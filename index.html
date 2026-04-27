@@ -34,6 +34,8 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .ex-sub{font-size:12px;color:#888780;margin-top:2px;line-height:1.4}
 .ex-loc{font-size:11px;color:#7F77DD;margin-top:4px;font-weight:500}
 .ex-link{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#fff;background:#E53E3E;padding:3px 8px;border-radius:10px;margin-top:5px;text-decoration:none;font-weight:600}
+.ex-links-wrap{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.ex-link-stretch{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#fff;background:#5B4EA8;padding:3px 8px;border-radius:10px;text-decoration:none;font-weight:600}
 .badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px;vertical-align:middle;font-weight:500}
 .bk{background:#FFF3CD;color:#854F0B}
 .bh{background:#EEEDFE;color:#3C3489}
@@ -236,9 +238,13 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
   <div class="section-hdr">Cool-down &middot; 5 min</div>
   <div class="item" id="a9">
     <div class="item-top" onclick="tog('a9','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Stretch &mdash; chest, shoulder, hamstring</div><div class="ex-sub">Hold each 20&ndash;30 sec</div>
+      <div class="ex-name">Stretch &mdash; chest, shoulder, hamstring</div><div class="ex-sub">Hold each 20&ndash;30 sec &middot; 3 stretches</div>
       <div class="ex-loc">📍 Mat / open floor area</div>
-      <a class="ex-link" href="https://www.youtube.com/results?search_query=post+workout+upper+body+stretching+routine" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+      <div class="ex-links-wrap" onclick="event.stopPropagation()">
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=doorway+chest+stretch+how+to" target="_blank">▶ Chest stretch</a>
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=cross+body+shoulder+stretch+how+to" target="_blank">▶ Shoulder stretch</a>
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=seated+hamstring+stretch+how+to" target="_blank">▶ Hamstring stretch</a>
+      </div>
     </div></div>
     <div class="fields-wrap">
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Stretch D1" type="text" placeholder="e.g. tight right shoulder today"/></div>
@@ -355,9 +361,12 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
   <div class="section-hdr">Cool-down &middot; 5 min</div>
   <div class="item" id="b9">
     <div class="item-top" onclick="tog('b9','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Hip flexor + quad stretch</div><div class="ex-sub">Hold 20&ndash;30 sec &middot; focus on right hip flexor</div>
+      <div class="ex-name">Hip flexor + quad stretch</div><div class="ex-sub">Hold 20&ndash;30 sec each &middot; right hip gets extra time &middot; 2 stretches</div>
       <div class="ex-loc">📍 Mat / open floor area</div>
-      <a class="ex-link" href="https://www.youtube.com/results?search_query=post+workout+lower+body+hip+flexor+stretch" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+      <div class="ex-links-wrap" onclick="event.stopPropagation()">
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=kneeling+hip+flexor+stretch+how+to" target="_blank">▶ Hip flexor stretch</a>
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=standing+quad+stretch+how+to" target="_blank">▶ Quad stretch</a>
+      </div>
     </div></div>
     <div class="fields-wrap">
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Hip stretch" type="text" placeholder="e.g. right hip tight, held longer"/></div>
@@ -434,9 +443,14 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
   <div class="section-hdr">Cool-down &middot; 5 min</div>
   <div class="item" id="c6">
     <div class="item-top" onclick="tog('c6','c',6)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Full body stretch</div><div class="ex-sub">Hip flexor, quad, chest, shoulder &middot; 20&ndash;30 sec each</div>
+      <div class="ex-name">Full body stretch</div><div class="ex-sub">Hip flexor, quad, chest, shoulder &middot; 20&ndash;30 sec each &middot; 4 stretches</div>
       <div class="ex-loc">📍 Mat / open floor area</div>
-      <a class="ex-link" href="https://www.youtube.com/results?search_query=full+body+post+workout+stretching+routine" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+      <div class="ex-links-wrap" onclick="event.stopPropagation()">
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=kneeling+hip+flexor+stretch+how+to" target="_blank">▶ Hip flexor</a>
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=standing+quad+stretch+how+to" target="_blank">▶ Quad</a>
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=doorway+chest+stretch+how+to" target="_blank">▶ Chest</a>
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=cross+body+shoulder+stretch+how+to" target="_blank">▶ Shoulder</a>
+      </div>
     </div></div>
     <div class="fields-wrap">
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Stretch D3" type="text" placeholder="e.g. feeling looser than last week"/></div>
@@ -530,9 +544,13 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
   <div class="section-hdr">Cool-down &middot; 5 min</div>
   <div class="item" id="d7">
     <div class="item-top" onclick="tog('d7','d',8)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Stretch &mdash; chest, shoulder, bicep</div><div class="ex-sub">Hold each 20&ndash;30 sec</div>
+      <div class="ex-name">Stretch &mdash; chest, shoulder, bicep</div><div class="ex-sub">Hold each 20&ndash;30 sec &middot; 3 stretches</div>
       <div class="ex-loc">📍 Mat / open floor area</div>
-      <a class="ex-link" href="https://www.youtube.com/results?search_query=post+workout+upper+body+stretching+routine" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+      <div class="ex-links-wrap" onclick="event.stopPropagation()">
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=doorway+chest+stretch+how+to" target="_blank">▶ Chest stretch</a>
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=cross+body+shoulder+stretch+how+to" target="_blank">▶ Shoulder stretch</a>
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=bicep+forearm+stretch+how+to" target="_blank">▶ Bicep stretch</a>
+      </div>
     </div></div>
     <div class="fields-wrap">
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Stretch D4" type="text" placeholder="e.g. shoulders loosening up"/></div>
@@ -637,9 +655,13 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
   <div class="section-hdr">Cool-down &middot; 5 min</div>
   <div class="item" id="e8">
     <div class="item-top" onclick="tog('e8','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Hip flexor + quad + hamstring stretch</div><div class="ex-sub">Hold 20&ndash;30 sec &middot; right hip gets extra time</div>
+      <div class="ex-name">Hip flexor + quad + hamstring stretch</div><div class="ex-sub">Hold 20&ndash;30 sec each &middot; right hip gets extra time &middot; 3 stretches</div>
       <div class="ex-loc">📍 Mat / open floor area</div>
-      <a class="ex-link" href="https://www.youtube.com/results?search_query=post+workout+lower+body+hip+flexor+stretch" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+      <div class="ex-links-wrap" onclick="event.stopPropagation()">
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=kneeling+hip+flexor+stretch+how+to" target="_blank">▶ Hip flexor</a>
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=standing+quad+stretch+how+to" target="_blank">▶ Quad</a>
+        <a class="ex-link-stretch" href="https://www.youtube.com/results?search_query=seated+hamstring+stretch+how+to" target="_blank">▶ Hamstring</a>
+      </div>
     </div></div>
     <div class="fields-wrap">
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Stretch D5" type="text" placeholder="e.g. right hip much better today!"/></div>
