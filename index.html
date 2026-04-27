@@ -3,14 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3-Day Gym Plan — Anytime Fitness Guilford</title>
+<title>5-Day Gym Plan — Anytime Fitness Guilford</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:420px;margin:0 auto}
-.day-selector{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap}
-.day-btn{flex:1;min-width:60px;padding:10px 4px;border-radius:8px;border:0.5px solid #D3D1C7;font-size:12px;font-weight:500;cursor:pointer;text-align:center;background:#F5F5F2;color:#888780;transition:all 0.15s;line-height:1.4}
+.day-selector{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:1rem}
+.day-btn{padding:12px 8px;border-radius:8px;border:0.5px solid #D3D1C7;font-size:13px;font-weight:500;cursor:pointer;text-align:center;background:#F5F5F2;color:#888780;transition:all 0.15s;line-height:1.6}
 .day-btn.active{background:#EEEDFE;border-color:#7F77DD;color:#3C3489}
+.day-btn.progress-tab{grid-column:1 / -1;font-size:13px;padding:12px 8px}
 .day-btn.progress-tab.active{background:#5B4EA8;border-color:#5B4EA8;color:#fff}
+.day-btn.full-row{grid-column:1 / -1;max-width:50%;margin:0 auto;width:100%}
 .day-panel{display:none}
 .day-panel.show{display:block}
 .progress-wrap{margin-bottom:1rem}
@@ -18,12 +20,11 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .progress-fill{height:100%;background:#7F77DD;border-radius:3px;transition:width 0.3s}
 .progress-label{display:flex;justify-content:space-between;font-size:12px;color:#888780}
 .section-hdr{font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:0.07em;margin:1rem 0 0.4rem;padding-bottom:4px;border-bottom:0.5px solid #EEEDFE}
-.item{background:#fff;border:0.5px solid #E8E8E4;border-radius:8px;margin-bottom:6px;overflow:hidden}
+.item{background:#fff;border:1.5px solid #D8D4F0;border-radius:10px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(91,78,168,0.06)}
 .item.done{background:#F5F5F2}
 .item-top{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer}
 .item.done .ex-name{color:#B4B2A9;text-decoration:line-through}
-.item.done .ex-sub{color:#B4B2A9}
-.item.done .ex-loc{color:#C8C6BD}
+.item.done .ex-sub,.item.done .ex-loc{color:#B4B2A9}
 .item.done .ex-link{opacity:0.4;pointer-events:none}
 .checkbox{width:22px;height:22px;min-width:22px;border-radius:50%;border:2px solid #D3D1C7;display:flex;align-items:center;justify-content:center;transition:all 0.15s;margin-top:1px;flex-shrink:0}
 .item.done .checkbox{background:#7F77DD;border-color:#7F77DD}
@@ -38,19 +39,33 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .bh{background:#EEEDFE;color:#3C3489}
 .bo{background:#F1EFE8;color:#5F5E5A}
 .bn{background:#E1F5EE;color:#085041}
-.weight-row{padding:0 12px 10px 44px;display:flex;align-items:center;gap:8px}
-.weight-input{flex:1;font-size:12px;padding:5px 8px;border:0.5px solid #D3D1C7;border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
-.weight-input:focus{border-color:#7F77DD;background:#fff}
-.weight-input::placeholder{color:#C8C6BD}
-.weight-label{font-size:11px;color:#888780;white-space:nowrap}
+/* notes + rep fields */
+.fields-wrap{padding:0 12px 10px 44px;display:flex;flex-direction:column;gap:6px}
+.rep-row{display:flex;flex-direction:column;gap:5px}
+.rep-label{font-size:11px;color:#888780;white-space:nowrap;min-width:38px}
+.rep-single{display:flex;align-items:center;gap:8px}
+.rep-single .rep-label{min-width:42px}
+.rep-input{flex:1;font-size:12px;padding:6px 10px;border:1.5px solid #C4C0E8;border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
+.rep-input:focus{border-color:#7F77DD;background:#fff}
+.rep-input::placeholder{color:#C8C6BD;font-size:11px}
+.notes-row{display:flex;gap:6px;align-items:center}
+.notes-input{flex:1;font-size:12px;padding:5px 8px;border:1.5px solid #C4C0E8;border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
+.last-time{font-size:11px;color:#7F77DD;background:#EEEDFE;border-radius:6px;padding:5px 8px;margin-bottom:2px;line-height:1.5;display:none}
+.last-time.has-data{display:block}
+.last-time-label{font-weight:600;margin-right:4px}
+.notes-input:focus{border-color:#7F77DD;background:#fff}
+.notes-input::placeholder{color:#C8C6BD}
 .tip{background:#EEEDFE;border-left:3px solid #7F77DD;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:#3C3489;line-height:1.6;margin-top:1rem}
 .btn-row{display:flex;gap:8px;margin-top:0.75rem}
 .complete-btn{flex:2;padding:11px;font-size:13px;font-weight:600;border-radius:8px;border:none;background:#5B4EA8;color:#fff;cursor:pointer}
 .reset-btn{flex:1;padding:11px;font-size:13px;border-radius:8px;border:0.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer}
-
-/* ── Progress page ── */
+/* progress page */
+.prog-stats{display:flex;gap:5px;margin-bottom:1rem;flex-wrap:wrap}
+.stat-box{flex:1;min-width:52px;background:#fff;border:0.5px solid #E8E8E4;border-radius:10px;padding:8px 4px;text-align:center}
+.stat-num{font-size:20px;font-weight:700;color:#5B4EA8}
+.stat-label{font-size:10px;color:#888780;margin-top:2px;line-height:1.3}
 .prog-day-card{background:#fff;border:0.5px solid #E8E8E4;border-radius:12px;margin-bottom:1rem;overflow:hidden}
-.prog-day-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:#fff}
+.prog-day-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
 .prog-day-header:hover{background:#FAFAF8}
 .prog-day-title{font-size:14px;font-weight:700;color:#2C2C2A}
 .prog-day-sub{font-size:11px;color:#888780;margin-top:2px}
@@ -65,12 +80,6 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .prog-session-item span{color:#888780}
 .prog-empty{font-size:12px;color:#C8C6BD;font-style:italic;padding:14px}
 .prog-clear-btn{display:block;width:calc(100% - 28px);margin:0 14px 12px;padding:8px;font-size:12px;border-radius:6px;border:0.5px solid #E8E8E4;background:#F5F5F2;color:#888780;cursor:pointer;text-align:center}
-.prog-clear-btn:hover{color:#E53E3E;border-color:#E53E3E}
-.prog-stats{display:flex;gap:8px;margin-bottom:1rem}
-.stat-box{flex:1;background:#fff;border:0.5px solid #E8E8E4;border-radius:10px;padding:10px 8px;text-align:center}
-.stat-num{font-size:22px;font-weight:700;color:#5B4EA8}
-.stat-label{font-size:11px;color:#888780;margin-top:2px}
-
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#2C2C2A;color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:999}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -78,77 +87,67 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 <body>
 
 <div style="margin-bottom:1rem;">
-  <div style="font-size:18px;font-weight:700;color:#5B4EA8;">3-Day Gym Plan</div>
-  <div style="font-size:12px;color:#888780;margin-top:2px;">Anytime Fitness Guilford &middot; At least 1 rest day between sessions</div>
+  <div style="font-size:18px;font-weight:700;color:#5B4EA8;">5-Day Gym Plan</div>
+  <div style="font-size:12px;color:#888780;margin-top:2px;">Anytime Fitness Guilford &middot; Complete in any order &middot; Rest whenever needed</div>
 </div>
 
 <div class="day-selector">
   <button class="day-btn progress-tab" onclick="sw('prog',this)">📊 Progress</button>
-  <button class="day-btn active" onclick="sw('a',this)">Day 1<br><span style="font-size:10px;font-weight:400">Upper + core</span></button>
-  <button class="day-btn" onclick="sw('b',this)">Day 2<br><span style="font-size:10px;font-weight:400">Lower + cardio</span></button>
-  <button class="day-btn" onclick="sw('c',this)">Day 3<br><span style="font-size:10px;font-weight:400">Full body</span></button>
+  <button class="day-btn active" onclick="sw('a',this)">Day 1<br><span style="font-size:11px;font-weight:400">Upper Body A</span></button>
+  <button class="day-btn" onclick="sw('b',this)">Day 2<br><span style="font-size:11px;font-weight:400">Lower Body A</span></button>
+  <button class="day-btn" onclick="sw('c',this)">Day 3<br><span style="font-size:11px;font-weight:400">Cardio and Core</span></button>
+  <button class="day-btn" onclick="sw('d',this)">Day 4<br><span style="font-size:11px;font-weight:400">Upper Body B</span></button>
+  <button class="day-btn full-row" onclick="sw('e',this)">Day 5<br><span style="font-size:11px;font-weight:400">Lower Body B and Cardio</span></button>
 </div>
 
-<!-- ═══ PROGRESS PAGE ═══ -->
+<!-- ═══ PROGRESS ═══ -->
 <div class="day-panel" id="p-prog">
   <div class="prog-stats">
-    <div class="stat-box"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total sessions</div></div>
-    <div class="stat-box"><div class="stat-num" id="stat-d1">0</div><div class="stat-label">Day 1 done</div></div>
-    <div class="stat-box"><div class="stat-num" id="stat-d2">0</div><div class="stat-label">Day 2 done</div></div>
-    <div class="stat-box"><div class="stat-num" id="stat-d3">0</div><div class="stat-label">Day 3 done</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-d1">0</div><div class="stat-label">Day 1</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-d2">0</div><div class="stat-label">Day 2</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-d3">0</div><div class="stat-label">Day 3</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-d4">0</div><div class="stat-label">Day 4</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-d5">0</div><div class="stat-label">Day 5</div></div>
   </div>
-
-  <!-- Day 1 summary -->
   <div class="prog-day-card">
-    <div class="prog-day-header" onclick="toggleProg('pa')">
-      <div><div class="prog-day-title">Day 1 &mdash; Upper body + core</div><div class="prog-day-sub">Tap to expand sessions</div></div>
-      <div class="prog-day-count" id="prog-count-a">0 sessions</div>
-    </div>
-    <div class="prog-day-body" id="pa">
-      <div id="prog-body-a"><div class="prog-empty">No sessions saved yet.</div></div>
-      <button class="prog-clear-btn" onclick="clearLog('a')">Clear Day 1 history</button>
-    </div>
+    <div class="prog-day-header" onclick="toggleProg('pa')"><div><div class="prog-day-title">Day 1 &mdash; Upper A</div><div class="prog-day-sub">Chest, back, shoulders, triceps</div></div><div class="prog-day-count" id="prog-count-a">0 sessions</div></div>
+    <div class="prog-day-body" id="pa"><div id="prog-body-a"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="clearLog('a')">Clear Day 1 history</button></div>
   </div>
-
-  <!-- Day 2 summary -->
   <div class="prog-day-card">
-    <div class="prog-day-header" onclick="toggleProg('pb')">
-      <div><div class="prog-day-title">Day 2 &mdash; Lower body + cardio</div><div class="prog-day-sub">Tap to expand sessions</div></div>
-      <div class="prog-day-count" id="prog-count-b">0 sessions</div>
-    </div>
-    <div class="prog-day-body" id="pb">
-      <div id="prog-body-b"><div class="prog-empty">No sessions saved yet.</div></div>
-      <button class="prog-clear-btn" onclick="clearLog('b')">Clear Day 2 history</button>
-    </div>
+    <div class="prog-day-header" onclick="toggleProg('pb')"><div><div class="prog-day-title">Day 2 &mdash; Lower A</div><div class="prog-day-sub">Legs, hips, calves</div></div><div class="prog-day-count" id="prog-count-b">0 sessions</div></div>
+    <div class="prog-day-body" id="pb"><div id="prog-body-b"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="clearLog('b')">Clear Day 2 history</button></div>
   </div>
-
-  <!-- Day 3 summary -->
   <div class="prog-day-card">
-    <div class="prog-day-header" onclick="toggleProg('pc')">
-      <div><div class="prog-day-title">Day 3 &mdash; Full body</div><div class="prog-day-sub">Tap to expand sessions</div></div>
-      <div class="prog-day-count" id="prog-count-c">0 sessions</div>
-    </div>
-    <div class="prog-day-body" id="pc">
-      <div id="prog-body-c"><div class="prog-empty">No sessions saved yet.</div></div>
-      <button class="prog-clear-btn" onclick="clearLog('c')">Clear Day 3 history</button>
-    </div>
+    <div class="prog-day-header" onclick="toggleProg('pc')"><div><div class="prog-day-title">Day 3 &mdash; Cardio + Core</div><div class="prog-day-sub">Rotating cardio, core stability, abs</div></div><div class="prog-day-count" id="prog-count-c">0 sessions</div></div>
+    <div class="prog-day-body" id="pc"><div id="prog-body-c"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="clearLog('c')">Clear Day 3 history</button></div>
+  </div>
+  <div class="prog-day-card">
+    <div class="prog-day-header" onclick="toggleProg('pd')"><div><div class="prog-day-title">Day 4 &mdash; Upper B</div><div class="prog-day-sub">Back, biceps, rear delt, core</div></div><div class="prog-day-count" id="prog-count-d">0 sessions</div></div>
+    <div class="prog-day-body" id="pd"><div id="prog-body-d"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="clearLog('d')">Clear Day 4 history</button></div>
+  </div>
+  <div class="prog-day-card">
+    <div class="prog-day-header" onclick="toggleProg('pe')"><div><div class="prog-day-title">Day 5 &mdash; Lower B + Cardio</div><div class="prog-day-sub">Legs, hips, cardio finisher</div></div><div class="prog-day-count" id="prog-count-e">0 sessions</div></div>
+    <div class="prog-day-body" id="pe"><div id="prog-body-e"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="clearLog('e')">Clear Day 5 history</button></div>
   </div>
 </div>
 
-<!-- ═══ DAY 1 ═══ -->
+<!-- ═══ DAY 1 — Upper A ═══ -->
 <div class="day-panel show" id="p-a">
   <div class="progress-wrap">
-    <div class="progress-label"><span>Day 1 &mdash; Upper body + core</span><span id="cnt-a">0 / 9</span></div>
+    <div class="progress-label"><span>Day 1 &mdash; Upper body A</span><span id="cnt-a">0 / 9</span></div>
     <div class="progress-track"><div class="progress-fill" id="bar-a" style="width:0%"></div></div>
   </div>
   <div class="section-hdr">Warm-up &middot; 5 min</div>
   <div class="item" id="a1">
     <div class="item-top" onclick="tog('a1','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Treadmill walk <span class="badge bk">knee-aware</span></div><div class="ex-sub">5 min &middot; slow &amp; flat &middot; 2.0&ndash;2.5 mph &middot; no incline</div>
+      <div class="ex-name">Treadmill walk</div><div class="ex-sub">5 min &middot; 2.0&ndash;2.5 mph &middot; flat &middot; no incline</div>
       <div class="ex-loc">📍 Ground floor cardio row</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+walking+warm+up+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Notes:</span><input class="weight-input" data-ex="Treadmill warm-up" type="text" placeholder="e.g. 2.2 mph, knees felt good"/></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Treadmill warm-up" type="text" placeholder="e.g. 2.2 mph, knees good"/></div>
+    </div>
   </div>
   <div class="section-hdr">Upper body &middot; ~35 min</div>
   <div class="item" id="a2">
@@ -157,7 +156,11 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
       <div class="ex-loc">📍 Selectorized machines &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=chest+press+machine+how+to+use" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Chest press" type="text" placeholder="e.g. 50 lbs, 3 sets done"/></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Chest-press"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Chest press" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Chest press" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Chest press" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Chest press-notes" type="text" placeholder="e.g. felt strong, good form"/></div>
+    </div>
   </div>
   <div class="item" id="a3">
     <div class="item-top" onclick="tog('a3','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
@@ -165,7 +168,11 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
       <div class="ex-loc">📍 Cable area &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=lat+pulldown+machine+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Lat pulldown" type="text" placeholder="e.g. 70 lbs"/></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Lat-pulldown"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Lat pulldown" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Lat pulldown" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Lat pulldown" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Lat pulldown-notes" type="text" placeholder="e.g. 70 lbs all 3 sets"/></div>
+    </div>
   </div>
   <div class="item" id="a4">
     <div class="item-top" onclick="tog('a4','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
@@ -173,15 +180,23 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
       <div class="ex-loc">📍 Low row station &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=seated+cable+row+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Seated cable row" type="text" placeholder="e.g. 60 lbs"/></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Cable-row"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Cable row" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Cable row" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Cable row" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Cable row-notes" type="text" placeholder="e.g. 60 lbs, back felt good"/></div>
+    </div>
   </div>
   <div class="item" id="a5">
     <div class="item-top" onclick="tog('a5','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Pec fly / rear delt machine <span class="badge bn">new</span></div><div class="ex-sub">2 &times; 12 each mode &middot; do both settings</div>
+      <div class="ex-name">Pec fly / rear delt machine <span class="badge bn">✓ confirmed</span></div><div class="ex-sub">2 &times; 12 each mode &middot; do both settings</div>
       <div class="ex-loc">📍 Precor near staircase &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=pec+fly+rear+delt+machine+how+to+precor" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Pec fly / rear delt" type="text" placeholder="e.g. fly 40 lbs / delt 30 lbs"/></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Pec-fly"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Pec fly" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Pec fly" data-set="2" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Pec fly-notes" type="text" placeholder="e.g. fly 40 / delt 30 lbs"/></div>
+    </div>
   </div>
   <div class="item" id="a6">
     <div class="item-top" onclick="tog('a6','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
@@ -189,7 +204,11 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
       <div class="ex-loc">📍 Cable crossover &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=tricep+pushdown+cable+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Tricep pushdown" type="text" placeholder="e.g. 30 lbs"/></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Tricep-pushdown"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Tricep pushdown" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Tricep pushdown" data-set="2" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Tricep pushdown-notes" type="text" placeholder="e.g. 30 lbs, easy"/></div>
+    </div>
   </div>
   <div class="section-hdr">Core &middot; ~8 min</div>
   <div class="item" id="a7">
@@ -198,15 +217,21 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
       <div class="ex-loc">📍 Mat / open floor area</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=dead+bug+exercise+how+to+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Notes:</span><input class="weight-input" data-ex="Dead bug" type="text" placeholder="e.g. felt strong, full range"/></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Dead bug" type="text" placeholder="e.g. felt strong, full range"/></div>
+    </div>
   </div>
   <div class="item" id="a8">
     <div class="item-top" onclick="tog('a8','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Seated ab crunch machine</div><div class="ex-sub">2 &times; 15 &middot; light weight</div>
-      <div class="ex-loc">📍 Selectorized area &middot; ground floor</div>
-      <a class="ex-link" href="https://www.youtube.com/results?search_query=ab+crunch+machine+how+to+use" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+      <div class="ex-name">Standing cable rotation</div><div class="ex-sub">2 &times; 12/side &middot; rotate slowly from core</div>
+      <div class="ex-loc">📍 Cable crossover &middot; ground floor</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=standing+cable+core+rotation+how+to" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Ab crunch machine" type="text" placeholder="e.g. 40 lbs"/></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Cable-rotation"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Cable rotation" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Cable rotation" data-set="2" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Cable rotation-notes" type="text" placeholder="e.g. 20 lbs each side"/></div>
+    </div>
   </div>
   <div class="section-hdr">Cool-down &middot; 5 min</div>
   <div class="item" id="a9">
@@ -215,196 +240,425 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
       <div class="ex-loc">📍 Mat / open floor area</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=post+workout+upper+body+stretching+routine" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Notes:</span><input class="weight-input" data-ex="Stretch" type="text" placeholder="e.g. tight right hip today"/></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Stretch D1" type="text" placeholder="e.g. tight right shoulder today"/></div>
+    </div>
   </div>
-  <div class="tip">Knees and hip fully rest today. Focus on form &mdash; weight comes naturally. ~50 min total.</div>
+  <div class="tip">Knees and hip fully rest today. Focus on form &mdash; weight will follow. ~50 min total.</div>
   <div class="btn-row">
-    <button class="complete-btn" onclick="completeDay('a','Day 1 — Upper body + core')">✓ Complete Day 1 &amp; Save</button>
+    <button class="complete-btn" onclick="completeDay('a','Day 1 — Upper A')">✓ Complete Day 1 &amp; Save</button>
     <button class="reset-btn" onclick="rst('a',9)">Reset</button>
   </div>
 </div>
 
-<!-- ═══ DAY 2 ═══ -->
+<!-- ═══ DAY 2 — Lower A ═══ -->
 <div class="day-panel" id="p-b">
   <div class="progress-wrap">
-    <div class="progress-label"><span>Day 2 &mdash; Lower body + cardio</span><span id="cnt-b">0 / 11</span></div>
+    <div class="progress-label"><span>Day 2 &mdash; Lower body A</span><span id="cnt-b">0 / 10</span></div>
     <div class="progress-track"><div class="progress-fill" id="bar-b" style="width:0%"></div></div>
   </div>
   <div class="section-hdr">Warm-up &middot; 5 min</div>
   <div class="item" id="b1">
-    <div class="item-top" onclick="tog('b1','b',11)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Treadmill walk <span class="badge bk">knee-aware</span></div><div class="ex-sub">5 min &middot; slow &amp; flat &middot; 2.0&ndash;2.5 mph &middot; no incline</div>
+    <div class="item-top" onclick="tog('b1','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Treadmill walk</div><div class="ex-sub">5 min &middot; slow &amp; flat &middot; 2.0&ndash;2.5 mph</div>
       <div class="ex-loc">📍 Ground floor cardio row</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+walking+warm+up+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Notes:</span><input class="weight-input" data-ex="Treadmill warm-up" type="text" placeholder="e.g. 2.2 mph, knees felt good"/></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Treadmill warm-up" type="text" placeholder="e.g. 2.2 mph, knees good"/></div>
+    </div>
   </div>
   <div class="section-hdr">Lower body &middot; ~30 min</div>
   <div class="item" id="b2">
-    <div class="item-top" onclick="tog('b2','b',11)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top" onclick="tog('b2','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Leg press <span class="badge bk">knee-aware</span></div><div class="ex-sub">3 &times; 12 &middot; sled only to start &middot; max 90&deg;</div>
       <div class="ex-loc">📍 Dark strength room &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=leg+press+machine+proper+form+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Leg press" type="text" placeholder="e.g. sled only / added 25 lbs"/></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Leg-press"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Leg press" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Leg press" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Leg press" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Leg press-notes" type="text" placeholder="e.g. sled only, knees felt ok"/></div>
+    </div>
   </div>
   <div class="item" id="b3">
-    <div class="item-top" onclick="tog('b3','b',11)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top" onclick="tog('b3','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Leg extension <span class="badge bk">knee-aware</span></div><div class="ex-sub">2 &times; 15 &middot; very light weight only</div>
       <div class="ex-loc">📍 Precor leg ext/curl combo &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=seated+leg+extension+machine+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Leg extension" type="text" placeholder="e.g. 30 lbs"/></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Leg-extension"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Leg extension" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Leg extension" data-set="2" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Leg extension-notes" type="text" placeholder="e.g. 30 lbs, light"/></div>
+    </div>
   </div>
   <div class="item" id="b4">
-    <div class="item-top" onclick="tog('b4','b',11)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top" onclick="tog('b4','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Leg curl</div><div class="ex-sub">3 &times; 12 &middot; controlled &middot; no jerking</div>
       <div class="ex-loc">📍 Same Precor combo machine &middot; flip seat</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=seated+leg+curl+machine+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Leg curl" type="text" placeholder="e.g. 50 lbs"/></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Leg-curl"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Leg curl" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Leg curl" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Leg curl" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Leg curl-notes" type="text" placeholder="e.g. 50 lbs, controlled"/></div>
+    </div>
   </div>
   <div class="item" id="b5">
-    <div class="item-top" onclick="tog('b5','b',11)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Hip abductor <span class="badge bh">hip-focus</span></div><div class="ex-sub">2 &times; 15 &middot; push knees outward</div>
+    <div class="item-top" onclick="tog('b5','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Hip abductor <span class="badge bh">hip-focus</span></div><div class="ex-sub">3 &times; 15 &middot; push knees outward</div>
       <div class="ex-loc">📍 Precor inner/outer thigh machine &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=hip+abductor+machine+how+to+use" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Hip abductor" type="text" placeholder="e.g. 60 lbs"/></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Hip-abductor"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Hip abductor" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Hip abductor" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Hip abductor" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Hip abductor-notes" type="text" placeholder="e.g. 60 lbs, hip felt stable"/></div>
+    </div>
   </div>
   <div class="item" id="b6">
-    <div class="item-top" onclick="tog('b6','b',11)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Hip adductor <span class="badge bh">hip-focus</span> <span class="badge bn">new</span></div><div class="ex-sub">2 &times; 15 &middot; squeeze knees inward &middot; flip setting</div>
+    <div class="item-top" onclick="tog('b6','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Hip adductor <span class="badge bh">hip-focus</span></div><div class="ex-sub">3 &times; 15 &middot; squeeze knees inward &middot; flip setting</div>
       <div class="ex-loc">📍 Same Precor inner/outer thigh machine</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=hip+adductor+machine+inner+thigh+how+to+use" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Hip adductor" type="text" placeholder="e.g. 50 lbs"/></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Hip-adductor"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Hip adductor" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Hip adductor" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Hip adductor" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Hip adductor-notes" type="text" placeholder="e.g. 50 lbs, 3 sets done"/></div>
+    </div>
   </div>
   <div class="item" id="b7">
-    <div class="item-top" onclick="tog('b7','b',11)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Leg press calf raises</div><div class="ex-sub">2 &times; 15 &middot; do right after leg press sets &middot; balls of feet on bottom edge of platform</div>
+    <div class="item-top" onclick="tog('b7','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Leg press calf raises</div><div class="ex-sub">3 &times; 15 &middot; balls of feet on bottom edge of platform</div>
       <div class="ex-loc">📍 Dark strength room &middot; same leg press machine</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=leg+press+calf+raises+how+to" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Leg press calf raises" type="text" placeholder="e.g. sled only, 15 reps easy"/></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Calf-raises"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Calf raises" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Calf raises" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Calf raises" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Calf raises-notes" type="text" placeholder="e.g. sled only, 15 reps"/></div>
+    </div>
   </div>
   <div class="section-hdr">Cardio finisher &middot; 15 min</div>
   <div class="item" id="b8">
-    <div class="item-top" onclick="tog('b8','b',11)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Elliptical <span class="badge bk">zero impact</span></div><div class="ex-sub">15 min &middot; comfortable conversational pace</div>
+    <div class="item-top" onclick="tog('b8','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Elliptical <span class="badge bk">zero impact</span></div><div class="ex-sub">15 min &middot; 50&ndash;60 SPM &middot; resistance 4&ndash;6</div>
       <div class="ex-loc">📍 Precor ellipticals &middot; ground floor cardio row</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=elliptical+machine+proper+form+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Notes:</span><input class="weight-input" data-ex="Elliptical" type="text" placeholder="e.g. resistance 6, felt good"/></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Elliptical" type="text" placeholder="e.g. resistance 5, 55 SPM"/></div>
+    </div>
   </div>
   <div class="section-hdr">Cool-down &middot; 5 min</div>
   <div class="item" id="b9">
-    <div class="item-top" onclick="tog('b9','b',11)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Hip flexor + quad stretch</div><div class="ex-sub">Hold 20&ndash;30 sec each &middot; focus on right hip flexor</div>
+    <div class="item-top" onclick="tog('b9','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Hip flexor + quad stretch</div><div class="ex-sub">Hold 20&ndash;30 sec &middot; focus on right hip flexor</div>
       <div class="ex-loc">📍 Mat / open floor area</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=post+workout+lower+body+hip+flexor+stretch" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Notes:</span><input class="weight-input" data-ex="Hip flexor stretch" type="text" placeholder="e.g. right hip tight, held longer"/></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Hip stretch" type="text" placeholder="e.g. right hip tight, held longer"/></div>
+    </div>
   </div>
   <div class="tip">Hip flaring? Skip leg press, add extra sets on adductor/abductor instead. ~55 min total.</div>
   <div class="btn-row">
-    <button class="complete-btn" onclick="completeDay('b','Day 2 — Lower body + cardio')">✓ Complete Day 2 &amp; Save</button>
-    <button class="reset-btn" onclick="rst('b',11)">Reset</button>
+    <button class="complete-btn" onclick="completeDay('b','Day 2 — Lower A')">✓ Complete Day 2 &amp; Save</button>
+    <button class="reset-btn" onclick="rst('b',10)">Reset</button>
   </div>
 </div>
 
-<!-- ═══ DAY 3 ═══ -->
+<!-- ═══ DAY 3 — Cardio + Core ═══ -->
 <div class="day-panel" id="p-c">
   <div class="progress-wrap">
-    <div class="progress-label"><span>Day 3 &mdash; Full body</span><span id="cnt-c">0 / 10</span></div>
+    <div class="progress-label"><span>Day 3 &mdash; Cardio + Core</span><span id="cnt-c">0 / 6</span></div>
     <div class="progress-track"><div class="progress-fill" id="bar-c" style="width:0%"></div></div>
   </div>
-  <div class="section-hdr">Cardio warm-up &middot; 10 min</div>
+  <div class="section-hdr">Cardio &middot; 30 min &middot; rotate each session</div>
   <div class="item" id="c1">
-    <div class="item-top" onclick="tog('c1','c',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Treadmill walk or elliptical <span class="badge bk">knee-aware</span></div><div class="ex-sub">10 min &middot; easy pace</div>
-      <div class="ex-loc">📍 Ground floor cardio row</div>
-      <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+walking+proper+form+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    <div class="item-top" onclick="tog('c1','c',6)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Cardio machine <span class="badge bo">rotate each session</span></div>
+      <div class="ex-sub">30 min &middot; Session 1: Treadmill walk &middot; Session 2: Elliptical &middot; Session 3: Rowing machine &middot; then repeat</div>
+      <div class="ex-loc">📍 Ground floor cardio row or upstairs (rowing)</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=rowing+machine+proper+form+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Notes:</span><input class="weight-input" data-ex="Treadmill / elliptical" type="text" placeholder="e.g. treadmill 2.8mph, felt warmed up"/></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Machine:</span><input class="notes-input" data-ex="Cardio machine" type="text" placeholder="e.g. treadmill 2.8mph / elliptical res.5"/></div>
+    </div>
   </div>
-  <div class="section-hdr">Full body circuit &middot; ~35 min</div>
+  <div class="section-hdr">Core &middot; ~20 min</div>
   <div class="item" id="c2">
-    <div class="item-top" onclick="tog('c2','c',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Chest press machine</div><div class="ex-sub">2 &times; 12 &middot; match or beat Day 1 weight</div>
-      <div class="ex-loc">📍 Selectorized machines &middot; ground floor</div>
-      <a class="ex-link" href="https://www.youtube.com/results?search_query=chest+press+machine+how+to+use" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    <div class="item-top" onclick="tog('c2','c',6)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Dead bug</div><div class="ex-sub">3 &times; 8/side &middot; back pressed to floor throughout</div>
+      <div class="ex-loc">📍 Mat / open floor area</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=dead+bug+exercise+how+to+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Chest press" type="text" placeholder="e.g. 55 lbs (up from 50)"/></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Dead bug" type="text" placeholder="e.g. 3 sets, felt stable"/></div>
+    </div>
   </div>
   <div class="item" id="c3">
-    <div class="item-top" onclick="tog('c3','c',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Lat pulldown</div><div class="ex-sub">2 &times; 12 &middot; squeeze at bottom of each rep</div>
-      <div class="ex-loc">📍 Cable area &middot; ground floor</div>
-      <a class="ex-link" href="https://www.youtube.com/results?search_query=lat+pulldown+machine+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    <div class="item-top" onclick="tog('c3','c',6)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Pallof press</div><div class="ex-sub">3 &times; 10/side &middot; press straight out &middot; hold 2 sec</div>
+      <div class="ex-loc">📍 Torque functional rig &middot; upstairs &middot; resistance band</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=pallof+press+resistance+band+how+to" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Lat pulldown" type="text" placeholder="e.g. 75 lbs"/></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Pallof press" type="text" placeholder="e.g. medium band, felt core working"/></div>
+    </div>
   </div>
   <div class="item" id="c4">
-    <div class="item-top" onclick="tog('c4','c',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Leg press <span class="badge bk">knee-aware</span></div><div class="ex-sub">2 &times; 12 &middot; same depth as Day 2</div>
-      <div class="ex-loc">📍 Dark strength room &middot; ground floor</div>
-      <a class="ex-link" href="https://www.youtube.com/results?search_query=leg+press+machine+proper+form+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
-    </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Leg press" type="text" placeholder="e.g. sled + 25 lbs each side"/></div>
-  </div>
-  <div class="item" id="c5">
-    <div class="item-top" onclick="tog('c5','c',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Hip abductor + adductor <span class="badge bh">hip-focus</span></div><div class="ex-sub">2 &times; 15 each &middot; both settings every time</div>
-      <div class="ex-loc">📍 Precor inner/outer thigh machine &middot; ground floor</div>
-      <a class="ex-link" href="https://www.youtube.com/results?search_query=hip+abductor+adductor+machine+how+to+use" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
-    </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Hip abductor + adductor" type="text" placeholder="e.g. abduct 60 / adduct 50 lbs"/></div>
-  </div>
-  <div class="item" id="c6">
-    <div class="item-top" onclick="tog('c6','c',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Seated cable row</div><div class="ex-sub">2 &times; 12 &middot; sit tall &middot; finish strong</div>
-      <div class="ex-loc">📍 Low row station &middot; ground floor</div>
-      <a class="ex-link" href="https://www.youtube.com/results?search_query=seated+cable+row+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
-    </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Seated cable row" type="text" placeholder="e.g. 65 lbs"/></div>
-  </div>
-  <div class="item" id="c7">
-    <div class="item-top" onclick="tog('c7','c',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Standing cable rotation</div><div class="ex-sub">2 &times; 12/side &middot; rotate slowly from core</div>
+    <div class="item-top" onclick="tog('c4','c',6)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Standing cable rotation</div><div class="ex-sub">3 &times; 12/side &middot; rotate slowly from core</div>
       <div class="ex-loc">📍 Cable crossover &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=standing+cable+core+rotation+how+to" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Weight:</span><input class="weight-input" data-ex="Cable rotation" type="text" placeholder="e.g. 20 lbs each side"/></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Cable-rotation"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Cable rotation" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Cable rotation" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Cable rotation" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Cable rotation-notes" type="text" placeholder="e.g. 20 lbs, slow and controlled"/></div>
+    </div>
   </div>
-  <div class="item" id="c8">
-    <div class="item-top" onclick="tog('c8','c',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Battle ropes <span class="badge bo">optional</span></div><div class="ex-sub">2 &times; 20 sec on/off &middot; skip if tired</div>
-      <div class="ex-loc">📍 Torque functional rig &middot; upstairs</div>
-      <a class="ex-link" href="https://www.youtube.com/results?search_query=battle+ropes+beginners+how+to" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+  <div class="item" id="c5">
+    <div class="item-top" onclick="tog('c5','c',6)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Seated Russian twist</div><div class="ex-sub">2 &times; 10/side &middot; lean back slightly &middot; bodyweight to start</div>
+      <div class="ex-loc">📍 Mat / bench area</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=seated+russian+twist+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Notes:</span><input class="weight-input" data-ex="Battle ropes" type="text" placeholder="e.g. did it / skipped today"/></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Russian twist" type="text" placeholder="e.g. bodyweight, 10 each side"/></div>
+    </div>
   </div>
   <div class="section-hdr">Cool-down &middot; 5 min</div>
-  <div class="item" id="c9">
-    <div class="item-top" onclick="tog('c9','c',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Full-body stretch</div><div class="ex-sub">Hip flexor, quad, chest, shoulder &middot; 20&ndash;30 sec each</div>
+  <div class="item" id="c6">
+    <div class="item-top" onclick="tog('c6','c',6)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Full body stretch</div><div class="ex-sub">Hip flexor, quad, chest, shoulder &middot; 20&ndash;30 sec each</div>
       <div class="ex-loc">📍 Mat / open floor area</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=full+body+post+workout+stretching+routine" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="weight-row"><span class="weight-label">Notes:</span><input class="weight-input" data-ex="Full-body stretch" type="text" placeholder="e.g. feeling stronger than Day 1!"/></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Stretch D3" type="text" placeholder="e.g. feeling looser than last week"/></div>
+    </div>
   </div>
-  <div class="tip">Notice what felt stronger vs Day 1 &mdash; that is the progress. Ready for 4&ndash;5 days? Just say the word. ~55 min total.</div>
+  <div class="tip">Day 3 is about building cardio base and core stability. Keep the cardio at a conversational pace &mdash; you should be able to talk throughout. ~55 min total.</div>
   <div class="btn-row">
-    <button class="complete-btn" onclick="completeDay('c','Day 3 — Full body')">✓ Complete Day 3 &amp; Save</button>
-    <button class="reset-btn" onclick="rst('c',10)">Reset</button>
+    <button class="complete-btn" onclick="completeDay('c','Day 3 — Cardio + Core')">✓ Complete Day 3 &amp; Save</button>
+    <button class="reset-btn" onclick="rst('c',6)">Reset</button>
+  </div>
+</div>
+
+<!-- ═══ DAY 4 — Upper B ═══ -->
+<div class="day-panel" id="p-d">
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Day 4 &mdash; Upper body B</span><span id="cnt-d">0 / 8</span></div>
+    <div class="progress-track"><div class="progress-fill" id="bar-d" style="width:0%"></div></div>
+  </div>
+  <div class="section-hdr">Warm-up &middot; 5 min</div>
+  <div class="item" id="d1">
+    <div class="item-top" onclick="tog('d1','d',8)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Treadmill walk</div><div class="ex-sub">5 min &middot; 2.0&ndash;2.5 mph &middot; flat</div>
+      <div class="ex-loc">📍 Ground floor cardio row</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+walking+warm+up+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Treadmill warm-up" type="text" placeholder="e.g. 2.3 mph, felt good"/></div>
+    </div>
+  </div>
+  <div class="section-hdr">Upper body B &middot; ~35 min</div>
+  <div class="item" id="d2">
+    <div class="item-top" onclick="tog('d2','d',8)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Lat pulldown</div><div class="ex-sub">3 &times; 12 &middot; wider grip today if possible &middot; pull to chest</div>
+      <div class="ex-loc">📍 Cable area &middot; ground floor</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=wide+grip+lat+pulldown+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Lat-pulldown-wide"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Lat pulldown wide" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Lat pulldown wide" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Lat pulldown wide" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Lat pulldown wide-notes" type="text" placeholder="e.g. 75 lbs, wider grip felt different"/></div>
+    </div>
+  </div>
+  <div class="item" id="d3">
+    <div class="item-top" onclick="tog('d3','d',8)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Pec fly / rear delt machine</div><div class="ex-sub">3 &times; 12 each mode &middot; both settings &middot; one extra set vs Day 1</div>
+      <div class="ex-loc">📍 Precor near staircase &middot; ground floor</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=pec+fly+rear+delt+machine+how+to+precor" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Pec-fly-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Pec fly B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Pec fly B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Pec fly B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Pec fly B-notes" type="text" placeholder="e.g. fly 45 / delt 35 lbs"/></div>
+    </div>
+  </div>
+  <div class="item" id="d4">
+    <div class="item-top" onclick="tog('d4','d',8)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Seated cable row</div><div class="ex-sub">3 &times; 12 &middot; try neutral/V-bar grip if available</div>
+      <div class="ex-loc">📍 Low row station &middot; ground floor</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=seated+cable+row+v+bar+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Cable-row-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Cable row B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Cable row B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Cable row B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Cable row B-notes" type="text" placeholder="e.g. 65 lbs, v-bar grip"/></div>
+    </div>
+  </div>
+  <div class="item" id="d5">
+    <div class="item-top" onclick="tog('d5','d',8)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Dumbbell curl</div><div class="ex-sub">3 &times; 12 &middot; slow controlled curl &middot; no swinging</div>
+      <div class="ex-loc">📍 Dumbbell rack &middot; ground floor free weight area</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=dumbbell+bicep+curl+proper+form+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-DB-curl"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="DB curl" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="DB curl" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="DB curl" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="DB curl-notes" type="text" placeholder="e.g. 20 lbs each, slow"/></div>
+    </div>
+  </div>
+  <div class="item" id="d6">
+    <div class="item-top" onclick="tog('d6','d',8)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Tricep pushdown</div><div class="ex-sub">3 &times; 15 &middot; try rope attachment today for variety</div>
+      <div class="ex-loc">📍 Cable crossover &middot; ground floor</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=tricep+rope+pushdown+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Tricep-rope"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Tricep rope" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Tricep rope" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Tricep rope" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Tricep rope-notes" type="text" placeholder="e.g. 30 lbs rope, 3 sets"/></div>
+    </div>
+  </div>
+  <div class="section-hdr">Cool-down &middot; 5 min</div>
+  <div class="item" id="d7">
+    <div class="item-top" onclick="tog('d7','d',8)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Stretch &mdash; chest, shoulder, bicep</div><div class="ex-sub">Hold each 20&ndash;30 sec</div>
+      <div class="ex-loc">📍 Mat / open floor area</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=post+workout+upper+body+stretching+routine" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Stretch D4" type="text" placeholder="e.g. shoulders loosening up"/></div>
+    </div>
+  </div>
+  <div class="tip">Day 4 uses slightly different grips and adds biceps &mdash; same muscles as Day 1 but from different angles. You will feel the difference. ~50 min total.</div>
+  <div class="btn-row">
+    <button class="complete-btn" onclick="completeDay('d','Day 4 — Upper B')">✓ Complete Day 4 &amp; Save</button>
+    <button class="reset-btn" onclick="rst('d',8)">Reset</button>
+  </div>
+</div>
+
+<!-- ═══ DAY 5 — Lower B + Cardio ═══ -->
+<div class="day-panel" id="p-e">
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Day 5 &mdash; Lower body B + Cardio</span><span id="cnt-e">0 / 9</span></div>
+    <div class="progress-track"><div class="progress-fill" id="bar-e" style="width:0%"></div></div>
+  </div>
+  <div class="section-hdr">Warm-up &middot; 5 min</div>
+  <div class="item" id="e1">
+    <div class="item-top" onclick="tog('e1','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Treadmill walk</div><div class="ex-sub">5 min &middot; 2.0&ndash;2.5 mph &middot; flat</div>
+      <div class="ex-loc">📍 Ground floor cardio row</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+walking+warm+up+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Treadmill warm-up" type="text" placeholder="e.g. 2.2 mph, knees good"/></div>
+    </div>
+  </div>
+  <div class="section-hdr">Lower body B &middot; ~30 min</div>
+  <div class="item" id="e2">
+    <div class="item-top" onclick="tog('e2','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Leg press <span class="badge bk">knee-aware</span></div><div class="ex-sub">3 &times; 12 &middot; try feet slightly higher on platform vs Day 2</div>
+      <div class="ex-loc">📍 Dark strength room &middot; ground floor</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=leg+press+foot+position+variations" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Leg-press-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Leg press B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Leg press B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Leg press B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Leg press B-notes" type="text" placeholder="e.g. feet higher, felt glutes more"/></div>
+    </div>
+  </div>
+  <div class="item" id="e3">
+    <div class="item-top" onclick="tog('e3','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Leg curl</div><div class="ex-sub">3 &times; 12 &middot; focus on slow lowering phase</div>
+      <div class="ex-loc">📍 Precor leg ext/curl combo &middot; ground floor</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=seated+leg+curl+machine+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Leg-curl-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Leg curl B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Leg curl B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Leg curl B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Leg curl B-notes" type="text" placeholder="e.g. 55 lbs, slow lower"/></div>
+    </div>
+  </div>
+  <div class="item" id="e4">
+    <div class="item-top" onclick="tog('e4','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Hip abductor <span class="badge bh">hip-focus</span></div><div class="ex-sub">3 &times; 15 &middot; push knees outward</div>
+      <div class="ex-loc">📍 Precor inner/outer thigh machine &middot; ground floor</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=hip+abductor+machine+how+to+use" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Hip-abductor-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Hip abductor B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Hip abductor B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Hip abductor B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Hip abductor B-notes" type="text" placeholder="e.g. 65 lbs, hip stable"/></div>
+    </div>
+  </div>
+  <div class="item" id="e5">
+    <div class="item-top" onclick="tog('e5','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Hip adductor <span class="badge bh">hip-focus</span></div><div class="ex-sub">3 &times; 15 &middot; squeeze knees inward &middot; flip setting</div>
+      <div class="ex-loc">📍 Same Precor inner/outer thigh machine</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=hip+adductor+machine+inner+thigh+how+to+use" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Hip-adductor-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Hip adductor B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Hip adductor B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Hip adductor B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Hip adductor B-notes" type="text" placeholder="e.g. 55 lbs, 3 sets"/></div>
+    </div>
+  </div>
+  <div class="item" id="e6">
+    <div class="item-top" onclick="tog('e6','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Leg press calf raises</div><div class="ex-sub">3 &times; 15 &middot; balls of feet on platform edge</div>
+      <div class="ex-loc">📍 Dark strength room &middot; same leg press machine</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=leg+press+calf+raises+how+to" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="last-time" id="lt-Calf-raises-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" data-ex="Calf raises B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" data-ex="Calf raises B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" data-ex="Calf raises B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Calf raises B-notes" type="text" placeholder="e.g. sled + 25 lbs"/></div>
+    </div>
+  </div>
+  <div class="section-hdr">Cardio finisher &middot; 20 min</div>
+  <div class="item" id="e7">
+    <div class="item-top" onclick="tog('e7','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Treadmill walk <span class="badge bk">knee-aware</span></div><div class="ex-sub">20 min &middot; 2.5&ndash;3.0 mph &middot; incline 0&ndash;2 if knees feel good</div>
+      <div class="ex-loc">📍 Ground floor cardio row</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+incline+walking+benefits+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Treadmill cardio" type="text" placeholder="e.g. 2.8mph incline 1, felt strong"/></div>
+    </div>
+  </div>
+  <div class="section-hdr">Cool-down &middot; 5 min</div>
+  <div class="item" id="e8">
+    <div class="item-top" onclick="tog('e8','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Hip flexor + quad + hamstring stretch</div><div class="ex-sub">Hold 20&ndash;30 sec &middot; right hip gets extra time</div>
+      <div class="ex-loc">📍 Mat / open floor area</div>
+      <a class="ex-link" href="https://www.youtube.com/results?search_query=post+workout+lower+body+hip+flexor+stretch" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
+    </div></div>
+    <div class="fields-wrap">
+      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Stretch D5" type="text" placeholder="e.g. right hip much better today!"/></div>
+    </div>
+  </div>
+  <div class="tip">Day 5 closes the cycle. Notice what feels stronger vs the first time through. Come back to Claude when you are ready to progress weights or add difficulty. ~60 min total.</div>
+  <div class="btn-row">
+    <button class="complete-btn" onclick="completeDay('e','Day 5 — Lower B + Cardio')">✓ Complete Day 5 &amp; Save</button>
+    <button class="reset-btn" onclick="rst('e',9)">Reset</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-var counts={a:9,b:11,c:10};
+var counts={a:9,b:10,c:6,d:8,e:9};
+var statKeys={a:'stat-d1',b:'stat-d2',c:'stat-d3',d:'stat-d4',e:'stat-d5'};
+var countKeys={a:'prog-count-a',b:'prog-count-b',c:'prog-count-c',d:'prog-count-d',e:'prog-count-e'};
+var bodyKeys={a:'prog-body-a',b:'prog-body-b',c:'prog-body-c',d:'prog-body-d',e:'prog-body-e'};
 
 function tog(id,day,total){
   var el=document.getElementById(id);
@@ -418,7 +672,7 @@ function tog(id,day,total){
 function rst(day,total){
   var p=document.getElementById('p-'+day);
   p.querySelectorAll('.item').forEach(function(el){el.classList.remove('done');});
-  p.querySelectorAll('.weight-input').forEach(function(inp){inp.value='';});
+  p.querySelectorAll('input').forEach(function(inp){inp.value='';});
   document.getElementById('cnt-'+day).textContent='0 / '+total;
   document.getElementById('bar-'+day).style.width='0%';
 }
@@ -429,17 +683,29 @@ function sw(day,btn){
   document.getElementById('p-'+day).classList.add('show');
   btn.classList.add('active');
   if(day==='prog') renderProgress();
+loadLastTimes();
 }
 
 function toggleProg(id){
-  var el=document.getElementById(id);
-  el.classList.toggle('open');
+  document.getElementById(id).classList.toggle('open');
 }
 
 function completeDay(day,label){
   var p=document.getElementById('p-'+day);
   var entries=[];
-  p.querySelectorAll('.weight-input').forEach(function(inp){
+  // collect rep fields grouped by exercise
+  var exMap={};
+  p.querySelectorAll('.rep-input').forEach(function(inp){
+    var ex=inp.getAttribute('data-ex');
+    var set=inp.getAttribute('data-set');
+    if(!exMap[ex]) exMap[ex]=[];
+    if(inp.value.trim()) exMap[ex].push('Set '+set+': '+inp.value.trim());
+  });
+  Object.keys(exMap).forEach(function(ex){
+    if(exMap[ex].length) entries.push({ex:ex,note:exMap[ex].join(' | ')});
+  });
+  // collect notes fields
+  p.querySelectorAll('.notes-input').forEach(function(inp){
     var val=inp.value.trim();
     if(val) entries.push({ex:inp.getAttribute('data-ex'),note:val});
   });
@@ -452,6 +718,7 @@ function completeDay(day,label){
   localStorage.setItem('gymlog_'+day,JSON.stringify(saved));
   showToast('Session saved! ✓');
   rst(day,counts[day]);
+  loadLastTimes();
 }
 
 function getSaved(day){
@@ -465,22 +732,50 @@ function clearLog(day){
   renderProgress();
 }
 
+function loadLastTimes(){
+  var days={a:9,b:10,c:6,d:8,e:9};
+  Object.keys(days).forEach(function(day){
+    var saved=getSaved(day);
+    if(!saved.length) return;
+    var last=saved[0]; // most recent session
+    // Build a map of ex -> note from rep fields
+    var repMap={};
+    last.entries.forEach(function(e){
+      // rep entries look like "Set 1: 50 lbs | Set 2: 55 lbs"
+      if(e.note && e.note.indexOf('Set ')===0){
+        repMap[e.ex]=e.note;
+      }
+    });
+    // Now find all last-time divs in this day panel and populate
+    var panel=document.getElementById('p-'+day);
+    if(!panel) return;
+    panel.querySelectorAll('.last-time').forEach(function(el){
+      var id=el.id.replace('lt-','').replace(/-/g,' ');
+      // Try to match against repMap keys (fuzzy - normalize both)
+      var matched=null;
+      Object.keys(repMap).forEach(function(k){
+        if(k.toLowerCase().replace(/[^a-z0-9]/g,' ').trim()===id.toLowerCase().replace(/[^a-z0-9]/g,' ').trim()){
+          matched=repMap[k];
+        }
+      });
+      if(matched){
+        el.querySelector('.last-time-vals').textContent=matched;
+        el.classList.add('has-data');
+      }
+    });
+  });
+}
+
 function renderProgress(){
-  var days={a:'prog-body-a',b:'prog-body-b',c:'prog-body-c'};
-  var countEls={a:'prog-count-a',b:'prog-count-b',c:'prog-count-c'};
-  var statEls={a:'stat-d1',b:'stat-d2',c:'stat-d3'};
   var total=0;
-  ['a','b','c'].forEach(function(day){
+  ['a','b','c','d','e'].forEach(function(day){
     var saved=getSaved(day);
     total+=saved.length;
     var n=saved.length;
-    document.getElementById(countEls[day]).textContent=n+' session'+(n===1?'':'s');
-    document.getElementById(statEls[day]).textContent=n;
-    var el=document.getElementById(days[day]);
-    if(!n){
-      el.innerHTML='<div class="prog-empty">No sessions saved yet.</div>';
-      return;
-    }
+    document.getElementById(countKeys[day]).textContent=n+' session'+(n===1?'':'s');
+    document.getElementById(statKeys[day]).textContent=n;
+    var el=document.getElementById(bodyKeys[day]);
+    if(!n){el.innerHTML='<div class="prog-empty">No sessions saved yet.</div>';return;}
     el.innerHTML=saved.map(function(s,i){
       var rows=s.entries.length
         ?s.entries.map(function(e){return '<div class="prog-session-item"><b>'+e.ex+':</b> <span>'+e.note+'</span></div>';}).join('')
