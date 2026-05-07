@@ -84,6 +84,17 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .prog-clear-btn{display:block;width:calc(100% - 28px);margin:0 14px 12px;padding:8px;font-size:12px;border-radius:6px;border:0.5px solid #E8E8E4;background:#F5F5F2;color:#888780;cursor:pointer;text-align:center}
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#2C2C2A;color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:999}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:14px;padding:1.25rem;width:100%;max-width:380px;max-height:80vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:700;color:#2C2C2A;margin-bottom:0.5rem}
+.modal-sub{font-size:12px;color:#888780;margin-bottom:1rem;line-height:1.5}
+.modal-textarea{width:100%;height:120px;font-size:11px;padding:8px;border:1.5px solid #C4C0E8;border-radius:8px;font-family:monospace;color:#2C2C2A;resize:none;outline:none;background:#FAFAF8}
+.modal-textarea:focus{border-color:#7F77DD}
+.modal-btn-row{display:flex;gap:8px;margin-top:0.75rem}
+.modal-btn-primary{flex:2;padding:11px;font-size:13px;font-weight:600;border-radius:8px;border:none;background:#5B4EA8;color:#fff;cursor:pointer}
+.modal-btn-secondary{flex:1;padding:11px;font-size:13px;border-radius:8px;border:0.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer}
+.modal-divider{border:none;border-top:1px solid #F1EFE8;margin:1rem 0}
 </style>
 </head>
 <body>
@@ -93,10 +104,16 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     <div style="font-size:18px;font-weight:700;color:#5B4EA8;">5-Day Gym Plan</div>
     <div style="font-size:12px;color:#888780;margin-top:2px;">Anytime Fitness Guilford &middot; Complete in any order &middot; Rest whenever needed</div>
   </div>
-  <button onclick="reloadPage()" style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#EEEDFE;border:1px solid #7F77DD;border-radius:8px;color:#3C3489;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;">
-    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 2.5A5.5 5.5 0 1 0 12 6.5" stroke="#3C3489" stroke-width="1.5" stroke-linecap="round"/><polyline points="9,0.5 12,2.5 10,5.5" fill="#3C3489"/></svg>
-    Update
-  </button>
+  <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
+    <button onclick="reloadPage()" style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#EEEDFE;border:1px solid #7F77DD;border-radius:8px;color:#3C3489;font-size:12px;font-weight:600;cursor:pointer;">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 2.5A5.5 5.5 0 1 0 12 6.5" stroke="#3C3489" stroke-width="1.5" stroke-linecap="round"/><polyline points="9,0.5 12,2.5 10,5.5" fill="#3C3489"/></svg>
+      Update
+    </button>
+    <button onclick="showExportImport()" style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#E1F5EE;border:1px solid #0F6E56;border-radius:8px;color:#085041;font-size:12px;font-weight:600;cursor:pointer;">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3 6l3.5 3.5L10 6" stroke="#085041" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 10v1.5a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5V10" stroke="#085041" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Backup
+    </button>
+  </div>
 </div>
 
 <div class="day-selector">
@@ -682,6 +699,31 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 
 <div class="toast" id="toast"></div>
 
+<!-- Export/Import Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOverlay(event)">
+  <div class="modal">
+    <div class="modal-title">Backup and Restore Data</div>
+    <div class="modal-sub">Use this to back up your session history before updating the app or creating a new home screen icon. Copy the code and save it somewhere safe — paste it back in to restore.</div>
+
+    <div style="font-size:12px;font-weight:600;color:#2C2C2A;margin-bottom:6px;">Your backup code</div>
+    <textarea class="modal-textarea" id="export-text" readonly placeholder="Your backup code will appear here..."></textarea>
+    <div class="modal-btn-row">
+      <button class="modal-btn-primary" onclick="copyExport()">Copy to clipboard</button>
+      <button class="modal-btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+
+    <hr class="modal-divider">
+
+    <div style="font-size:12px;font-weight:600;color:#2C2C2A;margin-bottom:4px;">Restore from backup</div>
+    <div style="font-size:12px;color:#888780;margin-bottom:6px;">Paste your backup code below and tap Restore.</div>
+    <textarea class="modal-textarea" id="import-text" placeholder="Paste your backup code here..."></textarea>
+    <div class="modal-btn-row">
+      <button class="modal-btn-primary" onclick="importData()">Restore data</button>
+      <button class="modal-btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var counts={a:9,b:10,c:6,d:8,e:9};
 var statKeys={a:'stat-d1',b:'stat-d2',c:'stat-d3',d:'stat-d4',e:'stat-d5'};
@@ -851,10 +893,68 @@ function loadLastTimes(){
 function reloadPage(){
   var btn=document.querySelector('[onclick="reloadPage()"]');
   if(btn){
-    btn.textContent='Updating...';
+    btn.innerHTML='Updating...';
     btn.style.opacity='0.6';
   }
   window.location.reload(true);
+}
+
+function showExportImport(){
+  // Build export data from all days
+  var data={};
+  ['a','b','c','d','e'].forEach(function(day){
+    var saved=getSaved(day);
+    if(saved.length) data[day]=saved;
+  });
+  var encoded=btoa(JSON.stringify(data));
+  document.getElementById('export-text').value=encoded;
+  document.getElementById('import-text').value='';
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+
+function closeModalOverlay(e){
+  if(e.target===document.getElementById('modal-overlay')) closeModal();
+}
+
+function copyExport(){
+  var ta=document.getElementById('export-text');
+  ta.select();
+  try{
+    document.execCommand('copy');
+    showToast('Copied to clipboard! Paste into Notes app to save.');
+  } catch(e){
+    // Fallback for iOS
+    var range=document.createRange();
+    range.selectNode(ta);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    showToast('Long press and Copy to save your backup code.');
+  }
+}
+
+function importData(){
+  var code=document.getElementById('import-text').value.trim();
+  if(!code){showToast('Please paste your backup code first.');return;}
+  try{
+    var data=JSON.parse(atob(code));
+    var count=0;
+    ['a','b','c','d','e'].forEach(function(day){
+      if(data[day] && Array.isArray(data[day])){
+        localStorage.setItem('gymlog_'+day,JSON.stringify(data[day]));
+        count+=data[day].length;
+      }
+    });
+    closeModal();
+    renderProgress();
+    loadLastTimes();
+    showToast('Restored! '+count+' sessions loaded.');
+  } catch(e){
+    showToast('Invalid backup code. Please check and try again.');
+  }
 }
 
 function renderProgress(){
