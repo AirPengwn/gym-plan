@@ -88,9 +88,15 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 </head>
 <body>
 
-<div style="margin-bottom:1rem;">
-  <div style="font-size:18px;font-weight:700;color:#5B4EA8;">5-Day Gym Plan</div>
-  <div style="font-size:12px;color:#888780;margin-top:2px;">Anytime Fitness Guilford &middot; Complete in any order &middot; Rest whenever needed</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+  <div>
+    <div style="font-size:18px;font-weight:700;color:#5B4EA8;">5-Day Gym Plan</div>
+    <div style="font-size:12px;color:#888780;margin-top:2px;">Anytime Fitness Guilford &middot; Complete in any order &middot; Rest whenever needed</div>
+  </div>
+  <button onclick="reloadPage()" style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#EEEDFE;border:1px solid #7F77DD;border-radius:8px;color:#3C3489;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 2.5A5.5 5.5 0 1 0 12 6.5" stroke="#3C3489" stroke-width="1.5" stroke-linecap="round"/><polyline points="9,0.5 12,2.5 10,5.5" fill="#3C3489"/></svg>
+    Update
+  </button>
 </div>
 
 <div class="day-selector">
@@ -840,6 +846,15 @@ function loadLastTimes(){
       }
     });
   });
+}
+
+function reloadPage(){
+  var btn=document.querySelector('[onclick="reloadPage()"]');
+  if(btn){
+    btn.textContent='Updating...';
+    btn.style.opacity='0.6';
+  }
+  window.location.reload(true);
 }
 
 function renderProgress(){
