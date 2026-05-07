@@ -702,25 +702,43 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 <!-- Export/Import Modal -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModalOverlay(event)">
   <div class="modal">
-    <div class="modal-title">Backup and Restore Data</div>
-    <div class="modal-sub">Use this to back up your session history before updating the app or creating a new home screen icon. Copy the code and save it somewhere safe — paste it back in to restore.</div>
 
-    <div style="font-size:12px;font-weight:600;color:#2C2C2A;margin-bottom:6px;">Your backup code</div>
-    <textarea class="modal-textarea" id="export-text" readonly placeholder="Your backup code will appear here..."></textarea>
-    <div class="modal-btn-row">
-      <button class="modal-btn-primary" onclick="copyExport()">Copy to clipboard</button>
-      <button class="modal-btn-secondary" onclick="closeModal()">Close</button>
+    <!-- Tab bar -->
+    <div style="display:flex;gap:6px;margin-bottom:1rem;">
+      <button id="tab-backup" onclick="showTab('backup')" style="flex:1;padding:9px;font-size:13px;font-weight:600;border-radius:8px;border:1.5px solid #5B4EA8;background:#5B4EA8;color:#fff;cursor:pointer;">Backup</button>
+      <button id="tab-restore" onclick="showTab('restore')" style="flex:1;padding:9px;font-size:13px;font-weight:600;border-radius:8px;border:1.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer;">Restore</button>
     </div>
 
-    <hr class="modal-divider">
-
-    <div style="font-size:12px;font-weight:600;color:#2C2C2A;margin-bottom:4px;">Restore from backup</div>
-    <div style="font-size:12px;color:#888780;margin-bottom:6px;">Paste your backup code below and tap Restore.</div>
-    <textarea class="modal-textarea" id="import-text" placeholder="Paste your backup code here..."></textarea>
-    <div class="modal-btn-row">
-      <button class="modal-btn-primary" onclick="importData()">Restore data</button>
-      <button class="modal-btn-secondary" onclick="closeModal()">Cancel</button>
+    <!-- Backup panel -->
+    <div id="panel-backup">
+      <div class="modal-title">Back up your data</div>
+      <div class="modal-sub" style="margin-bottom:0.75rem;">Your backup code is below. <b>Long press the box → Select All → Copy</b>, then paste into your Notes app and save it.</div>
+      <textarea class="modal-textarea" id="export-text" readonly placeholder="Tap Generate to create your backup code"></textarea>
+      <div class="modal-btn-row">
+        <button class="modal-btn-primary" onclick="generateExport()">Generate backup code</button>
+        <button class="modal-btn-secondary" onclick="closeModal()">Close</button>
+      </div>
+      <div id="backup-hint" style="display:none;margin-top:0.75rem;background:#E1F5EE;border-radius:8px;padding:10px 12px;font-size:12px;color:#085041;line-height:1.6;">
+        ✅ Code generated!<br>
+        1. Long press the code box above<br>
+        2. Tap <b>Select All</b><br>
+        3. Tap <b>Copy</b><br>
+        4. Open <b>Notes</b> app and paste &amp; save
+      </div>
     </div>
+
+    <!-- Restore panel -->
+    <div id="panel-restore" style="display:none;">
+      <div class="modal-title">Restore your data</div>
+      <div class="modal-sub" style="margin-bottom:0.75rem;">Paste your backup code from Notes into the box below, then tap Restore.</div>
+      <textarea class="modal-textarea" id="import-text" placeholder="Paste your backup code here..."></textarea>
+      <div class="modal-btn-row">
+        <button class="modal-btn-primary" onclick="importData()">Restore data</button>
+        <button class="modal-btn-secondary" onclick="closeModal()">Cancel</button>
+      </div>
+      <div id="restore-hint" style="display:none;margin-top:0.75rem;background:#EEEDFE;border-radius:8px;padding:10px 12px;font-size:12px;color:#3C3489;line-height:1.6;"></div>
+    </div>
+
   </div>
 </div>
 
@@ -900,16 +918,43 @@ function reloadPage(){
 }
 
 function showExportImport(){
-  // Build export data from all days
+  document.getElementById('export-text').value='';
+  document.getElementById('import-text').value='';
+  document.getElementById('backup-hint').style.display='none';
+  document.getElementById('restore-hint').style.display='none';
+  showTab('backup');
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function showTab(tab){
+  var isBackup=(tab==='backup');
+  document.getElementById('panel-backup').style.display=isBackup?'block':'none';
+  document.getElementById('panel-restore').style.display=isBackup?'none':'block';
+  document.getElementById('tab-backup').style.background=isBackup?'#5B4EA8':'#F5F5F2';
+  document.getElementById('tab-backup').style.color=isBackup?'#fff':'#888780';
+  document.getElementById('tab-backup').style.borderColor=isBackup?'#5B4EA8':'#D3D1C7';
+  document.getElementById('tab-restore').style.background=isBackup?'#F5F5F2':'#5B4EA8';
+  document.getElementById('tab-restore').style.color=isBackup?'#888780':'#fff';
+  document.getElementById('tab-restore').style.borderColor=isBackup?'#D3D1C7':'#5B4EA8';
+}
+
+function generateExport(){
   var data={};
   ['a','b','c','d','e'].forEach(function(day){
     var saved=getSaved(day);
     if(saved.length) data[day]=saved;
   });
-  var encoded=btoa(JSON.stringify(data));
-  document.getElementById('export-text').value=encoded;
-  document.getElementById('import-text').value='';
-  document.getElementById('modal-overlay').classList.add('show');
+  if(!Object.keys(data).length){
+    showToast('No session data to back up yet.');
+    return;
+  }
+  var encoded=btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  var ta=document.getElementById('export-text');
+  ta.value=encoded;
+  // Try to select all text so user can see it
+  ta.focus();
+  ta.setSelectionRange(0, ta.value.length);
+  document.getElementById('backup-hint').style.display='block';
 }
 
 function closeModal(){
@@ -920,27 +965,11 @@ function closeModalOverlay(e){
   if(e.target===document.getElementById('modal-overlay')) closeModal();
 }
 
-function copyExport(){
-  var ta=document.getElementById('export-text');
-  ta.select();
-  try{
-    document.execCommand('copy');
-    showToast('Copied to clipboard! Paste into Notes app to save.');
-  } catch(e){
-    // Fallback for iOS
-    var range=document.createRange();
-    range.selectNode(ta);
-    window.getSelection().removeAllRanges();
-    window.getSelection().addRange(range);
-    showToast('Long press and Copy to save your backup code.');
-  }
-}
-
 function importData(){
   var code=document.getElementById('import-text').value.trim();
   if(!code){showToast('Please paste your backup code first.');return;}
   try{
-    var data=JSON.parse(atob(code));
+    var data=JSON.parse(decodeURIComponent(escape(atob(code))));
     var count=0;
     ['a','b','c','d','e'].forEach(function(day){
       if(data[day] && Array.isArray(data[day])){
@@ -948,12 +977,18 @@ function importData(){
         count+=data[day].length;
       }
     });
-    closeModal();
+    var hint=document.getElementById('restore-hint');
+    hint.textContent='✅ Restored '+count+' sessions successfully!';
+    hint.style.display='block';
     renderProgress();
     loadLastTimes();
-    showToast('Restored! '+count+' sessions loaded.');
+    setTimeout(function(){ closeModal(); showToast('Restored! '+count+' sessions loaded.'); }, 1200);
   } catch(e){
-    showToast('Invalid backup code. Please check and try again.');
+    var hint=document.getElementById('restore-hint');
+    hint.style.background='#FFF3CD';
+    hint.style.color='#854F0B';
+    hint.textContent='❌ Invalid backup code. Please check and try again.';
+    hint.style.display='block';
   }
 }
 
