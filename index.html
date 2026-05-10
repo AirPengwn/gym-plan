@@ -7,12 +7,10 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:420px;margin:0 auto}
-.day-selector{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:1rem}
-.day-btn{padding:12px 8px;border-radius:8px;border:0.5px solid #D3D1C7;font-size:13px;font-weight:500;cursor:pointer;text-align:center;background:#F5F5F2;color:#888780;transition:all 0.15s;line-height:1.6}
-.day-btn.active{background:#EEEDFE;border-color:#7F77DD;color:#3C3489}
-.day-btn.progress-tab{grid-column:1 / -1;font-size:13px;padding:12px 8px}
-.day-btn.progress-tab.active{background:#5B4EA8;border-color:#5B4EA8;color:#fff}
-.day-btn.full-row{grid-column:1 / -1;max-width:50%;margin:0 auto;width:100%}
+.day-selector{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:1rem}
+.day-btn{padding:12px 6px;border-radius:8px;border:0.5px solid #D3D1C7;font-size:12px;font-weight:600;cursor:pointer;text-align:center;background:#F5F5F2;color:#888780;transition:all 0.15s;line-height:1.5}
+.day-btn.active{background:#5B4EA8;border-color:#5B4EA8;color:#fff}
+.day-btn.progress-tab{font-size:12px;padding:12px 6px}
 .day-panel{display:none}
 .day-panel.show{display:block}
 .progress-wrap{margin-bottom:1rem}
@@ -81,7 +79,40 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .prog-session-item b{color:#2C2C2A}
 .prog-session-item span{color:#888780}
 .prog-empty{font-size:12px;color:#C8C6BD;font-style:italic;padding:14px}
-.prog-clear-btn{display:block;width:calc(100% - 28px);margin:0 14px 12px;padding:8px;font-size:12px;border-radius:6px;border:0.5px solid #E8E8E4;background:#F5F5F2;color:#888780;cursor:pointer;text-align:center}
+.prog-clear-btn{display:block;width:calc(100% - 28px);margin:0 14px 12px;padding:8px;font-size:12px;border-radius:6px;border:0.5px solid #FFBDBD;background:#FFF5F5;color:#C53030;cursor:pointer;text-align:center;font-weight:600}
+.prog-clear-btn:hover{background:#FED7D7}
+.prog-tab-row{display:flex;gap:6px;margin-bottom:1rem}
+.prog-tab-btn{flex:1;padding:10px;font-size:13px;font-weight:600;border-radius:8px;border:1.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer;transition:all 0.15s}
+.prog-tab-btn.active{background:#5B4EA8;border-color:#5B4EA8;color:#fff}
+.prog-panel{display:none}
+.prog-panel.show{display:block}
+.ex-list{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem}
+.ex-list-btn{padding:11px 14px;background:#fff;border:1.5px solid #D8D4F0;border-radius:10px;font-size:13px;font-weight:500;color:#2C2C2A;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}
+.ex-list-btn:hover{background:#EEEDFE;border-color:#7F77DD}
+.ex-list-btn.active{background:#EEEDFE;border-color:#5B4EA8;color:#3C3489}
+.ex-session-count{font-size:11px;color:#7F77DD;font-weight:600;background:#EEEDFE;padding:2px 8px;border-radius:10px}
+.ex-detail-panel{background:#fff;border:1.5px solid #D8D4F0;border-radius:10px;margin-bottom:1rem;overflow:hidden}
+.ex-detail-header{padding:12px 14px;border-bottom:0.5px solid #F1EFE8}
+.ex-detail-title{font-size:14px;font-weight:700;color:#3C3489}
+.ex-history-item{padding:10px 14px;border-bottom:0.5px solid #F1EFE8;font-size:12px}
+.ex-history-item:last-child{border-bottom:none}
+.ex-history-date{font-size:11px;font-weight:600;color:#5B4EA8;margin-bottom:4px}
+.ex-history-sets{color:#2C2C2A;line-height:1.6}
+.chart-wrap{padding:14px;background:#FAFAF8;border-top:0.5px solid #F1EFE8}
+.chart-title{font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+.chart-canvas-wrap{width:100%;overflow-x:auto}
+canvas.prog-chart{display:block;border-radius:8px}
+.mgr-day-label{font-size:11px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:0.06em;margin:1rem 0 0.4rem;padding-bottom:4px;border-bottom:0.5px solid #EEEDFE}
+.mgr-ex-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:1.5px solid #D8D4F0;border-radius:10px;margin-bottom:6px}
+.mgr-ex-row.archived{background:#F5F5F2;border-color:#E8E8E4;opacity:0.75}
+.mgr-ex-name{font-size:13px;font-weight:500;color:#2C2C2A;flex:1}
+.mgr-ex-name.archived{color:#888780;text-decoration:line-through}
+.mgr-ex-count{font-size:11px;color:#7F77DD;font-weight:600;margin-right:8px}
+.mgr-archive-btn{font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #FFBDBD;background:#FFF5F5;color:#C53030;cursor:pointer;white-space:nowrap}
+.mgr-restore-btn{font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #C4C0E8;background:#EEEDFE;color:#3C3489;cursor:pointer;white-space:nowrap}
+.mgr-notice{background:#E1F5EE;border-left:3px solid #0F6E56;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:#085041;line-height:1.6;margin-bottom:1rem}
+.mgr-archived-section{margin-top:1.5rem;padding-top:1rem;border-top:1px solid #E8E8E4}
+.mgr-archived-title{font-size:13px;font-weight:700;color:#888780;margin-bottom:0.75rem}
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#2C2C2A;color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:999}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .unit-toggle{display:flex;border-radius:6px;overflow:hidden;border:1.5px solid #C4C0E8;flex-shrink:0}
@@ -138,15 +169,16 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 
 <div class="day-selector">
   <button class="day-btn progress-tab" onclick="sw('prog',this)">📊 Progress</button>
-  <button class="day-btn active" onclick="sw('a',this)">Day 1<br><span style="font-size:11px;font-weight:400">Upper Body A</span></button>
-  <button class="day-btn" onclick="sw('b',this)">Day 2<br><span style="font-size:11px;font-weight:400">Lower Body A</span></button>
-  <button class="day-btn" onclick="sw('c',this)">Day 3<br><span style="font-size:11px;font-weight:400">Cardio and Core</span></button>
-  <button class="day-btn" onclick="sw('d',this)">Day 4<br><span style="font-size:11px;font-weight:400">Upper Body B</span></button>
-  <button class="day-btn full-row" onclick="sw('e',this)">Day 5<br><span style="font-size:11px;font-weight:400">Lower Body B and Cardio</span></button>
+  <button class="day-btn active" onclick="sw('a',this)">Day 1<br><span style="font-size:11px;font-weight:400">Upper A</span></button>
+  <button class="day-btn" onclick="sw('b',this)">Day 2<br><span style="font-size:11px;font-weight:400">Lower A · Cardio</span></button>
+  <button class="day-btn" onclick="sw('c',this)">Day 3<br><span style="font-size:11px;font-weight:400">Cardio + Core</span></button>
+  <button class="day-btn" onclick="sw('d',this)">Day 4<br><span style="font-size:11px;font-weight:400">Upper B</span></button>
+  <button class="day-btn" onclick="sw('e',this)">Day 5<br><span style="font-size:11px;font-weight:400">Lower B · Cardio</span></button>
 </div>
 
 <!-- ═══ PROGRESS ═══ -->
 <div class="day-panel" id="p-prog">
+  <!-- Stats row -->
   <div class="prog-stats">
     <div class="stat-box"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total</div></div>
     <div class="stat-box"><div class="stat-num" id="stat-d1">0</div><div class="stat-label">Day 1</div></div>
@@ -155,25 +187,78 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     <div class="stat-box"><div class="stat-num" id="stat-d4">0</div><div class="stat-label">Day 4</div></div>
     <div class="stat-box"><div class="stat-num" id="stat-d5">0</div><div class="stat-label">Day 5</div></div>
   </div>
-  <div class="prog-day-card">
-    <div class="prog-day-header" onclick="toggleProg('pa')"><div><div class="prog-day-title">Day 1 &mdash; Upper A</div><div class="prog-day-sub">Chest, back, shoulders, triceps</div></div><div class="prog-day-count" id="prog-count-a">0 sessions</div></div>
-    <div class="prog-day-body" id="pa"><div id="prog-body-a"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="clearLog('a')">Clear Day 1 history</button></div>
+
+  <!-- Days / Exercises tabs -->
+  <div class="prog-tab-row">
+    <button class="prog-tab-btn active" onclick="switchProgTab('days',this)">📅 Days</button>
+    <button class="prog-tab-btn" onclick="switchProgTab('exercises',this)">💪 Exercises</button>
+    <button class="prog-tab-btn" onclick="switchProgTab('manage',this)">⚙️ Manage</button>
   </div>
-  <div class="prog-day-card">
-    <div class="prog-day-header" onclick="toggleProg('pb')"><div><div class="prog-day-title">Day 2 &mdash; Lower A</div><div class="prog-day-sub">Legs, hips, calves</div></div><div class="prog-day-count" id="prog-count-b">0 sessions</div></div>
-    <div class="prog-day-body" id="pb"><div id="prog-body-b"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="clearLog('b')">Clear Day 2 history</button></div>
+
+  <!-- DAYS PANEL -->
+  <div class="prog-panel show" id="prog-panel-days">
+    <div class="prog-day-card">
+      <div class="prog-day-header" onclick="toggleProg('pa')"><div><div class="prog-day-title">Day 1 &mdash; Upper A</div><div class="prog-day-sub">Chest, back, shoulders, triceps</div></div><div class="prog-day-count" id="prog-count-a">0 sessions</div></div>
+      <div class="prog-day-body" id="pa"><div id="prog-body-a"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="confirmClear('a','Day 1')">🗑 Clear Day 1 history</button></div>
+    </div>
+    <div class="prog-day-card">
+      <div class="prog-day-header" onclick="toggleProg('pb')"><div><div class="prog-day-title">Day 2 &mdash; Lower A</div><div class="prog-day-sub">Legs, hips, calves</div></div><div class="prog-day-count" id="prog-count-b">0 sessions</div></div>
+      <div class="prog-day-body" id="pb"><div id="prog-body-b"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="confirmClear('b','Day 2')">🗑 Clear Day 2 history</button></div>
+    </div>
+    <div class="prog-day-card">
+      <div class="prog-day-header" onclick="toggleProg('pc')"><div><div class="prog-day-title">Day 3 &mdash; Cardio + Core</div><div class="prog-day-sub">Rotating cardio, core stability, abs</div></div><div class="prog-day-count" id="prog-count-c">0 sessions</div></div>
+      <div class="prog-day-body" id="pc"><div id="prog-body-c"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="confirmClear('c','Day 3')">🗑 Clear Day 3 history</button></div>
+    </div>
+    <div class="prog-day-card">
+      <div class="prog-day-header" onclick="toggleProg('pd')"><div><div class="prog-day-title">Day 4 &mdash; Upper B</div><div class="prog-day-sub">Back, biceps, rear delt, core</div></div><div class="prog-day-count" id="prog-count-d">0 sessions</div></div>
+      <div class="prog-day-body" id="pd"><div id="prog-body-d"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="confirmClear('d','Day 4')">🗑 Clear Day 4 history</button></div>
+    </div>
+    <div class="prog-day-card">
+      <div class="prog-day-header" onclick="toggleProg('pe')"><div><div class="prog-day-title">Day 5 &mdash; Lower B + Cardio</div><div class="prog-day-sub">Legs, hips, cardio finisher</div></div><div class="prog-day-count" id="prog-count-e">0 sessions</div></div>
+      <div class="prog-day-body" id="pe"><div id="prog-body-e"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="confirmClear('e','Day 5')">🗑 Clear Day 5 history</button></div>
+    </div>
   </div>
-  <div class="prog-day-card">
-    <div class="prog-day-header" onclick="toggleProg('pc')"><div><div class="prog-day-title">Day 3 &mdash; Cardio + Core</div><div class="prog-day-sub">Rotating cardio, core stability, abs</div></div><div class="prog-day-count" id="prog-count-c">0 sessions</div></div>
-    <div class="prog-day-body" id="pc"><div id="prog-body-c"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="clearLog('c')">Clear Day 3 history</button></div>
+
+  <!-- EXERCISES PANEL -->
+  <div class="prog-panel" id="prog-panel-exercises">
+    <div id="ex-list-wrap" class="ex-list"></div>
+    <div id="ex-detail-wrap"></div>
   </div>
-  <div class="prog-day-card">
-    <div class="prog-day-header" onclick="toggleProg('pd')"><div><div class="prog-day-title">Day 4 &mdash; Upper B</div><div class="prog-day-sub">Back, biceps, rear delt, core</div></div><div class="prog-day-count" id="prog-count-d">0 sessions</div></div>
-    <div class="prog-day-body" id="pd"><div id="prog-body-d"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="clearLog('d')">Clear Day 4 history</button></div>
+
+  <!-- MANAGE PANEL -->
+  <div class="prog-panel" id="prog-panel-manage">
+    <div class="mgr-notice">
+      Archiving an exercise removes it from the checklist but <strong>keeps all its history forever</strong>. You can restore it at any time. To add new exercises with video links and proper guidance, bring the request to Claude and we will add them together.
+    </div>
+    <div id="mgr-active-wrap"></div>
+    <div class="mgr-archived-section" id="mgr-archived-section" style="display:none">
+      <div class="mgr-archived-title">📦 Archived exercises</div>
+      <div id="mgr-archived-wrap"></div>
+    </div>
   </div>
-  <div class="prog-day-card">
-    <div class="prog-day-header" onclick="toggleProg('pe')"><div><div class="prog-day-title">Day 5 &mdash; Lower B + Cardio</div><div class="prog-day-sub">Legs, hips, cardio finisher</div></div><div class="prog-day-count" id="prog-count-e">0 sessions</div></div>
-    <div class="prog-day-body" id="pe"><div id="prog-body-e"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="clearLog('e')">Clear Day 5 history</button></div>
+</div>
+
+<!-- Clear confirmation modal -->
+<div class="modal-overlay" id="clear-modal-overlay">
+  <div class="modal" style="max-width:320px;">
+    <div class="modal-title" style="color:#C53030;">Clear history?</div>
+    <div class="modal-sub" id="clear-modal-msg" style="margin:0.75rem 0 1rem;"></div>
+    <div class="modal-btn-row">
+      <button class="modal-btn-primary" style="background:#C53030;" onclick="executeClear()">Yes, clear it</button>
+      <button class="modal-btn-secondary" onclick="closeClearModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Archive confirmation modal -->
+<div class="modal-overlay" id="archive-modal-overlay">
+  <div class="modal" style="max-width:320px;">
+    <div class="modal-title" style="color:#5B4EA8;">Archive exercise?</div>
+    <div class="modal-sub" id="archive-modal-msg" style="margin:0.75rem 0 1rem;"></div>
+    <div class="modal-btn-row">
+      <button class="modal-btn-primary" onclick="executeArchive()">Yes, archive it</button>
+      <button class="modal-btn-secondary" onclick="closeArchiveModal()">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -1175,6 +1260,15 @@ function tog(id,day,total){
   var d=p.querySelectorAll('.item.done').length;
   document.getElementById('cnt-'+day).textContent=d+' / '+total;
   document.getElementById('bar-'+day).style.width=Math.round(d/total*100)+'%';
+  // Auto-scroll next uncompleted exercise into view
+  if(el.classList.contains('done')){
+    setTimeout(function(){
+      var items=p.querySelectorAll('.item:not(.done)');
+      if(items.length){
+        items[0].scrollIntoView({behavior:'smooth',block:'start'});
+      }
+    },200);
+  }
 }
 
 function rst(day,total){
@@ -1202,6 +1296,7 @@ function sw(day,btn){
   if(day==='prog') renderProgress();
 loadLastTimes();
 initCardioPanels();
+applyArchivedToChecklist();
 }
 
 function toggleProg(id){
@@ -1279,9 +1374,7 @@ function getSaved(day){
 }
 
 function clearLog(day){
-  if(!confirm('Clear all saved sessions for this day?')) return;
-  localStorage.removeItem('gymlog_'+day);
-  renderProgress();
+  confirmClear(day, 'Day '+{a:1,b:2,c:3,d:4,e:5}[day]);
 }
 
 function normalizeEx(s){
@@ -1365,6 +1458,359 @@ function loadLastTimes(){
 
 var pendingDay=null;
 var pendingLabel=null;
+
+
+// ── Progress tab switching ──
+function switchProgTab(tab, btn){
+  document.querySelectorAll('.prog-tab-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.querySelectorAll('.prog-panel').forEach(function(p){p.classList.remove('show');});
+  document.getElementById('prog-panel-'+tab).classList.add('show');
+  if(tab==='exercises') renderExerciseList();
+  if(tab==='manage') renderManager();
+}
+
+// ── Confirmed clear ──
+var pendingClearDay=null;
+function confirmClear(day, label){
+  pendingClearDay=day;
+  document.getElementById('clear-modal-msg').textContent=
+    'This will permanently delete all saved sessions for '+label+'. This cannot be undone.';
+  document.getElementById('clear-modal-overlay').classList.add('show');
+}
+function closeClearModal(){
+  document.getElementById('clear-modal-overlay').classList.remove('show');
+  pendingClearDay=null;
+}
+function executeClear(){
+  if(!pendingClearDay) return;
+  localStorage.removeItem('gymlog_'+pendingClearDay);
+  closeClearModal();
+  renderProgress();
+  renderExerciseList();
+  showToast('History cleared.');
+}
+
+// ── Exercise list and detail ──
+var selectedEx=null;
+
+function getAllExercises(){
+  // Collect every unique exercise name that has set data across all days
+  var exMap={};
+  ['a','b','c','d','e'].forEach(function(day){
+    var saved=getSaved(day);
+    saved.forEach(function(session){
+      session.entries.forEach(function(e){
+        if(e.note && e.note.indexOf('Set ')===0){
+          var key=e.ex;
+          if(!exMap[key]) exMap[key]=[];
+          exMap[key].push({date:session.date, note:e.note});
+        }
+      });
+    });
+  });
+  return exMap;
+}
+
+var _exKeys=[];
+
+function selectExByIndex(i){
+  if(_exKeys[i]) selectExercise(_exKeys[i]);
+}
+
+function selectExercise(key){
+  // Toggle: clicking same exercise again collapses it
+  selectedEx = (selectedEx === key) ? null : key;
+  renderExerciseList();
+}
+
+function renderExerciseList(){
+  var exMap=getAllExercises();
+  var keys=Object.keys(exMap).sort();
+  _exKeys=keys;
+  var wrap=document.getElementById('ex-list-wrap');
+  document.getElementById('ex-detail-wrap').innerHTML='';
+  if(!keys.length){
+    wrap.innerHTML='<div class="prog-empty" style="padding:1rem 0;">No exercise data saved yet. Complete a session to see your exercises here.</div>';
+    return;
+  }
+  // Build list with inline chart below selected exercise
+  var html='';
+  keys.forEach(function(k,i){
+    var count=exMap[k].length;
+    var isSelected=(k===selectedEx);
+    var active=isSelected?' active':'';
+    html+='<button class="ex-list-btn'+active+'" onclick="selectExByIndex('+i+')">'
+      +'<span>'+k+'</span>'
+      +'<span class="ex-session-count">'+count+' session'+(count===1?'':'s')+'</span>'
+      +'</button>';
+    if(isSelected){
+      // Inline chart + history below this button
+      var sessions=exMap[k];
+      var reversed=sessions.slice().reverse();
+      var histHTML=sessions.map(function(s){
+        return ('<div class="ex-history-item">'
+          +'<div class="ex-history-date">'+s.date+'</div>'
+          +'<div class="ex-history-sets">'+s.note.replace(/\|/g,' &middot; ')+'</div>'
+          +'</div>');
+      }).join('');
+      var chartId='chart-'+i;
+      html+='<div class="ex-detail-panel">'
+        +'<div class="chart-wrap">'
+        +'<div class="chart-title">Weight over time &mdash; avg per session</div>'
+        +'<div class="chart-canvas-wrap"><canvas class="prog-chart" id="'+chartId+'" height="180"></canvas></div>'
+        +'</div>'
+        +histHTML
+        +'</div>';
+    }
+  });
+  wrap.innerHTML=html;
+  // Draw chart for selected exercise after DOM update
+  if(selectedEx && exMap[selectedEx]){
+    var idx=keys.indexOf(selectedEx);
+    var chartId='chart-'+idx;
+    var reversed=exMap[selectedEx].slice().reverse();
+    drawChart(reversed, chartId);
+  }
+}
+
+function parseSetWeights(noteStr){
+  var sets=noteStr.split('|');
+  var vals=[];
+  sets.forEach(function(s){
+    var m=s.trim().match(/Set\s*\d+:\s*([\d.]+)/);
+    if(m) vals.push(parseFloat(m[1]));
+  });
+  return vals;
+}
+
+function fmtChartDate(d){
+  var months={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
+  var m=d.match(/(\w+)\s+(\d+),\s*(\d{4})/);
+  if(m && months[m[1]]) return months[m[1]]+'/'+m[2]+'/'+m[3].slice(-2);
+  return d.split(',')[0].trim();
+}
+
+function drawChart(sessions, canvasId){
+  var canvas=document.getElementById(canvasId||'ex-chart');
+  if(!canvas) return;
+  var dpr=window.devicePixelRatio||1;
+  var w=canvas.parentNode.offsetWidth||300;
+  var chartH=180;
+  canvas.width=w*dpr;
+  canvas.height=chartH*dpr;
+  canvas.style.width=w+'px';
+  canvas.style.height=chartH+'px';
+  var ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+
+  var points=[];
+  sessions.forEach(function(s,i){
+    var weights=parseSetWeights(s.note);
+    if(weights.length){
+      var avg=weights.reduce(function(a,b){return a+b;},0)/weights.length;
+      points.push({x:i,y:avg,date:s.date,weights:weights});
+    }
+  });
+
+  if(points.length<1){ctx.fillStyle='#C8C6BD';ctx.font='12px system-ui';ctx.fillText('Not enough data yet',10,80);return;}
+
+  // More bottom padding so dates fit below dots
+  var pad={t:24,r:16,b:44,l:44};
+  var cw=w-pad.l-pad.r;
+  var ch=chartH-pad.t-pad.b;
+
+  var yVals=points.map(function(p){return p.y;});
+  var yMin=Math.floor(Math.min.apply(null,yVals)*0.9);
+  var yMax=Math.ceil(Math.max.apply(null,yVals)*1.1);
+  if(yMax===yMin){yMin=yMin-5;yMax=yMax+5;}
+
+  // Grid lines + y axis labels
+  ctx.strokeStyle='#F1EFE8';
+  ctx.lineWidth=1;
+  var yTicks=4;
+  for(var t=0;t<=yTicks;t++){
+    var yv=yMin+(yMax-yMin)*t/yTicks;
+    var yp=pad.t+ch-(ch*t/yTicks);
+    ctx.beginPath();ctx.moveTo(pad.l,yp);ctx.lineTo(pad.l+cw,yp);ctx.stroke();
+    ctx.fillStyle='#888780';ctx.font='10px system-ui';ctx.textAlign='right';
+    ctx.fillText(Math.round(yv),pad.l-4,yp+3);
+  }
+
+  if(points.length===1){
+    var px=pad.l+cw/2;
+    var py=pad.t+ch-ch*(points[0].y-yMin)/(yMax-yMin);
+    ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fillStyle='#5B4EA8';ctx.fill();
+    ctx.fillStyle='#3C3489';ctx.font='bold 11px system-ui';ctx.textAlign='center';
+    ctx.fillText(Math.round(points[0].y)+' lbs',px,py-10);
+    // Date below dot
+    var shortDate=fmtChartDate(points[0].date);
+    ctx.fillStyle='#888780';ctx.font='9px system-ui';
+    ctx.fillText(shortDate,px,pad.t+ch+16);
+    return;
+  }
+
+  // Line
+  ctx.beginPath();ctx.strokeStyle='#7F77DD';ctx.lineWidth=2.5;ctx.lineJoin='round';
+  points.forEach(function(p,i){
+    var px=pad.l+(i/(points.length-1))*cw;
+    var py=pad.t+ch-ch*(p.y-yMin)/(yMax-yMin);
+    if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+  });
+  ctx.stroke();
+
+  // Fill under line
+  ctx.beginPath();
+  points.forEach(function(p,i){
+    var px=pad.l+(i/(points.length-1))*cw;
+    var py=pad.t+ch-ch*(p.y-yMin)/(yMax-yMin);
+    if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+  });
+  ctx.lineTo(pad.l+cw,pad.t+ch);ctx.lineTo(pad.l,pad.t+ch);ctx.closePath();
+  ctx.fillStyle='rgba(127,119,221,0.12)';ctx.fill();
+
+  // Dots + weight label above + date below
+  points.forEach(function(p,i){
+    var px=pad.l+(i/(points.length-1))*cw;
+    var py=pad.t+ch-ch*(p.y-yMin)/(yMax-yMin);
+    // Dot
+    ctx.beginPath();ctx.arc(px,py,4,0,Math.PI*2);
+    ctx.fillStyle='#5B4EA8';ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+    // Weight label above dot
+    ctx.fillStyle='#3C3489';ctx.font='bold 10px system-ui';ctx.textAlign='center';
+    ctx.fillText(Math.round(p.y),px,py-10);
+    // Date below x axis — directly under each dot
+    var shortDate=fmtChartDate(p.date);
+    ctx.fillStyle='#888780';ctx.font='9px system-ui';ctx.textAlign='center';
+    ctx.fillText(shortDate,px,pad.t+ch+14);
+  });
+}
+
+var EXERCISE_REGISTRY=[{day:"Day 1 — Upper A",ex:"Treadmill warm-up"},{day:"Day 1 — Upper A",ex:"Chest press"},{day:"Day 1 — Upper A",ex:"Lat pulldown"},{day:"Day 1 — Upper A",ex:"Cable row"},{day:"Day 1 — Upper A",ex:"Pec fly"},{day:"Day 1 — Upper A",ex:"Rear delt"},{day:"Day 1 — Upper A",ex:"Tricep pushdown"},{day:"Day 1 — Upper A",ex:"Dead bug"},{day:"Day 1 — Upper A",ex:"Cable rotation"},{day:"Day 1 — Upper A",ex:"Stretch D1"},{day:"Day 2 — Lower A",ex:"Treadmill warm-up"},{day:"Day 2 — Lower A",ex:"Leg press"},{day:"Day 2 — Lower A",ex:"Leg extension"},{day:"Day 2 — Lower A",ex:"Leg curl"},{day:"Day 2 — Lower A",ex:"Hip abductor"},{day:"Day 2 — Lower A",ex:"Hip adductor"},{day:"Day 2 — Lower A",ex:"Calf raises"},{day:"Day 2 — Lower A",ex:"Elliptical"},{day:"Day 2 — Lower A",ex:"Hip stretch"},{day:"Day 3 — Cardio and Core",ex:"Cardio machine"},{day:"Day 3 — Cardio and Core",ex:"Dead bug"},{day:"Day 3 — Cardio and Core",ex:"Pallof press"},{day:"Day 3 — Cardio and Core",ex:"Cable rotation"},{day:"Day 3 — Cardio and Core",ex:"Russian twist"},{day:"Day 3 — Cardio and Core",ex:"Stretch D3"},{day:"Day 4 — Upper B",ex:"Treadmill warm-up"},{day:"Day 4 — Upper B",ex:"Lat pulldown wide"},{day:"Day 4 — Upper B",ex:"Pec fly B"},{day:"Day 4 — Upper B",ex:"Rear delt B"},{day:"Day 4 — Upper B",ex:"Cable row B"},{day:"Day 4 — Upper B",ex:"DB curl"},{day:"Day 4 — Upper B",ex:"Tricep rope"},{day:"Day 4 — Upper B",ex:"Stretch D4"},{day:"Day 5 — Lower B + Cardio",ex:"Treadmill warm-up"},{day:"Day 5 — Lower B + Cardio",ex:"Leg press B"},{day:"Day 5 — Lower B + Cardio",ex:"Leg extension B"},{day:"Day 5 — Lower B + Cardio",ex:"Leg curl B"},{day:"Day 5 — Lower B + Cardio",ex:"Hip abductor B"},{day:"Day 5 — Lower B + Cardio",ex:"Hip adductor B"},{day:"Day 5 — Lower B + Cardio",ex:"Calf raises B"},{day:"Day 5 — Lower B + Cardio",ex:"Treadmill cardio"},{day:"Day 5 — Lower B + Cardio",ex:"Stretch D5"}];
+function getArchivedExercises(){
+  try{ return JSON.parse(localStorage.getItem('archived_exercises'))||[]; }
+  catch(e){ return []; }
+}
+function saveArchivedExercises(arr){
+  localStorage.setItem('archived_exercises', JSON.stringify(arr));
+}
+
+function archiveExercise(exName){
+  var archived=getArchivedExercises();
+  if(archived.indexOf(exName)===-1) archived.push(exName);
+  saveArchivedExercises(archived);
+  renderManager();
+  renderExerciseList();
+  showToast('"'+exName+'" archived. History preserved.');
+}
+
+function restoreExercise(exName){
+  var archived=getArchivedExercises();
+  archived=archived.filter(function(e){return e!==exName;});
+  saveArchivedExercises(archived);
+  renderManager();
+  renderExerciseList();
+  showToast('"'+exName+'" restored to active.');
+}
+
+function renderManager(){
+  var archived=getArchivedExercises();
+  var exMap=getAllExercises(); // from history data
+  var activeWrap=document.getElementById('mgr-active-wrap');
+  var archivedWrap=document.getElementById('mgr-archived-wrap');
+  var archivedSection=document.getElementById('mgr-archived-section');
+
+  // Group active exercises by day
+  var dayGroups={};
+  EXERCISE_REGISTRY.forEach(function(item){
+    if(archived.indexOf(item.ex)===-1){
+      if(!dayGroups[item.day]) dayGroups[item.day]=[];
+      if(dayGroups[item.day].indexOf(item.ex)===-1) dayGroups[item.day].push(item.ex);
+    }
+  });
+
+  var activeHTML='';
+  Object.keys(dayGroups).forEach(function(day){
+    activeHTML+='<div class="mgr-day-label">'+day+'</div>';
+    dayGroups[day].forEach(function(ex){
+      var sessionCount=(exMap[ex]||[]).length;
+      var countStr=sessionCount?'<span class="mgr-ex-count">'+sessionCount+' session'+(sessionCount===1?'':'s')+'</span>':'';
+      var idx=_mgrActiveExs.length;
+      _mgrActiveExs.push(ex);
+      activeHTML+=('<div class="mgr-ex-row">'
+        +'<span class="mgr-ex-name">'+ex+'</span>'
+        +countStr
+        +'<button class="mgr-archive-btn" onclick="confirmArchiveByIndex('+idx+')" title="Archive this exercise">Archive</button>'
+        +'</div>');
+    });
+  });
+  activeWrap.innerHTML=activeHTML||'<div class="prog-empty">No active exercises.</div>';
+
+  // Archived exercises
+  if(archived.length){
+    archivedSection.style.display='block';
+    archivedWrap.innerHTML=archived.map(function(ex,idx){
+      var sessionCount=(exMap[ex]||[]).length;
+      var countStr=sessionCount?'<span class="mgr-ex-count">'+sessionCount+' saved</span>':'';
+      return ('<div class="mgr-ex-row archived">'
+        +'<span class="mgr-ex-name archived">'+ex+'</span>'
+        +countStr
+        +'<button class="mgr-restore-btn" onclick="restoreByIndex('+idx+')" title="Restore this exercise">Restore</button>'
+        +'</div>');
+    }).join('');
+  } else {
+    archivedSection.style.display='none';
+  }
+}
+
+var pendingArchiveEx=null;
+var _mgrActiveExs=[];
+function confirmArchiveByIndex(idx){
+  var ex=_mgrActiveExs[idx];
+  if(ex) confirmArchive(ex);
+}
+function restoreByIndex(idx){
+  var archived=getArchivedExercises();
+  var ex=archived[idx];
+  if(ex) restoreExercise(ex);
+}
+function confirmArchive(exName){
+  pendingArchiveEx=exName;
+  document.getElementById("archive-modal-msg").textContent=
+    'Archive "'+exName+'"? It will be removed from the checklist but ALL its history will be kept forever. You can restore it at any time.';
+  document.getElementById("archive-modal-overlay").classList.add("show");
+}
+function closeArchiveModal(){
+  document.getElementById("archive-modal-overlay").classList.remove("show");
+  pendingArchiveEx=null;
+}
+function executeArchive(){
+  if(pendingArchiveEx) archiveExercise(pendingArchiveEx);
+  closeArchiveModal();
+}
+
+function applyArchivedToChecklist(){
+  // Hide archived exercises from all day panels
+  // We match by data-ex attribute on inputs inside each item
+  var archived=getArchivedExercises();
+  if(!archived.length) return;
+  document.querySelectorAll('.item').forEach(function(item){
+    var inputs=item.querySelectorAll('[data-ex]');
+    inputs.forEach(function(inp){
+      var ex=inp.getAttribute('data-ex');
+      // Normalize - strip -notes, -set suffixes for matching
+      var baseEx=ex.replace(/-notes$/,"").replace(/-s\d+$/,"");
+      archived.forEach(function(a){
+        var aKey=a.replace(/[^a-z0-9]/gi," ").trim().toLowerCase();
+        var bKey=baseEx.replace(/[^a-z0-9]/gi," ").trim().toLowerCase();
+        if(aKey===bKey){
+          item.style.display="none";
+        }
+      });
+    });
+  });
+}
 
 function switchCardio(btn,prefix,key){var wrap=btn.parentNode;wrap.querySelectorAll(".cardio-machine-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");var parent=wrap.parentNode;parent.querySelectorAll(".cardio-machine-panel").forEach(function(p){p.classList.remove("show");});var panel=document.getElementById("panel-"+prefix+"-"+key);if(panel)panel.classList.add("show");}
 
