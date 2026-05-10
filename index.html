@@ -84,6 +84,26 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .prog-clear-btn{display:block;width:calc(100% - 28px);margin:0 14px 12px;padding:8px;font-size:12px;border-radius:6px;border:0.5px solid #E8E8E4;background:#F5F5F2;color:#888780;cursor:pointer;text-align:center}
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#2C2C2A;color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:999}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.unit-toggle{display:flex;border-radius:6px;overflow:hidden;border:1.5px solid #C4C0E8;flex-shrink:0}
+.unit-btn{padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:#FAFAF8;color:#888780;transition:all 0.15s}
+.unit-btn.active{background:#5B4EA8;color:#fff}
+.date-input-wrap{margin-top:0.75rem;padding:10px 12px;background:#F5F5F2;border-radius:8px;border:1px solid #E8E8E4}
+.date-input-label{font-size:11px;color:#888780;margin-bottom:5px}
+.date-input{width:100%;padding:8px 10px;font-size:13px;border:1.5px solid #C4C0E8;border-radius:8px;background:#fff;color:#2C2C2A;outline:none;font-family:inherit}
+.date-input:focus{border-color:#7F77DD}
+.cardio-fields{padding:0 12px 10px 44px;display:flex;flex-direction:column;gap:8px}
+.cardio-machine-toggle{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:2px}
+.cardio-machine-btn{padding:6px 10px;font-size:12px;font-weight:600;border-radius:8px;border:1.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer}
+.cardio-machine-btn.active{background:#5B4EA8;border-color:#5B4EA8;color:#fff}
+.cardio-machine-panel{display:none;flex-direction:column;gap:6px}
+.cardio-machine-panel.show{display:flex}
+.cardio-row{display:flex;gap:6px;align-items:center}
+.cardio-label{font-size:11px;color:#888780;white-space:nowrap;min-width:62px}
+.cardio-input{flex:1;font-size:12px;padding:5px 8px;border:1.5px solid #C4C0E8;border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
+.cardio-input:focus{border-color:#7F77DD;background:#fff}
+.cardio-input::placeholder{color:#C8C6BD;font-size:11px}
+.edit-date-btn{background:none;border:none;cursor:pointer;padding:2px 4px;font-size:13px;vertical-align:middle;line-height:1}
+.edit-date-input{font-size:11px;padding:3px 6px;border:1px solid #7F77DD;border-radius:5px;color:#2C2C2A;background:#fff;font-family:inherit;outline:none}
 .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:1rem}
 .modal-overlay.show{display:flex}
 .modal{background:#fff;border-radius:14px;padding:1.25rem;width:100%;max-width:380px;max-height:80vh;overflow-y:auto}
@@ -170,9 +190,7 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
       <div class="ex-loc">📍 Ground floor cardio row</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+walking+warm+up+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="fields-wrap">
-      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Treadmill warm-up" type="text" placeholder="e.g. 2.2 mph, knees good"/></div>
-    </div>
+<div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'wu','treadmill')">Treadmill</button></div><div class="cardio-machine-panel" id="panel-wu-treadmill"><div class="cardio-row"><span class="cardio-label">Speed</span><input class="cardio-input" data-ex="wu-treadmill-speed" type="text" placeholder="e.g. 2.2 mph"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="wu-treadmill-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-treadmill-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="wu-treadmill-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="wu-treadmill-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-treadmill-notes" type="text" placeholder="e.g. felt strong"/></div></div></div>
   </div>
   <div class="section-hdr">Upper body &middot; ~35 min</div>
   <div class="item" id="a2">
@@ -183,7 +201,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Chest-press"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Chest press" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Chest press" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Chest press" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Chest press" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Chest-press-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Chest-press-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Chest-press-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Chest press" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Chest-press-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Chest-press-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Chest-press-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Chest press" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Chest-press-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Chest-press-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Chest-press-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Chest press-notes" type="text" placeholder="e.g. felt strong, good form"/></div>
     </div>
   </div>
@@ -195,7 +228,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Lat-pulldown"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Lat pulldown" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Lat pulldown" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Lat pulldown" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Lat pulldown" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Lat-pulldown-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Lat-pulldown-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Lat-pulldown-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Lat pulldown" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Lat-pulldown-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Lat-pulldown-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Lat-pulldown-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Lat pulldown" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Lat-pulldown-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Lat-pulldown-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Lat-pulldown-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Lat pulldown-notes" type="text" placeholder="e.g. 70 lbs all 3 sets"/></div>
     </div>
   </div>
@@ -207,7 +255,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Cable-row"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable row" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable row" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable row" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable row" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Cable-row-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Cable-row-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Cable-row-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable row" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Cable-row-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Cable-row-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Cable-row-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable row" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Cable-row-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Cable-row-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Cable-row-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Cable row-notes" type="text" placeholder="e.g. 60 lbs, back felt good"/></div>
     </div>
   </div>
@@ -219,7 +282,17 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Pec-fly"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Pec fly" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Pec fly" data-set="2" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Pec fly" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Pec-fly-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Pec-fly-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Pec-fly-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Pec fly" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Pec-fly-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Pec-fly-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Pec-fly-s2" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Pec fly-notes" type="text" placeholder="e.g. 40 lbs, felt good"/></div>
     </div>
   </div>
@@ -231,7 +304,17 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Rear-delt"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Rear delt" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Rear delt" data-set="2" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Rear delt" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Rear-delt-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Rear-delt-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Rear-delt-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Rear delt" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Rear-delt-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Rear-delt-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Rear-delt-s2" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Rear delt-notes" type="text" placeholder="e.g. 30 lbs, lighter than fly"/></div>
     </div>
   </div>
@@ -243,7 +326,17 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Tricep-pushdown"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Tricep pushdown" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Tricep pushdown" data-set="2" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Tricep pushdown" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Tricep-pushdown-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Tricep-pushdown-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Tricep-pushdown-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Tricep pushdown" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Tricep-pushdown-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Tricep-pushdown-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Tricep-pushdown-s2" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Tricep pushdown-notes" type="text" placeholder="e.g. 30 lbs, easy"/></div>
     </div>
   </div>
@@ -266,7 +359,17 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Cable-rotation"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable rotation" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable rotation" data-set="2" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable rotation" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Cable-rotation-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Cable-rotation-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Cable-rotation-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable rotation" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Cable-rotation-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Cable-rotation-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Cable-rotation-s2" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Cable rotation-notes" type="text" placeholder="e.g. 20 lbs each side"/></div>
     </div>
   </div>
@@ -305,9 +408,7 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
       <div class="ex-loc">📍 Ground floor cardio row</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+walking+warm+up+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="fields-wrap">
-      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Treadmill warm-up" type="text" placeholder="e.g. 2.2 mph, knees good"/></div>
-    </div>
+<div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'wu','treadmill')">Treadmill</button></div><div class="cardio-machine-panel" id="panel-wu-treadmill"><div class="cardio-row"><span class="cardio-label">Speed</span><input class="cardio-input" data-ex="wu-treadmill-speed" type="text" placeholder="e.g. 2.2 mph"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="wu-treadmill-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-treadmill-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="wu-treadmill-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="wu-treadmill-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-treadmill-notes" type="text" placeholder="e.g. felt strong"/></div></div></div>
   </div>
   <div class="section-hdr">Lower body &middot; ~30 min</div>
   <div class="item" id="b2">
@@ -318,7 +419,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Leg-press"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg press" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg press" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg press" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg press" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-press-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-press-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-press-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg press" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-press-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-press-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-press-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg press" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-press-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-press-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-press-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Leg press-notes" type="text" placeholder="e.g. sled only, knees felt ok"/></div>
     </div>
   </div>
@@ -330,7 +446,17 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Leg-extension"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg extension" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg extension" data-set="2" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg extension" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-extension-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-extension-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-extension-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg extension" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-extension-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-extension-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-extension-s2" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Leg extension-notes" type="text" placeholder="e.g. 30 lbs, light"/></div>
     </div>
   </div>
@@ -342,7 +468,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Leg-curl"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg curl" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg curl" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg curl" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg curl" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-curl-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-curl-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-curl-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg curl" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-curl-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-curl-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-curl-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg curl" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-curl-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-curl-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-curl-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Leg curl-notes" type="text" placeholder="e.g. 50 lbs, controlled"/></div>
     </div>
   </div>
@@ -354,7 +495,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Hip-abductor"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip abductor" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip abductor" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip abductor" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip abductor" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Hip-abductor-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Hip-abductor-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Hip-abductor-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip abductor" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Hip-abductor-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Hip-abductor-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Hip-abductor-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip abductor" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Hip-abductor-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Hip-abductor-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Hip-abductor-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Hip abductor-notes" type="text" placeholder="e.g. 60 lbs, hip felt stable"/></div>
     </div>
   </div>
@@ -366,7 +522,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Hip-adductor"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip adductor" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip adductor" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip adductor" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip adductor" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Hip-adductor-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Hip-adductor-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Hip-adductor-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip adductor" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Hip-adductor-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Hip-adductor-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Hip-adductor-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip adductor" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Hip-adductor-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Hip-adductor-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Hip-adductor-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Hip adductor-notes" type="text" placeholder="e.g. 50 lbs, 3 sets done"/></div>
     </div>
   </div>
@@ -378,7 +549,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Calf-raises"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Calf raises" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Calf raises" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Calf raises" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Calf raises" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Calf-raises-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Calf-raises-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Calf-raises-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Calf raises" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Calf-raises-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Calf-raises-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Calf-raises-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Calf raises" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Calf-raises-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Calf-raises-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Calf-raises-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Calf raises-notes" type="text" placeholder="e.g. sled only, 15 reps"/></div>
     </div>
   </div>
@@ -389,9 +575,7 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
       <div class="ex-loc">📍 Precor ellipticals &middot; ground floor cardio row</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=elliptical+machine+proper+form+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="fields-wrap">
-      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Elliptical" type="text" placeholder="e.g. resistance 5, 55 SPM"/></div>
-    </div>
+<div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'d2cardio','elliptical')">Elliptical</button></div><div class="cardio-machine-panel" id="panel-d2cardio-elliptical"><div class="cardio-row"><span class="cardio-label">SPM</span><input class="cardio-input" data-ex="d2cardio-elliptical-speed" type="text" placeholder="e.g. 55 SPM"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="d2cardio-elliptical-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="d2cardio-elliptical-duration" type="text" placeholder="15 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="d2cardio-elliptical-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="d2cardio-elliptical-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="d2cardio-elliptical-notes" type="text" placeholder="e.g. felt strong"/></div></div></div>
   </div>
   <div class="section-hdr">Cool-down &middot; 5 min</div>
   <div class="item" id="b9">
@@ -428,9 +612,7 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
       <div class="ex-loc">📍 Ground floor cardio row or upstairs (rowing)</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=rowing+machine+proper+form+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="fields-wrap">
-      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Machine:</span><input class="notes-input" data-ex="Cardio machine" type="text" placeholder="e.g. treadmill 2.8mph / elliptical res.5"/></div>
-    </div>
+<div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'d3cardio','treadmill')">Treadmill</button><button class="cardio-machine-btn" onclick="switchCardio(this,'d3cardio','elliptical')">Elliptical</button><button class="cardio-machine-btn" onclick="switchCardio(this,'d3cardio','rowing')">Rowing</button><button class="cardio-machine-btn" onclick="switchCardio(this,'d3cardio','stairs')">Stairs</button><button class="cardio-machine-btn" onclick="switchCardio(this,'d3cardio','bike')">Bike</button></div><div class="cardio-machine-panel" id="panel-d3cardio-treadmill"><div class="cardio-row"><span class="cardio-label">Speed</span><input class="cardio-input" data-ex="d3cardio-treadmill-speed" type="text" placeholder="e.g. 2.8 mph"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="d3cardio-treadmill-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="d3cardio-treadmill-duration" type="text" placeholder="30 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="d3cardio-treadmill-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="d3cardio-treadmill-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="d3cardio-treadmill-notes" type="text" placeholder="e.g. felt strong"/></div></div><div class="cardio-machine-panel" id="panel-d3cardio-elliptical"><div class="cardio-row"><span class="cardio-label">SPM</span><input class="cardio-input" data-ex="d3cardio-elliptical-speed" type="text" placeholder="e.g. 55 SPM"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="d3cardio-elliptical-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="d3cardio-elliptical-duration" type="text" placeholder="30 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="d3cardio-elliptical-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="d3cardio-elliptical-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="d3cardio-elliptical-notes" type="text" placeholder="e.g. felt strong"/></div></div><div class="cardio-machine-panel" id="panel-d3cardio-rowing"><div class="cardio-row"><span class="cardio-label">Pace</span><input class="cardio-input" data-ex="d3cardio-rowing-speed" type="text" placeholder="e.g. 2:30 /500m"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="d3cardio-rowing-duration" type="text" placeholder="30 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="d3cardio-rowing-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="d3cardio-rowing-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="d3cardio-rowing-notes" type="text" placeholder="e.g. felt strong"/></div></div><div class="cardio-machine-panel" id="panel-d3cardio-stairs"><div class="cardio-row"><span class="cardio-label">Level</span><input class="cardio-input" data-ex="d3cardio-stairs-speed" type="text" placeholder="e.g. level 6"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="d3cardio-stairs-duration" type="text" placeholder="30 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="d3cardio-stairs-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="d3cardio-stairs-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="d3cardio-stairs-notes" type="text" placeholder="e.g. felt strong"/></div></div><div class="cardio-machine-panel" id="panel-d3cardio-bike"><div class="cardio-row"><span class="cardio-label">RPM</span><input class="cardio-input" data-ex="d3cardio-bike-speed" type="text" placeholder="e.g. 80 RPM"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="d3cardio-bike-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="d3cardio-bike-duration" type="text" placeholder="30 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="d3cardio-bike-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="d3cardio-bike-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="d3cardio-bike-notes" type="text" placeholder="e.g. felt strong"/></div></div></div>
   </div>
   <div class="section-hdr">Core &middot; ~20 min</div>
   <div class="item" id="c2">
@@ -461,7 +643,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Cable-rotation"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable rotation" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable rotation" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable rotation" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable rotation" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Cable-rotation-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Cable-rotation-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Cable-rotation-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable rotation" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Cable-rotation-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Cable-rotation-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Cable-rotation-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable rotation" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Cable-rotation-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Cable-rotation-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Cable-rotation-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Cable rotation-notes" type="text" placeholder="e.g. 20 lbs, slow and controlled"/></div>
     </div>
   </div>
@@ -524,7 +721,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Lat-pulldown-wide"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Lat pulldown wide" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Lat pulldown wide" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Lat pulldown wide" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Lat pulldown wide" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Lat-pulldown-wide-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Lat-pulldown-wide-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Lat-pulldown-wide-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Lat pulldown wide" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Lat-pulldown-wide-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Lat-pulldown-wide-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Lat-pulldown-wide-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Lat pulldown wide" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Lat-pulldown-wide-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Lat-pulldown-wide-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Lat-pulldown-wide-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Lat pulldown wide-notes" type="text" placeholder="e.g. 75 lbs, wider grip felt different"/></div>
     </div>
   </div>
@@ -536,7 +748,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Pec-fly-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Pec fly B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Pec fly B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Pec fly B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Pec fly B" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Pec-fly-B-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Pec-fly-B-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Pec-fly-B-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Pec fly B" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Pec-fly-B-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Pec-fly-B-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Pec-fly-B-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Pec fly B" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Pec-fly-B-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Pec-fly-B-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Pec-fly-B-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Pec fly B-notes" type="text" placeholder="e.g. 45 lbs, 3 sets"/></div>
     </div>
   </div>
@@ -548,7 +775,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Rear-delt-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Rear delt B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Rear delt B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Rear delt B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Rear delt B" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Rear-delt-B-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Rear-delt-B-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Rear-delt-B-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Rear delt B" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Rear-delt-B-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Rear-delt-B-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Rear-delt-B-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Rear delt B" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Rear-delt-B-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Rear-delt-B-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Rear-delt-B-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Rear delt B-notes" type="text" placeholder="e.g. 35 lbs, lighter than fly"/></div>
     </div>
   </div>
@@ -560,7 +802,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Cable-row-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable row B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable row B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable row B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable row B" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Cable-row-B-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Cable-row-B-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Cable-row-B-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable row B" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Cable-row-B-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Cable-row-B-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Cable-row-B-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Cable row B" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Cable-row-B-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Cable-row-B-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Cable-row-B-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Cable row B-notes" type="text" placeholder="e.g. 65 lbs, v-bar grip"/></div>
     </div>
   </div>
@@ -572,7 +829,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-DB-curl"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="DB curl" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="DB curl" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="DB curl" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="DB curl" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-DB-curl-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-DB-curl-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-DB-curl-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="DB curl" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-DB-curl-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-DB-curl-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-DB-curl-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="DB curl" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-DB-curl-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-DB-curl-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-DB-curl-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="DB curl-notes" type="text" placeholder="e.g. 20 lbs each, slow"/></div>
     </div>
   </div>
@@ -584,7 +856,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Tricep-rope"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Tricep rope" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Tricep rope" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Tricep rope" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Tricep rope" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Tricep-rope-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Tricep-rope-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Tricep-rope-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Tricep rope" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Tricep-rope-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Tricep-rope-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Tricep-rope-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Tricep rope" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Tricep-rope-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Tricep-rope-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Tricep-rope-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Tricep rope-notes" type="text" placeholder="e.g. 30 lbs rope, 3 sets"/></div>
     </div>
   </div>
@@ -623,9 +910,7 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
       <div class="ex-loc">📍 Ground floor cardio row</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+walking+warm+up+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="fields-wrap">
-      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Treadmill warm-up" type="text" placeholder="e.g. 2.2 mph, knees good"/></div>
-    </div>
+<div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'wu','treadmill')">Treadmill</button></div><div class="cardio-machine-panel" id="panel-wu-treadmill"><div class="cardio-row"><span class="cardio-label">Speed</span><input class="cardio-input" data-ex="wu-treadmill-speed" type="text" placeholder="e.g. 2.2 mph"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="wu-treadmill-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-treadmill-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="wu-treadmill-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="wu-treadmill-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-treadmill-notes" type="text" placeholder="e.g. felt strong"/></div></div></div>
   </div>
   <div class="section-hdr">Lower body B &middot; ~30 min</div>
   <div class="item" id="e2">
@@ -636,7 +921,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Leg-press-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg press B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg press B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg press B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg press B" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-press-B-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-press-B-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-press-B-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg press B" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-press-B-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-press-B-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-press-B-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg press B" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-press-B-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-press-B-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-press-B-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Leg press B-notes" type="text" placeholder="e.g. feet higher, felt glutes more"/></div>
     </div>
   </div>
@@ -648,7 +948,17 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Leg-extension-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg extension B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg extension B" data-set="2" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg extension B" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-extension-B-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-extension-B-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-extension-B-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg extension B" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-extension-B-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-extension-B-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-extension-B-s2" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Leg extension B-notes" type="text" placeholder="e.g. 30 lbs, light and controlled"/></div>
     </div>
   </div>
@@ -660,7 +970,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Leg-curl-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg curl B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg curl B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg curl B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg curl B" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-curl-B-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-curl-B-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-curl-B-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg curl B" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-curl-B-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-curl-B-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-curl-B-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Leg curl B" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Leg-curl-B-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Leg-curl-B-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Leg-curl-B-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Leg curl B-notes" type="text" placeholder="e.g. 55 lbs, slow lower"/></div>
     </div>
   </div>
@@ -672,7 +997,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Hip-abductor-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip abductor B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip abductor B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip abductor B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip abductor B" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Hip-abductor-B-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Hip-abductor-B-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Hip-abductor-B-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip abductor B" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Hip-abductor-B-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Hip-abductor-B-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Hip-abductor-B-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip abductor B" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Hip-abductor-B-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Hip-abductor-B-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Hip-abductor-B-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Hip abductor B-notes" type="text" placeholder="e.g. 65 lbs, hip stable"/></div>
     </div>
   </div>
@@ -684,7 +1024,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Hip-adductor-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip adductor B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip adductor B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip adductor B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip adductor B" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Hip-adductor-B-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Hip-adductor-B-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Hip-adductor-B-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip adductor B" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Hip-adductor-B-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Hip-adductor-B-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Hip-adductor-B-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Hip adductor B" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Hip-adductor-B-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Hip-adductor-B-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Hip-adductor-B-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Hip adductor B-notes" type="text" placeholder="e.g. 55 lbs, 3 sets"/></div>
     </div>
   </div>
@@ -696,7 +1051,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
     </div></div>
     <div class="fields-wrap">
       <div class="last-time" id="lt-Calf-raises-B"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>
-      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Calf raises B" data-set="1" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Calf raises B" data-set="2" type="text" placeholder="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Calf raises B" data-set="3" type="text" placeholder="lbs"/></div></div>
+      <div class="rep-row"><div class="rep-single"><span class="rep-label">Set 1:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Calf raises B" data-set="1" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Calf-raises-B-s1')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Calf-raises-B-s1')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Calf-raises-B-s1" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 2:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Calf raises B" data-set="2" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Calf-raises-B-s2')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Calf-raises-B-s2')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Calf-raises-B-s2" value="lbs"/></div><div class="rep-single"><span class="rep-label">Set 3:</span><input class="rep-input" oninput="this.style.color='';this.style.fontStyle='';" data-ex="Calf raises B" data-set="3" type="text" placeholder="lbs"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" onclick="setUnit(this,'unit-Calf-raises-B-s3')" type="button">lbs</button>
+          <button class="unit-btn" onclick="setUnit(this,'unit-Calf-raises-B-s3')" type="button">kg</button>
+        </div>
+        <input type="hidden" id="unit-Calf-raises-B-s3" value="lbs"/></div></div>
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Calf raises B-notes" type="text" placeholder="e.g. sled + 25 lbs"/></div>
     </div>
   </div>
@@ -707,9 +1077,7 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
       <div class="ex-loc">📍 Ground floor cardio row</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+incline+walking+benefits+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="fields-wrap">
-      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Treadmill cardio" type="text" placeholder="e.g. 2.8mph incline 1, felt strong"/></div>
-    </div>
+<div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'d5cardio','treadmill')">Treadmill</button></div><div class="cardio-machine-panel" id="panel-d5cardio-treadmill"><div class="cardio-row"><span class="cardio-label">Speed</span><input class="cardio-input" data-ex="d5cardio-treadmill-speed" type="text" placeholder="e.g. 2.8 mph"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="d5cardio-treadmill-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="d5cardio-treadmill-duration" type="text" placeholder="20 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="d5cardio-treadmill-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="d5cardio-treadmill-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="d5cardio-treadmill-notes" type="text" placeholder="e.g. felt strong"/></div></div></div>
   </div>
   <div class="section-hdr">Cool-down &middot; 5 min</div>
   <div class="item" id="e8">
@@ -734,6 +1102,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Date Confirm Modal -->
+<div class="modal-overlay" id="date-modal-overlay">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-title" style="margin-bottom:0.5rem;">Confirm session date</div>
+    <div class="modal-sub" style="margin-bottom:0.75rem;">The date and time below will be saved with this session. Adjust if needed before saving.</div>
+    <div class="date-input-wrap">
+      <div class="date-input-label">Date and time</div>
+      <input type="datetime-local" class="date-input" id="session-datetime"/>
+    </div>
+    <div class="modal-btn-row" style="margin-top:0.75rem;">
+      <button class="modal-btn-primary" onclick="confirmSave()">Save session</button>
+      <button class="modal-btn-secondary" onclick="cancelDateModal()">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <!-- Export/Import Modal -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModalOverlay(event)">
@@ -817,6 +1201,7 @@ function sw(day,btn){
   btn.classList.add('active');
   if(day==='prog') renderProgress();
 loadLastTimes();
+initCardioPanels();
 }
 
 function toggleProg(id){
@@ -824,15 +1209,39 @@ function toggleProg(id){
 }
 
 function completeDay(day,label){
+  pendingDay=day;
+  pendingLabel=label;
+  // Set datetime input to now
+  var now=new Date();
+  var offset=now.getTimezoneOffset();
+  var local=new Date(now.getTime()-offset*60000);
+  document.getElementById('session-datetime').value=local.toISOString().slice(0,16);
+  document.getElementById('date-modal-overlay').classList.add('show');
+}
+
+function cancelDateModal(){
+  document.getElementById('date-modal-overlay').classList.remove('show');
+  pendingDay=null;
+  pendingLabel=null;
+}
+
+function confirmSave(){
+  var day=pendingDay;
+  var label=pendingLabel;
+  if(!day) return;
   var p=document.getElementById('p-'+day);
   var entries=[];
-  // collect rep fields grouped by exercise
+  // collect rep fields grouped by exercise, include unit
   var exMap={};
   p.querySelectorAll('.rep-input').forEach(function(inp){
     var ex=inp.getAttribute('data-ex');
     var set=inp.getAttribute('data-set');
-    if(!exMap[ex]) exMap[ex]=[];
-    if(inp.value.trim()) exMap[ex].push('Set '+set+': '+inp.value.trim());
+    var val=inp.value.trim();
+    if(val){
+      var unit=getUnitForInput(inp);
+      if(!exMap[ex]) exMap[ex]=[];
+      exMap[ex].push('Set '+set+': '+val+' '+unit);
+    }
   });
   Object.keys(exMap).forEach(function(ex){
     if(exMap[ex].length) entries.push({ex:ex,note:exMap[ex].join(' | ')});
@@ -842,16 +1251,26 @@ function completeDay(day,label){
     var val=inp.value.trim();
     if(val) entries.push({ex:inp.getAttribute('data-ex'),note:val});
   });
-  var now=new Date();
-  var dateStr=now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
-  var timeStr=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  // collect cardio fields from active panels only
+  p.querySelectorAll('.cardio-machine-panel.show .cardio-input').forEach(function(inp){
+    var val=inp.value.trim();
+    if(val) entries.push({ex:inp.getAttribute('data-ex'),note:val});
+  });
+  // Get date from picker
+  var dtVal=document.getElementById('session-datetime').value;
+  var dt=dtVal ? new Date(dtVal) : new Date();
+  var dateStr=dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+  var timeStr=dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
   var saved=getSaved(day);
   saved.unshift({date:dateStr+' at '+timeStr,label:label,entries:entries});
   if(saved.length>20) saved=saved.slice(0,20);
   localStorage.setItem('gymlog_'+day,JSON.stringify(saved));
+  document.getElementById('date-modal-overlay').classList.remove('show');
   showToast('Session saved! ✓');
   rst(day,counts[day]);
   loadLastTimes();
+  pendingDay=null;
+  pendingLabel=null;
 }
 
 function getSaved(day){
@@ -942,6 +1361,32 @@ function loadLastTimes(){
       }
     });
   });
+}
+
+var pendingDay=null;
+var pendingLabel=null;
+
+function switchCardio(btn,prefix,key){var wrap=btn.parentNode;wrap.querySelectorAll(".cardio-machine-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");var parent=wrap.parentNode;parent.querySelectorAll(".cardio-machine-panel").forEach(function(p){p.classList.remove("show");});var panel=document.getElementById("panel-"+prefix+"-"+key);if(panel)panel.classList.add("show");}
+
+function initCardioPanels(){document.querySelectorAll(".cardio-machine-toggle").forEach(function(wrap){var firstBtn=wrap.querySelector(".cardio-machine-btn.active");if(firstBtn){var parent=wrap.parentNode;var panels=parent.querySelectorAll(".cardio-machine-panel");if(panels.length)panels[0].classList.add("show");}});}
+
+function editSessionDate(day,idx){var saved=getSaved(day);if(!saved[idx])return;var current=saved[idx].date;var dt=new Date(current);var defaultVal="";if(!isNaN(dt.getTime())){var offset=dt.getTimezoneOffset();var local=new Date(dt.getTime()-offset*60000);defaultVal=local.toISOString().slice(0,16);}var span=document.getElementById("pdate-"+day+"-"+idx);if(!span)return;span.innerHTML="<input class='edit-date-input' type='datetime-local' value='"+defaultVal+"' "+"onblur='saveEditDate(\""+day+"\","+idx+",this,\""+current+"\")' "+"onkeydown='if(event.key===\"Enter\")this.blur()'/>";span.querySelector("input").focus();}
+
+function saveEditDate(day,idx,inp,originalDate){var val=inp.value;var saved=getSaved(day);if(!saved[idx])return;if(val){var dt=new Date(val);if(!isNaN(dt.getTime())){var dateStr=dt.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});var timeStr=dt.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});saved[idx].date=dateStr+" at "+timeStr;}}localStorage.setItem("gymlog_"+day,JSON.stringify(saved));renderProgress();showToast("Date updated!");}
+
+function setUnit(btn, uid){
+  var wrap=btn.parentNode;
+  wrap.querySelectorAll('.unit-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById(uid).value=btn.textContent;
+}
+
+function getUnitForInput(repInput){
+  // Find the hidden unit input in the same rep-single div
+  var parent=repInput.closest('.rep-single');
+  if(!parent) return 'lbs';
+  var hidden=parent.querySelector('input[type="hidden"]');
+  return hidden ? hidden.value : 'lbs';
 }
 
 function reloadPage(){
@@ -1042,7 +1487,7 @@ function renderProgress(){
       var rows=s.entries.length
         ?s.entries.map(function(e){return '<div class="prog-session-item"><b>'+e.ex+':</b> <span>'+e.note+'</span></div>';}).join('')
         :'<div class="prog-session-item" style="color:#C8C6BD;font-style:italic">No notes recorded</div>';
-      return '<div class="prog-session"><div class="prog-session-date">Session '+(n-i)+' &mdash; '+s.date+'</div>'+rows+'</div>';
+      return '<div class="prog-session"><div class="prog-session-date">Session '+(n-i)+' &mdash; <span id="pdate-'+day+'-'+i+'">'+s.date+'</span> <button class="edit-date-btn" onclick="editSessionDate(\''+day+'\','+i+')" title="Edit date">✏️</button></div>'+rows+'</div>';
     }).join('');
   });
   document.getElementById('stat-total').textContent=total;
