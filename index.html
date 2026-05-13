@@ -1366,6 +1366,10 @@ function confirmSave(){
   loadLastTimes();
   pendingDay=null;
   pendingLabel=null;
+  // Auto-sync to JSONbin after every save
+  syncToJbin(function(ok){
+    if(!ok) showToast('⚠️ Cloud sync failed — data saved locally');
+  });
 }
 
 function getSaved(day){
@@ -1947,6 +1951,66 @@ function showToast(msg){
 }
 
 renderProgress();
+
+// ── JSONbin cloud sync ──────────────────────────────────────────────
+var JBIN_ID  = '6a040054c0954111d816afe6';
+var JBIN_KEY = '$2a$10$zEyOgbH7E5.fBt9UlxHh8.yPbLUnHJKEhpY2z9WCQJ1fS/WLCOBpa';
+var JBIN_URL = 'https://api.jsonbin.io/v3/b/' + JBIN_ID;
+
+function buildBinPayload(){
+  var payload = {};
+  ['a','b','c','d','e'].forEach(function(day){
+    payload['gymlog_'+day] = getSaved(day);
+  });
+  try { payload['archived_exercises'] = JSON.parse(localStorage.getItem('archived_exercises')) || []; }
+  catch(e) { payload['archived_exercises'] = []; }
+  return payload;
+}
+
+function syncToJbin(onDone){
+  fetch(JBIN_URL, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Master-Key': JBIN_KEY,
+      'X-Bin-Versioning': 'false'
+    },
+    body: JSON.stringify(buildBinPayload())
+  })
+  .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  .then(function(){ if(onDone) onDone(true); })
+  .catch(function(err){ console.warn('JSONbin sync failed:', err); if(onDone) onDone(false); });
+}
+
+// ── One-time backup seed ────────────────────────────────────────────
+// Restores your existing backup into localStorage (if not already done),
+// then pushes everything to JSONbin once.
+(function seedFromBackup(){
+  if(localStorage.getItem('gymlog_seeded_v1')) return; // already done
+  var BACKUP = 'eyJhIjpbeyJkYXRlIjoiVHVlLCBNYXkgMTIsIDIwMjYgYXQgMTE6NDAgUE0iLCJsYWJlbCI6IkRheSAxIOKAlCBVcHBlciBBIiwiZW50cmllcyI6W3siZXgiOiJDaGVzdCBwcmVzcyIsIm5vdGUiOiJTZXQgMTogOTAgbGJzIHwgU2V0IDI6IDkwIGxicyB8IFNldCAzOiA5MCBsYnMifSx7ImV4IjoiTGF0IHB1bGxkb3duIiwibm90ZSI6IlNldCAxOiA5MCBsYnMgfCBTZXQgMjogOTAgbGJzIHwgU2V0IDM6IDkwIGxicyJ9LHsiZXgiOiJDYWJsZSByb3ciLCJub3RlIjoiU2V0IDE6IDkwIGxicyB8IFNldCAyOiA5MCBsYnMgfCBTZXQgMzogOTAgbGJzIn0seyJleCI6IlBlYyBmbHkiLCJub3RlIjoiU2V0IDE6IDcwIGxicyB8IFNldCAyOiA3MCBsYnMifSx7ImV4IjoiUmVhciBkZWx0Iiwibm90ZSI6IlNldCAxOiA3MCBsYnMgfCBTZXQgMjogODAgbGJzIn0seyJleCI6IlRyaWNlcCBwdXNoZG93biIsIm5vdGUiOiJTZXQgMTogOTAgbGJzIHwgU2V0IDI6IDgwIGxicyJ9LHsiZXgiOiJDYWJsZSByb3RhdGlvbiIsIm5vdGUiOiJTZXQgMTogNTAgbGJzIHwgU2V0IDI6IDUwIGxicyJ9LHsiZXgiOiJDaGVzdCBwcmVzcy1ub3RlcyIsIm5vdGUiOiJTZWNvbmQgOTAgdG91Z2ghIDNyZCBoYXJkZXIhIn0seyJleCI6IlBlYyBmbHktbm90ZXMiLCJub3RlIjoiVHJ5IDgwLiBDaGVjayBjaGVzdCJ9LHsiZXgiOiJSZWFyIGRlbHQtbm90ZXMiLCJub3RlIjoiR29vZCBwcm9ncmVzc2lvbiJ9LHsiZXgiOiJUcmljZXAgcHVzaGRvd24tbm90ZXMiLCJub3RlIjoiV2F0Y2ggZm9ybSJ9LHsiZXgiOiJEZWFkIGJ1ZyIsIm5vdGUiOiIxNiB0d2ljZSJ9LHsiZXgiOiJDYWJsZSByb3RhdGlvbi1ub3RlcyIsIm5vdGUiOiJXYXRjaCBtb3JlIHZpZGVvcyJ9LHsiZXgiOiJ3dS10cmVhZG1pbGwtc3BlZWQiLCJub3RlIjoiMyBtcGgifSx7ImV4Ijoid3UtdHJlYWRtaWxsLWluY2xpbmUiLCJub3RlIjoiMyBkZWdyZWVzIn0seyJleCI6Ind1LXRyZWFkbWlsbC1kdXJhdGlvbiIsIm5vdGUiOiI1IG1pbiJ9LHsiZXgiOiJ3dS10cmVhZG1pbGwtZGlzdGFuY2UiLCJub3RlIjoiMC4yNCBtaWxlIn0seyJleCI6Ind1LXRyZWFkbWlsbC1jYWxvcmllcyIsIm5vdGUiOiIzMyJ9LHsiZXgiOiJ3dS10cmVhZG1pbGwtbm90ZXMiLCJub3RlIjoiQWVyb2JpYyJ9XX1dLCJkIjpbeyJkYXRlIjoiV2VkLCBNYXkgNiwgMjAyNiBhdCAxMToxOCBQTSIsImxhYmVsIjoiRGF5IDQg4oCUIFVwcGVyIEIiLCJlbnRyaWVzIjpbeyJleCI6IkxhdCBwdWxsZG93biB3aWRlIiwibm90ZSI6IlNldCAxOiAxMDAgbGJzIHwgU2V0IDI6IDEwMCBsYnMgfCBTZXQgMzogMTAwIGxicyJ9LHsiZXgiOiJQZWMgZmx5IEIiLCJub3RlIjoiU2V0IDE6IFJlYXI6IDkwIGxicyBwZWM6IDkwIGxicyB8IFNldCAyOiBSZWFyOiA5MCBsYnMgcGVjOiA5MCBsYnMgfCBTZXQgMzogUmVhcjogOTAgbGJzIHBlYzogOTAgbGJzIn0seyJleCI6IkNhYmxlIHJvdyBCIiwibm90ZSI6IlNldCAxOiA4MCBsYnMgfCBTZXQgMjogODAgbGJzIHwgU2V0IDM6IDgwIGxicyJ9LHsiZXgiOiJEQiBjdXJsIiwibm90ZSI6IlNldCAxOiAyNSBsYnMgfCBTZXQgMjogMjAgbGJzIHwgU2V0IDM6IDIwIGxicyJ9LHsiZXgiOiJUcmljZXAgcm9wZSIsIm5vdGUiOiJTZXQgMTogMTAwIGxicyB8IFNldCAyOiAxMDAgbGJzIHwgU2V0IDM6IDkwIGxicyJ9LHsiZXgiOiJUcmVhZG1pbGwgd2FybS11cCIsIm5vdGUiOiIzbXBoIGF0IDMlIn0seyJleCI6IkxhdCBwdWxsZG93biB3aWRlLW5vdGVzIiwibm90ZSI6IlRvdWdoIn0seyJleCI6IlBlYyBmbHkgQi1ub3RlcyIsIm5vdGUiOiJSZWFyIHdhcyB0b3VnaC4ifSx7ImV4IjoiQ2FibGUgcm93IEItbm90ZXMiLCJub3RlIjoiQ2FuIHByb2JhYmx5IGdvIGhpZ2hlciJ9LHsiZXgiOiJUcmljZXAgcm9wZS1ub3RlcyIsIm5vdGUiOiJUb3VnaCEifSx7ImV4IjoiU3RyZXRjaCBENCIsIm5vdGUiOiJDaGVjayB3aGF0IHRocmVlIHN0cmV0Y2hlcyBtZWFucyJ9XX1dLCJlIjpbeyJkYXRlIjoiU2F0LCBNYXkgOSwgMjAyNiBhdCAxMTozMCBQTSIsImxhYmVsIjoiRGF5IDUg4oCUIExvd2VyIEIgKyBDYXJkaW8iLCJlbnRyaWVzIjpbeyJleCI6IkxlZyBwcmVzcyBCIiwibm90ZSI6IlNldCAxOiA5MCBsYnMgfCBTZXQgMjogOTAgbGJzIHwgU2V0IDM6IDkwIGxicyJ9LHsiZXgiOiJMZWcgZXh0ZW5zaW9uIEIiLCJub3RlIjoiU2V0IDE6IDkwIGxicyB8IFNldCAyOiA5MCBsYnMifSx7ImV4IjoiTGVnIGN1cmwgQiIsIm5vdGUiOiJTZXQgMTogOTAgbGJzIHwgU2V0IDI6IDkwIGxicyB8IFNldCAzOiA4MCBsYnMifSx7ImV4IjoiSGlwIGFiZHVjdG9yIEIiLCJub3RlIjoiU2V0IDE6IDUwIGxicyB8IFNldCAyOiA1MCBsYnMgfCBTZXQgMzogNTAgbGJzIn0seyJleCI6IkhpcCBhZGR1Y3RvciBCIiwibm90ZSI6IlNldCAxOiA1MCBsYnMgfCBTZXQgMjogNTAgbGJzIHwgU2V0IDM6IDUwIGxicyJ9LHsiZXgiOiJDYWxmIHJhaXNlcyBCIiwibm90ZSI6IlNldCAxOiBPbiBzdGVwIHwgU2V0IDI6IE9uIHN0ZXAgfCBTZXQgMzogT24gc3RlcCJ9LHsiZXgiOiJUcmVhZG1pbGwgd2FybS11cCIsIm5vdGUiOiIzbXBoLCAzIGRlZ3JlZXMifSx7ImV4IjoiTGVnIGN1cmwgQi1ub3RlcyIsIm5vdGUiOiJUb3VnaCEgQ3JhbXBpbmcuIn0seyJleCI6IlRyZWFkbWlsbCBjYXJkaW8iLCJub3RlIjoiMyBtcGgsIDMgZGVncmVlcyJ9XX1dfQ==';
+  try {
+    var data = JSON.parse(decodeURIComponent(escape(atob(BACKUP))));
+    ['a','b','c','d','e'].forEach(function(day){
+      if(data[day] && Array.isArray(data[day])){
+        // Only write if localStorage is currently empty for this day
+        var existing = getSaved(day);
+        if(!existing.length){
+          localStorage.setItem('gymlog_'+day, JSON.stringify(data[day]));
+        }
+      }
+    });
+    localStorage.setItem('gymlog_seeded_v1','1');
+    renderProgress();
+    loadLastTimes();
+    // Push the seeded data up to JSONbin
+    syncToJbin(function(ok){
+      showToast(ok ? 'Data restored & synced to cloud ☁️' : 'Data restored (cloud sync pending)');
+    });
+  } catch(err){
+    console.warn('Seed failed:', err);
+    localStorage.setItem('gymlog_seeded_v1','1'); // don't retry on parse error
+  }
+})();
 </script>
 </body>
 </html>
