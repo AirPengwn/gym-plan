@@ -17,14 +17,28 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .progress-track{height:6px;background:#F1EFE8;border-radius:3px;overflow:hidden;margin-top:4px}
 .progress-fill{height:100%;background:#7F77DD;border-radius:3px;transition:width 0.3s}
 .progress-label{display:flex;justify-content:space-between;font-size:12px;color:#888780}
-.section-hdr{font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:0.07em;margin:1rem 0 0.4rem;padding-bottom:4px;border-bottom:0.5px solid #EEEDFE}
+.section-hdr{font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:0.07em;margin:0.5rem 0 0.4rem;padding-bottom:4px;border-bottom:0.5px solid #EEEDFE}
+.ex-cat{display:inline-block;font-size:9px;font-weight:700;color:#534AB7;background:#EEEDFE;border-radius:4px;padding:1px 5px;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em}
+body.dark .ex-cat{background:#2A2850;color:#9896C8}
+.day-summary{background:#fff;border:1.5px solid #D8D4F0;border-radius:10px;padding:12px 14px;margin-bottom:0.75rem;box-shadow:0 1px 3px rgba(91,78,168,0.06)}
+.day-summary-title{font-size:10px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px}
+.day-summary-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.day-summary-chip{display:flex;align-items:center;gap:5px;background:#F5F5F2;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:#3C3489}
+.day-summary-chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.day-summary-total{display:flex;align-items:center;gap:6px;border-top:1px solid #F1EFE8;padding-top:8px;font-size:12px;font-weight:700;color:#5B4EA8}
+.day-summary-total span{font-weight:400;color:#888780;font-size:11px}
+body.dark .day-summary{background:#252540;border-color:#3C3A5C}
+body.dark .day-summary-chip{background:#1A1A2E;color:#B4B2D8}
+body.dark .day-summary-title{color:#5C5A80}
+body.dark .day-summary-total{color:#9896C8;border-top-color:#3C3A5C}
+body.dark .day-summary-total span{color:#5C5A80}
 .item{background:#fff;border:1.5px solid #D8D4F0;border-radius:10px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(91,78,168,0.06)}
 .item.done{background:#F5F5F2}
-.item-top{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer}
+.item-top{display:flex;align-items:flex-start;gap:10px;padding:10px 12px}
 .item.done .ex-name{color:#B4B2A9;text-decoration:line-through}
 .item.done .ex-sub,.item.done .ex-loc{color:#B4B2A9}
 .item.done .ex-link{opacity:0.4;pointer-events:none}
-.checkbox{width:22px;height:22px;min-width:22px;border-radius:50%;border:2px solid #D3D1C7;display:flex;align-items:center;justify-content:center;transition:all 0.15s;margin-top:1px;flex-shrink:0}
+.checkbox{width:22px;height:22px;min-width:22px;border-radius:50%;border:2px solid #D3D1C7;display:flex;align-items:center;justify-content:center;transition:all 0.15s;margin-top:1px;flex-shrink:0;cursor:pointer;-webkit-tap-highlight-color:rgba(91,78,168,0.15)}
 .item.done .checkbox{background:#7F77DD;border-color:#7F77DD}
 .checkmark{width:10px;height:7px;display:none}
 .item.done .checkmark{display:block}
@@ -32,9 +46,11 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .prog-up{background:#D4F0E2;color:#0A6640}
 .prog-down{background:#FFE5E5;color:#C0392B}
 .prog-same{background:#F0F0F0;color:#888780}
-.rest-timer-bar{position:fixed;bottom:0;left:0;right:0;background:#3C3489;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;font-size:15px;font-weight:600;z-index:999;transform:translateY(100%);transition:transform 0.25s}
+.rest-timer-bar{position:fixed;bottom:0;left:0;right:0;background:#3C3489;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;padding-bottom:calc(10px + env(safe-area-inset-bottom));font-size:15px;font-weight:600;z-index:999;transform:translateY(100%);transition:transform 0.25s}
 .rest-timer-bar.show{transform:translateY(0)}
 .rest-timer-bar button{background:#ffffff33;border:none;color:#fff;font-size:13px;font-weight:600;padding:4px 10px;border-radius:8px;cursor:pointer}
+/* Push page content up when rest timer is visible so btn-row isn't obscured */
+body.timer-active .day-panel.show{padding-bottom:72px}
 #share-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1100;display:none;align-items:flex-end;justify-content:center}
 #share-modal-overlay.show{display:flex}
 #share-modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:20px;max-height:80vh;overflow-y:auto}
@@ -59,11 +75,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .fields-wrap{padding:0 12px 10px 44px;display:flex;flex-direction:column;gap:6px}
 .rep-row{display:flex;flex-direction:column;gap:5px}
 .rep-label{font-size:11px;color:#888780;white-space:nowrap;min-width:38px}
-.rep-single{display:flex;align-items:center;gap:8px}
+.rep-single{display:flex;align-items:center;gap:6px}
 .rep-single .rep-label{min-width:42px}
-.rep-input{flex:1;font-size:12px;padding:6px 10px;border:1.5px solid #C4C0E8;border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
+.rep-input{flex:1;font-size:12px;padding:0 10px;height:32px;border:1.5px solid #C4C0E8;border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;box-sizing:border-box}
 .rep-input:focus{border-color:#7F77DD;background:#fff}
 .rep-input::placeholder{color:#C8C6BD;font-size:11px}
+/* Actual reps — same height as weight input, label sits above as a header row */
+.reps-col{display:flex;flex-direction:column;align-items:center;gap:0;flex-shrink:0;width:50px}
+.reps-col-label{font-size:9px;color:#B4B2A9;text-align:center;letter-spacing:0.02em;margin-bottom:2px;line-height:1}
+.reps-actual-input{width:50px;font-size:12px;padding:0 4px;height:32px;border:1.5px solid #C4C0E8;border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;text-align:center;box-sizing:border-box}
+.reps-actual-input:focus{border-color:#7F77DD;background:#fff}
+.reps-actual-input::-webkit-inner-spin-button,.reps-actual-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.reps-actual-input[type=number]{-moz-appearance:textfield}
+/* Per-exercise manual rest timer button */
+.item-timer-btn{background:#EEEDFE;border:1.5px solid #C4C0E8;border-radius:20px;cursor:pointer;padding:3px 9px;font-size:11px;font-weight:600;line-height:1.4;color:#5B4EA8;flex-shrink:0;display:flex;align-items:center;gap:3px;white-space:nowrap}
+.item-timer-btn:active{background:#D8D4F0}
+body.dark .item-timer-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
 .notes-row{display:flex;gap:6px;align-items:center}
 .notes-input{flex:1;font-size:12px;padding:5px 8px;border:1.5px solid #C4C0E8;border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
 .last-time{font-size:11px;color:#7F77DD;background:#EEEDFE;border-radius:6px;padding:5px 8px;margin-bottom:2px;line-height:1.5;display:none}
@@ -158,7 +185,7 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .chart-title{font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
 .chart-canvas-wrap{width:100%;overflow-x:auto}
 canvas.prog-chart{display:block;border-radius:8px}
-.mgr-day-label{font-size:11px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:0.06em;margin:1rem 0 0.4rem;padding-bottom:4px;border-bottom:0.5px solid #EEEDFE}
+.mgr-day-label{font-size:14px;font-weight:700;color:#3C3489;margin:1.25rem 0 0.6rem;padding-bottom:6px;border-bottom:2px solid #D8D4F0}
 .mgr-ex-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:1.5px solid #D8D4F0;border-radius:10px;margin-bottom:6px}
 .mgr-ex-row.archived{background:#F5F5F2;border-color:#E8E8E4;opacity:0.75}
 .mgr-ex-name{font-size:13px;font-weight:500;color:#2C2C2A;flex:1}
@@ -171,8 +198,8 @@ canvas.prog-chart{display:block;border-radius:8px}
 .mgr-archived-title{font-size:13px;font-weight:700;color:#888780;margin-bottom:0.75rem}
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#2C2C2A;color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:999}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.unit-toggle{display:flex;border-radius:6px;overflow:hidden;border:1.5px solid #C4C0E8;flex-shrink:0}
-.unit-btn{padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:#FAFAF8;color:#888780;transition:all 0.15s}
+.unit-toggle{display:flex;border-radius:6px;overflow:hidden;border:1.5px solid #C4C0E8;flex-shrink:0;height:32px;box-sizing:border-box}
+.unit-btn{padding:0 9px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:#FAFAF8;color:#888780;transition:all 0.15s;height:100%}
 .unit-btn.active{background:#5B4EA8;color:#fff}
 .date-input-wrap{margin-top:0.75rem;padding:10px 12px;background:#F5F5F2;border-radius:8px;border:1px solid #E8E8E4}
 .date-input-label{font-size:11px;color:#888780;margin-bottom:5px}
@@ -205,7 +232,11 @@ canvas.prog-chart{display:block;border-radius:8px}
 
 body.dark{background:#1A1A2E;color:#E8E6F8}
 body.dark .item{background:#252540;border-color:#3C3A5C}
-body.dark .item.done{background:#1E1E38;border-color:#5B4EA8}
+body.dark .ex-name{color:#E8E6F8}
+body.dark .ex-sub{color:#9896C8}
+body.dark .ex-loc{color:#7F77DD}
+body.dark .item.done .ex-name{color:#5C5A80;text-decoration:line-through}
+body.dark .item.done .ex-sub,body.dark .item.done .ex-loc{color:#5C5A80}
 body.dark .day-btn{background:#252540;border-color:#3C3A5C;color:#B4B2D8}
 body.dark .day-btn.active{background:#5B4EA8;color:#fff}
 body.dark .prog-tab-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
@@ -214,8 +245,22 @@ body.dark .prog-stats{background:#252540}
 body.dark .stat-box{background:#1A1A2E}
 body.dark .stat-num{color:#B4B2D8}
 body.dark .prog-day-card{background:#252540;border-color:#3C3A5C}
-body.dark .prog-session{background:#1A1A2E;border-color:#3C3A5C}
+body.dark .prog-day-title{color:#E8E6F8}
+body.dark .prog-day-sub{color:#9896C8}
+body.dark .prog-day-count{background:#2A2850;color:#B4B2D8}
+body.dark .prog-day-header:hover{background:#2A2850}
+.prog-session-notes{padding:8px 14px;font-size:12px;color:#7F77DD;font-style:italic;border-top:0.5px solid #F1EFE8}
+.prog-session-dur{font-size:11px;color:#888780;font-weight:400}
+body.dark .prog-session-notes{color:#7F77DD;border-top-color:#3C3A5C}
+body.dark .prog-session-dur{color:#5C5A80}
 body.dark .prog-session-date{color:#9896C8}
+body.dark .prog-session-item{color:#B4B2D8}
+body.dark .prog-session-item b{color:#E8E6F8}
+body.dark .prog-session-item span{color:#7F77DD}
+body.dark .sess-nav-label{color:#7F77DD}
+body.dark .prog-clear-btn{background:#2A1A1A;border-color:#7A2020;color:#FF8080}
+body.dark .prog-clear-btn:hover{background:#3A1A1A}
+body.dark .muscle-map-title{color:#9896C8}
 body.dark .ex-detail-panel{background:#252540;border-color:#3C3A5C}
 body.dark .stat-card{background:#252540}
 body.dark .stat-card-label{color:#9896C8}
@@ -230,6 +275,102 @@ body.dark .sess-nav-btn{background:#1A1A2E;border-color:#3C3A5C;color:#B4B2D8}
 body.dark .prog-empty{color:#9896C8}
 body.dark .skip-row{background:#2A1A1A}
 body{transition:background 0.2s,color 0.2s}
+
+/* ── Pre-session check-in ── */
+.checkin-bar{padding:8px 0;margin-bottom:0.5rem}
+.checkin-label{font-size:11px;color:#888780;margin-bottom:6px;font-weight:500}
+.checkin-btns{display:flex;gap:8px}
+.checkin-btn{flex:1;padding:8px 4px;border:1.5px solid #D3D1C7;border-radius:10px;background:#F5F5F2;font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.15s;line-height:1.3}
+.checkin-btn span{font-size:10px;color:#888780;font-weight:500}
+.checkin-btn.selected-great{background:#E1F5EE;border-color:#0F6E56}
+.checkin-btn.selected-great span{color:#085041}
+.checkin-btn.selected-okay{background:#FFF8E1;border-color:#B8860B}
+.checkin-btn.selected-okay span{color:#7A5A00}
+.checkin-btn.selected-tired{background:#FFF5F5;border-color:#C53030}
+.checkin-btn.selected-tired span{color:#C53030}
+.checkin-done{font-size:12px;color:#888780;padding:4px 0 6px;display:flex;align-items:center;gap:6px}
+/* ── Progressive overload nudge ── */
+.overload-nudge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#085041;background:#D4F0E2;border-radius:8px;padding:2px 8px;margin-top:3px}
+body.dark .checkin-bar .checkin-label{color:#5C5A80}
+body.dark .checkin-btn{background:#252540;border-color:#3C3A5C;color:#E8E6F8}
+body.dark .checkin-btn span{color:#5C5A80}
+body.dark .checkin-btn.selected-great{background:#0F3A2E;border-color:#0F6E56}
+body.dark .checkin-btn.selected-great span{color:#5DD8A0}
+body.dark .checkin-btn.selected-okay{background:#3A2E00;border-color:#B8860B}
+body.dark .checkin-btn.selected-okay span{color:#FFD740}
+body.dark .checkin-btn.selected-tired{background:#3A1A1A;border-color:#C53030}
+body.dark .checkin-btn.selected-tired span{color:#FF8080}
+body.dark .overload-nudge{background:#0F3A2E;color:#5DD8A0}
+.session-timer-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#3C3489;background:#EEEDFE;border-radius:20px;padding:4px 10px;margin-bottom:0.75rem}
+/* ── Quick-fill button ── */
+.quick-fill-btn{display:flex;align-items:center;gap:5px;width:100%;padding:8px 12px;background:#F5F5F2;border:1.5px dashed #C4C0E8;border-radius:8px;color:#7F77DD;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:0.5rem;justify-content:center}
+.quick-fill-btn:active{background:#EEEDFE}
+/* ── RPE row ── */
+.rpe-row{display:flex;flex-direction:column;gap:3px;padding:4px 0}
+.rpe-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.rpe-top-label{font-size:10px;color:#888780}
+.rpe-top-val{font-size:11px;font-weight:700;color:#5B4EA8}
+.rpe-track{display:flex;align-items:center}
+.rpe-slider{flex:1;-webkit-appearance:none;appearance:none;height:5px;border-radius:3px;background:linear-gradient(to right,#7F77DD 0%,#7F77DD var(--rpe-pct,0%),#E8E8E4 var(--rpe-pct,0%),#E8E8E4 100%);outline:none;cursor:pointer}
+.rpe-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#5B4EA8;cursor:pointer;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+.rpe-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#5B4EA8;cursor:pointer;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+.rpe-ends{display:flex;justify-content:space-between;font-size:9px;color:#B4B2A9;padding:0 1px;margin-top:1px}
+.rpe-label{display:none}
+.rpe-val{display:none}
+.rpe-desc{display:none}
+body.dark .rpe-top-label{color:#5C5A80}
+body.dark .rpe-top-val{color:#9896C8}
+body.dark .rpe-ends{color:#3C3A5C}
+body.dark .rpe-slider{background:linear-gradient(to right,#7F77DD 0%,#7F77DD var(--rpe-pct,0%),#3C3A5C var(--rpe-pct,0%),#3C3A5C 100%)}
+body.dark .rpe-slider::-webkit-slider-thumb{border-color:#252540}
+/* ── Reps actual input ── */
+.reps-actual-input{width:44px;font-size:12px;padding:5px 6px;border:1.5px solid #C4C0E8;border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;text-align:center}
+.reps-actual-input:focus{border-color:#7F77DD;background:#fff}
+.reps-label{font-size:10px;color:#888780;text-align:center;margin-top:1px}
+/* ── Pain/soreness flag ── */
+.pain-row{display:flex;align-items:center;gap:6px;padding:4px 0}
+.pain-label{font-size:11px;color:#888780;white-space:nowrap}
+.pain-btn{padding:4px 9px;font-size:11px;font-weight:600;border-radius:6px;border:1.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer;transition:all 0.15s}
+.pain-btn.active-ok{background:#E1F5EE;border-color:#0F6E56;color:#085041}
+.pain-btn.active-flag{background:#FFF5F5;border-color:#C53030;color:#C53030}
+/* ── Reorder arrows ── */
+.mgr-reorder-btns{display:flex;gap:2px;margin-right:6px}
+.mgr-reorder-btn{background:#F5F5F2;border:1px solid #D3D1C7;border-radius:5px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:#5B4EA8}
+.mgr-reorder-btn:disabled{opacity:0.3;cursor:default}
+/* ── Milestone badges ── */
+.milestone-shelf{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
+.milestone-badge{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid}
+.milestone-badge.earned{background:#FFF8E1;border-color:#E0A800;color:#7A5A00}
+.milestone-badge.locked{background:#F5F5F2;border-color:#D3D1C7;color:#B4B2A9}
+/* ── Volume chart wrap ── */
+.vol-chart-wrap{background:#fff;border:1.5px solid #D8D4F0;border-radius:10px;margin-bottom:1rem;overflow:hidden}
+.vol-chart-inner{padding:14px}
+.vol-chart-title{font-size:11px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+/* ── Dark mode additions ── */
+body.dark .quick-fill-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
+body.dark .pain-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
+body.dark .pain-btn.active-ok{background:#0F3A2E;border-color:#0F6E56;color:#5DD8A0}
+body.dark .pain-btn.active-flag{background:#3A1A1A;border-color:#C53030;color:#FF8080}
+body.dark .milestone-badge.earned{background:#3A2E00;border-color:#E0A800;color:#FFD740}
+body.dark .milestone-badge.locked{background:#252540;border-color:#3C3A5C;color:#5C5A80}
+body.dark .mgr-day-label{color:#B4B2D8;border-bottom-color:#3C3A5C}
+body.dark .ex-list-btn:hover{background:#2A2850;border-color:#7F77DD}
+body.dark .ex-list-btn.active{background:#2A2850;border-color:#5B4EA8;color:#B4B2D8}
+body.dark .ex-session-count{background:#2A2850;color:#9896C8}
+body.dark .ex-detail-panel{background:#252540;border-color:#3C3A5C}
+body.dark .ex-history-item{border-bottom-color:#3C3A5C}
+body.dark .ex-history-date{color:#9896C8}
+body.dark .ex-history-sets{color:#B4B2D8}
+body.dark .ex-stat-row{border-bottom-color:#3C3A5C}
+body.dark .ex-stat-chip{background:#2A2850;color:#B4B2D8}
+body.dark .ex-stat-chip.gold{background:#3A2E00;color:#FFD740}
+body.dark .ex-stat-chip.green{background:#0F3A2E;color:#5DD8A0}
+body.dark .chart-wrap{background:#1E1E38;border-top-color:#3C3A5C}
+body.dark .chart-title{color:#9896C8}
+body.dark .vol-chart-wrap{background:#252540;border-color:#3C3A5C}
+body.dark .reps-actual-input{background:#1A1A2E;border-color:#3C3A5C;color:#E8E6F8}
+body.dark .reps-col-label{color:#5C5A80}
+body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
 </style>
 </head>
 <body>
@@ -420,18 +561,16 @@ body{transition:background 0.2s,color 0.2s}
     <div class="progress-label"><span>Day 1 &mdash; Upper body A</span><span id="cnt-a">0 / 10</span></div>
     <div class="progress-track"><div class="progress-fill" id="bar-a" style="width:0%"></div></div>
   </div>
-  <div class="section-hdr">Warm-up &middot; 5 min</div>
   <div class="item" id="a1">
-    <div class="item-top" onclick="tog('a1','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Treadmill walk</div><div class="ex-sub">5 min &middot; 2.0&ndash;2.5 mph &middot; flat &middot; no incline</div>
+    <div class="item-top"><div class="checkbox" onclick="tog('a1','a',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Warm-up</div><div class="ex-sub">5 min &middot; choose your machine below</div>
       <div class="ex-loc">📍 Ground floor cardio row</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+walking+warm+up+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-<div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'wu','treadmill')">Treadmill</button></div><div class="cardio-machine-panel" id="panel-wu-treadmill"><div class="cardio-row"><span class="cardio-label">Speed</span><input class="cardio-input" data-ex="wu-treadmill-speed" type="text" placeholder="e.g. 2.2 mph"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="wu-treadmill-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-treadmill-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="wu-treadmill-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="wu-treadmill-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-treadmill-notes" type="text" placeholder="e.g. felt strong"/></div></div></div>
+<div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'wu-a','treadmill')">Treadmill</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-a','elliptical')">Elliptical</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-a','row')">Row</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-a','bike')">Bike</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-a','stair')">Stair</button></div><div class="cardio-machine-panel" id="panel-wu-a-treadmill"><div class="cardio-row"><span class="cardio-label">Speed</span><input class="cardio-input" data-ex="wu-a-treadmill-speed" type="text" placeholder="e.g. 2.2 mph"/></div><div class="cardio-row"><span class="cardio-label">Incline</span><input class="cardio-input" data-ex="wu-a-treadmill-incline" type="text" placeholder="e.g. 0–2"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-a-treadmill-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="wu-a-treadmill-distance" type="text" placeholder="e.g. 0.3 mi"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-a-treadmill-notes" type="text" placeholder="e.g. felt good"/></div></div><div class="cardio-machine-panel" id="panel-wu-a-elliptical"><div class="cardio-row"><span class="cardio-label">SPM</span><input class="cardio-input" data-ex="wu-a-elliptical-speed" type="text" placeholder="e.g. 50 SPM"/></div><div class="cardio-row"><span class="cardio-label">Resistance</span><input class="cardio-input" data-ex="wu-a-elliptical-incline" type="text" placeholder="e.g. 4"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-a-elliptical-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-a-elliptical-notes" type="text" placeholder="e.g. smooth"/></div></div><div class="cardio-machine-panel" id="panel-wu-a-row"><div class="cardio-row"><span class="cardio-label">Pace</span><input class="cardio-input" data-ex="wu-a-row-speed" type="text" placeholder="e.g. easy pace"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-a-row-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="wu-a-row-distance" type="text" placeholder="e.g. 1000 m"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-a-row-notes" type="text" placeholder="e.g. easy pace"/></div></div><div class="cardio-machine-panel" id="panel-wu-a-bike"><div class="cardio-row"><span class="cardio-label">RPM</span><input class="cardio-input" data-ex="wu-a-bike-speed" type="text" placeholder="e.g. 80 RPM"/></div><div class="cardio-row"><span class="cardio-label">Resistance</span><input class="cardio-input" data-ex="wu-a-bike-incline" type="text" placeholder="e.g. 3"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-a-bike-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-a-bike-notes" type="text" placeholder="e.g. easy spin"/></div></div><div class="cardio-machine-panel" id="panel-wu-a-stair"><div class="cardio-row"><span class="cardio-label">Level</span><input class="cardio-input" data-ex="wu-a-stair-speed" type="text" placeholder="e.g. level 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-a-stair-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-a-stair-notes" type="text" placeholder="e.g. steady pace"/></div></div></div>
   </div>
-  <div class="section-hdr">Upper body &middot; ~35 min</div>
   <div class="item" id="a2">
-    <div class="item-top" onclick="tog('a2','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('a2','a',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Chest press machine</div><div class="ex-sub">3 &times; 12 &middot; start light &middot; rest 60&ndash;90 sec</div>
       <div class="ex-loc">📍 Selectorized machines &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=chest+press+machine+how+to+use" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -458,7 +597,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="a3">
-    <div class="item-top" onclick="tog('a3','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('a3','a',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Lat pulldown</div><div class="ex-sub">3 &times; 12 &middot; pull to upper chest &middot; controlled return</div>
       <div class="ex-loc">📍 Cable area &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=lat+pulldown+machine+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -485,7 +624,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="a4">
-    <div class="item-top" onclick="tog('a4','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('a4','a',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Seated cable row</div><div class="ex-sub">3 &times; 12 &middot; sit tall &middot; squeeze shoulder blades</div>
       <div class="ex-loc">📍 Low row station &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=seated+cable+row+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -512,7 +651,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="a5">
-    <div class="item-top" onclick="tog('a5','a',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('a5','a',10)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Pec fly machine <span class="badge bn">✓ confirmed</span></div><div class="ex-sub">2 &times; 12 &middot; arms sweep inward &middot; squeeze chest at centre</div>
       <div class="ex-loc">📍 Precor near staircase &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=pec+fly+machine+how+to+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -534,7 +673,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="a5b">
-    <div class="item-top" onclick="tog('a5b','a',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('a5b','a',10)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Rear delt machine <span class="badge bn">✓ confirmed</span></div><div class="ex-sub">2 &times; 12 &middot; flip to rear delt setting &middot; arms sweep outward</div>
       <div class="ex-loc">📍 Same Precor machine &middot; flip the setting</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=rear+delt+machine+proper+form+how+to" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -556,7 +695,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="a6">
-    <div class="item-top" onclick="tog('a6','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('a6','a',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Tricep pushdown</div><div class="ex-sub">2 &times; 15 &middot; elbows tucked at sides</div>
       <div class="ex-loc">📍 Cable crossover &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=tricep+pushdown+cable+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -577,9 +716,8 @@ body{transition:background 0.2s,color 0.2s}
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Tricep pushdown-notes" type="text" placeholder="e.g. 30 lbs, easy"/></div>
     </div>
   </div>
-  <div class="section-hdr">Core &middot; ~8 min</div>
   <div class="item" id="a7">
-    <div class="item-top" onclick="tog('a7','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('a7','a',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Dead bug</div><div class="ex-sub">2 &times; 8/side &middot; back pressed to floor throughout</div>
       <div class="ex-loc">📍 Mat / open floor area</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=dead+bug+exercise+how+to+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -589,7 +727,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="a8">
-    <div class="item-top" onclick="tog('a8','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('a8','a',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Standing cable rotation</div><div class="ex-sub">2 &times; 12/side &middot; rotate slowly from core</div>
       <div class="ex-loc">📍 Cable crossover &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=standing+cable+core+rotation+how+to" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -610,9 +748,8 @@ body{transition:background 0.2s,color 0.2s}
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Cable rotation-notes" type="text" placeholder="e.g. 20 lbs each side"/></div>
     </div>
   </div>
-  <div class="section-hdr">Cool-down &middot; 5 min</div>
   <div class="item" id="a9">
-    <div class="item-top" onclick="tog('a9','a',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('a9','a',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Stretch &mdash; chest, shoulder, hamstring</div><div class="ex-sub">Hold each 20&ndash;30 sec &middot; 3 stretches</div>
       <div class="ex-loc">📍 Mat / open floor area</div>
       <div class="ex-links-wrap" onclick="event.stopPropagation()">
@@ -625,7 +762,8 @@ body{transition:background 0.2s,color 0.2s}
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Stretch D1" type="text" placeholder="e.g. tight right shoulder today"/></div>
     </div>
   </div>
-  <div class="tip">Knees and hip fully rest today. Focus on form &mdash; weight will follow. ~50 min total.</div>
+  <div class="day-summary" id="summary-a"></div>
+  <div class="tip">Knees and hip fully rest today. Focus on form &mdash; weight will follow.</div>
   <div class="btn-row">
     <button class="complete-btn" onclick="completeDay('a','Day 1 — Upper A')">✓ Complete Day 1 &amp; Save</button>
     <button class="reset-btn" onclick="rst('a',9)">Reset</button>
@@ -638,18 +776,16 @@ body{transition:background 0.2s,color 0.2s}
     <div class="progress-label"><span>Day 2 &mdash; Lower body A</span><span id="cnt-b">0 / 10</span></div>
     <div class="progress-track"><div class="progress-fill" id="bar-b" style="width:0%"></div></div>
   </div>
-  <div class="section-hdr">Warm-up &middot; 5 min</div>
   <div class="item" id="b1">
-    <div class="item-top" onclick="tog('b1','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Treadmill walk</div><div class="ex-sub">5 min &middot; slow &amp; flat &middot; 2.0&ndash;2.5 mph</div>
+    <div class="item-top"><div class="checkbox" onclick="tog('b1','b',10)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Warm-up</div><div class="ex-sub">5 min &middot; choose your machine below</div>
       <div class="ex-loc">📍 Ground floor cardio row</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+walking+warm+up+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-<div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'wu','treadmill')">Treadmill</button></div><div class="cardio-machine-panel" id="panel-wu-treadmill"><div class="cardio-row"><span class="cardio-label">Speed</span><input class="cardio-input" data-ex="wu-treadmill-speed" type="text" placeholder="e.g. 2.2 mph"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="wu-treadmill-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-treadmill-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="wu-treadmill-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="wu-treadmill-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-treadmill-notes" type="text" placeholder="e.g. felt strong"/></div></div></div>
+<div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'wu-b','treadmill')">Treadmill</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-b','elliptical')">Elliptical</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-b','row')">Row</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-b','bike')">Bike</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-b','stair')">Stair</button></div><div class="cardio-machine-panel" id="panel-wu-b-treadmill"><div class="cardio-row"><span class="cardio-label">Speed</span><input class="cardio-input" data-ex="wu-b-treadmill-speed" type="text" placeholder="e.g. 2.2 mph"/></div><div class="cardio-row"><span class="cardio-label">Incline</span><input class="cardio-input" data-ex="wu-b-treadmill-incline" type="text" placeholder="e.g. 0–2"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-b-treadmill-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="wu-b-treadmill-distance" type="text" placeholder="e.g. 0.3 mi"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-b-treadmill-notes" type="text" placeholder="e.g. felt good"/></div></div><div class="cardio-machine-panel" id="panel-wu-b-elliptical"><div class="cardio-row"><span class="cardio-label">SPM</span><input class="cardio-input" data-ex="wu-b-elliptical-speed" type="text" placeholder="e.g. 50 SPM"/></div><div class="cardio-row"><span class="cardio-label">Resistance</span><input class="cardio-input" data-ex="wu-b-elliptical-incline" type="text" placeholder="e.g. 4"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-b-elliptical-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-b-elliptical-notes" type="text" placeholder="e.g. smooth"/></div></div><div class="cardio-machine-panel" id="panel-wu-b-row"><div class="cardio-row"><span class="cardio-label">Pace</span><input class="cardio-input" data-ex="wu-b-row-speed" type="text" placeholder="e.g. easy pace"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-b-row-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="wu-b-row-distance" type="text" placeholder="e.g. 1000 m"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-b-row-notes" type="text" placeholder="e.g. easy pace"/></div></div><div class="cardio-machine-panel" id="panel-wu-b-bike"><div class="cardio-row"><span class="cardio-label">RPM</span><input class="cardio-input" data-ex="wu-b-bike-speed" type="text" placeholder="e.g. 80 RPM"/></div><div class="cardio-row"><span class="cardio-label">Resistance</span><input class="cardio-input" data-ex="wu-b-bike-incline" type="text" placeholder="e.g. 3"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-b-bike-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-b-bike-notes" type="text" placeholder="e.g. easy spin"/></div></div><div class="cardio-machine-panel" id="panel-wu-b-stair"><div class="cardio-row"><span class="cardio-label">Level</span><input class="cardio-input" data-ex="wu-b-stair-speed" type="text" placeholder="e.g. level 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-b-stair-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-b-stair-notes" type="text" placeholder="e.g. steady pace"/></div></div></div>
   </div>
-  <div class="section-hdr">Lower body &middot; ~30 min</div>
   <div class="item" id="b2">
-    <div class="item-top" onclick="tog('b2','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('b2','b',10)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Leg press <span class="badge bk">knee-aware</span></div><div class="ex-sub">3 &times; 12 &middot; sled only to start &middot; max 90&deg;</div>
       <div class="ex-loc">📍 Dark strength room &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=leg+press+machine+proper+form+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -676,7 +812,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="b3">
-    <div class="item-top" onclick="tog('b3','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('b3','b',10)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Leg extension <span class="badge bk">knee-aware</span></div><div class="ex-sub">2 &times; 15 &middot; very light weight only</div>
       <div class="ex-loc">📍 Precor leg ext/curl combo &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=seated+leg+extension+machine+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -698,7 +834,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="b4">
-    <div class="item-top" onclick="tog('b4','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('b4','b',10)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Leg curl</div><div class="ex-sub">3 &times; 12 &middot; controlled &middot; no jerking</div>
       <div class="ex-loc">📍 Same Precor combo machine &middot; flip seat</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=seated+leg+curl+machine+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -725,7 +861,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="b5">
-    <div class="item-top" onclick="tog('b5','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('b5','b',10)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Hip abductor <span class="badge bh">hip-focus</span></div><div class="ex-sub">3 &times; 15 &middot; push knees outward</div>
       <div class="ex-loc">📍 Precor inner/outer thigh machine &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=hip+abductor+machine+how+to+use" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -752,7 +888,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="b6">
-    <div class="item-top" onclick="tog('b6','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('b6','b',10)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Hip adductor <span class="badge bh">hip-focus</span></div><div class="ex-sub">3 &times; 15 &middot; squeeze knees inward &middot; flip setting</div>
       <div class="ex-loc">📍 Same Precor inner/outer thigh machine</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=hip+adductor+machine+inner+thigh+how+to+use" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -779,7 +915,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="b7">
-    <div class="item-top" onclick="tog('b7','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('b7','b',10)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Leg press calf raises</div><div class="ex-sub">3 &times; 15 &middot; balls of feet on bottom edge of platform</div>
       <div class="ex-loc">📍 Dark strength room &middot; same leg press machine</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=leg+press+calf+raises+how+to" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -805,18 +941,16 @@ body{transition:background 0.2s,color 0.2s}
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Calf raises-notes" type="text" placeholder="e.g. sled only, 15 reps"/></div>
     </div>
   </div>
-  <div class="section-hdr">Cardio finisher &middot; 15 min</div>
   <div class="item" id="b8">
-    <div class="item-top" onclick="tog('b8','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('b8','b',10)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Elliptical <span class="badge bk">zero impact</span></div><div class="ex-sub">15 min &middot; 50&ndash;60 SPM &middot; resistance 4&ndash;6</div>
       <div class="ex-loc">📍 Precor ellipticals &middot; ground floor cardio row</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=elliptical+machine+proper+form+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
 <div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'d2cardio','elliptical')">Elliptical</button></div><div class="cardio-machine-panel" id="panel-d2cardio-elliptical"><div class="cardio-row"><span class="cardio-label">SPM</span><input class="cardio-input" data-ex="d2cardio-elliptical-speed" type="text" placeholder="e.g. 55 SPM"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="d2cardio-elliptical-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="d2cardio-elliptical-duration" type="text" placeholder="15 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="d2cardio-elliptical-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="d2cardio-elliptical-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="d2cardio-elliptical-notes" type="text" placeholder="e.g. felt strong"/></div></div></div>
   </div>
-  <div class="section-hdr">Cool-down &middot; 5 min</div>
   <div class="item" id="b9">
-    <div class="item-top" onclick="tog('b9','b',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('b9','b',10)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Hip flexor + quad stretch</div><div class="ex-sub">Hold 20&ndash;30 sec each &middot; right hip gets extra time &middot; 2 stretches</div>
       <div class="ex-loc">📍 Mat / open floor area</div>
       <div class="ex-links-wrap" onclick="event.stopPropagation()">
@@ -828,7 +962,8 @@ body{transition:background 0.2s,color 0.2s}
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Hip stretch" type="text" placeholder="e.g. right hip tight, held longer"/></div>
     </div>
   </div>
-  <div class="tip">Hip flaring? Skip leg press, add extra sets on adductor/abductor instead. ~55 min total.</div>
+  <div class="day-summary" id="summary-b"></div>
+  <div class="tip">Hip flaring? Skip leg press, add extra sets on adductor/abductor instead.</div>
   <div class="btn-row">
     <button class="complete-btn" onclick="completeDay('b','Day 2 — Lower A')">✓ Complete Day 2 &amp; Save</button>
     <button class="reset-btn" onclick="rst('b',10)">Reset</button>
@@ -841,9 +976,8 @@ body{transition:background 0.2s,color 0.2s}
     <div class="progress-label"><span>Day 3 &mdash; Cardio + Core</span><span id="cnt-c">0 / 6</span></div>
     <div class="progress-track"><div class="progress-fill" id="bar-c" style="width:0%"></div></div>
   </div>
-  <div class="section-hdr">Cardio &middot; 30 min &middot; rotate each session</div>
   <div class="item" id="c1">
-    <div class="item-top" onclick="tog('c1','c',6)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('c1','c',6)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Cardio machine <span class="badge bo">rotate each session</span></div>
       <div class="ex-sub">30 min &middot; Session 1: Treadmill walk &middot; Session 2: Elliptical &middot; Session 3: Rowing machine &middot; then repeat</div>
       <div class="ex-loc">📍 Ground floor cardio row or upstairs (rowing)</div>
@@ -851,9 +985,8 @@ body{transition:background 0.2s,color 0.2s}
     </div></div>
 <div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'d3cardio','treadmill')">Treadmill</button><button class="cardio-machine-btn" onclick="switchCardio(this,'d3cardio','elliptical')">Elliptical</button><button class="cardio-machine-btn" onclick="switchCardio(this,'d3cardio','rowing')">Rowing</button><button class="cardio-machine-btn" onclick="switchCardio(this,'d3cardio','stairs')">Stairs</button><button class="cardio-machine-btn" onclick="switchCardio(this,'d3cardio','bike')">Bike</button></div><div class="cardio-machine-panel" id="panel-d3cardio-treadmill"><div class="cardio-row"><span class="cardio-label">Speed</span><input class="cardio-input" data-ex="d3cardio-treadmill-speed" type="text" placeholder="e.g. 2.8 mph"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="d3cardio-treadmill-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="d3cardio-treadmill-duration" type="text" placeholder="30 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="d3cardio-treadmill-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="d3cardio-treadmill-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="d3cardio-treadmill-notes" type="text" placeholder="e.g. felt strong"/></div></div><div class="cardio-machine-panel" id="panel-d3cardio-elliptical"><div class="cardio-row"><span class="cardio-label">SPM</span><input class="cardio-input" data-ex="d3cardio-elliptical-speed" type="text" placeholder="e.g. 55 SPM"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="d3cardio-elliptical-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="d3cardio-elliptical-duration" type="text" placeholder="30 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="d3cardio-elliptical-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="d3cardio-elliptical-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="d3cardio-elliptical-notes" type="text" placeholder="e.g. felt strong"/></div></div><div class="cardio-machine-panel" id="panel-d3cardio-rowing"><div class="cardio-row"><span class="cardio-label">Pace</span><input class="cardio-input" data-ex="d3cardio-rowing-speed" type="text" placeholder="e.g. 2:30 /500m"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="d3cardio-rowing-duration" type="text" placeholder="30 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="d3cardio-rowing-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="d3cardio-rowing-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="d3cardio-rowing-notes" type="text" placeholder="e.g. felt strong"/></div></div><div class="cardio-machine-panel" id="panel-d3cardio-stairs"><div class="cardio-row"><span class="cardio-label">Level</span><input class="cardio-input" data-ex="d3cardio-stairs-speed" type="text" placeholder="e.g. level 6"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="d3cardio-stairs-duration" type="text" placeholder="30 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="d3cardio-stairs-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="d3cardio-stairs-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="d3cardio-stairs-notes" type="text" placeholder="e.g. felt strong"/></div></div><div class="cardio-machine-panel" id="panel-d3cardio-bike"><div class="cardio-row"><span class="cardio-label">RPM</span><input class="cardio-input" data-ex="d3cardio-bike-speed" type="text" placeholder="e.g. 80 RPM"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="d3cardio-bike-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="d3cardio-bike-duration" type="text" placeholder="30 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="d3cardio-bike-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="d3cardio-bike-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="d3cardio-bike-notes" type="text" placeholder="e.g. felt strong"/></div></div></div>
   </div>
-  <div class="section-hdr">Core &middot; ~20 min</div>
   <div class="item" id="c2">
-    <div class="item-top" onclick="tog('c2','c',6)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('c2','c',6)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Dead bug</div><div class="ex-sub">3 &times; 8/side &middot; back pressed to floor throughout</div>
       <div class="ex-loc">📍 Mat / open floor area</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=dead+bug+exercise+how+to+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -863,7 +996,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="c3">
-    <div class="item-top" onclick="tog('c3','c',6)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('c3','c',6)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Pallof press</div><div class="ex-sub">3 &times; 10/side &middot; press straight out &middot; hold 2 sec</div>
       <div class="ex-loc">📍 Torque functional rig &middot; upstairs &middot; resistance band</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=pallof+press+resistance+band+how+to" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -873,7 +1006,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="c4">
-    <div class="item-top" onclick="tog('c4','c',6)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('c4','c',6)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Standing cable rotation</div><div class="ex-sub">3 &times; 12/side &middot; rotate slowly from core</div>
       <div class="ex-loc">📍 Cable crossover &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=standing+cable+core+rotation+how+to" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -900,7 +1033,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="c5">
-    <div class="item-top" onclick="tog('c5','c',6)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('c5','c',6)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Seated Russian twist</div><div class="ex-sub">2 &times; 10/side &middot; lean back slightly &middot; bodyweight to start</div>
       <div class="ex-loc">📍 Mat / bench area</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=seated+russian+twist+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -909,9 +1042,8 @@ body{transition:background 0.2s,color 0.2s}
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Russian twist" type="text" placeholder="e.g. bodyweight, 10 each side"/></div>
     </div>
   </div>
-  <div class="section-hdr">Cool-down &middot; 5 min</div>
   <div class="item" id="c6">
-    <div class="item-top" onclick="tog('c6','c',6)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('c6','c',6)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Full body stretch</div><div class="ex-sub">Hip flexor, quad, chest, shoulder &middot; 20&ndash;30 sec each &middot; 4 stretches</div>
       <div class="ex-loc">📍 Mat / open floor area</div>
       <div class="ex-links-wrap" onclick="event.stopPropagation()">
@@ -925,7 +1057,8 @@ body{transition:background 0.2s,color 0.2s}
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Stretch D3" type="text" placeholder="e.g. feeling looser than last week"/></div>
     </div>
   </div>
-  <div class="tip">Day 3 is about building cardio base and core stability. Keep the cardio at a conversational pace &mdash; you should be able to talk throughout. ~55 min total.</div>
+  <div class="day-summary" id="summary-c"></div>
+  <div class="tip">Keep cardio at a conversational pace &mdash; you should be able to talk throughout.</div>
   <div class="btn-row">
     <button class="complete-btn" onclick="completeDay('c','Day 3 — Cardio + Core')">✓ Complete Day 3 &amp; Save</button>
     <button class="reset-btn" onclick="rst('c',6)">Reset</button>
@@ -938,20 +1071,16 @@ body{transition:background 0.2s,color 0.2s}
     <div class="progress-label"><span>Day 4 &mdash; Upper body B</span><span id="cnt-d">0 / 9</span></div>
     <div class="progress-track"><div class="progress-fill" id="bar-d" style="width:0%"></div></div>
   </div>
-  <div class="section-hdr">Warm-up &middot; 5 min</div>
   <div class="item" id="d1">
-    <div class="item-top" onclick="tog('d1','d',8)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Treadmill walk</div><div class="ex-sub">5 min &middot; 2.0&ndash;2.5 mph &middot; flat</div>
+    <div class="item-top"><div class="checkbox" onclick="tog('d1','d',8)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Warm-up</div><div class="ex-sub">5 min &middot; choose your machine below</div>
       <div class="ex-loc">📍 Ground floor cardio row</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+walking+warm+up+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-    <div class="fields-wrap">
-      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Treadmill warm-up" type="text" placeholder="e.g. 2.3 mph, felt good"/></div>
-    </div>
+<div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'wu-d','treadmill')">Treadmill</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-d','elliptical')">Elliptical</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-d','row')">Row</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-d','bike')">Bike</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-d','stair')">Stair</button></div><div class="cardio-machine-panel" id="panel-wu-d-treadmill"><div class="cardio-row"><span class="cardio-label">Speed</span><input class="cardio-input" data-ex="wu-d-treadmill-speed" type="text" placeholder="e.g. 2.2 mph"/></div><div class="cardio-row"><span class="cardio-label">Incline</span><input class="cardio-input" data-ex="wu-d-treadmill-incline" type="text" placeholder="e.g. 0–2"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-d-treadmill-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-d-treadmill-notes" type="text" placeholder="e.g. felt good"/></div></div><div class="cardio-machine-panel" id="panel-wu-d-elliptical"><div class="cardio-row"><span class="cardio-label">SPM</span><input class="cardio-input" data-ex="wu-d-elliptical-speed" type="text" placeholder="e.g. 50 SPM"/></div><div class="cardio-row"><span class="cardio-label">Resistance</span><input class="cardio-input" data-ex="wu-d-elliptical-incline" type="text" placeholder="e.g. 4"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-d-elliptical-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-d-elliptical-notes" type="text" placeholder="e.g. smooth"/></div></div><div class="cardio-machine-panel" id="panel-wu-d-row"><div class="cardio-row"><span class="cardio-label">Pace</span><input class="cardio-input" data-ex="wu-d-row-speed" type="text" placeholder="e.g. easy pace"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-d-row-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-d-row-notes" type="text" placeholder="e.g. easy pace"/></div></div><div class="cardio-machine-panel" id="panel-wu-d-bike"><div class="cardio-row"><span class="cardio-label">RPM</span><input class="cardio-input" data-ex="wu-d-bike-speed" type="text" placeholder="e.g. 80 RPM"/></div><div class="cardio-row"><span class="cardio-label">Resistance</span><input class="cardio-input" data-ex="wu-d-bike-incline" type="text" placeholder="e.g. 3"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-d-bike-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-d-bike-notes" type="text" placeholder="e.g. easy spin"/></div></div><div class="cardio-machine-panel" id="panel-wu-d-stair"><div class="cardio-row"><span class="cardio-label">Level</span><input class="cardio-input" data-ex="wu-d-stair-speed" type="text" placeholder="e.g. level 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-d-stair-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-d-stair-notes" type="text" placeholder="e.g. steady pace"/></div></div></div>
   </div>
-  <div class="section-hdr">Upper body B &middot; ~35 min</div>
   <div class="item" id="d2">
-    <div class="item-top" onclick="tog('d2','d',8)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('d2','d',8)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Lat pulldown</div><div class="ex-sub">3 &times; 12 &middot; wider grip today if possible &middot; pull to chest</div>
       <div class="ex-loc">📍 Cable area &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=wide+grip+lat+pulldown+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -978,7 +1107,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="d3">
-    <div class="item-top" onclick="tog('d3','d',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('d3','d',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Pec fly machine</div><div class="ex-sub">3 &times; 12 &middot; arms sweep inward &middot; one extra set vs Day 1</div>
       <div class="ex-loc">📍 Precor near staircase &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=pec+fly+machine+how+to+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -1005,7 +1134,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="d3b">
-    <div class="item-top" onclick="tog('d3b','d',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('d3b','d',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Rear delt machine</div><div class="ex-sub">3 &times; 12 &middot; flip to rear delt setting &middot; arms sweep outward</div>
       <div class="ex-loc">📍 Same Precor machine &middot; flip the setting</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=rear+delt+machine+proper+form+how+to" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -1032,7 +1161,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="d4">
-    <div class="item-top" onclick="tog('d4','d',8)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('d4','d',8)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Seated cable row — V-bar</div><div class="ex-sub">3 &times; 12 &middot; neutral/V-bar grip &middot; squeeze shoulder blades</div>
       <div class="ex-loc">📍 Low row station &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=seated+cable+row+v+bar+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -1059,7 +1188,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="d5">
-    <div class="item-top" onclick="tog('d5','d',8)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('d5','d',8)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Dumbbell curl</div><div class="ex-sub">3 &times; 12 &middot; slow controlled curl &middot; no swinging</div>
       <div class="ex-loc">📍 Dumbbell rack &middot; ground floor free weight area</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=dumbbell+bicep+curl+proper+form+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -1086,7 +1215,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="d6">
-    <div class="item-top" onclick="tog('d6','d',8)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('d6','d',8)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Tricep pushdown</div><div class="ex-sub">3 &times; 15 &middot; try rope attachment today for variety</div>
       <div class="ex-loc">📍 Cable crossover &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=tricep+rope+pushdown+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -1112,9 +1241,8 @@ body{transition:background 0.2s,color 0.2s}
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Tricep rope-notes" type="text" placeholder="e.g. 30 lbs rope, 3 sets"/></div>
     </div>
   </div>
-  <div class="section-hdr">Cool-down &middot; 5 min</div>
   <div class="item" id="d7">
-    <div class="item-top" onclick="tog('d7','d',8)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('d7','d',8)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Stretch &mdash; chest, shoulder, bicep</div><div class="ex-sub">Hold each 20&ndash;30 sec &middot; 3 stretches</div>
       <div class="ex-loc">📍 Mat / open floor area</div>
       <div class="ex-links-wrap" onclick="event.stopPropagation()">
@@ -1127,7 +1255,8 @@ body{transition:background 0.2s,color 0.2s}
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Stretch D4" type="text" placeholder="e.g. shoulders loosening up"/></div>
     </div>
   </div>
-  <div class="tip">Day 4 uses slightly different grips and adds biceps &mdash; same muscles as Day 1 but from different angles. You will feel the difference. ~50 min total.</div>
+  <div class="day-summary" id="summary-d"></div>
+  <div class="tip">Same muscles as Day 1 but from different angles &mdash; you will feel the difference.</div>
   <div class="btn-row">
     <button class="complete-btn" onclick="completeDay('d','Day 4 — Upper B')">✓ Complete Day 4 &amp; Save</button>
     <button class="reset-btn" onclick="rst('d',8)">Reset</button>
@@ -1140,18 +1269,16 @@ body{transition:background 0.2s,color 0.2s}
     <div class="progress-label"><span>Day 5 &mdash; Lower body B + Cardio</span><span id="cnt-e">0 / 10</span></div>
     <div class="progress-track"><div class="progress-fill" id="bar-e" style="width:0%"></div></div>
   </div>
-  <div class="section-hdr">Warm-up &middot; 5 min</div>
   <div class="item" id="e1">
-    <div class="item-top" onclick="tog('e1','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
-      <div class="ex-name">Treadmill walk</div><div class="ex-sub">5 min &middot; 2.0&ndash;2.5 mph &middot; flat</div>
+    <div class="item-top"><div class="checkbox" onclick="tog('e1','e',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+      <div class="ex-name">Warm-up</div><div class="ex-sub">5 min &middot; choose your machine below</div>
       <div class="ex-loc">📍 Ground floor cardio row</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+walking+warm+up+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
-<div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'wu','treadmill')">Treadmill</button></div><div class="cardio-machine-panel" id="panel-wu-treadmill"><div class="cardio-row"><span class="cardio-label">Speed</span><input class="cardio-input" data-ex="wu-treadmill-speed" type="text" placeholder="e.g. 2.2 mph"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="wu-treadmill-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-treadmill-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="wu-treadmill-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="wu-treadmill-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-treadmill-notes" type="text" placeholder="e.g. felt strong"/></div></div></div>
+<div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'wu-d','treadmill')">Treadmill</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-d','elliptical')">Elliptical</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-d','row')">Row</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-d','bike')">Bike</button><button class="cardio-machine-btn" onclick="switchCardio(this,'wu-d','stair')">Stair</button></div><div class="cardio-machine-panel" id="panel-wu-d-treadmill"><div class="cardio-row"><span class="cardio-label">Speed</span><input class="cardio-input" data-ex="wu-d-treadmill-speed" type="text" placeholder="e.g. 2.2 mph"/></div><div class="cardio-row"><span class="cardio-label">Incline</span><input class="cardio-input" data-ex="wu-d-treadmill-incline" type="text" placeholder="e.g. 0–2"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-d-treadmill-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="wu-d-treadmill-distance" type="text" placeholder="e.g. 0.3 mi"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-d-treadmill-notes" type="text" placeholder="e.g. felt good"/></div></div><div class="cardio-machine-panel" id="panel-wu-d-elliptical"><div class="cardio-row"><span class="cardio-label">SPM</span><input class="cardio-input" data-ex="wu-d-elliptical-speed" type="text" placeholder="e.g. 50 SPM"/></div><div class="cardio-row"><span class="cardio-label">Resistance</span><input class="cardio-input" data-ex="wu-d-elliptical-incline" type="text" placeholder="e.g. 4"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-d-elliptical-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-d-elliptical-notes" type="text" placeholder="e.g. smooth"/></div></div><div class="cardio-machine-panel" id="panel-wu-d-row"><div class="cardio-row"><span class="cardio-label">Pace</span><input class="cardio-input" data-ex="wu-d-row-speed" type="text" placeholder="e.g. easy pace"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-d-row-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="wu-d-row-distance" type="text" placeholder="e.g. 1000 m"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-d-row-notes" type="text" placeholder="e.g. easy pace"/></div></div><div class="cardio-machine-panel" id="panel-wu-d-bike"><div class="cardio-row"><span class="cardio-label">RPM</span><input class="cardio-input" data-ex="wu-d-bike-speed" type="text" placeholder="e.g. 80 RPM"/></div><div class="cardio-row"><span class="cardio-label">Resistance</span><input class="cardio-input" data-ex="wu-d-bike-incline" type="text" placeholder="e.g. 3"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-d-bike-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-d-bike-notes" type="text" placeholder="e.g. easy spin"/></div></div><div class="cardio-machine-panel" id="panel-wu-d-stair"><div class="cardio-row"><span class="cardio-label">Level</span><input class="cardio-input" data-ex="wu-d-stair-speed" type="text" placeholder="e.g. level 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="wu-d-stair-duration" type="text" placeholder="5 min"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="wu-d-stair-notes" type="text" placeholder="e.g. steady pace"/></div></div></div>
   </div>
-  <div class="section-hdr">Lower body B &middot; ~30 min</div>
   <div class="item" id="e2">
-    <div class="item-top" onclick="tog('e2','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('e2','e',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Leg press — high foot <span class="badge bk">knee-aware</span></div><div class="ex-sub">3 &times; 12 &middot; feet higher on platform than Day 2</div>
       <div class="ex-loc">📍 Dark strength room &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=leg+press+foot+position+variations" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -1178,7 +1305,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="e3">
-    <div class="item-top" onclick="tog('e3','e',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('e3','e',10)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Leg extension <span class="badge bk">knee-aware</span></div><div class="ex-sub">2 &times; 15 &middot; very light weight only</div>
       <div class="ex-loc">📍 Precor leg ext/curl combo &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=seated+leg+extension+machine+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -1200,7 +1327,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="e3b">
-    <div class="item-top" onclick="tog('e3b','e',10)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('e3b','e',10)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Leg curl</div><div class="ex-sub">3 &times; 12 &middot; focus on slow lowering phase &middot; flip seat</div>
       <div class="ex-loc">📍 Same Precor combo machine &middot; flip seat</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=seated+leg+curl+machine+proper+form" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -1227,7 +1354,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="e4">
-    <div class="item-top" onclick="tog('e4','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('e4','e',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Hip abductor <span class="badge bh">hip-focus</span></div><div class="ex-sub">3 &times; 15 &middot; push knees outward</div>
       <div class="ex-loc">📍 Precor inner/outer thigh machine &middot; ground floor</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=hip+abductor+machine+how+to+use" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -1254,7 +1381,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="e5">
-    <div class="item-top" onclick="tog('e5','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('e5','e',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Hip adductor <span class="badge bh">hip-focus</span></div><div class="ex-sub">3 &times; 15 &middot; squeeze knees inward &middot; flip setting</div>
       <div class="ex-loc">📍 Same Precor inner/outer thigh machine</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=hip+adductor+machine+inner+thigh+how+to+use" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -1281,7 +1408,7 @@ body{transition:background 0.2s,color 0.2s}
     </div>
   </div>
   <div class="item" id="e6">
-    <div class="item-top" onclick="tog('e6','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('e6','e',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Leg press calf raises</div><div class="ex-sub">3 &times; 15 &middot; balls of feet on platform edge</div>
       <div class="ex-loc">📍 Dark strength room &middot; same leg press machine</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=leg+press+calf+raises+how+to" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
@@ -1307,18 +1434,16 @@ body{transition:background 0.2s,color 0.2s}
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Calf raises-notes" type="text" placeholder="e.g. sled + 25 lbs"/></div>
     </div>
   </div>
-  <div class="section-hdr">Cardio finisher &middot; 20 min</div>
   <div class="item" id="e7">
-    <div class="item-top" onclick="tog('e7','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('e7','e',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Treadmill walk <span class="badge bk">knee-aware</span></div><div class="ex-sub">20 min &middot; 2.5&ndash;3.0 mph &middot; incline 0&ndash;2 if knees feel good</div>
       <div class="ex-loc">📍 Ground floor cardio row</div>
       <a class="ex-link" href="https://www.youtube.com/results?search_query=treadmill+incline+walking+benefits+beginners" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>
     </div></div>
 <div class="cardio-fields"><div class="cardio-machine-toggle"><button class="cardio-machine-btn active" onclick="switchCardio(this,'d5cardio','treadmill')">Treadmill</button></div><div class="cardio-machine-panel" id="panel-d5cardio-treadmill"><div class="cardio-row"><span class="cardio-label">Speed</span><input class="cardio-input" data-ex="d5cardio-treadmill-speed" type="text" placeholder="e.g. 2.8 mph"/></div><div class="cardio-row"><span class="cardio-label">Incline/Res.</span><input class="cardio-input" data-ex="d5cardio-treadmill-incline" type="text" placeholder="e.g. incline 1 / res. 5"/></div><div class="cardio-row"><span class="cardio-label">Duration</span><input class="cardio-input" data-ex="d5cardio-treadmill-duration" type="text" placeholder="20 min"/></div><div class="cardio-row"><span class="cardio-label">Distance</span><input class="cardio-input" data-ex="d5cardio-treadmill-distance" type="text" placeholder="e.g. 0.8 mi / 1.2 km"/></div><div class="cardio-row"><span class="cardio-label">Calories</span><input class="cardio-input" data-ex="d5cardio-treadmill-calories" type="text" placeholder="e.g. 120 cal"/></div><div class="cardio-row"><span class="cardio-label">Notes</span><input class="cardio-input" data-ex="d5cardio-treadmill-notes" type="text" placeholder="e.g. felt strong"/></div></div></div>
   </div>
-  <div class="section-hdr">Cool-down &middot; 5 min</div>
   <div class="item" id="e8">
-    <div class="item-top" onclick="tog('e8','e',9)"><div class="checkbox"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
+    <div class="item-top"><div class="checkbox" onclick="tog('e8','e',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>
       <div class="ex-name">Hip flexor + quad + hamstring stretch</div><div class="ex-sub">Hold 20&ndash;30 sec each &middot; right hip gets extra time &middot; 3 stretches</div>
       <div class="ex-loc">📍 Mat / open floor area</div>
       <div class="ex-links-wrap" onclick="event.stopPropagation()">
@@ -1331,7 +1456,8 @@ body{transition:background 0.2s,color 0.2s}
       <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="Stretch D5" type="text" placeholder="e.g. right hip much better today!"/></div>
     </div>
   </div>
-  <div class="tip">Day 5 closes the cycle. Notice what feels stronger vs the first time through. Come back to Claude when you are ready to progress weights or add difficulty. ~60 min total.</div>
+  <div class="day-summary" id="summary-e"></div>
+  <div class="tip">Day 5 closes the cycle. Notice what feels stronger vs the first time through.</div>
   <div class="btn-row">
     <button class="complete-btn" onclick="completeDay('e','Day 5 — Lower B + Cardio')">✓ Complete Day 5 &amp; Save</button>
     <button class="reset-btn" onclick="rst('e',9)">Reset</button>
@@ -1345,6 +1471,7 @@ body{transition:background 0.2s,color 0.2s}
   <div class="modal" style="max-width:340px;">
     <div class="modal-title" style="margin-bottom:0.5rem;">Confirm session date</div>
     <div class="modal-sub" style="margin-bottom:0.75rem;">The date and time below will be saved with this session. Adjust if needed before saving.</div>
+    <div id="session-duration-display" style="display:none;font-size:13px;font-weight:600;color:#5B4EA8;background:#EEEDFE;border-radius:8px;padding:8px 12px;margin-bottom:0.75rem;text-align:center"></div>
     <div class="date-input-wrap">
       <div class="date-input-label">Date and time</div>
       <input type="datetime-local" class="date-input" id="session-datetime"/>
@@ -1406,9 +1533,26 @@ var statKeys={a:'stat-d1',b:'stat-d2',c:'stat-d3',d:'stat-d4',e:'stat-d5'};
 var countKeys={a:'prog-count-a',b:'prog-count-b',c:'prog-count-c',d:'prog-count-d',e:'prog-count-e'};
 var bodyKeys={a:'prog-body-a',b:'prog-body-b',c:'prog-body-c',d:'prog-body-d',e:'prog-body-e'};
 
+// ── Session duration tracking ────────────────────────────────────────
+var sessionStartTimes={};
+function markSessionStart(day){
+  if(!sessionStartTimes[day]){
+    sessionStartTimes[day]=Date.now();
+  }
+}
+function getSessionDuration(day){
+  if(!sessionStartTimes[day]) return null;
+  var mins=Math.round((Date.now()-sessionStartTimes[day])/60000);
+  return mins;
+}
+function clearSessionStart(day){ delete sessionStartTimes[day]; }
+
+
 function tog(id,day,total){
   var el=document.getElementById(id);
   el.classList.toggle('done');
+  // Mark session start on first exercise checked
+  if(el.classList.contains('done')) markSessionStart(day);
   var p=document.getElementById('p-'+day);
   var d=p.querySelectorAll('.item.done').length;
   document.getElementById('cnt-'+day).textContent=d+' / '+total;
@@ -1501,13 +1645,253 @@ function sw(day,btn){
   document.getElementById('p-'+day).classList.add('show');
   btn.classList.add('active');
   if(day==='prog') renderProgress();
+  else markSessionStart(day);
   loadLastTimes();
   initCardioPanels();
   applyArchivedToChecklist();
 }
 
+// ── Swipe to switch days ─────────────────────────────────────────────
+(function initSwipe(){
+  var dayOrder=['prog','a','b','c','d','e'];
+  var touchStartX=0,touchStartY=0,touchStartTime=0;
+  document.addEventListener('touchstart',function(e){
+    touchStartX=e.touches[0].clientX;
+    touchStartY=e.touches[0].clientY;
+    touchStartTime=Date.now();
+  },{passive:true});
+  document.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-touchStartX;
+    var dy=e.changedTouches[0].clientY-touchStartY;
+    var dt=Date.now()-touchStartTime;
+    if(Math.abs(dx)<50||Math.abs(dy)>Math.abs(dx)*0.8||dt>400) return;
+    // Find current active day
+    var current=null;
+    dayOrder.forEach(function(d){
+      var p=document.getElementById('p-'+d);
+      if(p&&p.classList.contains('show')) current=d;
+    });
+    if(!current) return;
+    var idx=dayOrder.indexOf(current);
+    var nextIdx=dx<0?idx+1:idx-1;
+    if(nextIdx<0||nextIdx>=dayOrder.length) return;
+    var nextDay=dayOrder[nextIdx];
+    // Find the button for this day and click it
+    document.querySelectorAll('.day-btn').forEach(function(b){
+      var oc=b.getAttribute('onclick')||'';
+      if(oc.indexOf("'"+nextDay+"'")!==-1){
+        sw(nextDay,b);
+        haptic('light');
+      }
+    });
+  },{passive:true});
+})();
+
 function toggleProg(id){
   document.getElementById(id).classList.toggle('open');
+}
+
+// ── Quick-fill from last session ─────────────────────────────────────
+function quickFill(day){
+  var globalMap=buildGlobalRepMap();
+  var p=document.getElementById('p-'+day);
+  var filled=0;
+  p.querySelectorAll('.rep-input').forEach(function(inp){
+    var ex=normalizeEx(inp.getAttribute('data-ex')||'');
+    var setNum=inp.getAttribute('data-set');
+    var match=globalMap[ex]||null;
+    if(match&&setNum){
+      var parts=match.note.split('|');
+      parts.forEach(function(part){
+        part=part.trim();
+        var sMatch=part.match(/^Set\s*(\d+):\s*(.+?)(\s*x\d+reps)?$/);
+        if(sMatch&&sMatch[1]===setNum){
+          inp.value=sMatch[2].trim().replace(/\s*(lbs|kg)$/,'');
+          inp.style.color='#E07B3F';
+          inp.style.fontStyle='italic';
+          filled++;
+        }
+      });
+    }
+  });
+  p.querySelectorAll('.notes-input').forEach(function(inp){
+    var ex=normalizeEx(inp.getAttribute('data-ex')||'');
+    var match=globalMap[ex]||null;
+    if(match&&!inp.value){
+      inp.value=match.note;
+      inp.style.color='#E07B3F';
+      inp.style.fontStyle='italic';
+      filled++;
+    }
+  });
+  if(filled>0){
+    showToast('📋 Filled '+filled+' fields from last session');
+    haptic('light');
+    saveDraft(day);
+  } else {
+    showToast('No previous session data to fill from');
+  }
+}
+
+// ── Pre-session check-in state ────────────────────────────────────────
+var checkinState={a:null,b:null,c:null,d:null,e:null};
+
+function selectCheckin(btn, day, feeling){
+  var row=btn.closest('.checkin-btns');
+  if(row) row.querySelectorAll('.checkin-btn').forEach(function(b){
+    b.classList.remove('selected-great','selected-okay','selected-tired');
+  });
+  btn.classList.add('selected-'+feeling);
+  setCheckin(day, feeling);
+}
+
+function checkinBtnHTML(day){
+  return '<div class="checkin-label">How are you feeling today?</div>'
+    +'<div class="checkin-btns">'
+    +'<button class="checkin-btn" onclick="selectCheckin(this,\''+day+'\',\'great\')">💪<span>Great</span></button>'
+    +'<button class="checkin-btn" onclick="selectCheckin(this,\''+day+'\',\'okay\')">😐<span>Okay</span></button>'
+    +'<button class="checkin-btn" onclick="selectCheckin(this,\''+day+'\',\'tired\')">😴<span>Tired</span></button>'
+    +'</div>';
+}
+
+function setCheckin(day, feeling){
+  checkinState[day]=feeling;
+  var bar=document.getElementById('checkin-bar-'+day);
+  if(!bar) return;
+  var emoji={great:'💪',okay:'😐',tired:'😴'};
+  var label={great:'Great',okay:'Okay',tired:'Tired'};
+  bar.innerHTML='<div class="checkin-done">'+emoji[feeling]+' Feeling <strong>'+label[feeling]+'</strong> today — logged with session</div>';
+  haptic('light');
+}
+
+(function injectQuickFillButtons(){
+  ['a','b','c','d','e'].forEach(function(day){
+    var p=document.getElementById('p-'+day);
+    if(!p) return;
+    var wrap=p.querySelector('.progress-wrap');
+    if(!wrap) return;
+    var btn=document.createElement('button');
+    btn.className='quick-fill-btn';
+    btn.innerHTML='📋 Quick-fill from last session';
+    btn.onclick=function(){ quickFill(day); };
+    wrap.parentNode.insertBefore(btn,wrap.nextSibling);
+  });
+})();
+
+(function injectCheckinBars(){
+  ['a','b','c','d','e'].forEach(function(day){
+    var p=document.getElementById('p-'+day);
+    if(!p) return;
+    var qfBtn=p.querySelector('.quick-fill-btn');
+    if(!qfBtn) return;
+    var bar=document.createElement('div');
+    bar.className='checkin-bar';
+    bar.id='checkin-bar-'+day;
+    bar.innerHTML=checkinBtnHTML(day);
+    qfBtn.parentNode.insertBefore(bar, qfBtn.nextSibling);
+  });
+})();
+
+// ── RPE slider + actual reps + pain flag + manual timer injection ──────────────────
+(function injectExerciseExtras(){
+  ['a','b','c','d','e'].forEach(function(day){
+    var p=document.getElementById('p-'+day);
+    if(!p) return;
+    p.querySelectorAll('.item').forEach(function(item){
+
+      // ── Add manual rest timer button to item-top (ALL items) ──────
+      var itemTop=item.querySelector('.item-top');
+      if(itemTop && !itemTop.querySelector('.item-timer-btn')){
+        var timerBtn=document.createElement('button');
+        timerBtn.className='item-timer-btn';
+        timerBtn.title='Start rest timer';
+        timerBtn.innerHTML='<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="flex-shrink:0"><circle cx="6" cy="6" r="5" stroke="#5B4EA8" stroke-width="1.5"/><path d="M6 3.5V6l1.5 1.5" stroke="#5B4EA8" stroke-width="1.5" stroke-linecap="round"/></svg>Rest';
+        timerBtn.onclick=function(e){
+          e.stopPropagation();
+          startRestTimer(restDefault);
+          haptic('light');
+        };
+        itemTop.appendChild(timerBtn);
+      }
+
+      // Everything below only applies to items with a fields-wrap (strength exercises)
+      var fw=item.querySelector('.fields-wrap');
+      if(!fw) return;
+
+      // Get exercise name from first data-ex input
+      var exInp=item.querySelector('[data-ex]');
+      if(!exInp) return;
+      var exName=exInp.getAttribute('data-ex').replace(/-notes$/,'');
+
+      // ── Add actual reps column to each rep-single ─────────────────
+      var repRow=fw.querySelector('.rep-row');
+      if(repRow && !fw.querySelector('.reps-header-row')){
+        var headerRow=document.createElement('div');
+        headerRow.className='reps-header-row';
+        headerRow.style.cssText='display:flex;justify-content:flex-end;margin-bottom:-2px';
+        var headerLabel=document.createElement('span');
+        headerLabel.style.cssText='font-size:9px;color:#B4B2A9;letter-spacing:0.03em;width:50px;text-align:center;display:block';
+        headerLabel.textContent='actual reps';
+        headerRow.appendChild(headerLabel);
+        fw.insertBefore(headerRow, repRow);
+      }
+      item.querySelectorAll('.rep-single').forEach(function(rs){
+        if(rs.querySelector('.reps-col')) return;
+        var col=document.createElement('div');
+        col.className='reps-col';
+        var repsInp=document.createElement('input');
+        repsInp.type='number';
+        repsInp.className='reps-actual-input';
+        repsInp.placeholder='—';
+        repsInp.min='1';repsInp.max='99';
+        repsInp.setAttribute('data-ex-reps',exName);
+        col.appendChild(repsInp);
+        rs.appendChild(col);
+      });
+
+      // Only add RPE + pain once per item
+      if(fw.querySelector('.rpe-row')) return;
+
+      // ── RPE slider ────────────────────────────────────────────────
+      var rpeRow=document.createElement('div');
+      rpeRow.className='rpe-row';
+      var rpeDescs=['—','Very light','Light','Moderate','Moderate','Hard','Hard','Very hard','Very hard','Maximal','Max effort'];
+      rpeRow.innerHTML=
+        '<div class="rpe-top">'
+          +'<span class="rpe-top-label">How hard was it?</span>'
+          +'<span class="rpe-top-val" id="rpe-val-'+exName.replace(/[^a-z0-9]/gi,'-')+'"></span>'
+        +'</div>'
+        +'<div class="rpe-track">'
+          +'<input class="rpe-slider" type="range" min="0" max="10" value="0" data-ex="'+exName+'" '
+          +'oninput="'
+            +'this.style.setProperty(\'--rpe-pct\',(this.value*10)+\'%\');'
+            +'var vEl=this.closest(\'.rpe-row\').querySelector(\'.rpe-top-val\');'
+            +'if(vEl){var descs=[\'—\',\'Very light\',\'Light\',\'Moderate\',\'Moderate\',\'Hard\',\'Hard\',\'Very hard\',\'Very hard\',\'Maximal\',\'Max effort\'];'
+            +'vEl.textContent=(this.value>0?this.value+\' · \'+descs[parseInt(this.value)]:\'\');}'
+          +'">'
+        +'</div>'
+        +'<div class="rpe-ends"><span>1 easy</span><span>10 max</span></div>';
+      fw.appendChild(rpeRow);
+
+      // ── Pain/soreness flag ────────────────────────────────────────
+      var painRow=document.createElement('div');
+      painRow.className='pain-row';
+      painRow.innerHTML='<span class="pain-label">Feeling:</span>'
+        +'<button class="pain-btn active-ok" data-ex="'+exName+'" onclick="setPain(this,\'ok\')">✓ Good</button>'
+        +'<button class="pain-btn" data-ex="'+exName+'" onclick="setPain(this,\'flag\')">⚠️ Discomfort</button>';
+      fw.appendChild(painRow);
+    });
+  });
+})();
+
+// Apply any saved exercise order AFTER injections have run
+// (actual call happens after localStorage wipe at startup, below)
+
+function setPain(btn,state){
+  var row=btn.closest('.pain-row');
+  row.querySelectorAll('.pain-btn').forEach(function(b){b.classList.remove('active-ok','active-flag');});
+  if(state==='ok') btn.classList.add('active-ok');
+  else btn.classList.add('active-flag');
 }
 
 // completeDay defined below with incomplete guard
@@ -1532,8 +1916,12 @@ function confirmSave(){
     var val=inp.value.trim();
     if(val){
       var unit=getUnitForInput(inp);
+      // Check for actual reps
+      var repsInp=inp.closest('.rep-single') && inp.closest('.rep-single').querySelector('.reps-actual-input');
+      var repsVal=repsInp?repsInp.value.trim():'';
+      var setStr='Set '+set+': '+val+' '+unit+(repsVal?' x'+repsVal+'reps':'');
       if(!exMap[ex]) exMap[ex]=[];
-      exMap[ex].push('Set '+set+': '+val+' '+unit);
+      exMap[ex].push(setStr);
     }
   });
   Object.keys(exMap).forEach(function(ex){
@@ -1549,6 +1937,15 @@ function confirmSave(){
     var val=inp.value.trim();
     if(val) entries.push({ex:inp.getAttribute('data-ex'),note:val});
   });
+  // collect RPE values
+  p.querySelectorAll('.rpe-slider').forEach(function(sl){
+    var val=parseInt(sl.value);
+    if(val>0) entries.push({ex:sl.getAttribute('data-ex')+'-rpe',note:'RPE '+val+'/10'});
+  });
+  // collect pain flags
+  p.querySelectorAll('.pain-btn.active-flag').forEach(function(btn){
+    entries.push({ex:btn.getAttribute('data-ex')+'-pain',note:'⚠️ Discomfort flagged'});
+  });
   // Get date from picker
   var dtVal=document.getElementById('session-datetime').value;
   var dt=dtVal ? new Date(dtVal) : new Date();
@@ -1556,7 +1953,14 @@ function confirmSave(){
   var timeStr=dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
   var saved=getSaved(day);
   var sn=document.getElementById('session-notes');var sessionNotes=sn?sn.value.trim():'';if(sn)sn.value='';
-  saved.unshift({date:dateStr+' at '+timeStr,label:label,entries:entries,notes:sessionNotes||null});
+  // capture session duration
+  var dur=getSessionDuration(day);
+  var sessionObj={date:dateStr+' at '+timeStr,label:label,entries:entries,notes:sessionNotes||null};
+  if(dur!==null && dur>0) sessionObj.duration=dur;
+  // save check-in feeling
+  if(checkinState[day]) sessionObj.checkin=checkinState[day];
+  checkinState[day]=null;
+  saved.unshift(sessionObj);
   if(saved.length>20) saved=saved.slice(0,20);
   localStorage.setItem('gymlog_'+day,JSON.stringify(saved));
   document.getElementById('date-modal-overlay').classList.remove('show');
@@ -1564,13 +1968,18 @@ function confirmSave(){
   var savedEntries=saved[0].entries; var savedLabel=label; var savedDay=day;
   var prs=checkForPRs(day, savedEntries);
   rst(day,counts[day]);
+  clearSessionStart(day);
+  // Reset check-in bar for next session
+  var ciBar=document.getElementById('checkin-bar-'+day);
+  if(ciBar) ciBar.innerHTML=checkinBtnHTML(day);
   loadLastTimes();
   pendingDay=null;
   pendingLabel=null;
   stopRestTimer();
   haptic('success');
-  if(prs.length){ showPRToast(prs); setTimeout(function(){ showShareModal(savedDay,savedLabel,savedEntries,prs); },prs.length*2200+400); }
-  else { setTimeout(function(){ showShareModal(savedDay,savedLabel,savedEntries,[]); },400); }
+  checkMilestones();
+  if(prs.length){ showPRToast(prs); setTimeout(function(){ showShareModal(savedDay,savedLabel,savedEntries,prs,sessionObj); },prs.length*2200+400); }
+  else { setTimeout(function(){ showShareModal(savedDay,savedLabel,savedEntries,[],sessionObj); },400); }
   // Auto-sync to JSONbin after every save
   syncToJbin(function(ok){
     if(!ok) showToast('⚠️ Cloud sync failed — data saved locally');
@@ -1614,6 +2023,39 @@ function buildGlobalRepMap(){
   return globalMap;
 }
 
+// ── Progressive overload nudge ────────────────────────────────────────
+function getExerciseHistory(exKey){
+  // Returns array of max weights per session, most recent first
+  var sessions=[];
+  ['a','b','c','d','e'].forEach(function(d){
+    getSaved(d).forEach(function(session){
+      var ts=Date.parse(session.date.replace(' at ',' '))||0;
+      session.entries.forEach(function(e){
+        if(normalizeEx(e.ex)===exKey && e.note && e.note.indexOf('Set ')===0){
+          var weights=parseSetWeights(e.note);
+          if(weights.length) sessions.push({ts:ts, max:Math.max.apply(null,weights)});
+        }
+      });
+    });
+  });
+  sessions.sort(function(a,b){return b.ts-a.ts;});
+  return sessions;
+}
+
+function getOverloadNudge(exKey){
+  var hist=getExerciseHistory(exKey);
+  if(hist.length<2) return null;
+  // Check last 2–3 sessions — if max weight is identical across all of them, nudge
+  var checkN=Math.min(hist.length,3);
+  var refWeight=hist[0].max;
+  if(refWeight<=0) return null;
+  for(var i=1;i<checkN;i++){
+    if(hist[i].max!==refWeight) return null; // weight has varied, no nudge
+  }
+  // All checked sessions have the same max weight — suggest +5 lbs
+  return refWeight;
+}
+
 function loadLastTimes(){
   var globalMap=buildGlobalRepMap();
   ['a','b','c','d','e'].forEach(function(day){
@@ -1624,9 +2066,20 @@ function loadLastTimes(){
       var rawId=el.id.replace('lt-','').replace(/-+/g,' ').trim();
       var key=normalizeEx(rawId);
       var match=globalMap[key] || null;
+      // Remove any existing nudge
+      var existingNudge=el.parentNode.querySelector('.overload-nudge');
+      if(existingNudge) existingNudge.parentNode.removeChild(existingNudge);
       if(match){
         el.querySelector('.last-time-vals').textContent=match.note+' ('+match.date+')';
         el.classList.add('has-data');
+        // Progressive overload nudge
+        var nudgeWeight=getOverloadNudge(key);
+        if(nudgeWeight!==null){
+          var nudge=document.createElement('div');
+          nudge.className='overload-nudge';
+          nudge.innerHTML='⬆️ Ready to try '+(nudgeWeight+5)+' lbs?';
+          el.parentNode.insertBefore(nudge, el.nextSibling);
+        }
       } else {
         el.querySelector('.last-time-vals').textContent='';
         el.classList.remove('has-data');
@@ -1828,7 +2281,9 @@ function parseSetWeights(noteStr){
   var sets=noteStr.split('|');
   var vals=[];
   sets.forEach(function(s){
-    var m=s.trim().match(/Set\s*\d+:\s*([\d.]+)/);
+    // Strip any "x##reps" suffix before parsing weight
+    var cleaned=s.trim().replace(/\s*x\d+reps/,'');
+    var m=cleaned.match(/Set\s*\d+:\s*([\d.]+)/);
     if(m) vals.push(parseFloat(m[1]));
   });
   return vals;
@@ -1937,7 +2392,98 @@ function drawChart(sessions, canvasId){
   });
 }
 
-var EXERCISE_REGISTRY=[{day:"Day 1 — Upper A",ex:"Treadmill warm-up"},{day:"Day 1 — Upper A",ex:"Chest press"},{day:"Day 1 — Upper A",ex:"Lat pulldown"},{day:"Day 1 — Upper A",ex:"Cable row"},{day:"Day 1 — Upper A",ex:"Pec fly"},{day:"Day 1 — Upper A",ex:"Rear delt"},{day:"Day 1 — Upper A",ex:"Tricep pushdown"},{day:"Day 1 — Upper A",ex:"Dead bug"},{day:"Day 1 — Upper A",ex:"Cable rotation"},{day:"Day 1 — Upper A",ex:"Stretch D1"},{day:"Day 2 — Lower A",ex:"Treadmill warm-up"},{day:"Day 2 — Lower A",ex:"Leg press"},{day:"Day 2 — Lower A",ex:"Leg extension"},{day:"Day 2 — Lower A",ex:"Leg curl"},{day:"Day 2 — Lower A",ex:"Hip abductor"},{day:"Day 2 — Lower A",ex:"Hip adductor"},{day:"Day 2 — Lower A",ex:"Calf raises"},{day:"Day 2 — Lower A",ex:"Elliptical"},{day:"Day 2 — Lower A",ex:"Hip stretch"},{day:"Day 3 — Cardio and Core",ex:"Cardio machine"},{day:"Day 3 — Cardio and Core",ex:"Dead bug"},{day:"Day 3 — Cardio and Core",ex:"Pallof press"},{day:"Day 3 — Cardio and Core",ex:"Cable rotation"},{day:"Day 3 — Cardio and Core",ex:"Russian twist"},{day:"Day 3 — Cardio and Core",ex:"Stretch D3"},{day:"Day 4 — Upper B",ex:"Treadmill warm-up"},{day:"Day 4 — Upper B",ex:"Lat pulldown wide"},{day:"Day 4 — Upper B",ex:"Pec fly"},{day:"Day 4 — Upper B",ex:"Rear delt"},{day:"Day 4 — Upper B",ex:"Cable row — V-bar"},{day:"Day 4 — Upper B",ex:"DB curl"},{day:"Day 4 — Upper B",ex:"Tricep rope"},{day:"Day 4 — Upper B",ex:"Stretch D4"},{day:"Day 5 — Lower B + Cardio",ex:"Treadmill warm-up"},{day:"Day 5 — Lower B + Cardio",ex:"Leg press — high foot"},{day:"Day 5 — Lower B + Cardio",ex:"Leg extension"},{day:"Day 5 — Lower B + Cardio",ex:"Leg curl"},{day:"Day 5 — Lower B + Cardio",ex:"Hip abductor"},{day:"Day 5 — Lower B + Cardio",ex:"Hip adductor"},{day:"Day 5 — Lower B + Cardio",ex:"Calf raises"},{day:"Day 5 — Lower B + Cardio",ex:"Treadmill cardio"},{day:"Day 5 — Lower B + Cardio",ex:"Stretch D5"}];
+var EXERCISE_REGISTRY=[
+  {day:"Day 1 — Upper A",ex:"Treadmill warm-up",id:"a1",cat:"Warm-up",mins:5},
+  {day:"Day 1 — Upper A",ex:"Chest press",id:"a2",cat:"Upper body",mins:5},
+  {day:"Day 1 — Upper A",ex:"Lat pulldown",id:"a3",cat:"Upper body",mins:5},
+  {day:"Day 1 — Upper A",ex:"Cable row",id:"a4",cat:"Upper body",mins:5},
+  {day:"Day 1 — Upper A",ex:"Pec fly",id:"a5",cat:"Upper body",mins:5},
+  {day:"Day 1 — Upper A",ex:"Rear delt",id:"a5b",cat:"Upper body",mins:5},
+  {day:"Day 1 — Upper A",ex:"Tricep pushdown",id:"a6",cat:"Upper body",mins:5},
+  {day:"Day 1 — Upper A",ex:"Dead bug",id:"a7",cat:"Core",mins:4},
+  {day:"Day 1 — Upper A",ex:"Cable rotation",id:"a8",cat:"Core",mins:4},
+  {day:"Day 1 — Upper A",ex:"Stretch D1",id:"a9",cat:"Cool-down",mins:5},
+  {day:"Day 2 — Lower A",ex:"Treadmill warm-up",id:"b1",cat:"Warm-up",mins:5},
+  {day:"Day 2 — Lower A",ex:"Leg press",id:"b2",cat:"Lower body",mins:5},
+  {day:"Day 2 — Lower A",ex:"Leg extension",id:"b3",cat:"Lower body",mins:5},
+  {day:"Day 2 — Lower A",ex:"Leg curl",id:"b4",cat:"Lower body",mins:5},
+  {day:"Day 2 — Lower A",ex:"Hip abductor",id:"b5",cat:"Lower body",mins:5},
+  {day:"Day 2 — Lower A",ex:"Hip adductor",id:"b6",cat:"Lower body",mins:5},
+  {day:"Day 2 — Lower A",ex:"Calf raises",id:"b7",cat:"Lower body",mins:5},
+  {day:"Day 2 — Lower A",ex:"Elliptical",id:"b8",cat:"Cardio",mins:15},
+  {day:"Day 2 — Lower A",ex:"Hip stretch",id:"b9",cat:"Cool-down",mins:5},
+  {day:"Day 3 — Cardio and Core",ex:"Cardio machine",id:"c1",cat:"Cardio",mins:30},
+  {day:"Day 3 — Cardio and Core",ex:"Dead bug",id:"c2",cat:"Core",mins:5},
+  {day:"Day 3 — Cardio and Core",ex:"Pallof press",id:"c3",cat:"Core",mins:5},
+  {day:"Day 3 — Cardio and Core",ex:"Cable rotation",id:"c4",cat:"Core",mins:5},
+  {day:"Day 3 — Cardio and Core",ex:"Russian twist",id:"c5",cat:"Core",mins:5},
+  {day:"Day 3 — Cardio and Core",ex:"Stretch D3",id:"c6",cat:"Cool-down",mins:5},
+  {day:"Day 4 — Upper B",ex:"Treadmill warm-up",id:"d1",cat:"Warm-up",mins:5},
+  {day:"Day 4 — Upper B",ex:"Lat pulldown wide",id:"d2",cat:"Upper body",mins:5},
+  {day:"Day 4 — Upper B",ex:"Pec fly",id:"d3",cat:"Upper body",mins:5},
+  {day:"Day 4 — Upper B",ex:"Rear delt",id:"d3b",cat:"Upper body",mins:5},
+  {day:"Day 4 — Upper B",ex:"Cable row — V-bar",id:"d4",cat:"Upper body",mins:5},
+  {day:"Day 4 — Upper B",ex:"DB curl",id:"d5",cat:"Upper body",mins:5},
+  {day:"Day 4 — Upper B",ex:"Tricep rope",id:"d6",cat:"Upper body",mins:5},
+  {day:"Day 4 — Upper B",ex:"Stretch D4",id:"d7",cat:"Cool-down",mins:5},
+  {day:"Day 5 — Lower B + Cardio",ex:"Treadmill warm-up",id:"e1",cat:"Warm-up",mins:5},
+  {day:"Day 5 — Lower B + Cardio",ex:"Leg press — high foot",id:"e2",cat:"Lower body",mins:5},
+  {day:"Day 5 — Lower B + Cardio",ex:"Leg extension",id:"e3",cat:"Lower body",mins:5},
+  {day:"Day 5 — Lower B + Cardio",ex:"Leg curl",id:"e3b",cat:"Lower body",mins:5},
+  {day:"Day 5 — Lower B + Cardio",ex:"Hip abductor",id:"e4",cat:"Lower body",mins:5},
+  {day:"Day 5 — Lower B + Cardio",ex:"Hip adductor",id:"e5",cat:"Lower body",mins:5},
+  {day:"Day 5 — Lower B + Cardio",ex:"Calf raises",id:"e6",cat:"Lower body",mins:5},
+  {day:"Day 5 — Lower B + Cardio",ex:"Treadmill cardio",id:"e7",cat:"Cardio",mins:20},
+  {day:"Day 5 — Lower B + Cardio",ex:"Stretch D5",id:"e8",cat:"Cool-down",mins:5}
+];
+
+// ── Inject category tags onto each exercise item ─────────────────────
+(function injectCategoryTags(){
+  EXERCISE_REGISTRY.forEach(function(r){
+    var el=document.getElementById(r.id);
+    if(!el) return;
+    var nameEl=el.querySelector('.ex-name');
+    if(!nameEl) return;
+    if(nameEl.querySelector('.ex-cat')) return; // already injected
+    var tag=document.createElement('div');
+    tag.className='ex-cat';
+    tag.textContent=r.cat+' · '+r.mins+' min';
+    nameEl.parentNode.insertBefore(tag, nameEl);
+  });
+})();
+
+// ── Render day summary breakdown in each .day-summary box ────────────
+function renderDaySummaries(){
+  var dayMap={'a':'Day 1 — Upper A','b':'Day 2 — Lower A','c':'Day 3 — Cardio and Core','d':'Day 4 — Upper B','e':'Day 5 — Lower B + Cardio'};
+  // Color palette per category
+  var catColors={'Warm-up':'#F59E0B','Upper body':'#7F77DD','Lower body':'#10B981','Core':'#EF4444','Cardio':'#3B82F6','Cool-down':'#8B5CF6'};
+  ['a','b','c','d','e'].forEach(function(dayKey){
+    var el=document.getElementById('summary-'+dayKey);
+    if(!el) return;
+    var dayLabel=dayMap[dayKey];
+    var cats={};
+    var catOrder=[];
+    var total=0;
+    EXERCISE_REGISTRY.forEach(function(r){
+      if(r.day!==dayLabel) return;
+      if(!cats[r.cat]){ cats[r.cat]=0; catOrder.push(r.cat); }
+      cats[r.cat]+=r.mins;
+      total+=r.mins;
+    });
+    var chipsHTML='';
+    catOrder.forEach(function(cat){
+      var color=catColors[cat]||'#888780';
+      chipsHTML+='<div class="day-summary-chip">'
+        +'<span class="day-summary-chip-dot" style="background:'+color+'"></span>'
+        +cat+' &middot; <span style="color:#888780;font-weight:400">'+cats[cat]+' min</span>'
+        +'</div>';
+    });
+    el.innerHTML='<div class="day-summary-title">Workout breakdown</div>'
+      +'<div class="day-summary-chips">'+chipsHTML+'</div>'
+      +'<div class="day-summary-total">~'+total+' min <span>total session time</span></div>';
+  });
+}
+
 function getArchivedExercises(){
   try{ return JSON.parse(localStorage.getItem('archived_exercises'))||[]; }
   catch(e){ return []; }
@@ -1964,32 +2510,151 @@ function restoreExercise(exName){
   showToast('"'+exName+'" restored to active.');
 }
 
+// Map from EXERCISE_REGISTRY day label -> single-letter panel key
+var DAY_NAME_TO_KEY={
+  'Day 1 — Upper A':'a',
+  'Day 2 — Lower A':'b',
+  'Day 3 — Cardio and Core':'c',
+  'Day 4 — Upper B':'d',
+  'Day 5 — Lower B + Cardio':'e'
+};
+
+function getExerciseOrder(){
+  try{ return JSON.parse(localStorage.getItem('exercise_order'))||{}; }
+  catch(e){ return {}; }
+}
+function saveExerciseOrder(obj){
+  localStorage.setItem('exercise_order',JSON.stringify(obj));
+}
+
+function moveExercise(day, exName, dir){
+  var order=getExerciseOrder();
+  if(!order[day]){
+    // Initialize from registry using the full day name as key
+    order[day]=EXERCISE_REGISTRY.filter(function(r){return r.day===day;}).map(function(r){return r.ex;});
+  }
+  var arr=order[day];
+  var idx=arr.indexOf(exName);
+  if(idx===-1) return;
+  var newIdx=idx+dir;
+  if(newIdx<0||newIdx>=arr.length) return;
+  arr.splice(idx,1);
+  arr.splice(newIdx,0,exName);
+  order[day]=arr;
+  saveExerciseOrder(order);
+  // Reorder using the letter key for DOM lookup
+  var dayKey=DAY_NAME_TO_KEY[day]||day;
+  reorderDayItems(dayKey,arr);
+  loadLastTimes();
+  applyArchivedToChecklist();
+  showToast('Order saved — day updated ✓');
+  renderManager();
+}
+
+function reorderDayItems(dayKey, order){
+  var p=document.getElementById('p-'+dayKey);
+  if(!p||!order||!order.length) return;
+
+  var exToId={};
+  EXERCISE_REGISTRY.forEach(function(r){
+    if((DAY_NAME_TO_KEY[r.day]||r.day)===dayKey) exToId[r.ex]=r.id;
+  });
+
+  var orderedIds=[];
+  order.forEach(function(exName){
+    var id=exToId[exName];
+    if(id && orderedIds.indexOf(id)===-1) orderedIds.push(id);
+  });
+  EXERCISE_REGISTRY.forEach(function(r){
+    if((DAY_NAME_TO_KEY[r.day]||r.day)===dayKey && orderedIds.indexOf(r.id)===-1){
+      orderedIds.push(r.id);
+    }
+  });
+
+  var orderedEls=[];
+  var allFound=orderedIds.every(function(id){
+    var el=document.getElementById(id);
+    if(el) orderedEls.push(el);
+    return !!el;
+  });
+  if(!allFound) return;
+
+  var summary=document.getElementById('summary-'+dayKey);
+  var tip=p.querySelector('.tip');
+  var btnRow=p.querySelector('.btn-row');
+  var anchor=summary||tip||btnRow||null;
+
+  orderedEls.forEach(function(el){ if(el.parentNode) el.parentNode.removeChild(el); });
+  orderedEls.forEach(function(el){
+    if(anchor) p.insertBefore(el,anchor);
+    else p.appendChild(el);
+  });
+}
+
+function applyExerciseOrder(){
+  var order=getExerciseOrder();
+  // Only apply days that have a saved custom order
+  Object.keys(order).forEach(function(dayLabel){
+    if(!order[dayLabel]||!order[dayLabel].length) return;
+    var dayKey=DAY_NAME_TO_KEY[dayLabel]||dayLabel;
+    if(!dayKey) return;
+    reorderDayItems(dayKey, order[dayLabel]);
+  });
+}
+
 function renderManager(){
   var archived=getArchivedExercises();
+  var order=getExerciseOrder();
   var exMap=getAllExercises(); // from history data
   var activeWrap=document.getElementById('mgr-active-wrap');
   var archivedWrap=document.getElementById('mgr-archived-wrap');
   var archivedSection=document.getElementById('mgr-archived-section');
+  _mgrActiveExs=[];
 
-  // Group active exercises by day
+  // Group active exercises by day, respecting custom order
   var dayGroups={};
+  var dayKeys=[];
   EXERCISE_REGISTRY.forEach(function(item){
+    if(dayKeys.indexOf(item.day)===-1) dayKeys.push(item.day);
     if(archived.indexOf(item.ex)===-1){
       if(!dayGroups[item.day]) dayGroups[item.day]=[];
       if(dayGroups[item.day].indexOf(item.ex)===-1) dayGroups[item.day].push(item.ex);
     }
   });
+  // Apply custom order within each day
+  dayKeys.forEach(function(day){
+    if(order[day]&&dayGroups[day]){
+      var customOrder=order[day].filter(function(ex){ return dayGroups[day].indexOf(ex)!==-1; });
+      var rest=dayGroups[day].filter(function(ex){ return customOrder.indexOf(ex)===-1; });
+      dayGroups[day]=customOrder.concat(rest);
+    }
+  });
+
+  var catColors={'Warm-up':'#F59E0B','Upper body':'#7F77DD','Lower body':'#10B981','Core':'#EF4444','Cardio':'#3B82F6','Cool-down':'#8B5CF6'};
+  // Build a lookup: exercise name -> cat
+  var exCat={};
+  EXERCISE_REGISTRY.forEach(function(r){ exCat[r.ex]=r.cat; });
 
   var activeHTML='';
-  Object.keys(dayGroups).forEach(function(day){
+  dayKeys.forEach(function(day){
+    if(!dayGroups[day]||!dayGroups[day].length) return;
     activeHTML+='<div class="mgr-day-label">'+day+'</div>';
-    dayGroups[day].forEach(function(ex){
+    dayGroups[day].forEach(function(ex,i){
       var sessionCount=(exMap[ex]||[]).length;
       var countStr=sessionCount?'<span class="mgr-ex-count">'+sessionCount+' session'+(sessionCount===1?'':'s')+'</span>':'';
       var idx=_mgrActiveExs.length;
       _mgrActiveExs.push(ex);
+      var isFirst=i===0,isLast=i===dayGroups[day].length-1;
+      var cat=exCat[ex]||'';
+      var catColor=catColors[cat]||'#888780';
+      var catPill=cat?'<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;color:'+catColor+';background:'+catColor+'18;border-radius:10px;padding:1px 6px;margin-left:5px;white-space:nowrap;flex-shrink:0">'
+        +'<span style="width:5px;height:5px;border-radius:50%;background:'+catColor+';display:inline-block"></span>'+cat+'</span>':'';
       activeHTML+=('<div class="mgr-ex-row">'
-        +'<span class="mgr-ex-name">'+ex+'</span>'
+        +'<div class="mgr-reorder-btns">'
+        +'<button class="mgr-reorder-btn" onclick="moveExercise(\''+day+'\',\''+ex+'\',-1)" '+(isFirst?'disabled':'')+'title="Move up">↑</button>'
+        +'<button class="mgr-reorder-btn" onclick="moveExercise(\''+day+'\',\''+ex+'\',1)" '+(isLast?'disabled':'')+'title="Move down">↓</button>'
+        +'</div>'
+        +'<span class="mgr-ex-name" style="display:flex;align-items:center;flex-wrap:wrap;gap:2px">'+ex+catPill+'</span>'
         +countStr
         +'<button class="mgr-archive-btn" onclick="confirmArchiveByIndex('+idx+')" title="Archive this exercise">Archive</button>'
         +'</div>');
@@ -2062,7 +2727,22 @@ function applyArchivedToChecklist(){
   });
 }
 
-function switchCardio(btn,prefix,key){var wrap=btn.parentNode;wrap.querySelectorAll(".cardio-machine-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");var parent=wrap.parentNode;parent.querySelectorAll(".cardio-machine-panel").forEach(function(p){p.classList.remove("show");});var panel=document.getElementById("panel-"+prefix+"-"+key);if(panel)panel.classList.add("show");}
+function switchCardio(btn,prefix,key){
+  var wrap=btn.parentNode;
+  var parent=wrap.parentNode;
+  var panel=document.getElementById("panel-"+prefix+"-"+key);
+  // If already active, toggle off
+  if(btn.classList.contains("active")){
+    btn.classList.remove("active");
+    if(panel) panel.classList.remove("show");
+    return;
+  }
+  // Otherwise activate this one, deactivate others
+  wrap.querySelectorAll(".cardio-machine-btn").forEach(function(b){b.classList.remove("active");});
+  btn.classList.add("active");
+  parent.querySelectorAll(".cardio-machine-panel").forEach(function(p){p.classList.remove("show");});
+  if(panel) panel.classList.add("show");
+}
 
 function initCardioPanels(){document.querySelectorAll(".cardio-machine-toggle").forEach(function(wrap){var firstBtn=wrap.querySelector(".cardio-machine-btn.active");if(firstBtn){var parent=wrap.parentNode;var panels=parent.querySelectorAll(".cardio-machine-panel");if(panels.length)panels[0].classList.add("show");}});}
 
@@ -2117,18 +2797,29 @@ function showTab(tab){
 
 function generateExport(){
   var data={};
+  // Workout sessions
   ['a','b','c','d','e'].forEach(function(day){
     var saved=getSaved(day);
-    if(saved.length) data[day]=saved;
+    if(saved.length) data['gymlog_'+day]=saved;
   });
+  // Measurements
+  var meas=getMeasurements();
+  if(meas.length) data['body_measurements']=meas;
+  // Archived exercises
+  var archived=getArchivedExercises();
+  if(archived.length) data['archived_exercises']=archived;
+  // Earned milestones
+  try{ var mil=JSON.parse(localStorage.getItem('earned_milestones')); if(mil&&mil.length) data['earned_milestones']=mil; }catch(e){}
+  // Exercise order
+  try{ var ord=JSON.parse(localStorage.getItem('exercise_order')); if(ord&&Object.keys(ord).length) data['exercise_order']=ord; }catch(e){}
+
   if(!Object.keys(data).length){
-    showToast('No session data to back up yet.');
+    showToast('No data to back up yet.');
     return;
   }
   var encoded=btoa(unescape(encodeURIComponent(JSON.stringify(data))));
   var ta=document.getElementById('export-text');
   ta.value=encoded;
-  // Try to select all text so user can see it
   ta.focus();
   ta.setSelectionRange(0, ta.value.length);
   document.getElementById('backup-hint').style.display='block';
@@ -2148,17 +2839,37 @@ function importData(){
   try{
     var data=JSON.parse(decodeURIComponent(escape(atob(code))));
     var count=0;
+    // Restore workout sessions — support both old format (key=day letter) and new (key=gymlog_X)
     ['a','b','c','d','e'].forEach(function(day){
-      if(data[day] && Array.isArray(data[day])){
-        localStorage.setItem('gymlog_'+day,JSON.stringify(data[day]));
-        count+=data[day].length;
+      var sessions=data['gymlog_'+day]||data[day];
+      if(sessions && Array.isArray(sessions)){
+        localStorage.setItem('gymlog_'+day,JSON.stringify(sessions));
+        count+=sessions.length;
       }
     });
+    // Restore measurements
+    if(data['body_measurements'] && Array.isArray(data['body_measurements'])){
+      localStorage.setItem('body_measurements',JSON.stringify(data['body_measurements']));
+    }
+    // Restore archived exercises
+    if(data['archived_exercises'] && Array.isArray(data['archived_exercises'])){
+      localStorage.setItem('archived_exercises',JSON.stringify(data['archived_exercises']));
+    }
+    // Restore earned milestones
+    if(data['earned_milestones'] && Array.isArray(data['earned_milestones'])){
+      localStorage.setItem('earned_milestones',JSON.stringify(data['earned_milestones']));
+    }
+    // Restore exercise order
+    if(data['exercise_order'] && typeof data['exercise_order']==='object'){
+      localStorage.setItem('exercise_order',JSON.stringify(data['exercise_order']));
+    }
     var hint=document.getElementById('restore-hint');
-    hint.textContent='✅ Restored '+count+' sessions successfully!';
+    hint.textContent='✅ Restored '+count+' sessions + measurements + settings!';
     hint.style.display='block';
     renderProgress();
+    renderDaySummaries();
     loadLastTimes();
+    applyArchivedToChecklist();
     setTimeout(function(){ closeModal(); showToast('Restored! '+count+' sessions loaded.'); }, 1200);
   } catch(e){
     var hint=document.getElementById('restore-hint');
@@ -2299,12 +3010,16 @@ function renderProgress(){
       +'<button class="sess-nav-btn" onclick="navSession(\"'+day+'\",1)" '+(idx===n-1?'disabled':'')+'>&rarr; Older</button>'
       +'</div>'):'';
     var rows=s.entries.length
-      ?s.entries.map(function(e){return '<div class="prog-session-item"><b>'+e.ex+':</b> <span>'+e.note+'</span></div>';}).join('')
+      ?s.entries.filter(function(e){ return !e.ex.endsWith('-rpe')&&!e.ex.endsWith('-pain'); })
+        .map(function(e){return '<div class="prog-session-item"><b>'+e.ex+':</b> <span>'+e.note+'</span></div>';}).join('')
       :'<div class="prog-session-item" style="color:#C8C6BD;font-style:italic">No notes recorded</div>';
-    var notesHTML=s.notes?'<div style="padding:8px 14px;font-size:12px;color:#7F77DD;font-style:italic;border-top:0.5px solid #F1EFE8">📝 '+s.notes+'</div>':'';
+    var checkinEmoji={great:'💪 Great',okay:'😐 Okay',tired:'😴 Tired'};
+    var checkinHTML=s.checkin?'<div class="prog-session-notes" style="border-top:none;padding-top:0">'+checkinEmoji[s.checkin]+' day</div>':'';
+    var notesHTML=s.notes?'<div class="prog-session-notes">📝 '+s.notes+'</div>':'';
     var sessHTML='<div class="prog-session">'
-      +'<div class="prog-session-date">'+s.date+' <button class="edit-date-btn" onclick="editSessionDate(\"'+day+'\",'+idx+')" title="Edit date">✏️</button></div>'
-      +rows+notesHTML+'</div>';
+      +'<div class="prog-session-date">'+s.date+(s.duration?' <span class="prog-session-dur">⏱ '+s.duration+'min</span>':'')
+      +' <button class="edit-date-btn" onclick="editSessionDate(\"'+day+'\",'+idx+')" title="Edit date">✏️</button></div>'
+      +checkinHTML+rows+notesHTML+'</div>';
     var muscles=MUSCLE_MAP[day]||{front:[],back:[]};
     var mapHTML='<div class="muscle-map-wrap"><div class="muscle-map-title">Muscles Worked</div>'
       +'<svg class="muscle-map-svg" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg">'
@@ -2321,8 +3036,11 @@ function showToast(msg){
 }
 
 renderProgress();
-
-// ── Restore any in-progress draft from a previous session ────────────
+renderDaySummaries();
+// Wipe any exercise_order saved by previous broken versions — it was never working
+localStorage.removeItem('exercise_order');
+applyExerciseOrder();
+setTimeout(checkMilestones, 500);
 (function restoreInProgressDraft(){
   var days=['a','b','c','d','e'];
   var totals={a:10,b:10,c:6,d:9,e:10};
@@ -2393,6 +3111,10 @@ function buildBinPayload(){
   catch(e) { payload['archived_exercises'] = []; }
   try { payload['body_measurements'] = JSON.parse(localStorage.getItem('body_measurements')) || []; }
   catch(e) { payload['body_measurements'] = []; }
+  try { payload['exercise_order'] = JSON.parse(localStorage.getItem('exercise_order')) || {}; }
+  catch(e) { payload['exercise_order'] = {}; }
+  try { payload['earned_milestones'] = JSON.parse(localStorage.getItem('earned_milestones')) || []; }
+  catch(e) { payload['earned_milestones'] = []; }
   return payload;
 }
 
@@ -2494,17 +3216,6 @@ function renderProgressBadges(day){
 
 // Rest timer defined above
 // Hook rest timer into tog() — start on check, stop on uncheck
-var _origTog=tog;
-tog=function(id,day,total){
-  _origTog(id,day,total);
-  var el=document.getElementById(id);
-  if(el && el.classList.contains('done')){
-    startRestTimer(90);
-  } else {
-    stopRestTimer();
-  }
-};
-
 // ── Incomplete day guard ─────────────────────────────────────────────
 function completeDay(day,label){
   var p=document.getElementById('p-'+day);
@@ -2519,6 +3230,17 @@ function completeDay(day,label){
   var offset=now.getTimezoneOffset();
   var local=new Date(now.getTime()-offset*60000);
   document.getElementById('session-datetime').value=local.toISOString().slice(0,16);
+  // Show session duration if available
+  var dur=getSessionDuration(day);
+  var durEl=document.getElementById('session-duration-display');
+  if(durEl){
+    if(dur!==null && dur>0){
+      durEl.textContent='⏱ Session duration: '+(dur>=60?Math.floor(dur/60)+'h '+(dur%60)+'m':dur+' min');
+      durEl.style.display='block';
+    } else {
+      durEl.style.display='none';
+    }
+  }
   document.getElementById('date-modal-overlay').classList.add('show');
 }
 
@@ -2602,6 +3324,14 @@ function computeStats(){
     avgExChecked:avgExChecked,topSkipped:skipRates.slice(0,3),favDay:dayFullNames[favDay],favCount:dayCounts[favDay]};
 }
 
+function statCard(label,val,sub){
+  return '<div class="stat-card"><div class="stat-card-label">'+label+'</div><div class="stat-card-val">'+val+'</div>'+(sub?'<div class="stat-card-sub">'+sub+'</div>':'')+'</div>';
+}
+
+function statBox(label,value){
+  return '<div class="stat-card"><div class="stat-card-label">'+label+'</div><div class="stat-card-val">'+value+'</div></div>';
+}
+
 function renderStats(){
   var s=computeStats();
   var el=document.getElementById('prog-stats');
@@ -2622,6 +3352,7 @@ function renderStats(){
     +statCard('Avg Exercises',''+s.avgExChecked,'per session')
     +statCard('Most Done Day',s.favDay,''+s.favCount+' sessions')
     +'</div></div>';
+  html+=renderWeeklyConsistency();
   html+='<div class="stats-section"><div class="stats-section-title">Days Since Last Done</div><div class="day-since-grid">';
   ['a','b','c','d','e'].forEach(function(d){
     var ts=s.dayLastTs[d],ago=ts?Math.floor((now-ts)/MS_DAY):null;
@@ -2630,6 +3361,10 @@ function renderStats(){
     html+='<div class="day-since-card"><span class="day-since-name">'+s.dayNames[d]+'</span><span class="day-since-val" style="color:'+col+'">'+agoStr+'</span></div>';
   });
   html+='</div></div>';
+  // Volume chart
+  html+='<div class="stats-section"><div class="stats-section-title">Weekly Volume (lbs moved)</div>'
+    +'<div class="vol-chart-wrap"><div class="vol-chart-inner"><canvas id="vol-chart-canvas"></canvas></div></div>'
+    +'</div>';
   if(s.topSkipped.length){
     html+='<div class="stats-section"><div class="stats-section-title">Most Skipped Exercises</div><div class="skip-list">';
     s.topSkipped.forEach(function(item){
@@ -2637,37 +3372,284 @@ function renderStats(){
     });
     html+='</div></div>';
   }
+  // CSV Export button
+  html+='<div class="stats-section">'
+    +'<button onclick="exportCSV()" style="width:100%;padding:11px;background:#E1F5EE;border:1.5px solid #0F6E56;border-radius:10px;color:#085041;font-size:13px;font-weight:600;cursor:pointer;">📥 Export All Data as CSV</button>'
+    +'</div>';
+  html+=renderMilestones();
   el.innerHTML=html;
+  // Draw volume chart after DOM update
+  setTimeout(drawVolumeChart,50);
 }
 
-function statCard(label,val,sub){
-  return '<div class="stat-card"><div class="stat-card-label">'+label+'</div><div class="stat-card-val">'+val+'</div>'+(sub?'<div class="stat-card-sub">'+sub+'</div>':'')+'</div>';
+// ── Milestone badge system ───────────────────────────────────────────
+var MILESTONES=[
+  {id:'s1',icon:'🌱',label:'First Session',check:function(s){return s&&s.total>=1;}},
+  {id:'s5',icon:'🔥',label:'5 Sessions',check:function(s){return s&&s.total>=5;}},
+  {id:'s10',icon:'💪',label:'10 Sessions',check:function(s){return s&&s.total>=10;}},
+  {id:'s25',icon:'⚡',label:'25 Sessions',check:function(s){return s&&s.total>=25;}},
+  {id:'s50',icon:'🏆',label:'50 Sessions',check:function(s){return s&&s.total>=50;}},
+  {id:'s100',icon:'🦁',label:'100 Sessions',check:function(s){return s&&s.total>=100;}},
+  {id:'streak3',icon:'📅',label:'3-Day Streak',check:function(s){return s&&s.streak>=3;}},
+  {id:'streak7',icon:'🗓',label:'7-Day Streak',check:function(s){return s&&s.streak>=7;}},
+  {id:'wk4',icon:'🎯',label:'4-Week Consistent',check:function(s,w){return w&&w>=4;}},
+  {id:'wk8',icon:'🏅',label:'8-Week Consistent',check:function(s,w){return w&&w>=8;}},
+  {id:'wk12',icon:'🥇',label:'12-Week Warrior',check:function(s,w){return w&&w>=12;}},
+  {id:'alldays',icon:'🌟',label:'All 5 Days Done',check:function(s){return s&&Object.keys(s.dayCounts).every(function(d){return s.dayCounts[d]>0;});}},
+  {id:'pr1',icon:'🏋️',label:'First PR',check:function(s,w,prs){return prs&&prs>0;}},
+  {id:'pr10',icon:'🎖',label:'10 PRs',check:function(s,w,prs){return prs&&prs>=10;}},
+  {id:'month1',icon:'📆',label:'1 Month Active',check:function(s){return s&&s.thisMonth>=1&&s.total>=4;}},
+  {id:'earlybird',icon:'🌅',label:'Early Bird',check:function(s,w,p,sessions){
+    return sessions&&sessions.some(function(sess){ var d=new Date(sess.ts); return d.getHours()<7; });
+  }},
+  {id:'nightowl',icon:'🦉',label:'Night Owl',check:function(s,w,p,sessions){
+    return sessions&&sessions.some(function(sess){ var d=new Date(sess.ts); return d.getHours()>=21; });
+  }},
+  {id:'speed',icon:'⚡',label:'Quick Session',check:function(s,w,p,sessions){
+    return sessions&&sessions.some(function(sess){ return sess.duration&&sess.duration<40; });
+  }},
+  {id:'marathon',icon:'🏃',label:'Marathon Session',check:function(s,w,p,sessions){
+    return sessions&&sessions.some(function(sess){ return sess.duration&&sess.duration>=90; });
+  }},
+];
+
+function getTotalPRs(){
+  var prs=0;
+  ['a','b','c','d','e'].forEach(function(d){
+    getSaved(d).forEach(function(session){
+      if(session.entries){
+        session.entries.forEach(function(e){
+          if(e.ex&&e.ex.endsWith('-pr')) prs++;
+        });
+      }
+    });
+  });
+  return prs;
 }
 
-function statBox(label,value){
-  return '<div class="stat-card"><div class="stat-card-label">'+label+'</div><div class="stat-card-val">'+value+'</div></div>';
+function getWeeklyConsistency(){
+  // Count weeks (Mon-Sun) that had ≥3 sessions
+  var allSessions=[];
+  ['a','b','c','d','e'].forEach(function(d){
+    getSaved(d).forEach(function(s){
+      var ts=Date.parse(s.date.replace(' at ',' '))||0;
+      if(ts) allSessions.push({ts:ts,duration:s.duration||null});
+    });
+  });
+  if(!allSessions.length) return {weeksHit:0,sessions:allSessions};
+  // Group by ISO week
+  var weekMap={};
+  allSessions.forEach(function(s){
+    var d=new Date(s.ts);
+    var day=d.getDay();
+    var mon=new Date(d); mon.setDate(d.getDate()-(day===0?6:day-1));
+    var wk=mon.getFullYear()+'-'+(mon.getMonth()+1)+'-'+mon.getDate();
+    if(!weekMap[wk]) weekMap[wk]=0;
+    weekMap[wk]++;
+  });
+  var weeksHit=Object.keys(weekMap).filter(function(wk){return weekMap[wk]>=3;}).length;
+  return {weeksHit:weeksHit,sessions:allSessions};
+}
+
+function checkMilestones(){
+  var earned=getEarnedMilestones();
+  var s=computeStats();
+  var wkData=getWeeklyConsistency();
+  var prs=getTotalPRs();
+  var newOnes=[];
+  MILESTONES.forEach(function(m){
+    if(earned.indexOf(m.id)===-1&&m.check(s,wkData.weeksHit,prs,wkData.sessions)){
+      earned.push(m.id);
+      newOnes.push(m);
+    }
+  });
+  if(newOnes.length){
+    localStorage.setItem('earned_milestones',JSON.stringify(earned));
+    newOnes.forEach(function(m,i){
+      setTimeout(function(){ showToast('🎉 Badge: '+m.icon+' '+m.label+'!'); haptic('success'); },i*2500);
+    });
+  }
+}
+
+function getEarnedMilestones(){
+  try{ return JSON.parse(localStorage.getItem('earned_milestones'))||[]; }
+  catch(e){ return []; }
+}
+
+function renderMilestones(){
+  var earned=getEarnedMilestones();
+  var s=computeStats();
+  var wkData=getWeeklyConsistency();
+  var prs=getTotalPRs();
+  var html='<div class="stats-section"><div class="stats-section-title">🏅 Milestone Badges</div><div class="milestone-shelf">';
+  MILESTONES.forEach(function(m){
+    var isEarned=m.check(s,wkData.weeksHit,prs,wkData.sessions)||earned.indexOf(m.id)!==-1;
+    html+='<div class="milestone-badge '+(isEarned?'earned':'locked')+'">'
+      +(isEarned?m.icon:'🔒')+' '+m.label+'</div>';
+  });
+  html+='</div></div>';
+  return html;
+}
+
+// ── Weekly consistency in Stats ──────────────────────────────────────
+function renderWeeklyConsistency(){
+  var wkData=getWeeklyConsistency();
+  var weeksHit=wkData.weeksHit;
+  var html='<div class="stats-section"><div class="stats-section-title">Weekly Consistency</div><div class="stat-grid">'
+    +statCard('Weeks w/ 3+ Sessions',''+weeksHit,'≥3 sessions = consistent')
+    +statCard('Current Week','',function(){
+      var sessions=wkData.sessions;
+      var now=new Date(),day=now.getDay();
+      var mon=new Date(now); mon.setDate(now.getDate()-(day===0?6:day-1)); mon.setHours(0,0,0,0);
+      var count=sessions.filter(function(s){return s.ts>=mon.getTime();}).length;
+      return count+' session'+(count===1?'':'s')+' this week';
+    }())
+    +'</div></div>';
+  return html;
+}
+
+// ── Weekly volume chart ──────────────────────────────────────────────
+function drawVolumeChart(){
+  var canvas=document.getElementById('vol-chart-canvas');
+  if(!canvas) return;
+  // Gather all sessions, compute weekly total lbs
+  var weekMap={};
+  var weekOrder=[];
+  ['a','b','c','d','e'].forEach(function(d){
+    getSaved(d).forEach(function(session){
+      var ts=Date.parse(session.date.replace(' at ',' '))||0;
+      if(!ts) return;
+      var dt=new Date(ts);
+      var day=dt.getDay();
+      var mon=new Date(dt); mon.setDate(dt.getDate()-(day===0?6:day-1)); mon.setHours(0,0,0,0);
+      var wk=mon.getFullYear()+'-'+String(mon.getMonth()+1).padStart(2,'0')+'-'+String(mon.getDate()).padStart(2,'0');
+      if(!weekMap[wk]){ weekMap[wk]=0; weekOrder.push(wk); }
+      session.entries.forEach(function(e){
+        if(e.note&&e.note.indexOf('Set ')===0){
+          parseSetWeights(e.note).forEach(function(w){ weekMap[wk]+=w; });
+        }
+      });
+    });
+  });
+  weekOrder=weekOrder.filter(function(w,i,a){return a.indexOf(w)===i;}).sort();
+  var points=weekOrder.slice(-12).map(function(wk){
+    var d=new Date(wk+'T12:00:00');
+    var label=(d.getMonth()+1)+'/'+d.getDate();
+    return {label:label,val:Math.round(weekMap[wk])};
+  });
+  if(!points.length){ canvas.getContext('2d').fillStyle='#C8C6BD'; canvas.getContext('2d').font='12px system-ui'; canvas.getContext('2d').fillText('No data yet',10,40); return; }
+
+  var dpr=window.devicePixelRatio||1;
+  var w=canvas.parentNode.offsetWidth||320;
+  var chartH=160;
+  canvas.width=w*dpr; canvas.height=chartH*dpr;
+  canvas.style.width=w+'px'; canvas.style.height=chartH+'px';
+  var ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+
+  var pad={t:20,r:10,b:36,l:50};
+  var cw=w-pad.l-pad.r,ch=chartH-pad.t-pad.b;
+  var yMax=Math.ceil(Math.max.apply(null,points.map(function(p){return p.val;}))*1.15)||100;
+  var yMin=0;
+  var barW=Math.min(28,cw/points.length-4);
+
+  // Grid
+  ctx.strokeStyle='#F1EFE8'; ctx.lineWidth=1;
+  for(var t=0;t<=4;t++){
+    var yp=pad.t+ch*(1-t/4);
+    ctx.beginPath(); ctx.moveTo(pad.l,yp); ctx.lineTo(pad.l+cw,yp); ctx.stroke();
+    ctx.fillStyle='#888780'; ctx.font='10px system-ui'; ctx.textAlign='right';
+    ctx.fillText(Math.round(yMax*t/4),pad.l-4,yp+3);
+  }
+
+  // Bars
+  points.forEach(function(p,i){
+    var bx=pad.l+i*(cw/points.length)+(cw/points.length-barW)/2;
+    var bh=ch*(p.val/yMax);
+    var by=pad.t+ch-bh;
+    var grad=ctx.createLinearGradient(bx,by,bx,pad.t+ch);
+    grad.addColorStop(0,'#7F77DD'); grad.addColorStop(1,'rgba(127,119,221,0.4)');
+    ctx.fillStyle=grad;
+    ctx.beginPath();
+    ctx.roundRect?ctx.roundRect(bx,by,barW,bh,3):ctx.rect(bx,by,barW,bh);
+    ctx.fill();
+    // Value on top
+    if(p.val>0){
+      ctx.fillStyle='#3C3489'; ctx.font='bold 9px system-ui'; ctx.textAlign='center';
+      var kStr=p.val>=1000?Math.round(p.val/100)/10+'k':p.val;
+      ctx.fillText(kStr,bx+barW/2,by-3);
+    }
+    // Date below
+    ctx.fillStyle='#888780'; ctx.font='9px system-ui'; ctx.textAlign='center';
+    ctx.fillText(p.label,bx+barW/2,pad.t+ch+14);
+  });
+}
+
+// ── CSV export ────────────────────────────────────────────────────────
+function exportCSV(){
+  var rows=[['Date','Day','Exercise','Note','Duration (min)','RPE','Discomfort']];
+  ['a','b','c','d','e'].forEach(function(d){
+    getSaved(d).forEach(function(session){
+      var dur=session.duration||'';
+      var entryMap={};
+      var rpeMap={};
+      var painArr=[];
+      (session.entries||[]).forEach(function(e){
+        if(e.ex&&e.ex.endsWith('-rpe')) rpeMap[e.ex.replace('-rpe','')]=e.note.replace('RPE ','').replace('/10','');
+        else if(e.ex&&e.ex.endsWith('-pain')) painArr.push(e.ex.replace('-pain',''));
+        else entryMap[e.ex]=e.note;
+      });
+      var mainEntries=Object.keys(entryMap).filter(function(k){return !k.match(/^wu-|^d\dcardio-|^d\d-/)||entryMap[k];});
+      if(!mainEntries.length){
+        rows.push(['"'+session.date+'"','"'+(session.label||d)+'"','(no entries)','',''+dur,'','']);
+      } else {
+        mainEntries.forEach(function(ex){
+          var note=entryMap[ex]||'';
+          var rpe=rpeMap[ex]||'';
+          var pain=painArr.indexOf(ex)!==-1?'Yes':'';
+          rows.push(['"'+session.date+'"','"'+(session.label||d)+'"','"'+ex+'"','"'+note+'"',''+dur,''+rpe,pain]);
+        });
+      }
+    });
+  });
+  var csv=rows.map(function(r){return r.join(',');}).join('\n');
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='gym-log-'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); },200);
+  showToast('CSV exported — check Files 📂');
 }
 
 // ── Share / session summary ──────────────────────────────────────────
-function buildShareText(day,label,entries,prs){
+function buildShareText(day,label,entries,prs,sessionObj){
   var lines=['💪 '+label,''];
+  if(sessionObj&&sessionObj.duration){ lines.push('⏱ Duration: '+(sessionObj.duration>=60?Math.floor(sessionObj.duration/60)+'h '+(sessionObj.duration%60)+'m':sessionObj.duration+' min')); lines.push(''); }
   var exMap={};
   var notes={};
+  var rpes={};
+  var pains=[];
   entries.forEach(function(e){
     if(e.note && e.note.indexOf('Set ')===0) exMap[e.ex]=e.note;
+    else if(e.ex && e.ex.endsWith('-rpe')) rpes[e.ex.replace('-rpe','')]=e.note;
+    else if(e.ex && e.ex.endsWith('-pain')) pains.push(e.ex.replace('-pain',''));
     else if(!e.ex.match(/^wu-|^d\dcardio-|^d\d-/)) notes[e.ex]=e.note;
   });
   Object.keys(exMap).forEach(function(ex){
-    lines.push('• '+ex);
+    lines.push('• '+ex+(rpes[ex]?' ('+rpes[ex]+')':''));
     exMap[ex].split('|').forEach(function(s){ lines.push('  '+s.trim()); });
     if(notes[ex+'-notes']) lines.push('  📝 '+notes[ex+'-notes']);
+    if(pains.indexOf(ex)!==-1) lines.push('  ⚠️ Discomfort flagged');
   });
   if(prs&&prs.length){lines.push('');lines.push('🏆 Personal Records');prs.forEach(function(pr){lines.push('  '+pr.ex+': '+pr.weight+' lbs (was '+pr.prev+')');});}
   return lines.join('\n');
 }
 
-function showShareModal(day,label,entries,prs){
-  document.getElementById('share-text').value=buildShareText(day,label,entries,prs||[]);
+function showShareModal(day,label,entries,prs,sessionObj){
+  document.getElementById('share-text').value=buildShareText(day,label,entries,prs||[],sessionObj||null);
   document.getElementById('share-modal-overlay').classList.add('show');
 }
 
@@ -2920,9 +3902,13 @@ function toggleDarkMode(){
 
 // ── Haptic feedback ───────────────────────────────────────────────────────────────────
 function haptic(style){
-  if(!navigator.vibrate) return;
-  if(style==='light') navigator.vibrate(10);
-  else if(style==='success') navigator.vibrate([20,40,20]);
+  if(style==='light'){
+    if(navigator.vibrate) navigator.vibrate(12);
+  } else if(style==='success'){
+    if(navigator.vibrate) navigator.vibrate([20,40,20]);
+  } else if(style==='medium'){
+    if(navigator.vibrate) navigator.vibrate(25);
+  }
 }
 
 // ── Rest timer with duration presets ────────────────────────────────────────────────────
@@ -2944,6 +3930,7 @@ function startRestTimer(seconds){
   restSeconds=seconds||restDefault;
   document.getElementById('rest-timer-count').textContent=restSeconds;
   document.getElementById('rest-timer-bar').classList.add('show');
+  document.body.classList.add('timer-active');
   [30,60,90,120].forEach(function(d){
     var btn=document.getElementById('rt-'+d);
     if(btn) btn.style.background=d===restSeconds?'rgba(255,255,255,0.4)':'';
@@ -2954,6 +3941,7 @@ function startRestTimer(seconds){
     if(restSeconds<=0){
       clearInterval(restInterval);
       document.getElementById('rest-timer-bar').classList.remove('show');
+      document.body.classList.remove('timer-active');
       showToast('Rest done — next set! 💪');
       haptic('success');
     }
@@ -2961,7 +3949,11 @@ function startRestTimer(seconds){
 }
 
 function addRestTime(s){ restSeconds+=s; document.getElementById('rest-timer-count').textContent=restSeconds; }
-function stopRestTimer(){ clearInterval(restInterval); document.getElementById('rest-timer-bar').classList.remove('show'); }
+function stopRestTimer(){
+  clearInterval(restInterval);
+  document.getElementById('rest-timer-bar').classList.remove('show');
+  document.body.classList.remove('timer-active');
+}
 
 // ── Personal Record detection ────────────────────────────────────────────────────────────────
 function checkForPRs(day, entries){
@@ -2995,14 +3987,18 @@ function showPRToast(prs){
   });
 }
 
-// Hook rest timer into tog
+// Hook: stronger haptic on checkbox, no auto-timer (use per-exercise ⏱ button instead)
 (function(){
   var _base=tog;
   tog=function(id,day,total){
     _base(id,day,total);
     var el=document.getElementById(id);
-    if(el&&el.classList.contains('done')) startRestTimer(restDefault);
-    else stopRestTimer();
+    // Stronger haptic pattern on check/uncheck
+    if(el&&el.classList.contains('done')){
+      if(navigator.vibrate) navigator.vibrate([15,30,15]);
+    } else {
+      if(navigator.vibrate) navigator.vibrate(10);
+    }
   };
 })();
 
@@ -3033,6 +4029,12 @@ function showPRToast(prs){
     }
     if(data['body_measurements'] && Array.isArray(data['body_measurements']) && data['body_measurements'].length){
       localStorage.setItem('body_measurements', JSON.stringify(data['body_measurements']));
+    }
+    if(data['exercise_order'] && typeof data['exercise_order']==='object'){
+      localStorage.setItem('exercise_order', JSON.stringify(data['exercise_order']));
+    }
+    if(data['earned_milestones'] && Array.isArray(data['earned_milestones'])){
+      localStorage.setItem('earned_milestones', JSON.stringify(data['earned_milestones']));
     }
     if(restored){
       renderProgress();
