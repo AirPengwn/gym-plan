@@ -1386,6 +1386,12 @@ function normalizeEx(s){
 }
 
 function buildGlobalRepMap(){
+  console.log('=== buildGlobalRepMap START ===');
+  ['a','b','c','d','e'].forEach(function(day){
+    var s=getSaved(day);
+    console.log('Day '+day+': '+s.length+' sessions');
+    if(s.length) console.log('  most recent date: '+s[0].date+' | ts: '+Date.parse(s[0].date.replace(' at ',' ')));
+  });
   // Collect the most recent entry for every exercise name across ALL days
   // keyed by normalized exercise name -> {note, date, ts}
   var globalMap={};
@@ -1406,6 +1412,8 @@ function buildGlobalRepMap(){
       });
     });
   });
+  console.log('=== globalMap keys ===');
+  Object.keys(globalMap).forEach(function(k){ console.log('  '+k+' -> '+globalMap[k].date+' | '+globalMap[k].note.substring(0,40)); });
   return globalMap;
 }
 
