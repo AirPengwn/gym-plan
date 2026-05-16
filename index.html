@@ -202,6 +202,34 @@ canvas.prog-chart{display:block;border-radius:8px}
 .modal-btn-primary{flex:2;padding:11px;font-size:13px;font-weight:600;border-radius:8px;border:none;background:#5B4EA8;color:#fff;cursor:pointer}
 .modal-btn-secondary{flex:1;padding:11px;font-size:13px;border-radius:8px;border:0.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer}
 .modal-divider{border:none;border-top:1px solid #F1EFE8;margin:1rem 0}
+
+body.dark{background:#1A1A2E;color:#E8E6F8}
+body.dark .item{background:#252540;border-color:#3C3A5C}
+body.dark .item.done{background:#1E1E38;border-color:#5B4EA8}
+body.dark .day-btn{background:#252540;border-color:#3C3A5C;color:#B4B2D8}
+body.dark .day-btn.active{background:#5B4EA8;color:#fff}
+body.dark .prog-tab-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
+body.dark .prog-tab-btn.active{background:#5B4EA8;color:#fff}
+body.dark .prog-stats{background:#252540}
+body.dark .stat-box{background:#1A1A2E}
+body.dark .stat-num{color:#B4B2D8}
+body.dark .prog-day-card{background:#252540;border-color:#3C3A5C}
+body.dark .prog-session{background:#1A1A2E;border-color:#3C3A5C}
+body.dark .prog-session-date{color:#9896C8}
+body.dark .ex-detail-panel{background:#252540;border-color:#3C3A5C}
+body.dark .stat-card{background:#252540}
+body.dark .stat-card-label{color:#9896C8}
+body.dark .stat-card-val{color:#B4B2D8}
+body.dark .meas-entry-card,.dark .meas-history-item{background:#252540;border-color:#3C3A5C}
+body.dark .modal{background:#252540;color:#E8E6F8}
+body.dark .date-input,body.dark #session-notes{background:#1A1A2E;color:#E8E6F8;border-color:#3C3A5C}
+body.dark #share-modal{background:#252540}
+body.dark #share-text{background:#1A1A2E;color:#E8E6F8;border-color:#3C3A5C}
+body.dark .sess-nav{background:#252540}
+body.dark .sess-nav-btn{background:#1A1A2E;border-color:#3C3A5C;color:#B4B2D8}
+body.dark .prog-empty{color:#9896C8}
+body.dark .skip-row{background:#2A1A1A}
+body{transition:background 0.2s,color 0.2s}
 </style>
 </head>
 <body>
@@ -212,10 +240,13 @@ canvas.prog-chart{display:block;border-radius:8px}
     <div style="font-size:12px;color:#888780;margin-top:2px;">Anytime Fitness Guilford &middot; Complete in any order &middot; Rest whenever needed</div>
   </div>
   <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
-    <button onclick="reloadPage()" style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#EEEDFE;border:1px solid #7F77DD;border-radius:8px;color:#3C3489;font-size:12px;font-weight:600;cursor:pointer;">
+    <div style="display:flex;gap:5px;">
+      <button onclick="reloadPage()" style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#EEEDFE;border:1px solid #7F77DD;border-radius:8px;color:#3C3489;font-size:12px;font-weight:600;cursor:pointer;">
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 2.5A5.5 5.5 0 1 0 12 6.5" stroke="#3C3489" stroke-width="1.5" stroke-linecap="round"/><polyline points="9,0.5 12,2.5 10,5.5" fill="#3C3489"/></svg>
       Update
     </button>
+      <button onclick="toggleDarkMode()" id="dark-toggle" style="padding:8px 10px;background:#F5F5F2;border:1px solid #D3D1C7;border-radius:8px;font-size:15px;cursor:pointer;" title="Toggle dark mode">🌙</button>
+    </div>
     <button onclick="showExportImport()" style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#E1F5EE;border:1px solid #0F6E56;border-radius:8px;color:#085041;font-size:12px;font-weight:600;cursor:pointer;">
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3 6l3.5 3.5L10 6" stroke="#085041" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 10v1.5a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5V10" stroke="#085041" stroke-width="1.5" stroke-linecap="round"/></svg>
       Backup
@@ -1318,6 +1349,7 @@ canvas.prog-chart{display:block;border-radius:8px}
       <div class="date-input-label">Date and time</div>
       <input type="datetime-local" class="date-input" id="session-datetime"/>
     </div>
+    <div class="date-input-wrap" style="margin-top:0.5rem;"><div class="date-input-label">Session notes (optional)</div><textarea id="session-notes" placeholder="e.g. Felt strong today..." style="width:100%;box-sizing:border-box;padding:8px 10px;font-size:13px;border:1.5px solid #C4C0E8;border-radius:8px;background:#fff;color:#2C2C2A;outline:none;font-family:inherit;resize:none;min-height:60px;margin-top:2px;"></textarea></div>
     <div class="modal-btn-row" style="margin-top:0.75rem;">
       <button class="modal-btn-primary" onclick="confirmSave()">Save session</button>
       <button class="modal-btn-secondary" onclick="cancelDateModal()">Cancel</button>
@@ -1381,6 +1413,7 @@ function tog(id,day,total){
   var d=p.querySelectorAll('.item.done').length;
   document.getElementById('cnt-'+day).textContent=d+' / '+total;
   document.getElementById('bar-'+day).style.width=Math.round(d/total*100)+'%';
+  haptic('light');
   // Save draft every time an exercise is checked/unchecked
   saveDraft(day);
   // Auto-scroll next uncompleted exercise into view
@@ -1522,19 +1555,22 @@ function confirmSave(){
   var dateStr=dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
   var timeStr=dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
   var saved=getSaved(day);
-  saved.unshift({date:dateStr+' at '+timeStr,label:label,entries:entries});
+  var sn=document.getElementById('session-notes');var sessionNotes=sn?sn.value.trim():'';if(sn)sn.value='';
+  saved.unshift({date:dateStr+' at '+timeStr,label:label,entries:entries,notes:sessionNotes||null});
   if(saved.length>20) saved=saved.slice(0,20);
   localStorage.setItem('gymlog_'+day,JSON.stringify(saved));
   document.getElementById('date-modal-overlay').classList.remove('show');
   showToast('Session saved! ✓');
   var savedEntries=saved[0].entries; var savedLabel=label; var savedDay=day;
+  var prs=checkForPRs(day, savedEntries);
   rst(day,counts[day]);
   loadLastTimes();
   pendingDay=null;
   pendingLabel=null;
   stopRestTimer();
-  // Show share summary
-  setTimeout(function(){ showShareModal(savedDay, savedLabel, savedEntries); }, 400);
+  haptic('success');
+  if(prs.length){ showPRToast(prs); setTimeout(function(){ showShareModal(savedDay,savedLabel,savedEntries,prs); },prs.length*2200+400); }
+  else { setTimeout(function(){ showShareModal(savedDay,savedLabel,savedEntries,[]); },400); }
   // Auto-sync to JSONbin after every save
   syncToJbin(function(ok){
     if(!ok) showToast('⚠️ Cloud sync failed — data saved locally');
@@ -2265,9 +2301,10 @@ function renderProgress(){
     var rows=s.entries.length
       ?s.entries.map(function(e){return '<div class="prog-session-item"><b>'+e.ex+':</b> <span>'+e.note+'</span></div>';}).join('')
       :'<div class="prog-session-item" style="color:#C8C6BD;font-style:italic">No notes recorded</div>';
+    var notesHTML=s.notes?'<div style="padding:8px 14px;font-size:12px;color:#7F77DD;font-style:italic;border-top:0.5px solid #F1EFE8">📝 '+s.notes+'</div>':'';
     var sessHTML='<div class="prog-session">'
       +'<div class="prog-session-date">'+s.date+' <button class="edit-date-btn" onclick="editSessionDate(\"'+day+'\",'+idx+')" title="Edit date">✏️</button></div>'
-      +rows+'</div>';
+      +rows+notesHTML+'</div>';
     var muscles=MUSCLE_MAP[day]||{front:[],back:[]};
     var mapHTML='<div class="muscle-map-wrap"><div class="muscle-map-title">Muscles Worked</div>'
       +'<svg class="muscle-map-svg" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg">'
@@ -2455,36 +2492,7 @@ function renderProgressBadges(day){
   });
 }
 
-// ── Rest Timer ───────────────────────────────────────────────────────
-var restInterval=null;
-var restSeconds=0;
-
-function startRestTimer(seconds){
-  clearInterval(restInterval);
-  restSeconds=seconds||90;
-  document.getElementById('rest-timer-count').textContent=restSeconds;
-  document.getElementById('rest-timer-bar').classList.add('show');
-  restInterval=setInterval(function(){
-    restSeconds--;
-    document.getElementById('rest-timer-count').textContent=restSeconds;
-    if(restSeconds<=0){
-      clearInterval(restInterval);
-      document.getElementById('rest-timer-bar').classList.remove('show');
-      showToast('Rest done — next set! 💪');
-    }
-  },1000);
-}
-
-function addRestTime(s){
-  restSeconds+=s;
-  document.getElementById('rest-timer-count').textContent=restSeconds;
-}
-
-function stopRestTimer(){
-  clearInterval(restInterval);
-  document.getElementById('rest-timer-bar').classList.remove('show');
-}
-
+// Rest timer defined above
 // Hook rest timer into tog() — start on check, stop on uncheck
 var _origTog=tog;
 tog=function(id,day,total){
@@ -2641,7 +2649,7 @@ function statBox(label,value){
 }
 
 // ── Share / session summary ──────────────────────────────────────────
-function buildShareText(day,label,entries){
+function buildShareText(day,label,entries,prs){
   var lines=['💪 '+label,''];
   var exMap={};
   var notes={};
@@ -2654,11 +2662,12 @@ function buildShareText(day,label,entries){
     exMap[ex].split('|').forEach(function(s){ lines.push('  '+s.trim()); });
     if(notes[ex+'-notes']) lines.push('  📝 '+notes[ex+'-notes']);
   });
+  if(prs&&prs.length){lines.push('');lines.push('🏆 Personal Records');prs.forEach(function(pr){lines.push('  '+pr.ex+': '+pr.weight+' lbs (was '+pr.prev+')');});}
   return lines.join('\n');
 }
 
-function showShareModal(day,label,entries){
-  document.getElementById('share-text').value=buildShareText(day,label,entries);
+function showShareModal(day,label,entries,prs){
+  document.getElementById('share-text').value=buildShareText(day,label,entries,prs||[]);
   document.getElementById('share-modal-overlay').classList.add('show');
 }
 
@@ -2895,6 +2904,108 @@ function drawMeasChartGeneric(data, canvas, wrap){
   });
 }
 
+// ── Dark mode ──────────────────────────────────────────────────────────────────
+function toggleDarkMode(){
+  var isDark=document.body.classList.toggle('dark');
+  localStorage.setItem('darkMode',isDark?'1':'0');
+  document.getElementById('dark-toggle').textContent=isDark?'☀️':'🌙';
+}
+(function initDarkMode(){
+  if(localStorage.getItem('darkMode')==='1'){
+    document.body.classList.add('dark');
+    var btn=document.getElementById('dark-toggle');
+    if(btn) btn.textContent='☀️';
+  }
+})();
+
+// ── Haptic feedback ───────────────────────────────────────────────────────────────────
+function haptic(style){
+  if(!navigator.vibrate) return;
+  if(style==='light') navigator.vibrate(10);
+  else if(style==='success') navigator.vibrate([20,40,20]);
+}
+
+// ── Rest timer with duration presets ────────────────────────────────────────────────────
+var restInterval=null;
+var restSeconds=0;
+var restDefault=90;
+
+function setRestDuration(s){
+  restDefault=s;
+  [30,60,90,120].forEach(function(d){
+    var btn=document.getElementById('rt-'+d);
+    if(btn) btn.style.background=d===s?'rgba(255,255,255,0.4)':'';
+  });
+  startRestTimer(s);
+}
+
+function startRestTimer(seconds){
+  clearInterval(restInterval);
+  restSeconds=seconds||restDefault;
+  document.getElementById('rest-timer-count').textContent=restSeconds;
+  document.getElementById('rest-timer-bar').classList.add('show');
+  [30,60,90,120].forEach(function(d){
+    var btn=document.getElementById('rt-'+d);
+    if(btn) btn.style.background=d===restSeconds?'rgba(255,255,255,0.4)':'';
+  });
+  restInterval=setInterval(function(){
+    restSeconds--;
+    document.getElementById('rest-timer-count').textContent=restSeconds;
+    if(restSeconds<=0){
+      clearInterval(restInterval);
+      document.getElementById('rest-timer-bar').classList.remove('show');
+      showToast('Rest done — next set! 💪');
+      haptic('success');
+    }
+  },1000);
+}
+
+function addRestTime(s){ restSeconds+=s; document.getElementById('rest-timer-count').textContent=restSeconds; }
+function stopRestTimer(){ clearInterval(restInterval); document.getElementById('rest-timer-bar').classList.remove('show'); }
+
+// ── Personal Record detection ────────────────────────────────────────────────────────────────
+function checkForPRs(day, entries){
+  var prs=[];
+  entries.forEach(function(e){
+    if(!e.note||e.note.indexOf('Set ')!==0) return;
+    var allPrev=[];
+    ['a','b','c','d','e'].forEach(function(d){
+      var saved=getSaved(d);
+      var start=(d===day)?1:0;
+      for(var i=start;i<saved.length;i++){
+        saved[i].entries.forEach(function(en){
+          if(en.ex===e.ex&&en.note&&en.note.indexOf('Set ')===0)
+            parseSetWeights(en.note).forEach(function(w){ allPrev.push(w); });
+        });
+      }
+    });
+    if(!allPrev.length) return;
+    var prevBest=Math.max.apply(null,allPrev);
+    var currWeights=parseSetWeights(e.note);
+    if(!currWeights.length) return;
+    var currBest=Math.max.apply(null,currWeights);
+    if(currBest>prevBest) prs.push({ex:e.ex,weight:currBest,prev:prevBest});
+  });
+  return prs;
+}
+
+function showPRToast(prs){
+  prs.forEach(function(pr,i){
+    setTimeout(function(){ showToast('🏆 PR: '+pr.ex+' — '+pr.weight+' lbs!'); haptic('success'); },i*2200);
+  });
+}
+
+// Hook rest timer into tog
+(function(){
+  var _base=tog;
+  tog=function(id,day,total){
+    _base(id,day,total);
+    var el=document.getElementById(id);
+    if(el&&el.classList.contains('done')) startRestTimer(restDefault);
+    else stopRestTimer();
+  };
+})();
+
 // ── Restore from JSONbin if localStorage is empty ──────────────────
 (function restoreFromCloud(){
   // Check if all days are empty locally
@@ -2936,11 +3047,16 @@ function drawMeasChartGeneric(data, canvas, wrap){
 
 <!-- Rest Timer Bar -->
 <div class="rest-timer-bar" id="rest-timer-bar">
-  <span id="rest-timer-label">⏱ Rest: <span id="rest-timer-count">90</span>s</span>
-  <div style="display:flex;gap:8px">
-    <button onclick="addRestTime(30)">+30s</button>
-    <button onclick="stopRestTimer()">✕</button>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span>⏱ <span id="rest-timer-count">90</span>s</span>
+    <div style="display:flex;gap:4px">
+      <button onclick="setRestDuration(30)" id="rt-30">30</button>
+      <button onclick="setRestDuration(60)" id="rt-60">60</button>
+      <button onclick="setRestDuration(90)" id="rt-90">90</button>
+      <button onclick="setRestDuration(120)" id="rt-120">120</button>
+    </div>
   </div>
+  <button onclick="stopRestTimer()" style="font-size:16px;padding:4px 8px">✕</button>
 </div>
 
 <!-- Share/Summary Modal -->
