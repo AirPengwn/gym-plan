@@ -1387,17 +1387,19 @@ function normalizeEx(s){
 
 function buildGlobalRepMap(){
   // Collect the most recent entry for every exercise name across ALL days
-  // keyed by normalized exercise name -> {note, date}
+  // keyed by normalized exercise name -> {note, date, ts}
   var globalMap={};
   ['a','b','c','d','e'].forEach(function(day){
     var saved=getSaved(day);
     saved.forEach(function(session){
+      // Parse the session date string into a timestamp for comparison
+      var ts=Date.parse(session.date) || 0;
       session.entries.forEach(function(e){
         if(e.note && e.note.indexOf('Set ')===0){
           var key=normalizeEx(e.ex);
-          // Only keep the most recent (sessions are stored newest-first, days iterated in order)
-          if(!globalMap[key]){
-            globalMap[key]={note:e.note, date:session.date};
+          // Keep whichever session is most recent by actual date
+          if(!globalMap[key] || ts > globalMap[key].ts){
+            globalMap[key]={note:e.note, date:session.date, ts:ts};
           }
         }
       });
