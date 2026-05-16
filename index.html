@@ -1393,7 +1393,8 @@ function buildGlobalRepMap(){
     var saved=getSaved(day);
     saved.forEach(function(session){
       // Parse the session date string into a timestamp for comparison
-      var ts=Date.parse(session.date) || 0;
+      // App format is "Mon, May 9, 2026 at 11:30 PM" — strip "at" so Date.parse works
+      var ts=Date.parse(session.date.replace(' at ',' ')) || 0;
       session.entries.forEach(function(e){
         if(e.note && e.note.indexOf('Set ')===0){
           var key=normalizeEx(e.ex);
