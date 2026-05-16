@@ -1415,22 +1415,10 @@ function loadLastTimes(){
     var panel=document.getElementById('p-'+day);
     if(!panel) return;
 
-    // Also build same-day map so same-day takes priority
-    var sameDayMap={};
-    var saved=getSaved(day);
-    if(saved.length){
-      saved[0].entries.forEach(function(e){
-        if(e.note && e.note.indexOf('Set ')===0){
-          sameDayMap[normalizeEx(e.ex)]={note:e.note, date:saved[0].date};
-        }
-      });
-    }
-
     panel.querySelectorAll('.last-time').forEach(function(el){
       var rawId=el.id.replace('lt-','').replace(/-+/g,' ').trim();
       var key=normalizeEx(rawId);
-      // Same-day takes priority, then cross-day
-      var match=sameDayMap[key] || globalMap[key] || null;
+      var match=globalMap[key] || null;
       if(match){
         el.querySelector('.last-time-vals').textContent=match.note+' ('+match.date+')';
         el.classList.add('has-data');
@@ -1445,7 +1433,7 @@ function loadLastTimes(){
       if(inp.value) return; // don't overwrite if already typed
       var ex=normalizeEx(inp.getAttribute('data-ex')||'');
       var setNum=inp.getAttribute('data-set');
-      var match=sameDayMap[ex] || globalMap[ex] || null;
+      var match=globalMap[ex] || null;
       if(match && setNum){
         // Parse "Set 1: 50 lbs | Set 2: 55 lbs | Set 3: 55 lbs"
         var parts=match.note.split('|');
@@ -1454,7 +1442,7 @@ function loadLastTimes(){
           var sMatch=part.match(/^Set\s*(\d+):\s*(.+)$/);
           if(sMatch && sMatch[1]===setNum){
             inp.value=sMatch[2].trim();
-            inp.style.color='#7F77DD'; // purple tint to show it's pre-filled
+            inp.style.color='#7F77DD';
             inp.style.fontStyle='italic';
           }
         });
