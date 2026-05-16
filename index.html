@@ -135,6 +135,8 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .skip-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#FFF8F8;border-radius:7px;font-size:12px}
 .skip-row-name{color:#2C2C2A;font-weight:500}
 .skip-row-pct{color:#C0392B;font-weight:700}
+.meas-sub-btn{padding:7px 14px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:13px;font-weight:600;color:#888780;background:#F5F5F2;cursor:pointer}
+.meas-sub-btn.active{background:#7F77DD;border-color:#7F77DD;color:#fff}
 .meas-entry-card{background:#fff;border:1.5px solid #D8D4F0;border-radius:12px;padding:14px;margin-bottom:12px}
 .meas-entry-row{display:flex;gap:8px;align-items:center}
 .meas-unit-btn{padding:8px 12px;border:1.5px solid #D3D1C7;border-radius:7px;font-size:13px;font-weight:600;color:#888780;background:#F5F5F2;cursor:pointer}
@@ -247,7 +249,7 @@ canvas.prog-chart{display:block;border-radius:8px}
     <button class="prog-tab-btn active" onclick="switchProgTab('days',this)"><span style="font-size:18px">📅</span>Days</button>
     <button class="prog-tab-btn" onclick="switchProgTab('exercises',this)"><span style="font-size:18px">💪</span>Exercises</button>
     <button class="prog-tab-btn" onclick="switchProgTab('stats',this)"><span style="font-size:18px">📊</span>Stats</button>
-    <button class="prog-tab-btn" onclick="switchProgTab('measurements',this)"><span style="font-size:18px">⚖️</span>Weight</button>
+    <button class="prog-tab-btn" onclick="switchProgTab('measurements',this)"><span style="font-size:18px">📏</span>Measurements</button>
     <button class="prog-tab-btn" onclick="switchProgTab('manage',this)"><span style="font-size:18px">⚙️</span>Manage</button>
   </div>
 
@@ -283,6 +285,12 @@ canvas.prog-chart{display:block;border-radius:8px}
 
   <!-- MEASUREMENTS PANEL -->
   <div class="prog-panel" id="prog-panel-measurements">
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="meas-sub-btn active" id="meas-sub-weight" onclick="switchMeasTab('weight',this)">⚖️ Weight</button>
+      <button class="meas-sub-btn" id="meas-sub-waist" onclick="switchMeasTab('waist',this)">📐 Waist</button>
+      <button class="meas-sub-btn" id="meas-sub-bodyfat" onclick="switchMeasTab('bodyfat',this)">🔬 Body Fat</button>
+    </div>
+    <div id="meas-tab-weight">
     <div class="meas-entry-card">
       <div class="meas-entry-row">
         <input type="number" id="meas-weight-val" placeholder="e.g. 185" step="0.1" min="50" max="500" style="flex:1;padding:10px 12px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:15px;font-weight:600;color:#2C2C2A;background:#fff;"/>
@@ -299,6 +307,39 @@ canvas.prog-chart{display:block;border-radius:8px}
     <div id="meas-chart-wrap" style="margin:12px 0 4px"><canvas id="meas-chart" height="180"></canvas></div>
     <div id="meas-summary" style="display:flex;gap:8px;margin-bottom:12px"></div>
     <div id="meas-history"></div>
+    </div><!-- end meas-tab-weight -->
+
+    <div id="meas-tab-waist" style="display:none">
+    <div class="meas-entry-card">
+      <div class="meas-entry-row">
+        <input type="number" id="meas-waist-val" placeholder="e.g. 34" step="0.1" min="10" max="100" style="flex:1;padding:10px 12px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:15px;font-weight:600;color:#2C2C2A;background:#fff;"/>
+        <span style="font-size:14px;font-weight:600;color:#888780;padding:0 8px">in</span>
+      </div>
+      <div class="meas-entry-row" style="margin-top:8px">
+        <input type="date" id="meas-waist-date" style="flex:1;padding:10px 12px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:14px;color:#2C2C2A;background:#fff;"/>
+        <button onclick="saveGenericMeas('waist','meas-waist-val','meas-waist-date','in')" style="padding:10px 18px;background:#7F77DD;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Add</button>
+      </div>
+    </div>
+    <div id="meas-chart-wrap-waist" style="margin:12px 0 4px"><canvas id="meas-chart-waist" height="180"></canvas></div>
+    <div id="meas-summary-waist" style="display:flex;gap:8px;margin-bottom:12px"></div>
+    <div id="meas-history-waist"></div>
+    </div><!-- end meas-tab-waist -->
+
+    <div id="meas-tab-bodyfat" style="display:none">
+    <div class="meas-entry-card">
+      <div class="meas-entry-row">
+        <input type="number" id="meas-bodyfat-val" placeholder="e.g. 22.5" step="0.1" min="1" max="60" style="flex:1;padding:10px 12px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:15px;font-weight:600;color:#2C2C2A;background:#fff;"/>
+        <span style="font-size:14px;font-weight:600;color:#888780;padding:0 8px">%</span>
+      </div>
+      <div class="meas-entry-row" style="margin-top:8px">
+        <input type="date" id="meas-bodyfat-date" style="flex:1;padding:10px 12px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:14px;color:#2C2C2A;background:#fff;"/>
+        <button onclick="saveGenericMeas('bodyfat','meas-bodyfat-val','meas-bodyfat-date','%')" style="padding:10px 18px;background:#7F77DD;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Add</button>
+      </div>
+    </div>
+    <div id="meas-chart-wrap-bodyfat" style="margin:12px 0 4px"><canvas id="meas-chart-bodyfat" height="180"></canvas></div>
+    <div id="meas-summary-bodyfat" style="display:flex;gap:8px;margin-bottom:12px"></div>
+    <div id="meas-history-bodyfat"></div>
+    </div><!-- end meas-tab-bodyfat -->
   </div>
 
   <!-- MANAGE PANEL -->
@@ -1614,7 +1655,7 @@ var pendingLabel=null;
 function switchProgTab(tab, btn){
   document.querySelectorAll('.prog-tab-btn').forEach(function(b){b.classList.remove('active');});
   if(tab==='stats') renderStats();
-  if(tab==='measurements'){ initMeasDateDefault(); renderMeasurements(); }
+  if(tab==='measurements'){ initMeasDateDefault(); renderMeasurements(); renderGenericMeas('waist'); renderGenericMeas('bodyfat'); }
   btn.classList.add('active');
   document.querySelectorAll('.prog-panel').forEach(function(p){p.classList.remove('show');});
   document.getElementById('prog-panel-'+tab).classList.add('show');
@@ -2635,20 +2676,35 @@ function copyShareText(){
 // ── Measurements ─────────────────────────────────────────────────────
 var measUnit='lbs';
 
+function switchMeasTab(tab, btn){
+  document.querySelectorAll('.meas-sub-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.querySelectorAll('[id^="meas-tab-"]').forEach(function(el){el.style.display='none';});
+  var el=document.getElementById('meas-tab-'+tab);
+  if(el) el.style.display='block';
+  // Init date defaults and render for the active tab
+  initMeasDateDefault();
+  if(tab==='weight') renderMeasurements();
+  else renderGenericMeas(tab);
+}
+
 function setMeasUnit(u){
   measUnit=u;
   document.getElementById('meas-unit-lbs').classList.toggle('active',u==='lbs');
   document.getElementById('meas-unit-kg').classList.toggle('active',u==='kg');
 }
 
+var measUnit='lbs';
+
 function initMeasDateDefault(){
-  var inp=document.getElementById('meas-date-val');
-  if(inp&&!inp.value){
-    var now=new Date();
-    var offset=now.getTimezoneOffset();
-    var local=new Date(now.getTime()-offset*60000);
-    inp.value=local.toISOString().slice(0,10);
-  }
+  var now=new Date();
+  var offset=now.getTimezoneOffset();
+  var local=new Date(now.getTime()-offset*60000);
+  var dateStr=local.toISOString().slice(0,10);
+  ['meas-date-val','meas-waist-date','meas-bodyfat-date'].forEach(function(id){
+    var inp=document.getElementById(id);
+    if(inp&&!inp.value) inp.value=dateStr;
+  });
 }
 
 function getMeasurements(){
@@ -2658,24 +2714,25 @@ function getMeasurements(){
 
 function saveMeasurements(data){
   localStorage.setItem('body_measurements', JSON.stringify(data));
+  syncToJbin(function(ok){ if(!ok) showToast('Saved locally (cloud sync failed)'); });
 }
 
+// ── Weight (existing, lbs/kg toggle) ────────────────────────────────
 function saveMeasurement(){
   var val=parseFloat(document.getElementById('meas-weight-val').value);
   var dateVal=document.getElementById('meas-date-val').value;
   if(!val||isNaN(val)||val<=0){ showToast('Enter a valid weight'); return; }
   if(!dateVal){ showToast('Pick a date'); return; }
   var data=getMeasurements();
-  // Check for duplicate date
-  var dupIdx=data.findIndex(function(m){ return m.date===dateVal&&m.type==='weight'; });
+  var dupIdx=-1;
+  data.forEach(function(m,i){ if(m.date===dateVal&&m.type==='weight') dupIdx=i; });
   if(dupIdx!==-1){
     if(!confirm('You already have a weight entry for this date. Replace it?')) return;
     data.splice(dupIdx,1);
   }
   data.push({type:'weight',date:dateVal,value:val,unit:measUnit});
-  data.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; });
+  data.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
   saveMeasurements(data);
-  syncToJbin(function(ok){ if(!ok) showToast('Saved locally (cloud sync failed)'); });
   document.getElementById('meas-weight-val').value='';
   renderMeasurements();
   showToast('Weight saved!');
@@ -2685,64 +2742,107 @@ function deleteMeasurement(idx){
   var data=getMeasurements();
   data.splice(idx,1);
   saveMeasurements(data);
-  syncToJbin(null);
   renderMeasurements();
 }
 
 function renderMeasurements(){
-  var data=getMeasurements().filter(function(m){ return m.type==='weight'; });
-  var histEl=document.getElementById('meas-history');
-  var summEl=document.getElementById('meas-summary');
+  renderGenericMeas('weight');
+}
+
+// ── Generic measurement save/render (waist, bodyfat, etc.) ───────────
+function saveGenericMeas(type, valId, dateId, unit){
+  var val=parseFloat(document.getElementById(valId).value);
+  var dateVal=document.getElementById(dateId).value;
+  if(!val||isNaN(val)||val<=0){ showToast('Enter a valid value'); return; }
+  if(!dateVal){ showToast('Pick a date'); return; }
+  var data=getMeasurements();
+  var dupIdx=-1;
+  data.forEach(function(m,i){ if(m.date===dateVal&&m.type===type) dupIdx=i; });
+  if(dupIdx!==-1){
+    if(!confirm('You already have an entry for this date. Replace it?')) return;
+    data.splice(dupIdx,1);
+  }
+  data.push({type:type,date:dateVal,value:val,unit:unit});
+  data.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
+  saveMeasurements(data);
+  document.getElementById(valId).value='';
+  renderGenericMeas(type);
+  showToast('Saved!');
+}
+
+function deleteGenericMeas(type, idx){
+  // idx is index within type-filtered array — find real index
+  var data=getMeasurements();
+  var typeData=data.filter(function(m){return m.type===type;});
+  var target=typeData[idx];
+  if(!target) return;
+  var realIdx=data.indexOf(target);
+  if(realIdx!==-1) data.splice(realIdx,1);
+  saveMeasurements(data);
+  renderGenericMeas(type);
+}
+
+function renderGenericMeas(type){
+  var suffixMap={weight:'',waist:'-waist',bodyfat:'-bodyfat'};
+  var sfx=suffixMap[type]||('-'+type);
+  var histEl=document.getElementById('meas-history'+sfx);
+  var summEl=document.getElementById('meas-summary'+sfx);
+  var chartWrap=document.getElementById('meas-chart-wrap'+sfx);
+  var chartCanvas=document.getElementById('meas-chart'+sfx);
+  if(!histEl) return;
+
+  var isWeight=(type==='weight');
+  var data=getMeasurements().filter(function(m){return m.type===type;});
 
   // Summary chips
   if(data.length>=2){
     var first=data[0],last=data[data.length-1];
     var change=Math.round((last.value-first.value)*10)/10;
     var sign=change>0?'+':'';
+    // For waist/bodyfat, down is good (green); for weight same logic
     var col=change<0?'#0A6640':change>0?'#C0392B':'#888780';
     var weeks=Math.round((new Date(last.date)-new Date(first.date))/(1000*60*60*24*7)*10)/10;
-    summEl.innerHTML=
-      measChip('Current',last.value+' '+last.unit)+
-      measChip('Change','<span style="color:'+col+'">'+sign+change+' '+last.unit+'</span>')+
-      measChip('Over',weeks+' wks');
+    summEl.innerHTML=measChip('Current',last.value+' '+last.unit)
+      +measChip('Change','<span style="color:'+col+'">'+sign+change+' '+last.unit+'</span>')
+      +measChip('Over',weeks+' wks');
   } else if(data.length===1){
     summEl.innerHTML=measChip('Current',data[0].value+' '+data[0].unit);
   } else {
     summEl.innerHTML='';
   }
 
-  // History list (newest first for display)
+  // History list newest first
   if(!data.length){
-    histEl.innerHTML='<div style="color:#888;font-size:13px;text-align:center;padding:12px 0">No weight entries yet</div>';
+    histEl.innerHTML='<div style="color:#888;font-size:13px;text-align:center;padding:12px 0">No entries yet</div>';
   } else {
     var reversed=data.slice().reverse();
     histEl.innerHTML=reversed.map(function(m,i){
       var realIdx=data.length-1-i;
       var d=new Date(m.date+'T12:00:00');
       var dateStr=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+      var delFn=isWeight?'deleteMeasurement('+realIdx+')':'deleteGenericMeas(\"'+type+'\",'+realIdx+')';x+')';
       return '<div class="meas-history-item">'
         +'<div><div class="meas-history-val">'+m.value+' '+m.unit+'</div>'
         +'<div class="meas-history-date">'+dateStr+'</div></div>'
-        +'<button class="meas-history-del" onclick="deleteMeasurement('+realIdx+')" title="Delete">✕</button>'
+        +'<button class="meas-history-del" onclick="'+delFn+'" title="Delete">✕</button>'
         +'</div>';
     }).join('');
   }
 
-  // Draw chart
-  drawMeasChart(data);
+  // Chart
+  if(chartWrap&&chartCanvas) drawMeasChartGeneric(data, chartCanvas, chartWrap);
 }
 
 function measChip(label,val){
   return '<div class="meas-stat-chip"><div class="meas-stat-label">'+label+'</div><div class="meas-stat-val">'+val+'</div></div>';
 }
 
-function drawMeasChart(data){
-  var canvas=document.getElementById('meas-chart');
-  if(!canvas) return;
-  var wrap=document.getElementById('meas-chart-wrap');
+function drawMeasChart(data){ drawMeasChartGeneric(data, document.getElementById('meas-chart'), document.getElementById('meas-chart-wrap')); }
+
+function drawMeasChartGeneric(data, canvas, wrap){
+  if(!canvas||!wrap) return;
   if(!data.length){ wrap.style.display='none'; return; }
   wrap.style.display='block';
-
   var dpr=window.devicePixelRatio||1;
   var w=canvas.parentNode.offsetWidth||320;
   var chartH=180;
@@ -2750,56 +2850,44 @@ function drawMeasChart(data){
   canvas.style.width=w+'px'; canvas.style.height=chartH+'px';
   var ctx=canvas.getContext('2d');
   ctx.scale(dpr,dpr);
-
-  var points=data.map(function(m,i){ return {x:i,y:m.value,date:m.date,unit:m.unit}; });
-  if(points.length<1) return;
-
+  var points=data.map(function(m,i){return {x:i,y:m.value,date:m.date,unit:m.unit};});
   var pad={t:20,r:16,b:44,l:50};
-  var cw=w-pad.l-pad.r, ch=chartH-pad.t-pad.b;
+  var cw=w-pad.l-pad.r,ch=chartH-pad.t-pad.b;
   var yVals=points.map(function(p){return p.y;});
-  var yMin=Math.floor(Math.min.apply(null,yVals)-3);
-  var yMax=Math.ceil(Math.max.apply(null,yVals)+3);
+  var yMin=Math.floor(Math.min.apply(null,yVals)-2);
+  var yMax=Math.ceil(Math.max.apply(null,yVals)+2);
   if(yMax===yMin){yMin-=5;yMax+=5;}
-
-  // Background
   ctx.fillStyle='#FAFAFA'; ctx.fillRect(0,0,w,chartH);
-
-  // Grid lines
   var steps=4;
   ctx.strokeStyle='#EEEDFE'; ctx.lineWidth=1;
   for(var g=0;g<=steps;g++){
     var gy=pad.t+ch*(1-g/steps);
     ctx.beginPath(); ctx.moveTo(pad.l,gy); ctx.lineTo(pad.l+cw,gy); ctx.stroke();
     ctx.fillStyle='#B4B2A9'; ctx.font='10px system-ui'; ctx.textAlign='right';
-    ctx.fillText(Math.round(yMin+(yMax-yMin)*g/steps),pad.l-6,gy+3);
+    ctx.fillText(Math.round((yMin+(yMax-yMin)*g/steps)*10)/10,pad.l-6,gy+3);
   }
-
-  // Line
-  ctx.beginPath(); ctx.strokeStyle='#7F77DD'; ctx.lineWidth=2.5; ctx.lineJoin='round';
-  points.forEach(function(p,i){
-    var px=pad.l+(points.length===1?cw/2:i/(points.length-1)*cw);
-    var py=pad.t+ch*(1-(p.y-yMin)/(yMax-yMin));
-    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
-  });
-  ctx.stroke();
-
-  // Fill under line
-  ctx.beginPath(); ctx.fillStyle='rgba(127,119,221,0.08)';
-  points.forEach(function(p,i){
-    var px=pad.l+(points.length===1?cw/2:i/(points.length-1)*cw);
-    var py=pad.t+ch*(1-(p.y-yMin)/(yMax-yMin));
-    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
-  });
-  ctx.lineTo(pad.l+cw,pad.t+ch); ctx.lineTo(pad.l,pad.t+ch); ctx.closePath(); ctx.fill();
-
-  // Dots + dates
+  if(points.length>1){
+    ctx.beginPath(); ctx.strokeStyle='#7F77DD'; ctx.lineWidth=2.5; ctx.lineJoin='round';
+    points.forEach(function(p,i){
+      var px=pad.l+i/(points.length-1)*cw;
+      var py=pad.t+ch*(1-(p.y-yMin)/(yMax-yMin));
+      i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    });
+    ctx.stroke();
+    ctx.beginPath(); ctx.fillStyle='rgba(127,119,221,0.08)';
+    points.forEach(function(p,i){
+      var px=pad.l+i/(points.length-1)*cw;
+      var py=pad.t+ch*(1-(p.y-yMin)/(yMax-yMin));
+      i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    });
+    ctx.lineTo(pad.l+cw,pad.t+ch); ctx.lineTo(pad.l,pad.t+ch); ctx.closePath(); ctx.fill();
+  }
   points.forEach(function(p,i){
     var px=pad.l+(points.length===1?cw/2:i/(points.length-1)*cw);
     var py=pad.t+ch*(1-(p.y-yMin)/(yMax-yMin));
     ctx.beginPath(); ctx.arc(px,py,4,0,Math.PI*2);
     ctx.fillStyle='#7F77DD'; ctx.fill();
     ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
-    // Date label under dot
     var d=new Date(p.date+'T12:00:00');
     var label=(d.getMonth()+1)+'/'+d.getDate();
     ctx.fillStyle='#B4B2A9'; ctx.font='9px system-ui'; ctx.textAlign='center';
