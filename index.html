@@ -1396,7 +1396,7 @@ function buildGlobalRepMap(){
       // App format is "Mon, May 9, 2026 at 11:30 PM" — strip "at" so Date.parse works
       var ts=Date.parse(session.date.replace(' at ',' ')) || 0;
       session.entries.forEach(function(e){
-        if(e.note && e.note.indexOf('Set ')===0){
+        if(e.note){
           var key=normalizeEx(e.ex);
           // Keep whichever session is most recent by actual date
           if(!globalMap[key] || ts > globalMap[key].ts){
@@ -1446,6 +1446,18 @@ function loadLastTimes(){
             inp.style.fontStyle='italic';
           }
         });
+      }
+    });
+
+    // Pre-populate cardio input fields with last known values
+    panel.querySelectorAll('.cardio-input').forEach(function(inp){
+      if(inp.value) return;
+      var ex=normalizeEx(inp.getAttribute('data-ex')||'');
+      var match=globalMap[ex] || null;
+      if(match){
+        inp.value=match.note;
+        inp.style.color='#7F77DD';
+        inp.style.fontStyle='italic';
       }
     });
   });
