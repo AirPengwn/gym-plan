@@ -1955,13 +1955,13 @@ function confirmSave(){
   var sn=document.getElementById('session-notes');var sessionNotes=sn?sn.value.trim():'';if(sn)sn.value='';
   // capture session duration
   var dur=getSessionDuration(day);
-  var sessionObj={date:dateStr+' at '+timeStr,ts:dt.getTime(),label:label,entries:entries,notes:sessionNotes||null};
+  var sessionObj={date:dateStr+' at '+timeStr,label:label,entries:entries,notes:sessionNotes||null};
   if(dur!==null && dur>0) sessionObj.duration=dur;
   // save check-in feeling
   if(checkinState[day]) sessionObj.checkin=checkinState[day];
   checkinState[day]=null;
   saved.unshift(sessionObj);
-  if(saved.length>2000) saved=saved.slice(0,2000); // safety bound only — was 20 (silently lost history)
+  if(saved.length>20) saved=saved.slice(0,20);
   localStorage.setItem('gymlog_'+day,JSON.stringify(saved));
   document.getElementById('date-modal-overlay').classList.remove('show');
   showToast('Session saved! ✓');
@@ -2006,7 +2006,9 @@ function buildGlobalRepMap(){
   ['a','b','c','d','e'].forEach(function(day){
     var saved=getSaved(day);
     saved.forEach(function(session){
-      var ts=sessTs(session);
+      // Parse the session date string into a timestamp for comparison
+      // App format is "Mon, May 9, 2026 at 11:30 PM" — strip "at" so Date.parse works
+      var ts=Date.parse(session.date.replace(' at ',' ')) || 0;
       session.entries.forEach(function(e){
         if(e.note){
           var key=normalizeEx(e.ex);
@@ -2027,7 +2029,7 @@ function getExerciseHistory(exKey){
   var sessions=[];
   ['a','b','c','d','e'].forEach(function(d){
     getSaved(d).forEach(function(session){
-      var ts=sessTs(session);
+      var ts=Date.parse(session.date.replace(' at ',' '))||0;
       session.entries.forEach(function(e){
         if(normalizeEx(e.ex)===exKey && e.note && e.note.indexOf('Set ')===0){
           var weights=parseSetWeights(e.note);
@@ -2169,8 +2171,6 @@ function executeClear(){
   renderProgress();
   renderExerciseList();
   showToast('History cleared.');
-  // Deliberate destructive action → overwrite cloud so it doesn't merge back.
-  syncToJbin(function(){}, {authoritative:true});
 }
 
 // ── Exercise list and detail ──
@@ -2748,7 +2748,7 @@ function initCardioPanels(){document.querySelectorAll(".cardio-machine-toggle").
 
 function editSessionDate(day,idx){var saved=getSaved(day);if(!saved[idx])return;var current=saved[idx].date;var dt=new Date(current);var defaultVal="";if(!isNaN(dt.getTime())){var offset=dt.getTimezoneOffset();var local=new Date(dt.getTime()-offset*60000);defaultVal=local.toISOString().slice(0,16);}var span=document.getElementById("pdate-"+day+"-"+idx);if(!span)return;span.innerHTML="<input class='edit-date-input' type='datetime-local' value='"+defaultVal+"' "+"onblur='saveEditDate(\""+day+"\","+idx+",this,\""+current+"\")' "+"onkeydown='if(event.key===\"Enter\")this.blur()'/>";span.querySelector("input").focus();}
 
-function saveEditDate(day,idx,inp,originalDate){var val=inp.value;var saved=getSaved(day);if(!saved[idx])return;if(val){var dt=new Date(val);if(!isNaN(dt.getTime())){var dateStr=dt.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});var timeStr=dt.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});saved[idx].date=dateStr+" at "+timeStr;saved[idx].ts=dt.getTime();}}localStorage.setItem("gymlog_"+day,JSON.stringify(saved));renderProgress();showToast("Date updated!");syncToJbin(function(){});}
+function saveEditDate(day,idx,inp,originalDate){var val=inp.value;var saved=getSaved(day);if(!saved[idx])return;if(val){var dt=new Date(val);if(!isNaN(dt.getTime())){var dateStr=dt.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});var timeStr=dt.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});saved[idx].date=dateStr+" at "+timeStr;}}localStorage.setItem("gymlog_"+day,JSON.stringify(saved));renderProgress();showToast("Date updated!");}
 
 function setUnit(btn, uid){
   var wrap=btn.parentNode;
@@ -2771,13 +2771,7 @@ function reloadPage(){
     btn.innerHTML='Updating...';
     btn.style.opacity='0.6';
   }
-  // location.reload(true) is ignored by modern browsers and there is no
-  // service worker, so GitHub Pages / browser cache can still serve a stale
-  // file. A fresh cache-busting URL forces the newest index.html.
-  try{
-    if(window.caches && caches.keys) caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); });
-  }catch(e){}
-  location.replace(location.origin + location.pathname + '?v=' + Date.now());
+  window.location.reload(true);
 }
 
 function showExportImport(){
@@ -2818,15 +2812,8 @@ function generateExport(){
   try{ var mil=JSON.parse(localStorage.getItem('earned_milestones')); if(mil&&mil.length) data['earned_milestones']=mil; }catch(e){}
   // Exercise order
   try{ var ord=JSON.parse(localStorage.getItem('exercise_order')); if(ord&&Object.keys(ord).length) data['exercise_order']=ord; }catch(e){}
-  // In-progress (unsubmitted) drafts — so a backup also protects a workout
-  // you're in the middle of entering.
-  ['a','b','c','d','e'].forEach(function(day){
-    var dr=getDraftRaw(day);
-    if(dr) data['gymlog_draft_'+day]=dr;
-  });
-  data['__schema']=SCHEMA_VERSION;
 
-  if(Object.keys(data).filter(function(k){return k!=='__schema';}).length===0){
+  if(!Object.keys(data).length){
     showToast('No data to back up yet.');
     return;
   }
@@ -2852,9 +2839,6 @@ function importData(){
   try{
     var data=JSON.parse(decodeURIComponent(escape(atob(code))));
     var count=0;
-    // Snapshot CURRENT state before overwriting, so a wrong/stale paste
-    // can be undone instead of silently destroying live data.
-    try{ localStorage.setItem('gymlog_import_undo', btoa(unescape(encodeURIComponent(JSON.stringify(buildBinPayload()))))); }catch(e){}
     // Restore workout sessions — support both old format (key=day letter) and new (key=gymlog_X)
     ['a','b','c','d','e'].forEach(function(day){
       var sessions=data['gymlog_'+day]||data[day];
@@ -2862,8 +2846,6 @@ function importData(){
         localStorage.setItem('gymlog_'+day,JSON.stringify(sessions));
         count+=sessions.length;
       }
-      // Restore any in-progress draft carried in the backup
-      if(data['gymlog_draft_'+day]) localStorage.setItem('gymlog_draft_'+day, JSON.stringify(data['gymlog_draft_'+day]));
     });
     // Restore measurements
     if(data['body_measurements'] && Array.isArray(data['body_measurements'])){
@@ -2882,16 +2864,13 @@ function importData(){
       localStorage.setItem('exercise_order',JSON.stringify(data['exercise_order']));
     }
     var hint=document.getElementById('restore-hint');
-    hint.innerHTML='✅ Restored '+count+' sessions + measurements + settings! '
-      +'<button onclick="undoImport()" style="margin-left:6px;padding:4px 10px;border:1px solid #C53030;background:#FFF5F5;color:#C53030;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Undo import</button>';
+    hint.textContent='✅ Restored '+count+' sessions + measurements + settings!';
     hint.style.display='block';
     renderProgress();
     renderDaySummaries();
     loadLastTimes();
     applyArchivedToChecklist();
-    // Explicit user action → push the restored state authoritatively.
-    syncToJbin(function(){}, {authoritative:true});
-    showToast('Restored! '+count+' sessions loaded.');
+    setTimeout(function(){ closeModal(); showToast('Restored! '+count+' sessions loaded.'); }, 1200);
   } catch(e){
     var hint=document.getElementById('restore-hint');
     hint.style.background='#FFF3CD';
@@ -2899,25 +2878,6 @@ function importData(){
     hint.textContent='❌ Invalid backup code. Please check and try again.';
     hint.style.display='block';
   }
-}
-
-function undoImport(){
-  var snap=localStorage.getItem('gymlog_import_undo');
-  if(!snap){ showToast('Nothing to undo.'); return; }
-  try{
-    var p=JSON.parse(decodeURIComponent(escape(atob(snap))));
-    applyPayloadToLocal(p);
-    // Force-restore drafts exactly (applyPayloadToLocal only takes richer ones)
-    ['a','b','c','d','e'].forEach(function(d){
-      if(p['gymlog_draft_'+d]) localStorage.setItem('gymlog_draft_'+d, JSON.stringify(p['gymlog_draft_'+d]));
-    });
-    localStorage.removeItem('gymlog_import_undo');
-    renderProgress(); renderDaySummaries(); loadLastTimes(); applyArchivedToChecklist();
-    syncToJbin(function(){}, {authoritative:true});
-    var hint=document.getElementById('restore-hint');
-    if(hint){ hint.textContent='↩ Import undone — your previous data is back.'; hint.style.display='block'; }
-    showToast('Import undone — previous data restored.');
-  }catch(e){ showToast('Undo failed.'); }
 }
 
 // Session page indices per day (0 = most recent)
@@ -3093,24 +3053,23 @@ setTimeout(checkMilestones, 500);
     });
   });
 
-  // Collect every day that has a non-empty draft (none are discarded —
-  // they all stay in storage; we just surface the first one).
-  var draftDays=[];
-  var dayNum={a:1,b:2,c:3,d:4,e:5};
+  var draftDay=null;
+  // Find the most recently modified draft
+  var latestTs=0;
   days.forEach(function(d){
     var raw=localStorage.getItem('gymlog_draft_'+d);
     if(raw){
       try{
         var draft=JSON.parse(raw);
         if((draft.checked&&draft.checked.length)||Object.keys(draft.fields||{}).length){
-          draftDays.push(d);
+          // Use the storage timestamp approximation — just pick first found, they won't conflict
+          if(!draftDay) draftDay=d;
         }
       }catch(e){}
     }
   });
 
-  if(draftDays.length){
-    var draftDay=draftDays[0];
+  if(draftDay){
     // Switch to the day with a draft
     var btn=dayBtns[draftDay];
     if(btn){
@@ -3120,12 +3079,7 @@ setTimeout(checkMilestones, 500);
       btn.classList.add('active');
     }
     restoreDraft(draftDay, totals[draftDay]);
-    if(draftDays.length>1){
-      var others=draftDays.slice(1).map(function(d){return 'Day '+dayNum[d];}).join(', ');
-      showToast('Draft restored (Day '+dayNum[draftDay]+'). Also unsaved: '+others+' 💪');
-    } else {
-      showToast('Draft restored — pick up where you left off 💪');
-    }
+    showToast('Draft restored — pick up where you left off 💪');
   }
 })();
 
@@ -3143,172 +3097,40 @@ setTimeout(checkMilestones, 500);
   });
 })();
 
-// ── JSONbin cloud sync (merge-based, non-destructive) ───────────────
+// ── JSONbin cloud sync ──────────────────────────────────────────────
 var JBIN_ID  = '6a040054c0954111d816afe6';
 var JBIN_KEY = '$2a$10$zEyOgbH7E5.fBt9UlxHh8.yPbLUnHJKEhpY2z9WCQJ1fS/WLCOBpa';
 var JBIN_URL = 'https://api.jsonbin.io/v3/b/' + JBIN_ID;
-var SCHEMA_VERSION = 2;
-
-// Stable epoch ms for a session — prefers explicit .ts, falls back to parsing
-// the localized display string. Used everywhere instead of raw Date.parse.
-function sessTs(s){
-  if(!s) return 0;
-  if(s.ts && !isNaN(s.ts)) return s.ts;
-  return Date.parse(String(s.date||'').replace(' at ',' ')) || 0;
-}
-
-// Identity key for dedupe/merge. With a real timestamp we key on
-// ts+label+entryCount; without one we fall back to a full content
-// signature so distinct legacy sessions can never collapse into one.
-function sessKey(s){
-  var t=sessTs(s);
-  var lbl=(s&&s.label)||'';
-  if(t) return 't'+t+'|'+lbl+'|'+(((s&&s.entries)||[]).length);
-  return 'c'+((s&&s.date)||'')+'|'+lbl+'|'+JSON.stringify((s&&s.entries)||[]);
-}
-
-function mergeSessions(a,b){
-  a=Array.isArray(a)?a:[]; b=Array.isArray(b)?b:[];
-  var map={},order=[];
-  function add(s){
-    if(!s||typeof s!=='object') return;
-    var k=sessKey(s), ex=map[k];
-    if(!ex){ map[k]=s; order.push(k); return; }
-    // collision: keep the richer record (more entries, then longer JSON)
-    var exN=((ex.entries)||[]).length, sN=((s.entries)||[]).length;
-    if(sN>exN || (sN===exN && JSON.stringify(s).length>JSON.stringify(ex).length)) map[k]=s;
-  }
-  a.forEach(add); b.forEach(add);
-  var out=order.map(function(k){return map[k];});
-  out.sort(function(x,y){return sessTs(y)-sessTs(x);});
-  return out;
-}
-
-// Exact-match union for append-only arrays (measurements, milestones).
-function unionArr(a,b){
-  a=Array.isArray(a)?a:[]; b=Array.isArray(b)?b:[];
-  var seen={},out=[];
-  a.concat(b).forEach(function(v){
-    var k=(v&&typeof v==='object')?JSON.stringify(v):String(v);
-    if(!seen[k]){ seen[k]=1; out.push(v); }
-  });
-  return out;
-}
-
-function getDraftRaw(day){
-  try{ return JSON.parse(localStorage.getItem('gymlog_draft_'+day)); }catch(e){ return null; }
-}
-function draftWeight(d){
-  if(!d||typeof d!=='object') return -1;
-  return ((d.checked&&d.checked.length)||0)+Object.keys(d.fields||{}).length;
-}
 
 function buildBinPayload(){
-  var p={ __schema:SCHEMA_VERSION };
+  var payload = {};
   ['a','b','c','d','e'].forEach(function(day){
-    p['gymlog_'+day]=getSaved(day);
-    var dr=getDraftRaw(day);
-    if(dr) p['gymlog_draft_'+day]=dr;
+    payload['gymlog_'+day] = getSaved(day);
   });
-  try { p['archived_exercises']=JSON.parse(localStorage.getItem('archived_exercises'))||[]; }catch(e){ p['archived_exercises']=[]; }
-  try { p['body_measurements']=JSON.parse(localStorage.getItem('body_measurements'))||[]; }catch(e){ p['body_measurements']=[]; }
-  try { p['exercise_order']=JSON.parse(localStorage.getItem('exercise_order'))||{}; }catch(e){ p['exercise_order']={}; }
-  try { p['earned_milestones']=JSON.parse(localStorage.getItem('earned_milestones'))||[]; }catch(e){ p['earned_milestones']=[]; }
-  return p;
+  try { payload['archived_exercises'] = JSON.parse(localStorage.getItem('archived_exercises')) || []; }
+  catch(e) { payload['archived_exercises'] = []; }
+  try { payload['body_measurements'] = JSON.parse(localStorage.getItem('body_measurements')) || []; }
+  catch(e) { payload['body_measurements'] = []; }
+  try { payload['exercise_order'] = JSON.parse(localStorage.getItem('exercise_order')) || {}; }
+  catch(e) { payload['exercise_order'] = {}; }
+  try { payload['earned_milestones'] = JSON.parse(localStorage.getItem('earned_milestones')) || []; }
+  catch(e) { payload['earned_milestones'] = []; }
+  return payload;
 }
 
-// Union of current local state + cloud. Cloud history is never dropped;
-// a device with less data can never shrink the cloud bin.
-function mergeCloudIntoPayload(cloud){
-  var p=buildBinPayload();
-  if(!cloud||typeof cloud!=='object') return p;
-  var localEmpty=true;
-  ['a','b','c','d','e'].forEach(function(day){
-    if((p['gymlog_'+day]||[]).length) localEmpty=false;
-    p['gymlog_'+day]=mergeSessions(p['gymlog_'+day], cloud['gymlog_'+day]);
-    var lc=p['gymlog_draft_'+day], cc=cloud['gymlog_draft_'+day];
-    if(draftWeight(cc)>draftWeight(lc)) p['gymlog_draft_'+day]=cc;
-  });
-  // append-only history → union (never loses an entry)
-  p['body_measurements']=unionArr(p['body_measurements'], cloud['body_measurements']);
-  p['earned_milestones']=unionArr(p['earned_milestones'], cloud['earned_milestones']);
-  // current-state config (archive/order): local is authoritative so that
-  // un-archiving/reordering sticks. Only fall back to cloud on a true wipe
-  // (no local sessions at all) so config survives a fresh/cleared device.
-  if(localEmpty && Array.isArray(cloud['archived_exercises']))
-    p['archived_exercises']=cloud['archived_exercises'];
-  if(localEmpty && cloud['exercise_order'] && typeof cloud['exercise_order']==='object')
-    p['exercise_order']=cloud['exercise_order'];
-  return p;
-}
-
-function applyPayloadToLocal(p){
-  if(!p||typeof p!=='object') return;
-  ['a','b','c','d','e'].forEach(function(day){
-    if(Array.isArray(p['gymlog_'+day])) localStorage.setItem('gymlog_'+day, JSON.stringify(p['gymlog_'+day]));
-    var dr=p['gymlog_draft_'+day];
-    if(dr && draftWeight(dr)>draftWeight(getDraftRaw(day))) localStorage.setItem('gymlog_draft_'+day, JSON.stringify(dr));
-  });
-  if(Array.isArray(p['archived_exercises'])) localStorage.setItem('archived_exercises', JSON.stringify(p['archived_exercises']));
-  if(Array.isArray(p['body_measurements'])) localStorage.setItem('body_measurements', JSON.stringify(p['body_measurements']));
-  if(Array.isArray(p['earned_milestones'])) localStorage.setItem('earned_milestones', JSON.stringify(p['earned_milestones']));
-  if(p['exercise_order'] && typeof p['exercise_order']==='object') localStorage.setItem('exercise_order', JSON.stringify(p['exercise_order']));
-}
-
-function refreshAfterSync(){
-  try{ if(typeof renderProgress==='function') renderProgress(); }catch(e){}
-  try{ if(typeof renderDaySummaries==='function') renderDaySummaries(); }catch(e){}
-  try{ if(typeof loadLastTimes==='function') loadLastTimes(); }catch(e){}
-}
-
-function cloudGET(){
-  return fetch(JBIN_URL, { method:'GET', headers:{ 'X-Master-Key':JBIN_KEY, 'X-Bin-Meta':'false' } })
-    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
-}
-function cloudPUT(payload){
-  return fetch(JBIN_URL, {
-    method:'PUT',
-    headers:{ 'Content-Type':'application/json', 'X-Master-Key':JBIN_KEY, 'X-Bin-Versioning':'true' },
-    body: JSON.stringify(payload)
-  }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
-}
-
-function markPendingSync(){ try{ localStorage.setItem('gymlog_sync_pending','1'); }catch(e){} }
-function clearPendingSync(){ try{ localStorage.removeItem('gymlog_sync_pending'); }catch(e){} }
-
-// Default sync is non-destructive: GET cloud, merge, write merged back to
-// both local and cloud. opts.authoritative=true does a straight overwrite
-// PUT — only for DELIBERATE destructive actions (clear history, restore
-// backup) where the user explicitly intends to replace cloud state.
-function syncToJbin(onDone, opts){
-  opts=opts||{};
-  if(opts.authoritative){
-    cloudPUT(buildBinPayload())
-      .then(function(){ clearPendingSync(); if(onDone) onDone(true); })
-      .catch(function(err){ console.warn('JSONbin authoritative sync failed:', err); markPendingSync(); if(onDone) onDone(false); });
-    return;
-  }
-  cloudGET()
-    .then(function(cloud){
-      var merged=mergeCloudIntoPayload(cloud);
-      applyPayloadToLocal(merged);
-      refreshAfterSync();
-      return cloudPUT(merged);
-    })
-    .then(function(){ clearPendingSync(); if(onDone) onDone(true); })
-    .catch(function(err){
-      // Do NOT overwrite cloud on failure — the new data is safe in
-      // localStorage and flagged for retry. This is the safe tradeoff.
-      console.warn('JSONbin merge sync failed (kept local, will retry):', err);
-      markPendingSync();
-      if(onDone) onDone(false);
-    });
-}
-
-function flushPendingSync(){
-  if(localStorage.getItem('gymlog_sync_pending')==='1'){
-    syncToJbin(function(ok){ if(ok) showToast('Pending changes synced ☁'); });
-  }
+function syncToJbin(onDone){
+  fetch(JBIN_URL, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Master-Key': JBIN_KEY,
+      'X-Bin-Versioning': 'false'
+    },
+    body: JSON.stringify(buildBinPayload())
+  })
+  .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  .then(function(){ if(onDone) onDone(true); })
+  .catch(function(err){ console.warn('JSONbin sync failed:', err); if(onDone) onDone(false); });
 }
 
 
@@ -3373,7 +3195,7 @@ function renderProgressBadges(day){
       getSaved(d).forEach(function(session){
         session.entries.forEach(function(e){
           if(normalizeEx(e.ex)===key && e.note && e.note.indexOf('Set ')===0){
-            sessions.push({note:e.note,ts:sessTs(session)});
+            sessions.push({note:e.note,ts:Date.parse(session.date.replace(' at ',' '))||0});
           }
         });
       });
@@ -3427,7 +3249,7 @@ function computeStats(){
   var allSessions=[];
   ['a','b','c','d','e'].forEach(function(d){
     getSaved(d).forEach(function(s){
-      var ts=sessTs(s);
+      var ts=Date.parse(s.date.replace(' at ',' '))||0;
       if(ts) allSessions.push({ts:ts,day:d,label:s.label,entries:s.entries||[]});
     });
   });
@@ -3610,7 +3432,7 @@ function getWeeklyConsistency(){
   var allSessions=[];
   ['a','b','c','d','e'].forEach(function(d){
     getSaved(d).forEach(function(s){
-      var ts=sessTs(s);
+      var ts=Date.parse(s.date.replace(' at ',' '))||0;
       if(ts) allSessions.push({ts:ts,duration:s.duration||null});
     });
   });
@@ -3695,7 +3517,7 @@ function drawVolumeChart(){
   var weekOrder=[];
   ['a','b','c','d','e'].forEach(function(d){
     getSaved(d).forEach(function(session){
-      var ts=sessTs(session);
+      var ts=Date.parse(session.date.replace(' at ',' '))||0;
       if(!ts) return;
       var dt=new Date(ts);
       var day=dt.getDay();
@@ -4180,24 +4002,47 @@ function showPRToast(prs){
   };
 })();
 
-// ── Sync with JSONbin on startup (non-destructive merge) ────────────
-// Always pulls the cloud bin and UNIONS it with whatever is local, so a
-// wiped/fresh device gets its history back, AND a device that already
-// logged something new keeps it too. Never overwrites cloud here.
+// ── Restore from JSONbin if localStorage is empty ──────────────────
 (function restoreFromCloud(){
-  cloudGET()
-    .then(function(cloud){
-      if(!cloud || typeof cloud!=='object') return;
-      var before=['a','b','c','d','e'].reduce(function(n,d){ return n+getSaved(d).length; },0);
-      var merged=mergeCloudIntoPayload(cloud);
-      applyPayloadToLocal(merged);
-      var after=['a','b','c','d','e'].reduce(function(n,d){ return n+getSaved(d).length; },0);
-      refreshAfterSync();
-      try{ if(typeof applyArchivedToChecklist==='function') applyArchivedToChecklist(); }catch(e){}
-      if(after>before) showToast('Session history synced from cloud ☁️');
-    })
-    .catch(function(err){ console.warn('Cloud restore failed:', err); })
-    .then(function(){ flushPendingSync(); });   // retry any unsynced local changes
+  // Check if all days are empty locally
+  var hasLocal = ['a','b','c','d','e'].some(function(d){
+    return getSaved(d).length > 0;
+  });
+  if(hasLocal) return; // localStorage has data, no need to pull from cloud
+
+  fetch(JBIN_URL, {
+    method: 'GET',
+    headers: { 'X-Master-Key': JBIN_KEY, 'X-Bin-Meta': 'false' }
+  })
+  .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  .then(function(data){
+    var restored = false;
+    ['a','b','c','d','e'].forEach(function(d){
+      var key = 'gymlog_'+d;
+      if(data[key] && Array.isArray(data[key]) && data[key].length){
+        localStorage.setItem(key, JSON.stringify(data[key]));
+        restored = true;
+      }
+    });
+    if(data['archived_exercises'] && Array.isArray(data['archived_exercises'])){
+      localStorage.setItem('archived_exercises', JSON.stringify(data['archived_exercises']));
+    }
+    if(data['body_measurements'] && Array.isArray(data['body_measurements']) && data['body_measurements'].length){
+      localStorage.setItem('body_measurements', JSON.stringify(data['body_measurements']));
+    }
+    if(data['exercise_order'] && typeof data['exercise_order']==='object'){
+      localStorage.setItem('exercise_order', JSON.stringify(data['exercise_order']));
+    }
+    if(data['earned_milestones'] && Array.isArray(data['earned_milestones'])){
+      localStorage.setItem('earned_milestones', JSON.stringify(data['earned_milestones']));
+    }
+    if(restored){
+      renderProgress();
+      loadLastTimes();
+      showToast('Session history restored from cloud ☁️');
+    }
+  })
+  .catch(function(err){ console.warn('Cloud restore failed:', err); });
 })();
 
 </script>
