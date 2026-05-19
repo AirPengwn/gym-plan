@@ -267,6 +267,8 @@ body.dark .stat-card-label{color:#9896C8}
 body.dark .stat-card-val{color:#B4B2D8}
 body.dark .meas-entry-card,.dark .meas-history-item{background:#252540;border-color:#3C3A5C}
 body.dark .modal{background:#252540;color:#E8E6F8}
+body.dark .modal-title{color:#E8E6F8}
+body.dark .modal-sub{color:#9E9CC4}
 body.dark .date-input,body.dark #session-notes{background:#1A1A2E;color:#E8E6F8;border-color:#3C3A5C}
 body.dark #share-modal{background:#252540}
 body.dark #share-text{background:#1A1A2E;color:#E8E6F8;border-color:#3C3A5C}
@@ -377,7 +379,7 @@ body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
 
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
   <div>
-    <div style="font-size:18px;font-weight:700;color:#5B4EA8;">John's Gym App <span id="app-version" style="font-size:10px;font-weight:600;color:#7F77DD;background:#EEEDFE;border-radius:6px;padding:1px 6px;vertical-align:middle;">v2.5</span></div>
+    <div style="font-size:18px;font-weight:700;color:#5B4EA8;">John's Gym App <span id="app-version" style="font-size:10px;font-weight:600;color:#7F77DD;background:#EEEDFE;border-radius:6px;padding:1px 6px;vertical-align:middle;">v2.18</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;">Anytime Fitness Guilford &middot; Complete in any order &middot; Rest whenever needed</div>
   </div>
   <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
@@ -538,7 +540,7 @@ body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
 
   <div class="prog-panel" id="prog-panel-manage">
     <div class="mgr-notice">
-      Archiving an exercise removes it from the checklist but <strong>keeps all its history forever</strong>. You can restore it at any time. To add new exercises with video links and proper guidance, bring the request to Claude and we will add them together.
+      <strong>Add</strong>, <strong>Edit</strong>, rename, swap and reorder your plan right here. Renaming <strong>keeps all logged history</strong> (the underlying tracking id never changes). Archiving hides an exercise but keeps its history forever — restore anytime.
     </div>
     <div id="mgr-active-wrap"></div>
     <div class="mgr-archived-section" id="mgr-archived-section" style="display:none">
@@ -723,20 +725,30 @@ var EXERCISE_DATA = {"a":[{"domId":"a1","html":"  <div class=\"item\" id=\"a1\">
 // Each EXERCISE_DATA item is parsed into a record with structured fields
 // AND its verbatim `_html`. Rendering uses `_html` verbatim unless a record
 // was edited (Phase 2b), so an unedited plan stays byte-identical.
+function _decodeEntities(s){
+  if(s==null) return s;
+  var map={'&times;':'×','&middot;':'·','&ndash;':'–','&mdash;':'—','&deg;':'°','&nbsp;':' ','&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&#39;':"'","&apos;":"'"};
+  return String(s)
+    .replace(/&#(\d+);/g,function(m,n){ try{return String.fromCharCode(parseInt(n,10));}catch(e){return m;} })
+    .replace(/&[a-z]+;|&#\d+;/gi,function(m){ return map[m]!=null?map[m]:m; });
+}
 function parseExerciseRecord(day, item){
   var h=item.html, rec={ domId:item.domId, day:day, _html:h, _edited:false };
   try{
     var nm=h.match(/class="ex-name">([\s\S]*?)<\/div>/);
     var nameHtml=nm?nm[1]:'';
     var badges=[];
-    nameHtml.replace(/<span class="badge ([a-z]+)">([\s\S]*?)<\/span>/g,function(m,c,t){ badges.push({cls:c,text:t}); return ''; });
-    rec.name=nameHtml.replace(/<span class="badge[\s\S]*?<\/span>/g,'').trim();
+    nameHtml.replace(/<span class="badge ([a-z]+)">([\s\S]*?)<\/span>/g,function(m,c,t){ badges.push({cls:c,text:_decodeEntities(t)}); return ''; });
+    rec.name=_decodeEntities(nameHtml.replace(/<span class="badge[\s\S]*?<\/span>/g,'').trim());
     rec.badges=badges;
-    var sm=h.match(/class="ex-sub">([\s\S]*?)<\/div>/); rec.sub=sm?sm[1]:'';
-    var lm=h.match(/class="ex-loc">([\s\S]*?)<\/div>/); rec.loc=lm?lm[1]:'';
+    var sm=h.match(/class="ex-sub">([\s\S]*?)<\/div>/); rec.sub=_decodeEntities(sm?sm[1]:'');
+    var lm=h.match(/class="ex-loc">([\s\S]*?)<\/div>/); rec.loc=_decodeEntities(lm?lm[1]:'');
     var links=[];
-    h.replace(/<a class="(ex-link|ex-link-stretch)"[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g,function(m,cls,href,label){ links.push({cls:cls,href:href,label:label}); return ''; });
+    h.replace(/<a class="(ex-link|ex-link-stretch)"[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g,function(m,cls,href,label){ links.push({cls:cls,href:href,label:_decodeEntities(label)}); return ''; });
     rec.links=links;
+    var dl=links.filter(function(l){return l.cls==='ex-link';})[0];
+    rec.video=dl?dl.href:'';
+    rec.badge=badges[0]||null;
     if(/class="cardio-fields"/.test(h)){
       rec.type='cardio';
       var pm=h.match(/switchCardio\(this,'([^']+)'/); rec.cardioPrefix=pm?pm[1]:null;
@@ -747,13 +759,13 @@ function parseExerciseRecord(day, item){
       rec.histEx=rx?rx[1]:null;
       rec.sets=(h.match(/class="rep-single"/g)||[]).length;
       var nx=h.match(/class="notes-input" data-ex="([^"]+)"[^>]*placeholder="([^"]*)"/);
-      rec.notesEx=nx?nx[1]:null; rec.notesPlaceholder=nx?nx[2]:'';
+      rec.notesEx=nx?nx[1]:null; rec.notesPlaceholder=_decodeEntities(nx?nx[2]:'');
       var t=getExerciseTargets()[normalizeEx(rec.histEx||'')];
       rec.repTarget=t?t.reps:null; rec.targetSets=t?t.sets:null;
     } else {
       rec.type='notes';
       var nx2=h.match(/class="notes-input" data-ex="([^"]+)"[^>]*placeholder="([^"]*)"/);
-      rec.histEx=nx2?nx2[1]:null; rec.notesEx=rec.histEx; rec.notesPlaceholder=nx2?nx2[2]:'';
+      rec.histEx=nx2?nx2[1]:null; rec.notesEx=rec.histEx; rec.notesPlaceholder=_decodeEntities(nx2?nx2[2]:'');
     }
   }catch(e){ /* fields best-effort only; _html is authoritative for render */ }
   return rec;
@@ -796,19 +808,364 @@ function getEffectivePlan(){
   return eff;
 }
 function renderItemHTML(rec){
-  if(rec && rec._html && !rec._edited) return rec._html;
-  if(typeof buildCardHTML==='function') return buildCardHTML(rec);
-  return (rec && rec._html) || '';
+  // Unedited records keep their verbatim markup (byte-identical, harness-
+  // verified). Edited/added records carry a freshly-built `_html`.
+  return (rec && rec._html) ? rec._html : '';
 }
+
+// ── Phase 2b: builder engine ─────────────────────────────────────────
+function _esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _dash(s){ return String(s||'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+function _ytSearch(q){ return 'https://www.youtube.com/results?search_query='+encodeURIComponent(String(q||'').trim()).replace(/%20/g,'+'); }
+
+// Build a clean, structurally-valid card for a strength/notes record.
+// Does NOT need to byte-match legacy markup — only correct classes/ids/
+// data-ex/tog so every existing handler & injection IIFE works.
+function buildCardHTML(rec){
+  var d=rec.day, id=rec.domId, hist=rec.histEx||rec.name;
+  var badge=(rec.badge&&rec.badge.text)?(' <span class="badge '+(_esc(rec.badge.cls||'bo'))+'">'+_esc(rec.badge.text)+'</span>'):'';
+  var link=rec.video?('<a class="ex-link" href="'+_esc(rec.video)+'" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>'):'';
+  var top='  <div class="item" id="'+id+'">\n'
+    +'    <div class="item-top"><div class="checkbox" onclick="tog(\''+id+'\',\''+d+'\',9)" style="cursor:pointer"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div>\n'
+    +'      <div class="ex-name">'+_esc(rec.name)+badge+'</div><div class="ex-sub">'+_esc(rec.sub||'')+'</div>\n'
+    +'      <div class="ex-loc">'+_esc(rec.loc||'')+'</div>\n'
+    +(link?('      '+link+'\n'):'')
+    +'    </div></div>\n';
+  var body;
+  if(rec.type==='strength'){
+    var n=Math.max(1,parseInt(rec.sets,10)||3);
+    var ltId='lt-'+_dash(hist);
+    var rs='';
+    for(var i=1;i<=n;i++){
+      var uid='unit-'+_dash(hist)+'-s'+i;
+      rs+='<div class="rep-single"><span class="rep-label">Set '+i+':</span><input class="rep-input" oninput="this.style.color=\'\';this.style.fontStyle=\'\';" data-ex="'+_esc(hist)+'" data-set="'+i+'" type="text" placeholder="lbs"/>\n'
+        +'        <div class="unit-toggle">\n'
+        +'          <button class="unit-btn active" onclick="setUnit(this,\''+uid+'\')" type="button">lbs</button>\n'
+        +'          <button class="unit-btn" onclick="setUnit(this,\''+uid+'\')" type="button">kg</button>\n'
+        +'        </div>\n'
+        +'        <input type="hidden" id="'+uid+'" value="lbs"/></div>';
+    }
+    body='    <div class="fields-wrap">\n'
+      +'      <div class="last-time" id="'+ltId+'"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>\n'
+      +'      <div class="rep-row">'+rs+'</div>\n'
+      +'      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="'+_esc(hist)+'-notes" type="text" placeholder="'+_esc(rec.notesPlaceholder||'e.g. notes')+'"/></div>\n'
+      +'    </div>\n';
+  } else { // notes-only
+    body='    <div class="fields-wrap">\n'
+      +'      <div class="notes-row"><span class="weight-label" style="font-size:11px;color:#888780;white-space:nowrap">Notes:</span><input class="notes-input" data-ex="'+_esc(hist)+'" type="text" placeholder="'+_esc(rec.notesPlaceholder||'e.g. notes')+'"/></div>\n'
+      +'    </div>\n';
+  }
+  return top+body+'  </div>\n';
+}
+
+// Surgical text-only edit for a card we keep verbatim (cardio): only the
+// display strings change; all structure/ids/data-ex stay untouched.
+function _surgicalEdit(html, rec){
+  if(rec.name!=null){
+    html=html.replace(/(<div class="ex-name">)([\s\S]*?)(<\/div>)/,function(m,a,inner,c){
+      var badges=(inner.match(/<span class="badge[\s\S]*?<\/span>/g)||[]).join(' ');
+      return a+_esc(rec.name)+(badges?' '+badges:'')+c;
+    });
+  }
+  if(rec.sub!=null) html=html.replace(/(<div class="ex-sub">)([\s\S]*?)(<\/div>)/,function(m,a,x,c){return a+_esc(rec.sub)+c;});
+  if(rec.loc!=null) html=html.replace(/(<div class="ex-loc">)([\s\S]*?)(<\/div>)/,function(m,a,x,c){return a+_esc(rec.loc)+c;});
+  if(rec.video) html=html.replace(/(<a class="ex-link" href=")[^"]*(")/,'$1'+_esc(rec.video)+'$2');
+  return html;
+}
+
+function _ovGet(){ var o=getPlanOverrides(); if(!o||typeof o!=='object') o={}; if(!o.order)o.order={}; if(!o.ex)o.ex={}; return o; }
+function _planCommit(msg){
+  showToast(msg||'Plan updated');
+  try{ syncToJbin(function(){}); }catch(e){}
+  try{ sessionStorage.setItem('gym_after_plan','manage'); }catch(e){}
+  setTimeout(function(){ location.reload(); }, 850);
+}
+function _baseRec(domId){ var m=buildExerciseModel(); return m.ex[domId]?JSON.parse(JSON.stringify(m.ex[domId])):null; }
+
+function _uniqueHist(name){
+  var hist=String(name||'Exercise').trim();
+  var taken={}, m=buildExerciseModel(), ov=_ovGet();
+  Object.keys(m.ex).forEach(function(k){ if(m.ex[k].histEx) taken[normalizeEx(m.ex[k].histEx)]=1; });
+  Object.keys(ov.ex).forEach(function(k){ if(ov.ex[k].histEx) taken[normalizeEx(ov.ex[k].histEx)]=1; });
+  var b=hist, n=2; while(taken[normalizeEx(hist)]){ hist=b+' '+n; n++; }
+  return hist;
+}
+function _newId(){ return 'ux'+Date.now().toString(36)+Math.floor(Math.random()*1e6); }
+function _orderArr(ov,day){ return (ov.order[day]&&ov.order[day].length)?ov.order[day].slice():buildExerciseModel().order[day].slice(); }
+function _instanceRec(day,linkId,hist,type,fields){
+  var t=(type==='notes')?'notes':(type==='strength'?'strength':(type==='cardio'?'notes':'strength'));
+  var rec={ domId:_newId(), day:day, linkId:linkId, type:t,
+    name:fields.name, histEx:hist, sub:fields.sub||'', loc:fields.loc||'',
+    video:fields.video||'', badge:fields.badge||null, cat:fields.cat||'', mins:(fields.mins!=null?fields.mins:null),
+    muscles:(Array.isArray(fields.muscles)?fields.muscles:[]),
+    sets:fields.sets||3, notesPlaceholder:fields.notesPlaceholder||'e.g. notes', _edited:true, _added:true };
+  rec._html=buildCardHTML(rec);
+  return rec;
+}
+
+// Add an exercise to one or more days (linked: shared history + linkId).
+function planAddExercise(days, fields){
+  if(!Array.isArray(days)) days=[days];
+  days=days.filter(Boolean); if(!days.length){ showToast('Pick at least one day'); return; }
+  var ov=_ovGet();
+  var hist=_uniqueHist(fields.name);
+  var linkId='lk'+Date.now().toString(36)+Math.floor(Math.random()*1e4);
+  days.forEach(function(day){
+    var rec=_instanceRec(day,linkId,hist,fields.type,fields);
+    ov.ex[rec.domId]=rec;
+    var ord=_orderArr(ov,day);
+    if(typeof fields._pos==='number') ord.splice(fields._pos,0,rec.domId); else ord.push(rec.domId);
+    ov.order[day]=ord;
+  });
+  localStorage.setItem('plan_v2', JSON.stringify(ov));
+  _planCommit('Added “'+fields.name+'” ('+days.length+' day'+(days.length>1?'s':'')+')');
+}
+
+// Edit a (possibly multi-day linked) exercise. Identity (histEx/data-ex)
+// is FROZEN ⇒ history never orphans. Shared fields propagate to every
+// linked instance; the selected `days` reconcile which days it lives on.
+function planEditExercise(domId, fields, days){
+  var plan=getEffectivePlan();
+  var ref=plan.ex[domId]||_baseRec(domId);
+  if(!ref){ showToast('Exercise not found'); return; }
+  var ov=_ovGet();
+  // group = all instances sharing histEx (adopts legacy duplicates in place) or linkId
+  var groupIds=_groupDomIds(plan, ref);
+  var byDay={}; groupIds.forEach(function(gid){ var r=plan.ex[gid]; if(r&&byDay[r.day]==null) byDay[r.day]=gid; });
+  var targetDays=(Array.isArray(days)&&days.length)?days.slice():Object.keys(byDay);
+  var linkId=ref.linkId || ((groupIds.length>1||targetDays.length>1) ? ('lk'+Date.now().toString(36)+Math.floor(Math.random()*1e4)) : null);
+  function applyShared(r){
+    Object.keys(fields).forEach(function(k){ if(k!=='_pos'&&k!=='type') r[k]=fields[k]; });
+    r.histEx=ref.histEx;            // frozen identity
+    if(linkId) r.linkId=linkId; else delete r.linkId;
+  }
+  // update kept/added days
+  targetDays.forEach(function(day){
+    var gid=byDay[day];
+    if(gid){
+      var src=plan.ex[gid], b=_baseRec(gid);
+      var r={}; Object.keys(src).forEach(function(k){ r[k]=src[k]; });
+      applyShared(r); r.domId=gid; r.day=day; r.type=src.type;
+      r._html=(src.type==='cardio'&&b&&b._html)?_surgicalEdit(b._html,r):buildCardHTML(r);
+      r._edited=true; ov.ex[gid]=r;
+      if(!ov.order[day]) ov.order[day]=_orderArr(ov,day);
+    } else {
+      var nr=_instanceRec(day,linkId,ref.histEx,(ref.type==='cardio'?'notes':ref.type),fields);
+      ov.ex[nr.domId]=nr;
+      var ord=_orderArr(ov,day); ord.push(nr.domId); ov.order[day]=ord;
+    }
+  });
+  // remove days no longer selected (history stays — keyed by histEx)
+  Object.keys(byDay).forEach(function(day){
+    if(targetDays.indexOf(day)===-1){
+      var gid=byDay[day];
+      delete ov.ex[gid];
+      ov.order[day]=_orderArr(ov,day).filter(function(x){ return x!==gid; });
+    }
+  });
+  localStorage.setItem('plan_v2', JSON.stringify(ov));
+  _planCommit('Saved “'+(fields.name||ref.name)+'”');
+}
+
+// Swap = archive the whole exercise (all its days; history kept & hidden)
+// + add the replacement on the chosen days.
+function planSwapExercise(domId, fields, days){
+  var plan=getEffectivePlan();
+  var ref=plan.ex[domId]||_baseRec(domId);
+  if(!ref){ showToast('Exercise not found'); return; }
+  var ov=_ovGet();
+  var groupIds=_groupDomIds(plan, ref);
+  if(ref.histEx){ var arch=getArchivedExercises(); if(arch.indexOf(ref.histEx)===-1){ arch.push(ref.histEx); saveArchivedExercises(arch); } }
+  var sd=(Array.isArray(days)&&days.length)?days.slice():[];
+  groupIds.forEach(function(gid){
+    var r=plan.ex[gid]; if(!r) return;
+    if(!sd.length) sd.push(r.day);
+    delete ov.ex[gid];
+    ov.order[r.day]=_orderArr(ov,r.day).filter(function(x){ return x!==gid; });
+  });
+  localStorage.setItem('plan_v2', JSON.stringify(ov));
+  planAddExercise(sd.length?sd:[ref.day], fields);
+}
+
+function planReorder(day, domId, dir){
+  var ov=_ovGet();
+  var ord=(ov.order[day]&&ov.order[day].length)?ov.order[day].slice():buildExerciseModel().order[day].slice();
+  var i=ord.indexOf(domId); if(i<0) return;
+  var j=i+dir; if(j<0||j>=ord.length) return;
+  ord.splice(i,1); ord.splice(j,0,domId);
+  ov.order[day]=ord;
+  localStorage.setItem('plan_v2', JSON.stringify(ov));
+  // Reorder the live DOM in place — no reload, no tab jump. Moving the whole
+  // .item node preserves injected fields (RPE/pain/reps) and any typed values.
+  var host=document.getElementById('items-'+day);
+  if(host){
+    var byId={};
+    host.querySelectorAll('.item').forEach(function(n){ if(n.id) byId[n.id]=n; });
+    ord.forEach(function(idd){ var n=byId[idd]; if(n) host.appendChild(n); });
+  }
+  try{ if(!TEST_MODE && typeof syncToJbin==='function') syncToJbin(function(){}); }catch(e){}
+  if(typeof renderManager==='function') renderManager(); // refresh ↑↓ states
+  showToast('Order updated');
+}
+
+// ── Builder modal control ────────────────────────────────────────────
+function _muscleChipsHTML(sel){
+  sel=sel||[];
+  var selMap={}; sel.forEach(function(k){ selMap[k]=1; });
+  var html='';
+  MUSCLE_GROUPS.forEach(function(g){
+    html+='<div style="font-size:10px;font-weight:700;color:#888780;margin:7px 0 3px">'+g.bucket+'</div>';
+    html+='<div style="display:flex;flex-wrap:wrap;gap:5px">';
+    g.items.forEach(function(it){
+      var on=!!selMap[it.key];
+      html+='<button type="button" data-mk="'+it.key+'" data-sel="'+(on?'1':'0')+'" onclick="toggleMuscleChip(this)" '
+        +'style="padding:5px 9px;font-size:11px;font-weight:600;border-radius:14px;cursor:pointer;border:1.5px solid '
+        +(on?'#5B4EA8;background:#5B4EA8;color:#fff':'#C4C0E8;background:#FAFAF8;color:#5B4EA8')+'">'+it.label+'</button>';
+    });
+    html+='</div>';
+  });
+  return html;
+}
+function toggleMuscleChip(btn){
+  var on=btn.getAttribute('data-sel')!=='1';
+  btn.setAttribute('data-sel',on?'1':'0');
+  btn.style.border='1.5px solid '+(on?'#5B4EA8':'#C4C0E8');
+  btn.style.background=on?'#5B4EA8':'#FAFAF8';
+  btn.style.color=on?'#fff':'#5B4EA8';
+}
+function _readMuscleChips(){
+  var out=[];
+  document.querySelectorAll('#b-muscles button[data-sel="1"]').forEach(function(b){ out.push(b.getAttribute('data-mk')); });
+  return out;
+}
+var _DAY_LABELS={a:'Day 1 · Upper A',b:'Day 2 · Lower A',c:'Day 3 · Cardio+Core',d:'Day 4 · Upper B',e:'Day 5 · Lower B'};
+function _dayChipsHTML(sel){
+  sel=sel||[]; var selMap={}; sel.forEach(function(k){ selMap[k]=1; });
+  var html='<div style="display:flex;flex-wrap:wrap;gap:5px">';
+  ['a','b','c','d','e'].forEach(function(d){
+    var on=!!selMap[d];
+    html+='<button type="button" data-dk="'+d+'" data-sel="'+(on?'1':'0')+'" onclick="toggleMuscleChip(this)" '
+      +'style="padding:5px 9px;font-size:11px;font-weight:600;border-radius:14px;cursor:pointer;border:1.5px solid '
+      +(on?'#5B4EA8;background:#5B4EA8;color:#fff':'#C4C0E8;background:#FAFAF8;color:#5B4EA8')+'">'+_DAY_LABELS[d]+'</button>';
+  });
+  return html+'</div>';
+}
+function _readDayChips(){
+  var out=[];
+  document.querySelectorAll('#b-days button[data-sel="1"]').forEach(function(b){ out.push(b.getAttribute('data-dk')); });
+  return out;
+}
+// One logical exercise = all instances sharing the same (truthy) histEx,
+// OR the same linkId. This unifies new linked sets AND legacy built-in
+// duplicates (same data-ex, no linkId) so editing adopts copies in place.
+function _groupDomIds(plan, rec){
+  if(!rec) return [];
+  if(rec.histEx){
+    return Object.keys(plan.ex).filter(function(k){ return plan.ex[k].histEx===rec.histEx; });
+  }
+  if(rec.linkId){
+    return Object.keys(plan.ex).filter(function(k){ return plan.ex[k].linkId===rec.linkId; });
+  }
+  return [rec.domId];
+}
+// Days an exercise (and its linked/duplicate copies) currently occupies.
+function _exerciseDays(domId){
+  var plan; try{ plan=getEffectivePlan(); }catch(e){ return []; }
+  var rec=plan.ex[domId]; if(!rec) return [];
+  var days={};
+  _groupDomIds(plan,rec).forEach(function(k){ if(plan.ex[k]) days[plan.ex[k].day]=1; });
+  return Object.keys(days);
+}
+// Sibling copies that aren't linked yet (for the "will link them" note).
+function _unlinkedSiblingDays(domId){
+  var plan; try{ plan=getEffectivePlan(); }catch(e){ return []; }
+  var rec=plan.ex[domId]; if(!rec||!rec.histEx) return [];
+  var ds={};
+  _groupDomIds(plan,rec).forEach(function(k){
+    var r=plan.ex[k]; if(!r||k===domId) return;
+    var alreadyLinked = rec.linkId && r.linkId && r.linkId===rec.linkId;
+    if(!alreadyLinked && r.day!==rec.day) ds[r.day]=1;
+  });
+  return Object.keys(ds);
+}
+var _builderEditId=null;
+function openBuilder(domId){
+  _builderEditId=domId||null;
+  var ttl=document.getElementById('builder-title');
+  var note=document.getElementById('builder-idnote');
+  var swap=document.getElementById('b-swap');
+  var typeSel=document.getElementById('b-type');
+  function set(id,v){ document.getElementById(id).value=v==null?'':v; }
+  if(domId){
+    var r=getEffectivePlan().ex[domId]; if(!r){ showToast('Exercise not found'); return; }
+    ttl.textContent='Edit exercise';
+    var dnum={a:'Day 1',b:'Day 2',c:'Day 3',d:'Day 4',e:'Day 5'};
+    var sib=_unlinkedSiblingDays(domId);
+    note.innerHTML='Renaming keeps all logged history — the underlying tracking id never changes.'
+      +(sib.length?(' <b>This exercise also has separate copies on '
+        +sib.map(function(d){return dnum[d];}).join(', ')
+        +'</b> — saving links them so they stay in sync. Untick a day to remove that copy.'):'');
+    note.style.display='block'; swap.style.display='';
+    document.getElementById('b-days').innerHTML=_dayChipsHTML(_exerciseDays(domId));
+    set('b-type',r.type==='cardio'?'strength':(r.type||'strength'));
+    set('b-name',r.name); set('b-sub',r.sub); set('b-loc',r.loc);
+    set('b-video',r.video); set('b-sets',r.sets||''); set('b-badge',r.badge?r.badge.text:'');
+    var _cm=(typeof exCatMins==='function')?exCatMins(domId):{cat:'',mins:null};
+    set('b-cat', _cm.cat||r.cat||'');
+    set('b-mins', _cm.mins!=null?_cm.mins:(r.mins!=null?r.mins:''));
+    document.getElementById('b-muscles').innerHTML=_muscleChipsHTML(getExerciseMuscles(domId));
+    typeSel.disabled=true; // structure frozen on edit
+  } else {
+    ttl.textContent='Add exercise';
+    note.style.display='none'; swap.style.display='none';
+    document.getElementById('b-days').innerHTML=_dayChipsHTML([]);
+    set('b-type','strength'); set('b-name',''); set('b-sub','');
+    set('b-loc',''); set('b-video',''); set('b-sets','3'); set('b-badge',''); set('b-cat',''); set('b-mins','');
+    document.getElementById('b-muscles').innerHTML=_muscleChipsHTML([]);
+    typeSel.disabled=false;
+  }
+  document.getElementById('builder-modal-overlay').classList.add('show');
+}
+function closeBuilder(){ document.getElementById('builder-modal-overlay').classList.remove('show'); }
+function saveBuilder(isSwap){
+  var name=(document.getElementById('b-name').value||'').trim();
+  if(!name){ showToast('Name is required'); return; }
+  var days=_readDayChips();
+  if(!days.length){ showToast('Pick at least one day'); return; }
+  var type=document.getElementById('b-type').value;
+  var sub=(document.getElementById('b-sub').value||'').trim();
+  var loc=(document.getElementById('b-loc').value||'').trim();
+  var video=(document.getElementById('b-video').value||'').trim();
+  if(!video) video=_ytSearch(name+' proper form how to');
+  var sets=parseInt(document.getElementById('b-sets').value,10)||3;
+  var bt=(document.getElementById('b-badge').value||'').trim();
+  var badge=bt?{cls:'bo',text:bt}:null;
+  var cat=(document.getElementById('b-cat').value||'').trim();
+  var mv=document.getElementById('b-mins').value;
+  var mins=(mv===''||mv==null)?null:(parseInt(mv,10)||0);
+  var muscles=_readMuscleChips();
+  var f={ name:name, sub:sub, loc:loc, video:video, badge:badge, sets:sets, type:type, cat:cat, mins:mins, muscles:muscles };
+  closeBuilder();
+  if(isSwap && _builderEditId){ f.type=type; planSwapExercise(_builderEditId,f,days); }
+  else if(_builderEditId){ planEditExercise(_builderEditId,f,days); }
+  else { planAddExercise(days,f); }
+}
+
 function renderDayItems(){
   var plan=getEffectivePlan();
   ['a','b','c','d','e'].forEach(function(d){
     var host=document.getElementById('items-'+d);
     if(!host) return;
-    var ids=plan.order[d]||[];
-    var html=ids.map(function(id){ var r=plan.ex[id]; return r?renderItemHTML(r):''; }).join('');
+    var ids=(plan.order[d]||[]).filter(function(id){ return plan.ex[id]; });
+    counts[d]=ids.length;                     // single source of truth = plan
+    var html=ids.map(function(id){ return renderItemHTML(plan.ex[id]); }).join('');
     html=html.replace(/(onclick="tog\('[^']+','[^']+',)\d+(\))/g,function(m,p1,p2){return p1+counts[d]+p2;});
     host.innerHTML=html;
+    // Keep the static progress label + Reset button in sync with the count
+    var cntEl=document.getElementById('cnt-'+d);
+    if(cntEl && /^\s*0\s*\//.test(cntEl.textContent)) cntEl.textContent='0 / '+counts[d];
+    var rb=document.querySelector('#p-'+d+' .reset-btn');
+    if(rb) rb.setAttribute('onclick',"rst('"+d+"',"+counts[d]+")");
   });
 }
 renderDayItems();
@@ -1900,16 +2257,28 @@ var EXERCISE_REGISTRY=[
 ];
 
 // ── Inject category tags onto each exercise item ─────────────────────
+// Category/minutes resolver: a user edit/add (plan_v2 record) wins over the
+// built-in EXERCISE_REGISTRY default, so builder-set categories show up.
+var _regById={}; EXERCISE_REGISTRY.forEach(function(r){ _regById[r.id]=r; });
+function exCatMins(domId){
+  var rec=null;
+  try{ rec=getEffectivePlan().ex[domId]; }catch(e){}
+  var reg=_regById[domId]||{};
+  return { cat:(rec&&rec.cat)||reg.cat||'', mins:(rec&&rec.mins!=null?rec.mins:(reg.mins!=null?reg.mins:null)) };
+}
 (function injectCategoryTags(){
-  EXERCISE_REGISTRY.forEach(function(r){
-    var el=document.getElementById(r.id);
+  var plan; try{ plan=getEffectivePlan(); }catch(e){ plan={ex:{}}; }
+  Object.keys(plan.ex||{}).forEach(function(domId){
+    var el=document.getElementById(domId);
     if(!el) return;
     var nameEl=el.querySelector('.ex-name');
     if(!nameEl) return;
-    if(nameEl.querySelector('.ex-cat')) return; // already injected
+    if(nameEl.parentNode.querySelector('.ex-cat')) return; // already injected
+    var cm=exCatMins(domId);
+    if(!cm.cat) return;
     var tag=document.createElement('div');
     tag.className='ex-cat';
-    tag.textContent=r.cat+' · '+r.mins+' min';
+    tag.textContent=cm.cat+(cm.mins!=null?(' · '+cm.mins+' min'):'');
     nameEl.parentNode.insertBefore(tag, nameEl);
   });
 })();
@@ -1919,18 +2288,24 @@ function renderDaySummaries(){
   var dayMap={'a':'Day 1 — Upper A','b':'Day 2 — Lower A','c':'Day 3 — Cardio and Core','d':'Day 4 — Upper B','e':'Day 5 — Lower B + Cardio'};
   // Color palette per category
   var catColors={'Warm-up':'#F59E0B','Upper body':'#7F77DD','Lower body':'#10B981','Core':'#EF4444','Cardio':'#3B82F6','Cool-down':'#8B5CF6'};
+  var plan; try{ plan=getEffectivePlan(); }catch(e){ plan={order:{},ex:{}}; }
+  var archived=getArchivedExercises();
   ['a','b','c','d','e'].forEach(function(dayKey){
     var el=document.getElementById('summary-'+dayKey);
     if(!el) return;
-    var dayLabel=dayMap[dayKey];
     var cats={};
     var catOrder=[];
     var total=0;
-    EXERCISE_REGISTRY.forEach(function(r){
-      if(r.day!==dayLabel) return;
-      if(!cats[r.cat]){ cats[r.cat]=0; catOrder.push(r.cat); }
-      cats[r.cat]+=r.mins;
-      total+=r.mins;
+    // Model-driven: reflects builder add/edit/reorder + the minutes field.
+    (plan.order[dayKey]||[]).forEach(function(domId){
+      var rec=plan.ex[domId]; if(!rec) return;
+      if(rec.histEx && archived.indexOf(rec.histEx)!==-1) return; // hide archived
+      var cm=(typeof exCatMins==='function')?exCatMins(domId):{cat:'',mins:0};
+      var cat=cm.cat||'Other';
+      var mins=(cm.mins!=null?cm.mins:0);
+      if(!cats[cat]){ cats[cat]=0; catOrder.push(cat); }
+      cats[cat]+=mins;
+      total+=mins;
     });
     var chipsHTML='';
     catOrder.forEach(function(cat){
@@ -2073,56 +2448,49 @@ function renderManager(){
   var archivedSection=document.getElementById('mgr-archived-section');
   _mgrActiveExs=[];
 
-  // Group active exercises by day, respecting custom order
-  var dayGroups={};
-  var dayKeys=[];
-  EXERCISE_REGISTRY.forEach(function(item){
-    if(dayKeys.indexOf(item.day)===-1) dayKeys.push(item.day);
-    if(archived.indexOf(item.ex)===-1){
-      if(!dayGroups[item.day]) dayGroups[item.day]=[];
-      if(dayGroups[item.day].indexOf(item.ex)===-1) dayGroups[item.day].push(item.ex);
-    }
-  });
-  // Apply custom order within each day
-  dayKeys.forEach(function(day){
-    if(order[day]&&dayGroups[day]){
-      var customOrder=order[day].filter(function(ex){ return dayGroups[day].indexOf(ex)!==-1; });
-      var rest=dayGroups[day].filter(function(ex){ return customOrder.indexOf(ex)===-1; });
-      dayGroups[day]=customOrder.concat(rest);
-    }
-  });
-
+  // Model-driven active list (Phase 2b). Order/edits come from the plan.
+  var plan=getEffectivePlan();
+  var dayLabels={a:'Day 1 — Upper A',b:'Day 2 — Lower A',c:'Day 3 — Cardio + Core',d:'Day 4 — Upper B',e:'Day 5 — Lower B + Cardio'};
   var catColors={'Warm-up':'#F59E0B','Upper body':'#7F77DD','Lower body':'#10B981','Core':'#EF4444','Cardio':'#3B82F6','Cool-down':'#8B5CF6'};
-  // Build a lookup: exercise name -> cat
-  var exCat={};
-  EXERCISE_REGISTRY.forEach(function(r){ exCat[r.ex]=r.cat; });
 
-  var activeHTML='';
-  dayKeys.forEach(function(day){
-    if(!dayGroups[day]||!dayGroups[day].length) return;
-    activeHTML+='<div class="mgr-day-label">'+day+'</div>';
-    dayGroups[day].forEach(function(ex,i){
-      var sessionCount=(exMap[ex]||[]).length;
+  var activeHTML='<button onclick="openBuilder(null)" style="width:100%;padding:11px;margin-bottom:12px;background:#EEEDFE;border:1.5px solid #7F77DD;border-radius:10px;color:#3C3489;font-size:13px;font-weight:700;cursor:pointer;">➕ Add exercise</button>';
+  ['a','b','c','d','e'].forEach(function(day){
+    var ids=(plan.order[day]||[]).filter(function(id){
+      var r=plan.ex[id]; if(!r) return false;
+      return archived.indexOf(r.histEx)===-1; // hide archived
+    });
+    if(!ids.length) return;
+    activeHTML+='<div class="mgr-day-label">'+(dayLabels[day]||day)+'</div>';
+    ids.forEach(function(id,i){
+      var r=plan.ex[id];
+      var nm=r.name||r.histEx||id;
+      var sessionCount=(exMap[r.histEx]||[]).length;
       var countStr=sessionCount?'<span class="mgr-ex-count">'+sessionCount+' session'+(sessionCount===1?'':'s')+'</span>':'';
       var idx=_mgrActiveExs.length;
-      _mgrActiveExs.push(ex);
-      var isFirst=i===0,isLast=i===dayGroups[day].length-1;
-      var cat=exCat[ex]||'';
+      _mgrActiveExs.push(r.histEx||nm);
+      var isFirst=i===0,isLast=i===ids.length-1;
+      var cat=exCatMins(id).cat||'';
       var catColor=catColors[cat]||'#888780';
       var catPill=cat?'<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;color:'+catColor+';background:'+catColor+'18;border-radius:10px;padding:1px 6px;margin-left:5px;white-space:nowrap;flex-shrink:0">'
         +'<span style="width:5px;height:5px;border-radius:50%;background:'+catColor+';display:inline-block"></span>'+cat+'</span>':'';
       activeHTML+=('<div class="mgr-ex-row">'
         +'<div class="mgr-reorder-btns">'
-        +'<button class="mgr-reorder-btn" onclick="moveExercise(\''+day+'\',\''+ex+'\',-1)" '+(isFirst?'disabled':'')+'title="Move up">↑</button>'
-        +'<button class="mgr-reorder-btn" onclick="moveExercise(\''+day+'\',\''+ex+'\',1)" '+(isLast?'disabled':'')+'title="Move down">↓</button>'
+        +'<button class="mgr-reorder-btn" onclick="planReorder(\''+day+'\',\''+id+'\',-1)" '+(isFirst?'disabled':'')+' title="Move up">↑</button>'
+        +'<button class="mgr-reorder-btn" onclick="planReorder(\''+day+'\',\''+id+'\',1)" '+(isLast?'disabled':'')+' title="Move down">↓</button>'
         +'</div>'
-        +'<span class="mgr-ex-name" style="display:flex;align-items:center;flex-wrap:wrap;gap:2px">'+ex+catPill+'</span>'
+        +'<span class="mgr-ex-name" style="display:flex;align-items:center;flex-wrap:wrap;gap:2px">'+_esc(nm)+catPill+(function(){
+          if(!r.linkId) return '';
+          var dd={}; Object.keys(plan.ex).forEach(function(k){ if(plan.ex[k].linkId===r.linkId) dd[plan.ex[k].day]=1; });
+          var c=Object.keys(dd).length;
+          return c>1?'<span style="font-size:9px;font-weight:700;color:#5B4EA8;background:#EEEDFE;border-radius:10px;padding:1px 6px;margin-left:5px;white-space:nowrap;flex-shrink:0">↔ '+c+' days</span>':'';
+        })()+'</span>'
         +countStr
+        +'<button class="mgr-archive-btn" style="background:#EEEDFE;border-color:#C4C0E8;color:#3C3489;margin-right:5px" onclick="openBuilder(\''+id+'\')" title="Edit / rename / swap">Edit</button>'
         +'<button class="mgr-archive-btn" onclick="confirmArchiveByIndex('+idx+')" title="Archive this exercise">Archive</button>'
         +'</div>');
     });
   });
-  activeWrap.innerHTML=activeHTML||'<div class="prog-empty">No active exercises.</div>';
+  activeWrap.innerHTML=activeHTML;
 
   // Archived exercises
   if(archived.length){
@@ -2465,6 +2833,98 @@ var MUSCLE_MAP={
   e:{front:['quad','inner-thigh','calf'],back:['hamstring','glute','outer-hip','calf']}
 };
 
+// ── Exercise-driven muscle targeting ─────────────────────────────────
+// The 16 regions buildMuscleMapSVG can shade. side = which figure(s).
+var MUSCLE_GROUPS=[
+  {bucket:'Push', items:[
+    {key:'chest',label:'Chest',side:'front'},
+    {key:'front-shoulder',label:'Front delt',side:'front'},
+    {key:'tricep',label:'Triceps',side:'both'} ]},
+  {bucket:'Pull', items:[
+    {key:'lat',label:'Lats',side:'back'},
+    {key:'upper-back',label:'Upper back / traps',side:'back'},
+    {key:'rear-delt',label:'Rear delt',side:'back'},
+    {key:'bicep',label:'Biceps',side:'front'} ]},
+  {bucket:'Core', items:[
+    {key:'core-front',label:'Abs',side:'front'},
+    {key:'core-back',label:'Lower back',side:'back'} ]},
+  {bucket:'Legs', items:[
+    {key:'quad',label:'Quads',side:'front'},
+    {key:'hamstring',label:'Hamstrings',side:'back'},
+    {key:'glute',label:'Glutes',side:'back'},
+    {key:'calf',label:'Calves',side:'both'} ]},
+  {bucket:'Hips', items:[
+    {key:'hip-flexor',label:'Hip flexors',side:'front'},
+    {key:'inner-thigh',label:'Inner thigh (adductors)',side:'front'},
+    {key:'outer-hip',label:'Outer hip (abductors)',side:'back'} ]}
+];
+var _MGROUP_SIDE={}; MUSCLE_GROUPS.forEach(function(g){ g.items.forEach(function(it){ _MGROUP_SIDE[it.key]=it.side; }); });
+var _MGROUP_LABEL={}; MUSCLE_GROUPS.forEach(function(g){ g.items.forEach(function(it){ _MGROUP_LABEL[it.key]=it.label; }); });
+// Sensible defaults for the built-in exercises (keyed by normalizeEx of the
+// history name). Keeps the figure accurate with zero user effort.
+var DEFAULT_MUSCLES={
+  'chest press':['chest','front-shoulder','tricep'],
+  'pec fly':['chest','front-shoulder'],
+  'lat pulldown':['lat','upper-back','bicep'],
+  'lat pulldown wide':['lat','upper-back','bicep'],
+  'cable row':['upper-back','lat','rear-delt','bicep'],
+  'cable row v bar':['upper-back','lat','rear-delt','bicep'],
+  'rear delt':['rear-delt','upper-back'],
+  'tricep pushdown':['tricep'],
+  'tricep rope':['tricep'],
+  'db curl':['bicep'],
+  'dead bug':['core-front'],
+  'cable rotation':['core-front','core-back'],
+  'pallof press':['core-front','core-back'],
+  'russian twist':['core-front','core-back'],
+  'leg press':['quad','glute','hamstring'],
+  'leg press high foot':['glute','hamstring','quad'],
+  'leg extension':['quad'],
+  'leg curl':['hamstring'],
+  'hip abductor':['outer-hip','glute'],
+  'hip adductor':['inner-thigh'],
+  'calf raises':['calf'],
+  'leg press calf raises':['calf']
+  // stretches / cool-down (Stretch D*, Hip stretch) intentionally → []
+};
+var CARDIO_MUSCLES=['quad','hamstring','glute','calf'];
+function getExerciseMuscles(domId){
+  var rec=null; try{ rec=getEffectivePlan().ex[domId]; }catch(e){}
+  if(!rec) return [];
+  if(Array.isArray(rec.muscles)) return rec.muscles;
+  var key=normalizeEx(rec.histEx||'');
+  if(DEFAULT_MUSCLES[key]) return DEFAULT_MUSCLES[key];
+  if(rec.type==='cardio') return CARDIO_MUSCLES;
+  return [];
+}
+function dayMusclesFor(dayKey){
+  var plan; try{ plan=getEffectivePlan(); }catch(e){ plan={order:{},ex:{}}; }
+  var archived=getArchivedExercises();
+  // Strength/notes = trained (strong). Cardio = engaged only (light tier),
+  // so a 5-min warm-up doesn't paint legs like a leg day.
+  var S={}, C={}, any=false;
+  (plan.order[dayKey]||[]).forEach(function(domId){
+    var rec=plan.ex[domId]; if(!rec) return;
+    if(rec.histEx && archived.indexOf(rec.histEx)!==-1) return;
+    var isCardio=(rec.type==='cardio');
+    getExerciseMuscles(domId).forEach(function(m){
+      if(!_MGROUP_SIDE[m]) return;
+      any=true;
+      (isCardio?C:S)[m]=1;
+    });
+  });
+  if(!any){ var lm=MUSCLE_MAP[dayKey]||{front:[],back:[]}; return {front:lm.front||[],back:lm.back||[],frontLight:[],backLight:[]}; }
+  var fS=[],bS=[],fL=[],bL=[];
+  function place(m,strong){
+    var side=_MGROUP_SIDE[m];
+    if(side==='front'||side==='both'){ (strong?fS:fL).push(m); }
+    if(side==='back'||side==='both'){ (strong?bS:bL).push(m); }
+  }
+  Object.keys(S).forEach(function(m){ place(m,true); });
+  Object.keys(C).forEach(function(m){ if(!S[m]) place(m,false); }); // strength wins
+  return { front:fS, back:bS, frontLight:fL, backLight:bL };
+}
+
 function navSession(day,dir){
   var saved=getSaved(day);
   sessPage[day]=Math.max(0,Math.min(saved.length-1,sessPage[day]+dir));
@@ -2472,10 +2932,11 @@ function navSession(day,dir){
 }
 
 function buildMuscleMapSVG(muscles){
-  var hi='#7F77DD',lo='#E8E6F8',ol='#C8C6BD',sk='#F5E6D3',bg='#F9F9F7';
+  var hi='#7F77DD',mid='#B9B4E6',sk='#F5E6D3',lo='#F5E6D3',ol='#C8C6BD',bg='#F9F9F7';
   var front=muscles.front||[],back=muscles.back||[];
-  function f(g){return front.indexOf(g)!==-1?hi:lo;}  // front color
-  function b(g){return back.indexOf(g)!==-1?hi:lo;}   // back color
+  var frontL=muscles.frontLight||[],backL=muscles.backLight||[];
+  function f(g){return front.indexOf(g)!==-1?hi:(frontL.indexOf(g)!==-1?mid:lo);} // front
+  function b(g){return back.indexOf(g)!==-1?hi:(backL.indexOf(g)!==-1?mid:lo);}   // back
 
   var s='<rect x="0" y="0" width="320" height="260" rx="10" fill="'+bg+'"/>';
   s+='<text x="80" y="15" text-anchor="middle" font-size="9" fill="#888780" font-family="system-ui">FRONT</text>';
@@ -2555,11 +3016,13 @@ function buildMuscleMapSVG(muscles){
   s+='<ellipse cx="'+(x+67)+'" cy="209" rx="10" ry="4" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>';
   s+='<ellipse cx="'+(x+90)+'" cy="209" rx="10" ry="4" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>';
 
-  // Legend
-  s+='<rect x="10" y="232" width="11" height="11" rx="2" fill="'+hi+'"/>';
-  s+='<text x="25" y="241" font-size="9" fill="#888780" font-family="system-ui">Targeted</text>';
-  s+='<rect x="90" y="232" width="11" height="11" rx="2" fill="'+lo+'"/>';
-  s+='<text x="105" y="241" font-size="9" fill="#888780" font-family="system-ui">Not targeted</text>';
+  // Legend (3-way: strength / cardio / not worked)
+  s+='<rect x="8" y="232" width="11" height="11" rx="2" fill="'+hi+'"/>';
+  s+='<text x="23" y="241" font-size="9" fill="#888780" font-family="system-ui">Strength</text>';
+  s+='<rect x="78" y="232" width="11" height="11" rx="2" fill="'+mid+'"/>';
+  s+='<text x="93" y="241" font-size="9" fill="#888780" font-family="system-ui">Cardio</text>';
+  s+='<rect x="142" y="232" width="11" height="11" rx="2" fill="'+lo+'" stroke="'+ol+'" stroke-width="1"/>';
+  s+='<text x="157" y="241" font-size="9" fill="#888780" font-family="system-ui">Not worked</text>';
   return s;
 }
 
@@ -2594,7 +3057,7 @@ function renderProgress(){
       +'<div class="prog-session-date">'+s.date+(s.duration?' <span class="prog-session-dur">⏱ '+s.duration+'min</span>':'')
       +' <button class="edit-date-btn" onclick="editSessionDate(\"'+day+'\",'+idx+')" title="Edit date">✏️</button></div>'
       +checkinHTML+rows+notesHTML+'</div>';
-    var muscles=MUSCLE_MAP[day]||{front:[],back:[]};
+    var muscles=dayMusclesFor(day);
     var mapHTML='<div class="muscle-map-wrap"><div class="muscle-map-title">Muscles Worked</div>'
       +'<svg class="muscle-map-svg" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg">'
       +buildMuscleMapSVG(muscles)+'</svg></div>';
@@ -2611,10 +3074,24 @@ function showToast(msg){
 
 renderProgress();
 renderDaySummaries();
-// Wipe any exercise_order saved by previous broken versions — it was never working
-localStorage.removeItem('exercise_order');
-applyExerciseOrder();
+// Order is now governed by plan_v2 via getEffectivePlan()/renderDayItems().
+// Legacy exercise_order no longer drives the DOM (kept only for old backups).
 setTimeout(checkMilestones, 500);
+// After a builder save+reload, return to the Manage tab (not Day 1).
+(function returnToManageAfterPlan(){
+  try{ if(sessionStorage.getItem('gym_after_plan')!=='manage') return;
+    sessionStorage.removeItem('gym_after_plan');
+  }catch(e){ return; }
+  setTimeout(function(){
+    var pb=document.querySelector('.day-btn.progress-tab');
+    if(pb){ sw('prog',pb); }
+    var mb=null;
+    document.querySelectorAll('.prog-tab-btn').forEach(function(b){
+      if((b.getAttribute('onclick')||'').indexOf("'manage'")!==-1) mb=b;
+    });
+    if(mb) switchProgTab('manage',mb);
+  },120);
+})();
 (function restoreInProgressDraft(){
   var days=['a','b','c','d','e'];
   var totals=counts;
@@ -3920,6 +4397,96 @@ function showPRToast(prs){
       <button class="modal-btn-secondary" onclick="closePlateCalc()">Close</button>
     </div>
     <div id="pc-result" style="margin-top:12px;font-size:13px;line-height:1.6;color:#2C2C2A;"></div>
+  </div>
+</div>
+
+<!-- Exercise Builder Modal -->
+<div class="modal-overlay" id="builder-modal-overlay" onclick="if(event.target===this)closeBuilder()">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-title" id="builder-title">Add exercise</div>
+    <div class="modal-sub" id="builder-idnote" style="display:none;background:#E1F5EE;color:#085041;border-radius:6px;padding:7px 9px;">Renaming keeps all logged history — the underlying tracking id never changes.</div>
+    <style>
+      .bld-grp{margin-bottom:11px}
+      .bld-lbl{font-size:12px;font-weight:700;color:#3C3489;display:block;margin-bottom:2px}
+      .bld-hint{font-size:10.5px;color:#888780;font-weight:400;display:block;margin-bottom:5px;line-height:1.4}
+      .bld-in{width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #C4C0E8;border-radius:8px;font-size:13px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
+      body.dark .bld-lbl{color:#C7C4EE} body.dark .bld-hint{color:#9E9CC4}
+      body.dark .bld-in{background:#1A1A2E;color:#E8E6F8;border-color:#3C3A5C}
+    </style>
+    <div>
+      <div class="bld-grp">
+        <label class="bld-lbl">Which day(s)</label>
+        <span class="bld-hint">Tap every day this exercise belongs to. On multiple days = one linked exercise (shared history); editing it updates all its days.</span>
+        <div id="b-days"></div>
+      </div>
+      <div class="bld-grp">
+        <label class="bld-lbl" for="b-type">Type</label>
+        <span class="bld-hint">Strength = logs weight/sets. Notes-only = checkbox + a notes box (stretches, core).</span>
+        <select id="b-type" class="bld-in">
+          <option value="strength">Strength</option><option value="notes">Notes-only</option>
+        </select>
+      </div>
+      <div class="bld-grp">
+        <label class="bld-lbl" for="b-name">Exercise name</label>
+        <span class="bld-hint">Shown as the card title — e.g. “Chest press machine”</span>
+        <input id="b-name" type="text" class="bld-in" placeholder="Chest press machine"/>
+      </div>
+      <div class="bld-grp">
+        <label class="bld-lbl" for="b-cat">Category</label>
+        <span class="bld-hint">The coloured tag on the card &amp; in Manage (also used in day summaries)</span>
+        <select id="b-cat" class="bld-in">
+          <option value="">— none —</option>
+          <option value="Warm-up">Warm-up</option>
+          <option value="Upper body">Upper body</option>
+          <option value="Lower body">Lower body</option>
+          <option value="Core">Core</option>
+          <option value="Cardio">Cardio</option>
+          <option value="Cool-down">Cool-down</option>
+        </select>
+      </div>
+      <div class="bld-grp">
+        <label class="bld-lbl">Muscles worked</label>
+        <span class="bld-hint">Drives the body figure on the Progress tab — the day's figure is the union of its exercises. Tap to toggle.</span>
+        <div id="b-muscles"></div>
+      </div>
+      <div class="bld-grp">
+        <label class="bld-lbl" for="b-sub">Sets × reps &amp; cues</label>
+        <span class="bld-hint">The grey line under the name — sets, reps, rest, form cues. e.g. “3 × 12 · start light · rest 60–90 sec”</span>
+        <input id="b-sub" type="text" class="bld-in" placeholder="3 × 12 · rest 60–90 sec"/>
+      </div>
+      <div class="bld-grp">
+        <label class="bld-lbl" for="b-loc">Location <span style="font-weight:400;color:#888780">(optional)</span></label>
+        <span class="bld-hint">Where to find it in the gym — e.g. “Selectorized machines · ground floor”</span>
+        <input id="b-loc" type="text" class="bld-in" placeholder="Selectorized machines · ground floor"/>
+      </div>
+      <div class="bld-grp">
+        <label class="bld-lbl" for="b-video">Demo video <span style="font-weight:400;color:#888780">(optional)</span></label>
+        <span class="bld-hint">Paste a video URL, or leave blank — a YouTube search link is created automatically from the name</span>
+        <input id="b-video" type="text" class="bld-in" style="font-size:12px" placeholder="Leave blank for auto YouTube search"/>
+      </div>
+      <div class="bld-grp" style="display:flex;gap:10px;">
+        <div style="width:78px;">
+          <label class="bld-lbl" for="b-sets">Sets</label>
+          <span class="bld-hint">Strength only</span>
+          <input id="b-sets" type="number" min="1" max="6" class="bld-in" placeholder="3"/>
+        </div>
+        <div style="width:88px;">
+          <label class="bld-lbl" for="b-mins">Minutes</label>
+          <span class="bld-hint">Est. time, for day summary</span>
+          <input id="b-mins" type="number" min="0" max="120" class="bld-in" placeholder="5"/>
+        </div>
+        <div style="flex:1;">
+          <label class="bld-lbl" for="b-badge">Badge <span style="font-weight:400;color:#888780">(optional)</span></label>
+          <span class="bld-hint">Small card tag — e.g. “knee-aware”</span>
+          <input id="b-badge" type="text" class="bld-in" placeholder="e.g. knee-aware"/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-btn-row">
+      <button class="modal-btn-primary" onclick="saveBuilder()">Save</button>
+      <button class="modal-btn-secondary" id="b-swap" style="display:none;background:#FFF3CD;color:#854F0B;" onclick="saveBuilder(true)">Swap</button>
+      <button class="modal-btn-secondary" onclick="closeBuilder()">Cancel</button>
+    </div>
   </div>
 </div>
 
