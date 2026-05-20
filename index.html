@@ -208,6 +208,17 @@ body.dark #test-toggle.test-on:hover{background:#4A1F1F;color:#FF8080}
 .patch5-rerun-btn:hover{background:var(--primary-tint)}
 body.dark .patch5-rerun-btn{color:var(--primary-2);border-color:var(--primary-2)}
 body.dark .patch5-rerun-btn:hover{background:#2A2850}
+/* v2.70 — Pull-from-cloud row (multi-device sync escape hatch). */
+.multi-device-row{margin-top:14px;padding-top:10px;border-top:1px solid var(--border-soft);text-align:center}
+.multi-device-label{font-size:12px;font-weight:600;color:var(--text);line-height:1.5;margin-bottom:6px}
+/* v2.71 — Primary/Reader device toggle */
+.primary-toggle-label{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text);cursor:pointer;margin-bottom:4px}
+.primary-toggle-label input{width:16px;height:16px;cursor:pointer;accent-color:var(--primary)}
+.primary-toggle-hint{font-size:10.5px;line-height:1.4;margin:0 0 8px;padding:0 8px}
+.primary-toggle-hint.pt-primary{color:var(--good)}
+.primary-toggle-hint.pt-reader{color:var(--warn)}
+body.dark .primary-toggle-hint.pt-primary{color:#5DD8A0}
+body.dark .primary-toggle-hint.pt-reader{color:#FFD740}
 #hdr-menu[hidden]{display:none}
 /* Follow-up 4: AA contrast for the expanded card footer (both themes) */
 .v2-foot .last-time{color:var(--text)}
@@ -676,7 +687,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.69</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.71</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -1004,6 +1015,17 @@ body.dark #pc-result{color:#E8E6F8}
       <!-- v2.60: Patch-5 migration health line. Refreshed every time the
            modal opens. Reads localStorage; no network, no mutation. -->
       <div id="patch5-status" class="patch5-status"></div>
+      <!-- v2.70-71: multi-device tools. Primary/reader toggle gates cloud
+           writes; Pull from cloud is a read-only escape hatch. -->
+      <div class="multi-device-row">
+        <div class="multi-device-label">Multi-device setup</div>
+        <label class="primary-toggle-label" for="primary-device-toggle">
+          <input type="checkbox" id="primary-device-toggle" onchange="togglePrimaryDevice(this.checked)">
+          <span>This is my <b>primary</b> device (writes to cloud)</span>
+        </label>
+        <div class="primary-toggle-hint" id="primary-toggle-hint"></div>
+        <button type="button" class="patch5-rerun-btn" onclick="pullFromCloud()">Pull from cloud</button>
+      </div>
     </div>
 
     <!-- Restore panel -->
@@ -2182,7 +2204,11 @@ function confirmSave(){
   checkMilestones();
   if(prs.length){ showPRToast(prs); setTimeout(function(){ showShareModal(savedDay,savedLabel,savedEntries,prs,sessionObj); },prs.length*2200+400); }
   else { setTimeout(function(){ showShareModal(savedDay,savedLabel,savedEntries,[],sessionObj); },400); }
-  // Auto-sync to JSONbin after every save
+  // Auto-sync to JSONbin after every save. v2.71: reader mode shows an
+  // explicit toast so the user knows the save went local-only.
+  if(!isPrimaryDevice()){
+    showToast('📖 Saved locally · reader mode (no cloud push from this device)');
+  }
   syncToJbin(function(ok){
     if(!ok) showToast('⚠️ Cloud sync failed — data saved locally');
   });
@@ -3431,6 +3457,8 @@ function showExportImport(){
   if(_gb){ _gb.className='modal-btn-primary'; _gb.textContent='Generate backup code'; }
   // v2.60: refresh the Patch-5 migration health line every time the modal opens.
   try{ _renderPatch5Status(); }catch(e){}
+  // v2.71: sync the Primary/Reader toggle UI to current localStorage state.
+  try{ _renderPrimaryToggleUI(); }catch(e){}
   showTab('backup');
   document.getElementById('modal-overlay').classList.add('show');
 }
@@ -3590,6 +3618,49 @@ function splitRearPecCombined(){
   }
 }
 
+// v2.70 — Pull from cloud, replacing local entirely. Bypasses the merge so a
+// device with stale data doesn't push its dupes back up. Use this when
+// another device has cleaner data than this one. Snapshots current local
+// state to the existing undo slot first.
+function pullFromCloud(){
+  if(TEST_MODE){ showToast('Test mode is on — cloud sync is disabled'); return; }
+  var ok=true;
+  try{
+    ok=confirm('Pull from cloud?\n\nReplace ALL local data on this device with the version stored in JSONbin. Use this when another device has pushed updates and you need to pull them down here.\n\nYour current local data will be backed up to the undo slot first.');
+  }catch(e){}
+  if(!ok) return;
+  showToast('Pulling from cloud…');
+  // Snapshot current local state for undo (same slot importData uses).
+  try{ localStorage.setItem('gymlog_import_undo', btoa(unescape(encodeURIComponent(JSON.stringify(buildBinPayload()))))); }catch(e){}
+  cloudGET()
+    .then(function(cloud){
+      if(!cloud || typeof cloud!=='object'){
+        showToast('⚠️ Cloud returned empty data — pull aborted');
+        return;
+      }
+      // Clear local gymlog_* + drafts explicitly so cloud-empty days
+      // overwrite local-non-empty days (applyPayloadToLocal only SETS keys
+      // that exist in the payload — without the explicit clear, local-only
+      // sessions would survive the pull).
+      ['a','b','c','d','e'].forEach(function(day){
+        localStorage.removeItem('gymlog_'+day);
+        localStorage.removeItem('gymlog_draft_'+day);
+      });
+      applyPayloadToLocal(cloud);
+      // Clear migration flag too so the v2.70-cleaned data gets verified on
+      // next boot. Migration is idempotent — it'll only act on entries
+      // missing .sets, which should be none.
+      try{ localStorage.removeItem('sessions_migrated_v1'); }catch(e){}
+      try{ haptic('light'); }catch(e){}
+      showToast('Cloud data pulled ✓ — reloading in 2s…');
+      setTimeout(function(){ try{ reloadPage(); }catch(e){ location.reload(); } }, 2000);
+    })
+    .catch(function(err){
+      try{ console.warn('pullFromCloud failed:', err); }catch(_){}
+      showToast('⚠️ Cloud pull failed — local data unchanged. Check connection.');
+    });
+}
+
 // v2.69 — find sessions with the same effective timestamp + label inside the
 // same day. Caused by entry-level edits (Split) that pushed non-authoritatively
 // and let the merge create a duplicate. The "richer" one (more entries, then
@@ -3709,17 +3780,47 @@ function _renderPatch5Status(){
   var showRepairBtn = stalled || partial || hasDoubles;
   var repairLabel = hasDoubles ? 'Repair data' : 'Re-run migration';
   var html='';
-  if(showRepairBtn){
-    html+='<button type="button" class="patch5-rerun-btn" onclick="reRunMigration()">'+repairLabel+'</button>';
-  }
-  if(hasCombined){
-    html+='<button type="button" class="patch5-rerun-btn" onclick="splitRearPecCombined()">Split into Rear delt + Pec fly</button>';
-  }
-  if(hasDuplicates){
-    html+='<button type="button" class="patch5-rerun-btn" onclick="dedupeDuplicateSessions()">Deduplicate sessions</button>';
+  // v2.71 — Write-intent buttons are hidden on reader devices. On a reader,
+  // running Repair/Split/Dedupe would modify local data while the cloud push
+  // is suppressed → local diverges from cloud → next "Pull from cloud" wipes
+  // the local changes. Better to hide them and force the work to happen on
+  // the primary device.
+  var primary=isPrimaryDevice();
+  if(primary){
+    if(showRepairBtn){
+      html+='<button type="button" class="patch5-rerun-btn" onclick="reRunMigration()">'+repairLabel+'</button>';
+    }
+    if(hasCombined){
+      html+='<button type="button" class="patch5-rerun-btn" onclick="splitRearPecCombined()">Split into Rear delt + Pec fly</button>';
+    }
+    if(hasDuplicates){
+      html+='<button type="button" class="patch5-rerun-btn" onclick="dedupeDuplicateSessions()">Deduplicate sessions</button>';
+    }
+  } else if(showRepairBtn || hasCombined || hasDuplicates){
+    // Reader-mode informational note when fixes would be available on a primary device.
+    msgs.push('Reader mode — fixes are hidden here. Apply them on your primary device, then tap "Pull from cloud" to refresh this device.');
   }
   el.innerHTML='<div class="patch5-msg"><span class="patch5-icon">'+icon+'</span> '+msgs.join('<br>')+'</div>'+html;
   el.className='patch5-status '+cls;
+}
+
+// v2.71 — Sync the Primary/Reader toggle UI from localStorage. Called from
+// showExportImport (every modal open) and after every togglePrimaryDevice call.
+// Standalone so it doesn't depend on _renderPatch5Status's code path (which
+// early-returns when no sessions exist — would otherwise skip the sync).
+function _renderPrimaryToggleUI(){
+  try{
+    var cb=document.getElementById('primary-device-toggle');
+    var hint=document.getElementById('primary-toggle-hint');
+    var primary=isPrimaryDevice();
+    if(cb) cb.checked=primary;
+    if(hint){
+      hint.textContent = primary
+        ? '✓ Changes on this device sync to cloud.'
+        : '📖 Reader mode — changes save locally only. Use Pull from cloud to refresh from your primary device.';
+      hint.className='primary-toggle-hint '+(primary?'pt-primary':'pt-reader');
+    }
+  }catch(e){}
 }
 // v2.61 — clear the migration flag and re-run. v2.63 — also strip doubled
 // unit suffixes ("90 lbs lbs" → "90 lbs") from .note strings, invalidate
@@ -4669,7 +4770,7 @@ renderDaySummaries();
 // Legacy exercise_order no longer drives the DOM (kept only for old backups).
 setTimeout(checkMilestones, 500);
 // Step 3: apply a11y attrs once the cards + injected fields exist.
-setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} }, 0);
+setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} try{ _renderPrimaryBadge(); }catch(e){} }, 0);
 // After a builder save+reload, return to the Manage tab (not Day 1).
 (function returnToManageAfterPlan(){
   try{ if(sessionStorage.getItem('gym_after_plan')!=='manage') return;
@@ -4877,11 +4978,71 @@ function cloudGET(){
 }
 function cloudPUT(payload){
   if(TEST_MODE) return Promise.reject(new Error('test mode: cloud write blocked'));
+  // v2.71 — Reader-mode devices NEVER write to cloud. cloudPUT is the single
+  // funnel for every push (authoritative or merged), so guarding here covers
+  // every code path that could contaminate the cloud bin from a stale device.
+  // Resolve as success so callers' happy paths run (toasts, UI updates) — the
+  // user is informed of reader mode by the persistent 📖 badge + the toast
+  // surfaced from confirmSave / Repair / Split / Dedupe.
+  if(!isPrimaryDevice()){
+    try{ console.log('[reader-mode] cloudPUT suppressed — this device is in reader mode'); }catch(e){}
+    return Promise.resolve({ readerMode:true });
+  }
   return fetch(JBIN_URL, {
     method:'PUT',
     headers:{ 'Content-Type':'application/json', 'X-Master-Key':JBIN_KEY, 'X-Bin-Versioning':'true' },
     body: JSON.stringify(payload)
   }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+}
+
+// v2.71 — Primary/Reader device mode. Per-device flag so a single user with
+// multiple devices can designate ONE as the writer (typically the phone) and
+// keep all others as read-only mirrors. Default = primary (preserves existing
+// behavior for everyone who never sets the flag).
+function isPrimaryDevice(){
+  try{
+    var v=localStorage.getItem('gym_primary_device');
+    return v===null || v==='1';
+  }catch(e){ return true; }
+}
+function setPrimaryDevice(yes){
+  try{ localStorage.setItem('gym_primary_device', yes?'1':'0'); }catch(e){}
+  try{ _renderPrimaryBadge(); }catch(e){}
+  try{ _renderPrimaryToggleUI(); }catch(e){}
+  try{ _renderPatch5Status(); }catch(e){}
+}
+function togglePrimaryDevice(makesPrimary){
+  if(!makesPrimary){
+    // Switching TO reader mode is a behavioral change — confirm once.
+    var ok=true;
+    try{
+      ok=confirm('Switch this device to Reader mode?\n\n• New workouts save LOCALLY only — no cloud sync\n• Repair / Split / Dedupe actions are hidden (would only modify local without syncing)\n• "Pull from cloud" lets you fetch the latest from your primary device\n\nUse this when one device (your iPhone) is your "writer" and others (PC, tablet) just view data.\n\nYour current data is unchanged either way.');
+    }catch(e){}
+    if(!ok){
+      var cb=document.getElementById('primary-device-toggle');
+      if(cb) cb.checked=true;
+      return;
+    }
+  }
+  setPrimaryDevice(makesPrimary);
+  showToast(makesPrimary
+    ? '✓ Primary device · changes sync to cloud'
+    : '📖 Reader mode · changes save locally only');
+  try{ haptic('light'); }catch(e){}
+}
+// v2.71 — Persistent visual indicator in the header. Prefixes 📖 to the
+// version badge when in reader mode so the user always knows the device's role.
+function _renderPrimaryBadge(){
+  var el=document.getElementById('app-version');
+  if(!el) return;
+  var current=String(el.textContent||'').replace(/^📖\s*/,'').trim();
+  if(isPrimaryDevice()){
+    el.textContent=current;
+    el.setAttribute('title','Primary device · changes sync to cloud');
+  } else {
+    el.textContent='📖 '+current;
+    el.setAttribute('title','Reader mode · this device does NOT write to cloud. Tap Backup → Primary device toggle to change.');
+  }
 }
 
 function markPendingSync(){ try{ localStorage.setItem('gymlog_sync_pending','1'); }catch(e){} }
