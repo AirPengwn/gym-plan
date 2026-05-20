@@ -3,13 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>John's Gym App</title>
+<title>MyFit</title>
 <style>
+/* ── Design tokens (audit §07). Foundation only — components convert to
+   these incrementally in later steps; existing colors are unchanged. ── */
+:root{
+  --primary:        #5B4EA8;
+  --primary-2:      #7F77DD;
+  --primary-tint:   #EEEDFE;
+  --ghost:          #5B4EA8;   /* italic last-session/draft text, light theme */
+  --surface:        #FAFAF8;
+  --surface-dark:   #1A1A2E;
+  --text:           #1F1D38;
+  --muted:          #6E6C66;   /* nudged up from #888780 for AA contrast */
+  --border:         #D3D1C7;
+  --border-soft:    #E5E2D8;
+  --good:           #0F6E56;
+  --warn:           #E0A800;
+  --bad:            #C53030;
+  --fs-xs:  10px;
+  --fs-sm:  12px;
+  --fs-md:  14px;
+  --fs-lg:  16px;
+  --fs-xl:  20px;
+  --fs-2xl: 28px;
+}
+body.dark{
+  --surface:        #1A1A2E;
+  --text:           #E8E6F8;
+  --muted:          #8B89B0;   /* nudged up from #5C5A80 for AA */
+  --border:         #3C3A5C;
+  --border-soft:    #3C3A5C;
+  --primary-tint:   #2A2850;
+  --ghost:          #7F77DD;   /* italic ghost text, dark theme (primary-2) */
+}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:420px;margin:0 auto}
-.day-selector{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:1rem}
-.day-btn{padding:12px 6px;border-radius:8px;border:0.5px solid #D3D1C7;font-size:12px;font-weight:600;cursor:pointer;text-align:center;background:#F5F5F2;color:#888780;transition:all 0.15s;line-height:1.5}
-.day-btn.active{background:#5B4EA8;border-color:#5B4EA8;color:#fff}
+.day-selector{display:flex;gap:2px;background:var(--primary-tint);border:1px solid var(--border-soft);border-radius:10px;padding:3px;margin-bottom:1rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.day-btn{flex:1;min-width:44px;min-height:44px;padding:8px 6px;border:0;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;background:transparent;color:var(--muted);transition:all 0.15s;line-height:1.2;white-space:nowrap}
+.day-btn.active{background:var(--primary);color:#fff}
 .day-btn.progress-tab{font-size:12px;padding:12px 6px}
 .day-panel{display:none}
 .day-panel.show{display:block}
@@ -17,10 +49,10 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .progress-track{height:6px;background:#F1EFE8;border-radius:3px;overflow:hidden;margin-top:4px}
 .progress-fill{height:100%;background:#7F77DD;border-radius:3px;transition:width 0.3s}
 .progress-label{display:flex;justify-content:space-between;font-size:12px;color:#888780}
-.section-hdr{font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:0.07em;margin:0.5rem 0 0.4rem;padding-bottom:4px;border-bottom:0.5px solid #EEEDFE}
+.section-hdr{font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:0.07em;margin:0.5rem 0 0.4rem;padding-bottom:4px;border-bottom:0.5px solid var(--border-soft)}
 .ex-cat{display:inline-block;font-size:9px;font-weight:700;color:#534AB7;background:#EEEDFE;border-radius:4px;padding:1px 5px;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em}
 body.dark .ex-cat{background:#2A2850;color:#9896C8}
-.day-summary{background:#fff;border:1.5px solid #D8D4F0;border-radius:10px;padding:12px 14px;margin-bottom:0.75rem;box-shadow:0 1px 3px rgba(91,78,168,0.06)}
+.day-summary{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:0.75rem;box-shadow:0 1px 3px rgba(91,78,168,0.06)}
 .day-summary-title{font-size:10px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px}
 .day-summary-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .day-summary-chip{display:flex;align-items:center;gap:5px;background:#F5F5F2;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:#3C3489}
@@ -32,13 +64,15 @@ body.dark .day-summary-chip{background:#1A1A2E;color:#B4B2D8}
 body.dark .day-summary-title{color:#5C5A80}
 body.dark .day-summary-total{color:#9896C8;border-top-color:#3C3A5C}
 body.dark .day-summary-total span{color:#5C5A80}
-.item{background:#fff;border:1.5px solid #D8D4F0;border-radius:10px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(91,78,168,0.06)}
+.item{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(91,78,168,0.06)}
 .item.done{background:#F5F5F2}
-.item-top{display:flex;align-items:flex-start;gap:10px;padding:10px 12px}
+.item-top{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer}
 .item.done .ex-name{color:#B4B2A9;text-decoration:line-through}
 .item.done .ex-sub,.item.done .ex-loc{color:#B4B2A9}
 .item.done .ex-link{opacity:0.4;pointer-events:none}
-.checkbox{width:22px;height:22px;min-width:22px;border-radius:50%;border:2px solid #D3D1C7;display:flex;align-items:center;justify-content:center;transition:all 0.15s;margin-top:1px;flex-shrink:0;cursor:pointer;-webkit-tap-highlight-color:rgba(91,78,168,0.15)}
+.checkbox{width:28px;height:28px;min-width:28px;border-radius:50%;border:2px solid #D3D1C7;display:flex;align-items:center;justify-content:center;transition:all 0.15s;margin-top:1px;flex-shrink:0;cursor:pointer;-webkit-tap-highlight-color:rgba(91,78,168,0.15)}
+/* Patch 3 Step 3 — when .checkbox is rendered as a real <button> (v2 card), neutralise UA button defaults so the visual remains byte-identical to the legacy <div> form. */
+button.checkbox{background:transparent;padding:0;font:inherit;line-height:0}
 .item.done .checkbox{background:#7F77DD;border-color:#7F77DD}
 .checkmark{width:10px;height:7px;display:none}
 .item.done .checkmark{display:block}
@@ -46,7 +80,9 @@ body.dark .day-summary-total span{color:#5C5A80}
 .prog-up{background:#D4F0E2;color:#0A6640}
 .prog-down{background:#FFE5E5;color:#C0392B}
 .prog-same{background:#F0F0F0;color:#888780}
-.rest-timer-bar{position:fixed;bottom:0;left:0;right:0;background:#3C3489;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;padding-bottom:calc(10px + env(safe-area-inset-bottom));font-size:15px;font-weight:600;z-index:999;transform:translateY(100%);transition:transform 0.25s}
+.rest-timer-bar{position:fixed;bottom:calc(env(safe-area-inset-bottom) + 6px);left:0;right:0;background:rgba(60,52,137,0.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;font-size:15px;font-weight:600;z-index:999;border-radius:12px 12px 0 0;transform:translateY(120%);transition:transform 0.25s}
+.ps-date{border-bottom:1px dotted var(--primary-2);cursor:pointer;-webkit-tap-highlight-color:rgba(91,78,168,.15)}
+.ps-cv{font-size:9px;opacity:.7;margin-left:1px}
 .rest-timer-bar.show{transform:translateY(0)}
 .rest-timer-bar button{background:#ffffff33;border:none;color:#fff;font-size:13px;font-weight:600;padding:4px 10px;border-radius:8px;cursor:pointer}
 /* Push page content up when rest timer is visible so btn-row isn't obscured */
@@ -77,28 +113,103 @@ body.timer-active .day-panel.show{padding-bottom:72px}
 .rep-label{font-size:11px;color:#888780;white-space:nowrap;min-width:38px}
 .rep-single{display:flex;align-items:center;gap:6px}
 .rep-single .rep-label{min-width:42px}
-.rep-input{flex:1;font-size:12px;padding:0 10px;height:32px;border:1.5px solid #C4C0E8;border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;box-sizing:border-box}
+.rep-input{flex:1;font-size:12px;padding:0 10px;height:32px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;box-sizing:border-box}
 .rep-input:focus{border-color:#7F77DD;background:#fff}
-.rep-input::placeholder{color:#C8C6BD;font-size:11px}
+.rep-input::placeholder{color:var(--muted);font-size:11px;opacity:1}
 /* Actual reps — same height as weight input, label sits above as a header row */
 .reps-col{display:flex;flex-direction:column;align-items:center;gap:0;flex-shrink:0;width:50px}
 .reps-col-label{font-size:9px;color:#B4B2A9;text-align:center;letter-spacing:0.02em;margin-bottom:2px;line-height:1}
-.reps-actual-input{width:50px;font-size:12px;padding:0 4px;height:32px;border:1.5px solid #C4C0E8;border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;text-align:center;box-sizing:border-box}
+.reps-actual-input{width:50px;font-size:12px;padding:0 4px;height:32px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;text-align:center;box-sizing:border-box}
 .reps-actual-input:focus{border-color:#7F77DD;background:#fff}
 .reps-actual-input::-webkit-inner-spin-button,.reps-actual-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .reps-actual-input[type=number]{-moz-appearance:textfield}
 /* Per-exercise manual rest timer button */
-.item-timer-btn{background:#EEEDFE;border:1.5px solid #C4C0E8;border-radius:20px;cursor:pointer;padding:3px 9px;font-size:11px;font-weight:600;line-height:1.4;color:#5B4EA8;flex-shrink:0;display:flex;align-items:center;gap:3px;white-space:nowrap}
+.item-timer-btn{background:#EEEDFE;border:1px solid var(--border-soft);border-radius:20px;cursor:pointer;padding:3px 12px;min-height:32px;box-sizing:border-box;font-size:11px;font-weight:600;line-height:1.4;color:#5B4EA8;flex-shrink:0;display:flex;align-items:center;gap:3px;white-space:nowrap}
 .item-timer-btn:active{background:#D8D4F0}
 body.dark .item-timer-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
 .notes-row{display:flex;gap:6px;align-items:center}
-.notes-input{flex:1;font-size:12px;padding:5px 8px;border:1.5px solid #C4C0E8;border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
+.notes-input{flex:1;font-size:12px;padding:5px 8px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
 .last-time{font-size:11px;color:#7F77DD;background:#EEEDFE;border-radius:6px;padding:5px 8px;margin-bottom:2px;line-height:1.5;display:none}
 .last-time.has-data{display:block}
 .last-time-label{font-weight:600;margin-right:4px}
 .notes-input:focus{border-color:#7F77DD;background:#fff}
-.notes-input::placeholder{color:#C8C6BD}
+.notes-input::placeholder{color:var(--muted);opacity:1}
 .tip{background:#EEEDFE;border-left:3px solid #7F77DD;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:#3C3489;line-height:1.6;margin-top:1rem}
+:focus-visible{outline:2px solid var(--primary-2);outline-offset:2px;border-radius:6px}
+/* Step 4 (audit §03): unified notice tray. Legacy banners stay in the DOM
+   as hidden state-holders (triggers/dismiss untouched); a MutationObserver
+   repaints this tray from their state. */
+.legacy-banner{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:0!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;border:0!important}
+#notice-tray{display:none;background:#fff;border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:0.75rem}
+body.dark #notice-tray{background:#252540;border-color:var(--border)}
+.tray-head{display:flex;justify-content:space-between;align-items:center;padding:8px 11px;font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;border-bottom:.5px solid var(--border-soft)}
+.tray-clear{font-weight:600;color:var(--primary-2);text-transform:none;letter-spacing:0;cursor:pointer;background:none;border:0;font-size:11px}
+.tray-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border-bottom:.5px solid var(--border-soft)}
+.tray-row:last-child{border-bottom:none}
+.tray-ic{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.tray-ic.red{background:#FBEAEA;color:var(--bad)} .tray-ic.warn{background:#FFF6DD;color:#9A7400} .tray-ic.info{background:var(--primary-tint);color:var(--primary)}
+body.dark .tray-ic.red{background:#3A1A1A} body.dark .tray-ic.warn{background:#3A2E00;color:#FFD740} body.dark .tray-ic.info{background:#2A2850;color:var(--primary-2)}
+.tray-bd{flex:1;min-width:0}
+.tray-t{font-size:12px;font-weight:700;color:var(--text);line-height:1.3}
+.tray-m{font-size:11px;color:var(--muted);line-height:1.4;margin-top:1px}
+.tray-act{font-size:11px;font-weight:700;color:var(--primary);background:none;border:0;cursor:pointer;flex-shrink:0;padding:4px 6px}
+.tray-x{background:none;border:0;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:2px 6px;flex-shrink:0}
+/* Step 5 (audit §02): redesigned exercise card (head / sets / footer). */
+.v2-card .item-top{align-items:flex-start}
+.v2-head{flex:1;min-width:0}
+.v2-head .ex-name{font-size:var(--fs-md);font-weight:600;color:var(--text);line-height:1.3}
+.v2-head .ex-sub{font-size:var(--fs-sm);color:var(--muted);margin-top:2px;line-height:1.4}
+.v2-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.v2-ovf-btn{background:none;border:1.5px solid var(--border);border-radius:8px;width:32px;height:32px;font-size:16px;line-height:1;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.v2-sets{margin:8px 12px 0;border-top:.5px solid var(--border-soft)}
+.v2-sets-head,.rep-single.v2-set{display:grid;grid-template-columns:28px 1fr 56px;gap:8px;align-items:center}
+.v2-sets-head{padding:6px 0 4px;font-size:var(--fs-xs);font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.v2-sets-head .l{padding-left:2px}
+.rep-single.v2-set{padding:5px 0}
+.rep-single.v2-set .rep-label{font-size:var(--fs-sm);color:var(--muted);font-variant-numeric:tabular-nums;min-width:0}
+.rep-single.v2-set .rep-input{width:100%}
+.v2-wl{display:flex;align-items:center;gap:6px;min-width:0}
+.rep-single.v2-set .reps-actual-input{width:54px;text-align:center}
+.v2-foot-toggle{display:flex;align-items:center;gap:6px;width:100%;background:none;border:0;border-top:.5px solid var(--border-soft);margin-top:8px;padding:9px 12px;font-size:var(--fs-sm);font-weight:600;color:var(--primary);cursor:pointer}
+.v2-foot-toggle .cv{transition:transform .15s}
+.v2-foot-toggle[aria-expanded="true"] .cv{transform:rotate(180deg)}
+.v2-foot{padding:0 12px 10px}
+.v2-foot[hidden],.v2-ovf[hidden]{display:none}
+.v2-ovf{padding:8px 12px;border-top:.5px solid var(--border-soft);display:flex;flex-direction:column;gap:8px}
+.v2-ovf .ex-loc,.v2-ovf .ex-link,.v2-ovf .ex-link-stretch{position:static;font-size:var(--fs-sm)}
+.v2-card.item.done .v2-head .ex-name{color:var(--muted);text-decoration:line-through}
+/* Header icon cluster: 🌙 📊 ⋯ — all three identical 40×40, centered, same shape */
+#dark-toggle,#hdr-prog-btn,#hdr-plan-btn,#hdr-ovf-btn{flex:0 0 auto;width:40px;height:40px;min-width:40px;min-height:40px;padding:0;display:flex;align-items:center;justify-content:center;background:#F5F5F2;border:1px solid #D3D1C7;border-radius:9px;font-size:17px;line-height:1;cursor:pointer;color:inherit;vertical-align:middle}
+#hdr-prog-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+body.dark #dark-toggle,body.dark #hdr-prog-btn,body.dark #hdr-plan-btn,body.dark #hdr-ovf-btn{background:#252540;border-color:#3C3A5C;color:#E8E6F8}
+body.dark #hdr-prog-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+/* Header overflow menu */
+.hdr-mi{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;border-bottom:.5px solid var(--border-soft);padding:11px 14px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;text-align:left}
+.hdr-mi:last-child{border-bottom:0}
+.hdr-mi:hover{background:var(--primary-tint)}
+.hdr-mi svg{flex-shrink:0}
+#hdr-menu[hidden]{display:none}
+/* Follow-up 4: AA contrast for the expanded card footer (both themes) */
+.v2-foot .last-time{color:var(--text)}
+.v2-foot .last-time .last-time-label,.v2-foot .last-time .last-time-vals{color:var(--text)}
+.v2-foot .rpe-top-label,.v2-foot .rpe-ends,.v2-foot .rpe-top-val{color:var(--muted)}
+.v2-foot .notes-input{color:var(--text)}
+.v2-foot .notes-input::placeholder{color:var(--muted);opacity:1}
+body.dark .v2-foot .last-time{background:#2A2850}
+body.dark .v2-foot .rpe-ends{color:#9E9CC4}
+/* Patch-2 Step 1: inline progress badge on the card head */
+.v2-nudge{display:none;margin-top:4px}
+.v2-nudge.show{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;border-radius:8px;padding:2px 8px}
+.v2-nudge.up{background:rgba(15,110,86,.12);color:var(--good)}
+.v2-nudge.even{background:var(--primary-tint);color:var(--muted)}
+.v2-nudge.down{background:rgba(224,168,0,.15);color:#8A6A00}
+body.dark .v2-nudge.down{color:#E0A800}
+/* Patch-2 Step 2: swipe affordance */
+.swipe-hint{position:fixed;top:50%;transform:translateY(-50%);width:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);opacity:.3;pointer-events:none;z-index:60;writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:.05em}
+.swipe-hint.l{left:0} .swipe-hint.r{right:0;transform:translateY(-50%) rotate(180deg)}
+.swipe-hint[hidden]{display:none}
+.swipe-tip{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translateX(-50%) translateY(10px);background:var(--text);color:var(--surface);font-size:12px;font-weight:600;padding:9px 15px;border-radius:20px;z-index:1200;box-shadow:0 4px 16px rgba(0,0,0,.28);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap}
+.swipe-tip.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .btn-row{display:flex;gap:8px;margin-top:0.75rem}
 .complete-btn{flex:2;padding:11px;font-size:13px;font-weight:600;border-radius:8px;border:none;background:#5B4EA8;color:#fff;cursor:pointer}
 .reset-btn{flex:1;padding:11px;font-size:13px;border-radius:8px;border:0.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer}
@@ -137,11 +248,11 @@ body.dark .item-timer-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
 .prog-panel{display:none}
 .prog-panel.show{display:block}
 .ex-list{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem}
-.ex-list-btn{padding:11px 14px;background:#fff;border:1.5px solid #D8D4F0;border-radius:10px;font-size:13px;font-weight:500;color:#2C2C2A;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}
+.ex-list-btn{padding:11px 14px;background:#fff;border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:500;color:#2C2C2A;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}
 .ex-list-btn:hover{background:#EEEDFE;border-color:#7F77DD}
 .ex-list-btn.active{background:#EEEDFE;border-color:#5B4EA8;color:#3C3489}
 .ex-session-count{font-size:11px;color:#7F77DD;font-weight:600;background:#EEEDFE;padding:2px 8px;border-radius:10px}
-.ex-detail-panel{background:#fff;border:1.5px solid #D8D4F0;border-radius:10px;margin-bottom:1rem;overflow:hidden}
+.ex-detail-panel{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:1rem;overflow:hidden}
 .stats-section{margin-bottom:18px}
 .stats-section-title{font-size:11px;font-weight:700;color:#888780;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -164,11 +275,11 @@ body.dark .item-timer-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
 .skip-row-pct{color:#C0392B;font-weight:700}
 .meas-sub-btn{padding:7px 14px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:13px;font-weight:600;color:#888780;background:#F5F5F2;cursor:pointer}
 .meas-sub-btn.active{background:#7F77DD;border-color:#7F77DD;color:#fff}
-.meas-entry-card{background:#fff;border:1.5px solid #D8D4F0;border-radius:12px;padding:14px;margin-bottom:12px}
+.meas-entry-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
 .meas-entry-row{display:flex;gap:8px;align-items:center}
 .meas-unit-btn{padding:8px 12px;border:1.5px solid #D3D1C7;border-radius:7px;font-size:13px;font-weight:600;color:#888780;background:#F5F5F2;cursor:pointer}
 .meas-unit-btn.active{background:#7F77DD;border-color:#7F77DD;color:#fff}
-.meas-history-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#fff;border:1px solid #EEEDFE;border-radius:8px;margin-bottom:6px}
+.meas-history-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
 .meas-history-date{font-size:12px;color:#888780}
 .meas-history-val{font-size:15px;font-weight:700;color:#3C3489}
 .meas-history-del{background:none;border:none;color:#C0392B;font-size:16px;cursor:pointer;padding:2px 6px}
@@ -185,25 +296,25 @@ body.dark .item-timer-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
 .chart-title{font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
 .chart-canvas-wrap{width:100%;overflow-x:auto}
 canvas.prog-chart{display:block;border-radius:8px}
-.mgr-day-label{font-size:14px;font-weight:700;color:#3C3489;margin:1.25rem 0 0.6rem;padding-bottom:6px;border-bottom:2px solid #D8D4F0}
-.mgr-ex-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:1.5px solid #D8D4F0;border-radius:10px;margin-bottom:6px}
+.mgr-day-label{font-size:14px;font-weight:700;color:#3C3489;margin:1.25rem 0 0.6rem;padding-bottom:6px;border-bottom:2px solid var(--border-soft)}
+.mgr-ex-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:6px}
 .mgr-ex-row.archived{background:#F5F5F2;border-color:#E8E8E4;opacity:0.75}
 .mgr-ex-name{font-size:13px;font-weight:500;color:#2C2C2A;flex:1}
 .mgr-ex-name.archived{color:#888780;text-decoration:line-through}
 .mgr-ex-count{font-size:11px;color:#7F77DD;font-weight:600;margin-right:8px}
 .mgr-archive-btn{font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #FFBDBD;background:#FFF5F5;color:#C53030;cursor:pointer;white-space:nowrap}
-.mgr-restore-btn{font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #C4C0E8;background:#EEEDFE;color:#3C3489;cursor:pointer;white-space:nowrap}
+.mgr-restore-btn{font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid var(--border-soft);background:#EEEDFE;color:#3C3489;cursor:pointer;white-space:nowrap}
 .mgr-notice{background:#E1F5EE;border-left:3px solid #0F6E56;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:#085041;line-height:1.6;margin-bottom:1rem}
 .mgr-archived-section{margin-top:1.5rem;padding-top:1rem;border-top:1px solid #E8E8E4}
 .mgr-archived-title{font-size:13px;font-weight:700;color:#888780;margin-bottom:0.75rem}
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#2C2C2A;color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:999}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.unit-toggle{display:flex;border-radius:6px;overflow:hidden;border:1.5px solid #C4C0E8;flex-shrink:0;height:32px;box-sizing:border-box}
+.unit-toggle{display:flex;border-radius:6px;overflow:hidden;border:1px solid var(--border-soft);flex-shrink:0;height:32px;box-sizing:border-box}
 .unit-btn{padding:0 9px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:#FAFAF8;color:#888780;transition:all 0.15s;height:100%}
 .unit-btn.active{background:#5B4EA8;color:#fff}
 .date-input-wrap{margin-top:0.75rem;padding:10px 12px;background:#F5F5F2;border-radius:8px;border:1px solid #E8E8E4}
 .date-input-label{font-size:11px;color:#888780;margin-bottom:5px}
-.date-input{width:100%;padding:8px 10px;font-size:13px;border:1.5px solid #C4C0E8;border-radius:8px;background:#fff;color:#2C2C2A;outline:none;font-family:inherit}
+.date-input{width:100%;padding:8px 10px;font-size:13px;border:1px solid var(--border-soft);border-radius:8px;background:#fff;color:#2C2C2A;outline:none;font-family:inherit}
 .date-input:focus{border-color:#7F77DD}
 .cardio-fields{padding:0 12px 10px 44px;display:flex;flex-direction:column;gap:8px}
 .cardio-machine-toggle{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:2px}
@@ -213,9 +324,9 @@ canvas.prog-chart{display:block;border-radius:8px}
 .cardio-machine-panel.show{display:flex}
 .cardio-row{display:flex;gap:6px;align-items:center}
 .cardio-label{font-size:11px;color:#888780;white-space:nowrap;min-width:62px}
-.cardio-input{flex:1;font-size:12px;padding:5px 8px;border:1.5px solid #C4C0E8;border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
+.cardio-input{flex:1;font-size:12px;padding:5px 8px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
 .cardio-input:focus{border-color:#7F77DD;background:#fff}
-.cardio-input::placeholder{color:#C8C6BD;font-size:11px}
+.cardio-input::placeholder{color:var(--muted);font-size:11px;opacity:1}
 .edit-date-btn{background:none;border:none;cursor:pointer;padding:2px 4px;font-size:13px;vertical-align:middle;line-height:1}
 .edit-date-input{font-size:11px;padding:3px 6px;border:1px solid #7F77DD;border-radius:5px;color:#2C2C2A;background:#fff;font-family:inherit;outline:none}
 .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:1rem}
@@ -223,7 +334,7 @@ canvas.prog-chart{display:block;border-radius:8px}
 .modal{background:#fff;border-radius:14px;padding:1.25rem;width:100%;max-width:380px;max-height:80vh;overflow-y:auto}
 .modal-title{font-size:16px;font-weight:700;color:#2C2C2A;margin-bottom:0.5rem}
 .modal-sub{font-size:12px;color:#888780;margin-bottom:1rem;line-height:1.5}
-.modal-textarea{width:100%;height:120px;font-size:11px;padding:8px;border:1.5px solid #C4C0E8;border-radius:8px;font-family:monospace;color:#2C2C2A;resize:none;outline:none;background:#FAFAF8}
+.modal-textarea{width:100%;height:120px;font-size:11px;padding:8px;border:1px solid var(--border-soft);border-radius:8px;font-family:monospace;color:#2C2C2A;resize:none;outline:none;background:#FAFAF8}
 .modal-textarea:focus{border-color:#7F77DD}
 .modal-btn-row{display:flex;gap:8px;margin-top:0.75rem}
 .modal-btn-primary{flex:2;padding:11px;font-size:13px;font-weight:600;border-radius:8px;border:none;background:#5B4EA8;color:#fff;cursor:pointer}
@@ -237,7 +348,8 @@ body.dark .ex-sub{color:#9896C8}
 body.dark .ex-loc{color:#7F77DD}
 body.dark .item.done .ex-name{color:#5C5A80;text-decoration:line-through}
 body.dark .item.done .ex-sub,body.dark .item.done .ex-loc{color:#5C5A80}
-body.dark .day-btn{background:#252540;border-color:#3C3A5C;color:#B4B2D8}
+body.dark .day-selector{background:#252540;border-color:#3C3A5C}
+body.dark .day-btn{background:transparent;border-color:transparent;color:#B4B2D8}
 body.dark .day-btn.active{background:#5B4EA8;color:#fff}
 body.dark .prog-tab-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
 body.dark .prog-tab-btn.active{background:#5B4EA8;color:#fff}
@@ -269,7 +381,14 @@ body.dark .meas-entry-card,.dark .meas-history-item{background:#252540;border-co
 body.dark .modal{background:#252540;color:#E8E6F8}
 body.dark .modal-title{color:#E8E6F8}
 body.dark .modal-sub{color:#9E9CC4}
+#session-notes{background:#fff;color:#2C2C2A;border:1px solid var(--border-soft)}
 body.dark .date-input,body.dark #session-notes{background:#1A1A2E;color:#E8E6F8;border-color:#3C3A5C}
+body.dark .modal-textarea{background:#1A1A2E;color:#E8E6F8;border-color:#3C3A5C}
+body.dark .date-input-wrap{background:#252540;border-color:#3C3A5C}
+body.dark .date-input-label{color:#9E9CC4}
+body.dark .modal-btn-secondary{background:var(--surface-dark);color:#9E9CC4;border-color:#3C3A5C}
+/* Dark-mode input chrome for the three input families (set weight / cardio / notes) */
+body.dark .rep-input,body.dark .cardio-input,body.dark .notes-input{background:#1F1D38;color:var(--text);border-color:var(--border)}
 body.dark #share-modal{background:#252540}
 body.dark #share-text{background:#1A1A2E;color:#E8E6F8;border-color:#3C3A5C}
 body.dark .sess-nav{background:#252540}
@@ -305,7 +424,7 @@ body.dark .checkin-btn.selected-tired span{color:#FF8080}
 body.dark .overload-nudge{background:#0F3A2E;color:#5DD8A0}
 .session-timer-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#3C3489;background:#EEEDFE;border-radius:20px;padding:4px 10px;margin-bottom:0.75rem}
 /* ── Quick-fill button ── */
-.quick-fill-btn{display:flex;align-items:center;gap:5px;width:100%;padding:8px 12px;background:#F5F5F2;border:1.5px dashed #C4C0E8;border-radius:8px;color:#7F77DD;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:0.5rem;justify-content:center}
+.quick-fill-btn{display:flex;align-items:center;gap:5px;width:100%;padding:8px 12px;background:#F5F5F2;border:1px dashed var(--border-soft);border-radius:8px;color:#7F77DD;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:0.5rem;justify-content:center}
 .quick-fill-btn:active{background:#EEEDFE}
 /* ── RPE row ── */
 .rpe-row{display:flex;flex-direction:column;gap:3px;padding:4px 0}
@@ -326,7 +445,7 @@ body.dark .rpe-ends{color:#3C3A5C}
 body.dark .rpe-slider{background:linear-gradient(to right,#7F77DD 0%,#7F77DD var(--rpe-pct,0%),#3C3A5C var(--rpe-pct,0%),#3C3A5C 100%)}
 body.dark .rpe-slider::-webkit-slider-thumb{border-color:#252540}
 /* ── Reps actual input ── */
-.reps-actual-input{width:44px;font-size:12px;padding:5px 6px;border:1.5px solid #C4C0E8;border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;text-align:center}
+.reps-actual-input{width:44px;font-size:12px;padding:5px 6px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;text-align:center}
 .reps-actual-input:focus{border-color:#7F77DD;background:#fff}
 .reps-label{font-size:10px;color:#888780;text-align:center;margin-top:1px}
 /* ── Pain/soreness flag ── */
@@ -337,7 +456,7 @@ body.dark .rpe-slider::-webkit-slider-thumb{border-color:#252540}
 .pain-btn.active-flag{background:#FFF5F5;border-color:#C53030;color:#C53030}
 /* ── Reorder arrows ── */
 .mgr-reorder-btns{display:flex;gap:2px;margin-right:6px}
-.mgr-reorder-btn{background:#F5F5F2;border:1px solid #D3D1C7;border-radius:5px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:#5B4EA8}
+.mgr-reorder-btn{background:#F5F5F2;border:1px solid #D3D1C7;border-radius:5px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;font-weight:700;color:#5B4EA8;line-height:1}
 .mgr-reorder-btn:disabled{opacity:0.3;cursor:default}
 /* ── Milestone badges ── */
 .milestone-shelf{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
@@ -345,7 +464,7 @@ body.dark .rpe-slider::-webkit-slider-thumb{border-color:#252540}
 .milestone-badge.earned{background:#FFF8E1;border-color:#E0A800;color:#7A5A00}
 .milestone-badge.locked{background:#F5F5F2;border-color:#D3D1C7;color:#B4B2A9}
 /* ── Volume chart wrap ── */
-.vol-chart-wrap{background:#fff;border:1.5px solid #D8D4F0;border-radius:10px;margin-bottom:1rem;overflow:hidden}
+.vol-chart-wrap{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:1rem;overflow:hidden}
 .vol-chart-inner{padding:14px}
 .vol-chart-title{font-size:11px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
 /* ── Dark mode additions ── */
@@ -373,54 +492,207 @@ body.dark .vol-chart-wrap{background:#252540;border-color:#3C3A5C}
 body.dark .reps-actual-input{background:#1A1A2E;border-color:#3C3A5C;color:#E8E6F8}
 body.dark .reps-col-label{color:#5C5A80}
 body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
+/* Bottom-of-panel + sweep: surfaces that lacked dark variants */
+body.dark .tip{background:var(--primary-tint);border-left-color:var(--primary-2);color:#B4B2D8}
+body.dark .reset-btn{background:#252540;border-color:var(--border);color:var(--muted)}
+body.dark .item.done{background:#1F1D38}
+body.dark #share-close-btn{background:#252540;color:#B4B2D8}
+body.dark .day-since-card{background:#252540}
+body.dark .meas-sub-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
+body.dark .meas-unit-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
+body.dark .cardio-machine-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
+body.dark .mgr-reorder-btn{background:#252540;border-color:#3C3A5C;color:#E8E6F8}
+body.dark .unit-btn{background:#1A1A2E;color:#9896C8}
+body.dark .ex-list-btn{background:#252540;color:#E8E6F8}
+body.dark .mgr-ex-row{background:#252540;border-color:#3C3A5C}
+body.dark .mgr-ex-row.archived{background:#1F1D38;border-color:#3C3A5C}
+body.dark .mgr-ex-name{color:#E8E6F8}
+body.dark .mgr-ex-name.archived{color:#8B89B0}
+body.dark .mgr-archived-title{color:#9896C8}
+body.dark .mgr-archived-section{border-top-color:#3C3A5C}
+body.dark .mgr-archive-btn{background:#3A1A1A;border-color:#7A2020;color:#FF8080}
+.mgr-edit-btn{background:#EEEDFE;border-color:var(--border-soft);color:#3C3489;margin-right:5px}
+body.dark .mgr-edit-btn{background:#2A2850;border-color:#3C3A5C;color:#C7C4EE}
+.mgr-link-pill{font-size:9px;font-weight:700;color:#5B4EA8;background:#EEEDFE;border-radius:10px;padding:1px 6px;margin-left:5px;white-space:nowrap;flex-shrink:0}
+body.dark .mgr-link-pill{background:#2A2850;color:#C7C4EE}
+.mgr-add-btn{width:100%;padding:11px;margin-bottom:12px;background:#EEEDFE;border:1.5px solid #7F77DD;border-radius:10px;color:#3C3489;font-size:13px;font-weight:700;cursor:pointer}
+body.dark .mgr-add-btn{background:#2A2850;border-color:#5B4EA8;color:#C7C4EE}
+body.dark .mgr-notice{background:#0F3A2E;border-left-color:#5DD8A0;color:#A8E8C8}
+body.dark #builder-idnote{background:#0F3A2E !important;color:#A8E8C8 !important}
+/* Step 3 — Deload "Now" zone card */
+.deload-card{background:#FFF5F5;border:1px solid #C53030;border-radius:10px;padding:11px 13px;margin-bottom:14px}
+.deload-card-msg{font-size:12.5px;color:#7A1010;line-height:1.5;margin-bottom:9px}
+.deload-card-actions{display:flex;gap:8px}
+.deload-plan-btn{flex:1;padding:8px 10px;background:#C53030;border:none;border-radius:7px;color:#fff;font-size:12px;font-weight:700;cursor:pointer}
+.deload-snooze-btn{flex:0 0 auto;padding:8px 12px;background:transparent;border:1px solid #C53030;border-radius:7px;color:#C53030;font-size:12px;font-weight:600;cursor:pointer}
+body.dark .deload-card{background:#2A1A1A;border-color:#7A2020}
+body.dark .deload-card-msg{color:#FFB0B0}
+body.dark .deload-plan-btn{background:#C53030;color:#fff}
+body.dark .deload-snooze-btn{background:transparent;border-color:#7A2020;color:#FF8080}
+/* Step 4 — Now / Trends / Awards zone wrappers.
+   Patch 3 Step 2: titles now use the existing .stats-section-title for visual
+   consistency with sub-sections; .stats-zone-title adds extra top breathing room. */
+.zone-section{margin-bottom:1.5rem}
+.stats-zone-title{margin-top:28px}
+/* First zone (Now) is wrapped in .zone-section; suppress its top margin so the
+   panel doesn't get an awkward gap before the very first header. */
+.zone-section:first-child>.stats-zone-title{margin-top:0}
+/* Step 5 — Sessions feed (cross-day timeline) */
+.sess-filter-row{display:flex;gap:5px;margin-bottom:0.75rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sess-filter{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--muted);background:#F5F5F2;border:1px solid var(--border);border-radius:14px;cursor:pointer;white-space:nowrap}
+.sess-filter.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.sess-cnt{font-size:10px;font-weight:700;color:var(--primary);background:#fff;border-radius:8px;padding:1px 6px;min-width:14px;text-align:center}
+.sess-filter.on .sess-cnt{color:var(--primary);background:#fff}
+body.dark .sess-filter{background:#252540;border-color:#3C3A5C;color:#9896C8}
+body.dark .sess-filter.on{background:var(--primary);border-color:var(--primary);color:#fff}
+body.dark .sess-cnt{background:#1A1A2E;color:#9896C8}
+body.dark .sess-filter.on .sess-cnt{background:#fff;color:var(--primary)}
+.sess-day-clear{font-size:11px;font-weight:600;padding:4px 10px;background:transparent;border:1px solid var(--bad);border-radius:6px;color:var(--bad);cursor:pointer}
+body.dark .sess-day-clear{border-color:#7A2020;color:#FF8080}
+.sess-week-hdr{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin:1rem 0 0.5rem;padding-bottom:4px;border-bottom:0.5px solid var(--border-soft)}
+.sess-week-hdr:first-child{margin-top:0.25rem}
+.sess-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:8px;box-shadow:0 1px 3px rgba(91,78,168,0.06)}
+body.dark .sess-card{background:#252540;border-color:#3C3A5C}
+.sess-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.sess-card-head-l{display:flex;align-items:center;gap:6px}
+.sess-day-pill{font-size:11px;font-weight:700;color:#fff;background:var(--primary);border-radius:9px;padding:2px 8px}
+.sess-day-a{background:#5B4EA8}.sess-day-b{background:#0F6E56}.sess-day-c{background:#E07B3F}.sess-day-d{background:#7F77DD}.sess-day-e{background:#B8860B}
+.sess-mood{font-size:16px;line-height:1}
+.sess-ovf-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;border-radius:6px;font-size:18px;color:var(--muted);cursor:pointer;padding:0}
+.sess-ovf-btn:hover{background:var(--border-soft)}
+.sess-ovf-menu{position:absolute;top:32px;right:0;z-index:50;background:var(--surface);border:1px solid var(--border-soft);border-radius:10px;box-shadow:0 8px 24px rgba(31,29,56,.18);min-width:180px;overflow:hidden}
+body.dark .sess-ovf-menu{background:#252540;border-color:#3C3A5C}
+.sess-ovf-mi{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;border-bottom:.5px solid var(--border-soft);padding:10px 12px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;text-align:left}
+.sess-ovf-mi:last-child{border-bottom:0}
+.sess-ovf-mi:hover{background:var(--border-soft)}
+.sess-ovf-danger{color:var(--bad)}
+body.dark .sess-ovf-danger{color:#FF8080}
+.sess-card-meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-bottom:8px;gap:8px;flex-wrap:wrap}
+.sess-card-chips{display:flex;gap:5px;flex-wrap:wrap}
+.sess-meta-chip{font-size:11px;font-weight:600;color:var(--muted);background:var(--border-soft);border-radius:7px;padding:2px 7px;white-space:nowrap}
+.sess-meta-chip.sess-pr{background:#FFF8E1;color:#7A5A00}
+body.dark .sess-meta-chip{background:#1F1D38;color:#9896C8}
+body.dark .sess-meta-chip.sess-pr{background:#3A2E00;color:#FFD740}
+.sess-card-body{font-size:12px;color:var(--text);line-height:1.5}
+.sess-lift{display:flex;flex-direction:column;gap:2px;padding:4px 0;border-top:.5px solid var(--border-soft)}
+.sess-lift:first-child{border-top:0;padding-top:0}
+body.dark .sess-lift{border-top-color:#3C3A5C}
+.sess-lift-name{font-size:12px;font-weight:600;color:var(--text)}
+.sess-lift-sets{display:flex;gap:4px;flex-wrap:wrap;margin-top:1px}
+.sess-lift-set{font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border-soft);border-radius:5px;padding:1px 6px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+body.dark .sess-lift-set{background:#1A1A2E;border-color:#3C3A5C;color:#B4B2D8}
+.sess-lift-empty{font-style:italic;color:var(--muted)}
+.sess-notes{margin-top:6px;font-size:11.5px;color:var(--muted);background:var(--primary-tint);border-radius:6px;padding:6px 8px;line-height:1.5}
+body.dark .sess-notes{background:#2A2850;color:#B4B2D8}
+/* Step 6 — Lifts sort chips + inline sparklines */
+.lifts-sort-row{display:flex;gap:5px;margin-bottom:0.6rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.lifts-sort-chip{flex:0 0 auto;padding:6px 11px;font-size:11.5px;font-weight:600;color:var(--muted);background:#F5F5F2;border:1px solid var(--border);border-radius:14px;cursor:pointer;white-space:nowrap}
+.lifts-sort-chip.on{background:var(--primary);border-color:var(--primary);color:#fff}
+body.dark .lifts-sort-chip{background:#252540;border-color:#3C3A5C;color:#9896C8}
+body.dark .lifts-sort-chip.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.lift-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lift-trail{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.lift-spark{display:block}
+.lift-pill{font-size:10px;font-weight:700;padding:2px 6px;border-radius:7px;white-space:nowrap}
+.lift-pill-up{background:#E1F5EE;color:#0F6E56}
+.lift-pill-down{background:#FFEAEA;color:#C53030}
+.lift-pill-flat{background:var(--border-soft);color:var(--muted)}
+body.dark .lift-pill-up{background:#0F3A2E;color:#5DD8A0}
+body.dark .lift-pill-down{background:#3A1A1A;color:#FF8080}
+body.dark .lift-pill-flat{background:#1F1D38;color:#9896C8}
+.ex-list-btn{gap:8px}
+/* Step 7 — Lift detail single-chart-three-metrics toggle */
+.lift-chart-panel{padding:12px}
+.lift-metric-row{display:flex;gap:5px;margin-bottom:10px}
+.lift-metric-pill{flex:1;padding:6px 8px;font-size:11px;font-weight:600;color:var(--muted);background:#F5F5F2;border:1px solid var(--border);border-radius:7px;cursor:pointer}
+.lift-metric-pill.on{background:var(--primary);border-color:var(--primary);color:#fff}
+body.dark .lift-metric-pill{background:#252540;border-color:#3C3A5C;color:#9896C8}
+body.dark .lift-metric-pill.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.ex-history-delta{margin-top:3px}
+/* Step 9 — Trend delta pills (unified visual) */
+.delta-pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;line-height:1.4;margin-left:6px;vertical-align:middle;white-space:nowrap}
+.delta-up{background:#E1F5EE;color:#0F6E56}
+.delta-down{background:#FFEAEA;color:#C53030}
+.delta-flat{background:var(--border-soft);color:var(--muted)}
+.delta-pb{background:#FBF1D6;color:#8C6500}
+body.dark .delta-up{background:#0F3A2E;color:#5DD8A0}
+body.dark .delta-down{background:#3A1A1A;color:#FF8080}
+body.dark .delta-flat{background:#1F1D38;color:#9896C8}
+body.dark .delta-pb{background:#3A2E00;color:#FFD740}
+/* v2.41 dark-mode finish — focus states, refactored chip/tab classes */
+body.dark .rep-input:focus,body.dark .reps-actual-input:focus,body.dark .notes-input:focus,body.dark .cardio-input:focus{background:#1F1D38}
+body.dark .edit-date-input{background:#1A1A2E;color:#E8E6F8;border-color:#3C3A5C}
+/* Measurement entry inputs (refactored from inline) */
+.meas-in{flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:#fff;font-family:inherit;outline:none}
+.meas-in.bold{font-size:15px;font-weight:600}
+.meas-in:focus{border-color:var(--primary-2)}
+body.dark .meas-in{background:#1A1A2E;border-color:#3C3A5C;color:#E8E6F8}
+/* Backup/Restore modal tabs (refactored from inline + showTab JS) */
+.tab-btn{flex:1;padding:9px;font-size:13px;font-weight:600;border-radius:8px;border:1.5px solid;cursor:pointer}
+.tab-btn.on{border-color:#5B4EA8;background:#5B4EA8;color:#fff}
+.tab-btn.off{border-color:var(--border);background:#F5F5F2;color:var(--muted)}
+body.dark .tab-btn.off{background:#252540;border-color:#3C3A5C;color:#9896C8}
+/* Lift-detail stat row (refactored from inline in JS template) */
+.lift-stat-row{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#F5F5F2;border-radius:7px;padding:7px 10px;font-size:12px}
+.lift-stat-row>.k{font-weight:600;color:#3C3489;flex-shrink:0}
+.lift-stat-row>.v{color:#5F5E5A;text-align:right}
+body.dark .lift-stat-row{background:#252540}
+body.dark .lift-stat-row>.k{color:#B4B2D8}
+body.dark .lift-stat-row>.v{color:#9896C8}
+/* Builder/multi-day chips (refactored from inline + toggleMuscleChip JS) */
+.chip{padding:5px 9px;font-size:11px;font-weight:600;border-radius:14px;cursor:pointer;border:1px solid var(--border-soft);background:#FAFAF8;color:#5B4EA8}
+.chip.on{border-color:#5B4EA8;background:#5B4EA8;color:#fff}
+body.dark .chip{background:#1A1A2E;border-color:#3C3A5C;color:#9896C8}
+body.dark .chip.on{background:#5B4EA8;border-color:#5B4EA8;color:#fff}
+/* Plate Calc inputs (refactored from inline) */
+#pc-target,#pc-bar{background:#FAFAF8;color:var(--text);border:1px solid var(--border-soft)}
+body.dark #pc-target,body.dark #pc-bar{background:#1A1A2E;color:#E8E6F8;border-color:#3C3A5C}
+body.dark #pc-result{color:#E8E6F8}
 </style>
 </head>
 <body>
 
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-  <div>
-    <div style="font-size:18px;font-weight:700;color:#5B4EA8;">John's Gym App <span id="app-version" style="font-size:10px;font-weight:600;color:#7F77DD;background:#EEEDFE;border-radius:6px;padding:1px 6px;vertical-align:middle;">v2.18</span></div>
-    <div style="font-size:12px;color:#888780;margin-top:2px;">Anytime Fitness Guilford &middot; Complete in any order &middot; Rest whenever needed</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
+  <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.53</span></div>
+    <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
-  <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
-    <div style="display:flex;gap:5px;">
-      <button onclick="reloadPage()" style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#EEEDFE;border:1px solid #7F77DD;border-radius:8px;color:#3C3489;font-size:12px;font-weight:600;cursor:pointer;">
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 2.5A5.5 5.5 0 1 0 12 6.5" stroke="#3C3489" stroke-width="1.5" stroke-linecap="round"/><polyline points="9,0.5 12,2.5 10,5.5" fill="#3C3489"/></svg>
-      Update
-    </button>
-      <button onclick="toggleDarkMode()" id="dark-toggle" style="padding:8px 10px;background:#F5F5F2;border:1px solid #D3D1C7;border-radius:8px;font-size:15px;cursor:pointer;" title="Toggle dark mode">🌙</button>
+  <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
+    <button onclick="toggleDarkMode()" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
+    <button type="button" id="hdr-prog-btn" class="day-btn progress-tab" onclick="sw('prog',this)" aria-label="Progress and stats" title="Progress and stats"><span aria-hidden="true">📊</span></button>
+    <button type="button" id="hdr-plan-btn" onclick="openManage()" aria-label="Plan" title="Plan"><span aria-hidden="true">📋</span></button>
+    <button type="button" id="hdr-ovf-btn" aria-label="More actions" aria-haspopup="true" onclick="hdrMenuToggle(event)"><span aria-hidden="true">⋯</span></button>
+    <div id="hdr-menu" hidden role="menu" style="position:absolute;top:100%;right:0;margin-top:6px;background:var(--surface);border:1px solid var(--border-soft);border-radius:10px;box-shadow:0 8px 24px rgba(31,29,56,.18);z-index:1100;min-width:172px;overflow:hidden;">
+      <button role="menuitem" onclick="reloadPage()" class="hdr-mi"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M11.5 2.5A5.5 5.5 0 1 0 12 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><polyline points="9,0.5 12,2.5 10,5.5" fill="currentColor"/></svg> Update</button>
+      <button role="menuitem" onclick="showExportImport()" class="hdr-mi"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 1v8M3 6l3.5 3.5L10 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 10v1.5a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Backup</button>
+      <button role="menuitem" onclick="toggleTestMode()" id="test-toggle" aria-label="Toggle Test Mode (sandbox — no cloud save)" class="hdr-mi">🧪 Test mode</button>
     </div>
-    <button onclick="showExportImport()" style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#E1F5EE;border:1px solid #0F6E56;border-radius:8px;color:#085041;font-size:12px;font-weight:600;cursor:pointer;">
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3 6l3.5 3.5L10 6" stroke="#085041" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 10v1.5a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5V10" stroke="#085041" stroke-width="1.5" stroke-linecap="round"/></svg>
-      Backup
-    </button>
-    <button onclick="toggleTestMode()" id="test-toggle" style="padding:8px 12px;background:#FFF8E1;border:1px solid #E0A800;border-radius:8px;color:#7A5A00;font-size:12px;font-weight:600;cursor:pointer;">🧪 Test mode</button>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
-<div id="backup-banner" style="display:none;background:#FFF8E1;border:1px solid #E0A800;color:#7A5A00;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:0.75rem;line-height:1.5;display:none;align-items:center;justify-content:space-between;gap:8px;">
+<div id="backup-banner" class="legacy-banner" style="display:none;background:#FFF8E1;border:1px solid #E0A800;color:#7A5A00;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:0.75rem;line-height:1.5;display:none;align-items:center;justify-content:space-between;gap:8px;">
   <span>💾 It's been a while since your last backup.</span>
   <span style="display:flex;gap:6px;flex-shrink:0;">
     <button onclick="showExportImport()" style="padding:5px 10px;background:#E0A800;border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">Back up now</button>
     <button onclick="dismissBackupBanner()" style="padding:5px 10px;background:transparent;border:1px solid #E0A800;border-radius:6px;color:#7A5A00;font-size:11px;font-weight:600;cursor:pointer;">Later</button>
   </span>
 </div>
-<div id="merge-banner" style="display:none;background:#EEEDFE;border:1px solid #7F77DD;color:#3C3489;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:0.75rem;line-height:1.5;align-items:center;justify-content:space-between;gap:8px;">
+<div id="merge-banner" class="legacy-banner" style="display:none;background:#EEEDFE;border:1px solid #7F77DD;color:#3C3489;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:0.75rem;line-height:1.5;align-items:center;justify-content:space-between;gap:8px;">
   <span id="merge-banner-msg">Synced from the cloud.</span>
   <button onclick="dismissMergeBanner()" style="padding:5px 10px;background:#7F77DD;border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">Got it</button>
 </div>
-<div id="deload-banner" style="display:none;background:#FFF5F5;border:1px solid #C53030;color:#C53030;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:0.75rem;line-height:1.5;align-items:center;justify-content:space-between;gap:8px;">
+<div id="deload-banner" class="legacy-banner" style="display:none;background:#FFF5F5;border:1px solid #C53030;color:#C53030;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:0.75rem;line-height:1.5;align-items:center;justify-content:space-between;gap:8px;">
   <span id="deload-banner-msg">Consider a deload week.</span>
   <button onclick="dismissDeloadBanner()" style="padding:5px 10px;background:#C53030;border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">Got it</button>
 </div>
+<div id="notice-tray" role="region" aria-label="Notifications"></div>
 
-<div class="day-selector">
-  <button class="day-btn progress-tab" onclick="sw('prog',this)">📊 Progress</button>
-  <button class="day-btn active" onclick="sw('a',this)">Day 1<br><span style="font-size:11px;font-weight:400">Upper A</span></button>
-  <button class="day-btn" onclick="sw('b',this)">Day 2<br><span style="font-size:11px;font-weight:400">Lower A · Cardio</span></button>
-  <button class="day-btn" onclick="sw('c',this)">Day 3<br><span style="font-size:11px;font-weight:400">Cardio + Core</span></button>
-  <button class="day-btn" onclick="sw('d',this)">Day 4<br><span style="font-size:11px;font-weight:400">Upper B</span></button>
-  <button class="day-btn" onclick="sw('e',this)">Day 5<br><span style="font-size:11px;font-weight:400">Lower B · Cardio</span></button>
+<div class="day-selector" role="tablist" aria-label="Day selector">
+  <button class="day-btn active" onclick="sw('a',this)" aria-label="Day 1 — Upper A">D1</button>
+  <button class="day-btn" onclick="sw('b',this)" aria-label="Day 2 — Lower A · Cardio">D2</button>
+  <button class="day-btn" onclick="sw('c',this)" aria-label="Day 3 — Cardio + Core">D3</button>
+  <button class="day-btn" onclick="sw('d',this)" aria-label="Day 4 — Upper B">D4</button>
+  <button class="day-btn" onclick="sw('e',this)" aria-label="Day 5 — Lower B · Cardio">D5</button>
 </div>
 
 <!-- ═══ PROGRESS ═══ -->
@@ -435,37 +707,32 @@ body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
     <div class="stat-box"><div class="stat-num" id="stat-d5">0</div><div class="stat-label">Day 5</div></div>
   </div>
 
-  <!-- Days / Exercises tabs -->
+  <!--
+    Tab labels (Sessions / Lifts / Trends) intentionally diverge from internal
+    keys (days / exercises / stats / manage) so that downstream callers of
+    switchProgTab(name, btn) — e.g. the builder save-and-reload flow that calls
+    switchProgTab('manage', …) — keep working unchanged. Don't rename the keys
+    without sweeping the call sites.
+  -->
+  <!-- Sessions / Lifts / Trends tabs (Manage moved to header 📋 Plan button) -->
   <div class="prog-tab-row">
-    <button class="prog-tab-btn active" onclick="switchProgTab('days',this)"><span style="font-size:18px">📅</span>Days</button>
-    <button class="prog-tab-btn" onclick="switchProgTab('exercises',this)"><span style="font-size:18px">💪</span>Exercises</button>
-    <button class="prog-tab-btn" onclick="switchProgTab('stats',this)"><span style="font-size:18px">📊</span>Stats</button>
-    <button class="prog-tab-btn" onclick="switchProgTab('measurements',this)"><span style="font-size:18px">📏</span>Measurements</button>
-    <button class="prog-tab-btn" onclick="switchProgTab('manage',this)"><span style="font-size:18px">⚙️</span>Manage</button>
+    <button class="prog-tab-btn active" onclick="switchProgTab('days',this)"><span style="font-size:18px">📅</span>Sessions</button>
+    <button class="prog-tab-btn" onclick="switchProgTab('exercises',this)"><span style="font-size:18px">💪</span>Lifts</button>
+    <button class="prog-tab-btn" onclick="switchProgTab('stats',this)"><span style="font-size:18px">📈</span>Trends</button>
   </div>
 
-  <!-- DAYS PANEL -->
+  <!-- SESSIONS PANEL (Step 5 — cross-day chronological feed) -->
   <div class="prog-panel show" id="prog-panel-days">
-    <div class="prog-day-card">
-      <div class="prog-day-header" onclick="toggleProg('pa')"><div><div class="prog-day-title">Day 1 &mdash; Upper A</div><div class="prog-day-sub">Chest, back, shoulders, triceps</div></div><div class="prog-day-count" id="prog-count-a">0 sessions</div></div>
-      <div class="prog-day-body" id="pa"><div id="prog-body-a"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="confirmClear('a','Day 1')">🗑 Clear Day 1 history</button></div>
+    <div class="sess-filter-row" role="tablist" aria-label="Filter sessions by day">
+      <button class="sess-filter on" data-d="all" onclick="sessFilter('all',this)">All</button>
+      <button class="sess-filter" data-d="a" onclick="sessFilter('a',this)">D1<span id="prog-count-a" class="sess-cnt">0</span></button>
+      <button class="sess-filter" data-d="b" onclick="sessFilter('b',this)">D2<span id="prog-count-b" class="sess-cnt">0</span></button>
+      <button class="sess-filter" data-d="c" onclick="sessFilter('c',this)">D3<span id="prog-count-c" class="sess-cnt">0</span></button>
+      <button class="sess-filter" data-d="d" onclick="sessFilter('d',this)">D4<span id="prog-count-d" class="sess-cnt">0</span></button>
+      <button class="sess-filter" data-d="e" onclick="sessFilter('e',this)">D5<span id="prog-count-e" class="sess-cnt">0</span></button>
     </div>
-    <div class="prog-day-card">
-      <div class="prog-day-header" onclick="toggleProg('pb')"><div><div class="prog-day-title">Day 2 &mdash; Lower A</div><div class="prog-day-sub">Legs, hips, calves</div></div><div class="prog-day-count" id="prog-count-b">0 sessions</div></div>
-      <div class="prog-day-body" id="pb"><div id="prog-body-b"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="confirmClear('b','Day 2')">🗑 Clear Day 2 history</button></div>
-    </div>
-    <div class="prog-day-card">
-      <div class="prog-day-header" onclick="toggleProg('pc')"><div><div class="prog-day-title">Day 3 &mdash; Cardio + Core</div><div class="prog-day-sub">Rotating cardio, core stability, abs</div></div><div class="prog-day-count" id="prog-count-c">0 sessions</div></div>
-      <div class="prog-day-body" id="pc"><div id="prog-body-c"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="confirmClear('c','Day 3')">🗑 Clear Day 3 history</button></div>
-    </div>
-    <div class="prog-day-card">
-      <div class="prog-day-header" onclick="toggleProg('pd')"><div><div class="prog-day-title">Day 4 &mdash; Upper B</div><div class="prog-day-sub">Back, biceps, rear delt, core</div></div><div class="prog-day-count" id="prog-count-d">0 sessions</div></div>
-      <div class="prog-day-body" id="pd"><div id="prog-body-d"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="confirmClear('d','Day 4')">🗑 Clear Day 4 history</button></div>
-    </div>
-    <div class="prog-day-card">
-      <div class="prog-day-header" onclick="toggleProg('pe')"><div><div class="prog-day-title">Day 5 &mdash; Lower B + Cardio</div><div class="prog-day-sub">Legs, hips, cardio finisher</div></div><div class="prog-day-count" id="prog-count-e">0 sessions</div></div>
-      <div class="prog-day-body" id="pe"><div id="prog-body-e"><div class="prog-empty">No sessions saved yet.</div></div><button class="prog-clear-btn" onclick="confirmClear('e','Day 5')">🗑 Clear Day 5 history</button></div>
-    </div>
+    <div id="sess-filter-actions" style="display:none;margin-bottom:0.5rem;text-align:right"></div>
+    <div id="sess-feed"></div>
   </div>
 
   <!-- EXERCISES PANEL -->
@@ -474,8 +741,12 @@ body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
     <div id="ex-detail-wrap"></div>
   </div>
 
-  <!-- MEASUREMENTS PANEL -->
-  <div class="prog-panel" id="prog-panel-measurements">
+  <!-- TRENDS PANEL (Stats + Body Measurements merged — Step 2) -->
+  <div class="prog-panel" id="prog-panel-stats">
+    <div id="prog-stats" style="padding:4px 0"></div>
+    <!-- Body Measurements section (moved from former #prog-panel-measurements; all IDs preserved so renderMeasurements/renderGenericMeas keep working) -->
+    <div id="meas-wrap-host">
+    <div class="section-hdr" style="margin-top:1.25rem;">Body Measurements</div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <button class="meas-sub-btn active" id="meas-sub-weight" onclick="switchMeasTab('weight',this)">⚖️ Weight</button>
       <button class="meas-sub-btn" id="meas-sub-waist" onclick="switchMeasTab('waist',this)">📐 Waist</button>
@@ -484,14 +755,14 @@ body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
     <div id="meas-tab-weight">
     <div class="meas-entry-card">
       <div class="meas-entry-row">
-        <input type="number" id="meas-weight-val" placeholder="e.g. 185" step="0.1" min="50" max="500" style="flex:1;padding:10px 12px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:15px;font-weight:600;color:#2C2C2A;background:#fff;"/>
+        <input type="number" inputmode="decimal" id="meas-weight-val" placeholder="e.g. 185" step="0.1" min="50" max="500" class="meas-in bold"/>
         <div style="display:flex;gap:4px">
           <button id="meas-unit-lbs" class="meas-unit-btn active" onclick="setMeasUnit('lbs')">lbs</button>
           <button id="meas-unit-kg" class="meas-unit-btn" onclick="setMeasUnit('kg')">kg</button>
         </div>
       </div>
       <div class="meas-entry-row" style="margin-top:8px">
-        <input type="date" id="meas-date-val" style="flex:1;padding:10px 12px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:14px;color:#2C2C2A;background:#fff;"/>
+        <input type="date" id="meas-date-val" class="meas-in"/>
         <button onclick="saveMeasurement()" style="padding:10px 18px;background:#7F77DD;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Add</button>
       </div>
     </div>
@@ -503,11 +774,11 @@ body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
     <div id="meas-tab-waist" style="display:none">
     <div class="meas-entry-card">
       <div class="meas-entry-row">
-        <input type="number" id="meas-waist-val" placeholder="e.g. 34" step="0.1" min="10" max="100" style="flex:1;padding:10px 12px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:15px;font-weight:600;color:#2C2C2A;background:#fff;"/>
+        <input type="number" inputmode="decimal" id="meas-waist-val" placeholder="e.g. 34" step="0.1" min="10" max="100" class="meas-in bold"/>
         <span style="font-size:14px;font-weight:600;color:#888780;padding:0 8px">in</span>
       </div>
       <div class="meas-entry-row" style="margin-top:8px">
-        <input type="date" id="meas-waist-date" style="flex:1;padding:10px 12px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:14px;color:#2C2C2A;background:#fff;"/>
+        <input type="date" id="meas-waist-date" class="meas-in"/>
         <button onclick="saveGenericMeas('waist','meas-waist-val','meas-waist-date','in')" style="padding:10px 18px;background:#7F77DD;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Add</button>
       </div>
     </div>
@@ -519,11 +790,11 @@ body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
     <div id="meas-tab-bodyfat" style="display:none">
     <div class="meas-entry-card">
       <div class="meas-entry-row">
-        <input type="number" id="meas-bodyfat-val" placeholder="e.g. 22.5" step="0.1" min="1" max="60" style="flex:1;padding:10px 12px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:15px;font-weight:600;color:#2C2C2A;background:#fff;"/>
+        <input type="number" inputmode="decimal" id="meas-bodyfat-val" placeholder="e.g. 22.5" step="0.1" min="1" max="60" class="meas-in bold"/>
         <span style="font-size:14px;font-weight:600;color:#888780;padding:0 8px">%</span>
       </div>
       <div class="meas-entry-row" style="margin-top:8px">
-        <input type="date" id="meas-bodyfat-date" style="flex:1;padding:10px 12px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:14px;color:#2C2C2A;background:#fff;"/>
+        <input type="date" id="meas-bodyfat-date" class="meas-in"/>
         <button onclick="saveGenericMeas('bodyfat','meas-bodyfat-val','meas-bodyfat-date','%')" style="padding:10px 18px;background:#7F77DD;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Add</button>
       </div>
     </div>
@@ -531,11 +802,7 @@ body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
     <div id="meas-summary-bodyfat" style="display:flex;gap:8px;margin-bottom:12px"></div>
     <div id="meas-history-bodyfat"></div>
     </div><!-- end meas-tab-bodyfat -->
-  </div>
-
-  <!-- MANAGE PANEL -->
-  <div class="prog-panel" id="prog-panel-stats">
-    <div id="prog-stats" style="padding:4px 0"></div>
+    </div><!-- end meas-wrap-host -->
   </div>
 
   <div class="prog-panel" id="prog-panel-manage">
@@ -558,6 +825,18 @@ body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
     <div class="modal-btn-row">
       <button class="modal-btn-primary" style="background:#C53030;" onclick="executeClear()">Yes, clear it</button>
       <button class="modal-btn-secondary" onclick="closeClearModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete one session (Step 5) -->
+<div class="modal-overlay" id="sess-del-overlay">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-title" style="color:#C53030;">Delete session?</div>
+    <div class="modal-sub" id="sess-del-msg" style="margin:0.75rem 0 1rem;"></div>
+    <div class="modal-btn-row">
+      <button class="modal-btn-primary" style="background:#C53030;" onclick="executeDeleteSession()">Delete</button>
+      <button class="modal-btn-secondary" onclick="closeDeleteSessionModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -661,7 +940,7 @@ body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
       <div class="date-input-label">Date and time</div>
       <input type="datetime-local" class="date-input" id="session-datetime"/>
     </div>
-    <div class="date-input-wrap" style="margin-top:0.5rem;"><div class="date-input-label">Session notes (optional)</div><textarea id="session-notes" placeholder="e.g. Felt strong today..." style="width:100%;box-sizing:border-box;padding:8px 10px;font-size:13px;border:1.5px solid #C4C0E8;border-radius:8px;background:#fff;color:#2C2C2A;outline:none;font-family:inherit;resize:none;min-height:60px;margin-top:2px;"></textarea></div>
+    <div class="date-input-wrap" style="margin-top:0.5rem;"><div class="date-input-label">Session notes (optional)</div><textarea id="session-notes" placeholder="e.g. Felt strong today..." style="width:100%;box-sizing:border-box;padding:8px 10px;font-size:13px;border-radius:8px;outline:none;font-family:inherit;resize:none;min-height:60px;margin-top:2px;"></textarea></div>
     <div class="modal-btn-row" style="margin-top:0.75rem;">
       <button class="modal-btn-primary" onclick="confirmSave()">Save session</button>
       <button class="modal-btn-secondary" onclick="cancelDateModal()">Cancel</button>
@@ -675,8 +954,8 @@ body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
 
     <!-- Tab bar -->
     <div style="display:flex;gap:6px;margin-bottom:1rem;">
-      <button id="tab-backup" onclick="showTab('backup')" style="flex:1;padding:9px;font-size:13px;font-weight:600;border-radius:8px;border:1.5px solid #5B4EA8;background:#5B4EA8;color:#fff;cursor:pointer;">Backup</button>
-      <button id="tab-restore" onclick="showTab('restore')" style="flex:1;padding:9px;font-size:13px;font-weight:600;border-radius:8px;border:1.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer;">Restore</button>
+      <button id="tab-backup" class="tab-btn on" onclick="showTab('backup')">Backup</button>
+      <button id="tab-restore" class="tab-btn off" onclick="showTab('restore')">Restore</button>
     </div>
 
     <!-- Backup panel -->
@@ -807,10 +1086,16 @@ function getEffectivePlan(){
   });
   return eff;
 }
+// Step 5 (audit §02): redesigned card behind a flag. Strength/notes use the
+// new head/sets/footer layout; cardio + _surgicalEdit keep the old builder.
+// The byte-identity harness checks the EXERCISE_DATA blob (unchanged), so it
+// still passes; the data layer/identity is untouched — this is layout only.
+var USE_NEW_CARD=true;
 function renderItemHTML(rec){
-  // Unedited records keep their verbatim markup (byte-identical, harness-
-  // verified). Edited/added records carry a freshly-built `_html`.
-  return (rec && rec._html) ? rec._html : '';
+  if(USE_NEW_CARD && rec && (rec.type==='strength'||rec.type==='notes') && typeof buildCardHTML_v2==='function')
+    return buildCardHTML_v2(rec);
+  // Unedited records keep their verbatim markup; edited/added carry _html.
+  return (rec && rec._html) ? rec._html : (typeof buildCardHTML==='function'?buildCardHTML(rec):'');
 }
 
 // ── Phase 2b: builder engine ─────────────────────────────────────────
@@ -856,6 +1141,176 @@ function buildCardHTML(rec){
       +'    </div>\n';
   }
   return top+body+'  </div>\n';
+}
+
+// ── Step 5: redesigned card (audit §02). Same data bindings as v1/the
+// injected extras, new layout. Cardio is NOT handled here (stays old). ──
+function buildCardHTML_v2(rec){
+  var d=rec.day,id=rec.domId,hist=rec.histEx||rec.name;
+  var badge=(rec.badge&&rec.badge.text)?(' <span class="badge '+_esc(rec.badge.cls||'bo')+'">'+_esc(rec.badge.text)+'</span>'):'';
+  var demo=rec.video?('<a class="ex-link" href="'+_esc(rec.video)+'" target="_blank" onclick="event.stopPropagation()">▶ Watch demo</a>'):'';
+  var loc=rec.loc?('<div class="ex-loc">📍 '+_esc(rec.loc)+'</div>'):'';
+  // Patch-2 Step 3: stretch demo links → individual ⋯ overflow items
+  var stretch=(rec.links||[]).filter(function(l){return l.cls==='ex-link-stretch';})
+    .map(function(l){return '<a class="ex-link-stretch" href="'+_esc(l.href)+'" target="_blank" onclick="event.stopPropagation()">'+_esc(l.label)+'</a>';}).join('');
+  // Patch-2 Step 1: inline progress badge (filled at runtime from history)
+  var nudge=(rec.type==='strength')?('<div class="v2-nudge" data-hist="'+_esc(hist)+'"></div>'):'';
+  var head='  <div class="item v2-card" id="'+id+'" data-cardv2="1">\n'
+   +'    <div class="item-top"><button type="button" class="checkbox" role="checkbox" aria-checked="false" aria-label="Mark exercise complete" onclick="tog(\''+id+'\',\''+d+'\',9)"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+   +'<div class="v2-head"><div class="ex-name">'+_esc(rec.name)+badge+'</div><div class="ex-sub">'+_esc(rec.sub||'')+'</div>'+nudge+'</div>'
+   +'<div class="v2-actions">'
+     +'<button type="button" class="item-timer-btn" title="Start rest timer" aria-label="Start rest timer" onclick="event.stopPropagation();startRestTimer(restDefault);haptic(\'light\')"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="flex-shrink:0" aria-hidden="true"><circle cx="6" cy="6" r="5" stroke="#5B4EA8" stroke-width="1.5"/><path d="M6 3.5V6l1.5 1.5" stroke="#5B4EA8" stroke-width="1.5" stroke-linecap="round"/></svg>Rest</button>'
+     +'<button type="button" class="v2-ovf-btn" aria-label="More options" onclick="cardToggle(this,\'ovf\')"><span aria-hidden="true">⋯</span></button>'
+   +'</div></div>\n';
+  if(rec.type!=='strength'){
+    return head
+     +'    <div class="fields-wrap">\n'
+     +((loc||demo||stretch)?('      <div class="v2-ovf" hidden>'+loc+demo+stretch+'</div>\n'):'')
+     +'      <div class="notes-row" style="padding:8px 12px 10px"><input class="notes-input" data-ex="'+_esc(hist)+'" type="text" placeholder="'+_esc(rec.notesPlaceholder||'e.g. notes')+'"/></div>\n'
+     +'    </div>\n  </div>\n';
+  }
+  var n=Math.max(1,parseInt(rec.sets,10)||3), rows='';
+  for(var i=1;i<=n;i++){
+    var uid='unit-'+_dash(hist)+'-s'+i;
+    rows+='<div class="rep-single v2-set">'
+      +'<span class="rep-label">'+i+'</span>'
+      +'<div class="v2-wl"><input class="rep-input" oninput="this.style.color=\'\';this.style.fontStyle=\'\';" data-ex="'+_esc(hist)+'" data-set="'+i+'" type="text" placeholder="lbs"/>'
+        +'<div class="unit-toggle"><button class="unit-btn active" type="button" onclick="setUnit(this,\''+uid+'\')">lbs</button><button class="unit-btn" type="button" onclick="setUnit(this,\''+uid+'\')">kg</button></div>'
+        +'<input type="hidden" id="'+uid+'" value="lbs"/></div>'
+      +'<input class="reps-actual-input" type="number" inputmode="decimal" min="1" max="99" data-ex-reps="'+_esc(hist)+'" placeholder="—"/>'
+      +'</div>';
+  }
+  var rpe='<div class="rpe-row"><div class="rpe-top"><span class="rpe-top-label">How hard was it?</span><span class="rpe-top-val" id="rpe-val-'+hist.replace(/[^a-z0-9]/gi,'-')+'"></span></div>'
+    +'<div class="rpe-track"><input class="rpe-slider" type="range" min="0" max="10" value="0" data-ex="'+_esc(hist)+'" oninput="this.style.setProperty(\'--rpe-pct\',(this.value*10)+\'%\');var vEl=this.closest(\'.rpe-row\').querySelector(\'.rpe-top-val\');if(vEl){var descs=[\'—\',\'Very light\',\'Light\',\'Moderate\',\'Moderate\',\'Hard\',\'Hard\',\'Very hard\',\'Very hard\',\'Maximal\',\'Max effort\'];vEl.textContent=(this.value>0?this.value+\' · \'+descs[parseInt(this.value)]:\'\');}"></div>'
+    +'<div class="rpe-ends"><span>1 easy</span><span>10 max</span></div></div>';
+  var pain='<div class="pain-row"><span class="pain-label">Feeling:</span>'
+    +'<button class="pain-btn active-ok" data-ex="'+_esc(hist)+'" onclick="setPain(this,\'ok\')">✓ Good</button>'
+    +'<button class="pain-btn" data-ex="'+_esc(hist)+'" onclick="setPain(this,\'flag\')">⚠️ Discomfort</button></div>';
+  return head
+   +'    <div class="fields-wrap">\n'
+   +'      <div class="v2-ovf" hidden>'+loc+demo+stretch+pain+'</div>\n'
+   +'      <div class="v2-sets"><div class="v2-sets-head"><div></div><div class="l">Weight</div><div>Reps</div></div><div class="rep-row">'+rows+'</div></div>\n'
+   +'      <button type="button" class="v2-foot-toggle" aria-expanded="false" onclick="cardToggle(this,\'foot\')">Last time, RPE &amp; notes <span class="cv" aria-hidden="true">▾</span></button>\n'
+   +'      <div class="v2-foot" hidden>\n'
+   +'        <div class="last-time" id="lt-'+_dash(hist)+'"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>\n'
+   +'        '+rpe+'\n'
+   +'        <div class="notes-row" style="margin-top:8px"><span class="weight-label" style="font-size:11px;color:var(--muted);white-space:nowrap">Notes:</span><input class="notes-input" data-ex="'+_esc(hist)+'-notes" type="text" placeholder="'+_esc(rec.notesPlaceholder||'e.g. notes')+'"/></div>\n'
+   +'      </div>\n'
+   +'    </div>\n  </div>\n';
+}
+function cardToggle(btn,kind){
+  var item=btn.closest('.item'); if(!item) return;
+  var el=item.querySelector(kind==='foot'?'.v2-foot':'.v2-ovf'); if(!el) return;
+  var opening=el.hasAttribute('hidden');
+  if(opening) el.removeAttribute('hidden'); else el.setAttribute('hidden','');
+  if(kind==='foot') btn.setAttribute('aria-expanded', opening?'true':'false');
+}
+
+// Follow-up 3: header overflow menu
+function hdrMenuToggle(e){
+  if(e&&e.stopPropagation) e.stopPropagation();
+  var m=document.getElementById('hdr-menu'); if(!m) return;
+  if(m.hasAttribute('hidden')) m.removeAttribute('hidden'); else m.setAttribute('hidden','');
+}
+document.addEventListener('click',function(e){
+  var m=document.getElementById('hdr-menu'); if(!m||m.hasAttribute('hidden')) return;
+  if(!e.target.closest) return;
+  if(e.target.closest('#hdr-ovf-btn')) return;                       // ⋯ toggle itself
+  // Selecting a menu item (Update / Backup / Test mode / End test) closes the menu.
+  if(e.target.closest('.hdr-mi')){ m.setAttribute('hidden',''); return; }
+  // Other clicks inside the menu (background) don't close.
+  if(e.target.closest('#hdr-menu')) return;
+  m.setAttribute('hidden','');                                       // outside click
+});
+
+// Follow-up 2: demote cardio "Watch demo" (and location) into a ⋯ overflow
+// on the cardio card head — runtime DOM move, EXERCISE_DATA blob unchanged.
+function enhanceCardioCards(){
+  document.querySelectorAll('.item:not([data-cardv2])').forEach(function(item){
+    if(item.getAttribute('data-ovfx')) return;
+    if(!item.querySelector('.cardio-fields')) return;        // cardio only
+    var top=item.querySelector('.item-top'); if(!top) return;
+    var links=top.querySelectorAll('.ex-link, .ex-link-stretch, .ex-links-wrap');
+    var loc=top.querySelector('.ex-loc');
+    if(!links.length && !loc) { item.setAttribute('data-ovfx','1'); return; }
+    var ovf=document.createElement('div'); ovf.className='v2-ovf'; ovf.setAttribute('hidden','');
+    if(loc) ovf.appendChild(loc);
+    links.forEach(function(l){ ovf.appendChild(l); });
+    var btn=document.createElement('button');
+    btn.type='button'; btn.className='v2-ovf-btn'; btn.setAttribute('aria-label','More options');
+    btn.style.marginLeft='auto'; btn.innerHTML='<span aria-hidden="true">⋯</span>';
+    btn.onclick=function(ev){ ev.stopPropagation(); cardToggle(btn,'ovf'); };
+    top.appendChild(btn);
+    item.appendChild(ovf);
+    item.setAttribute('data-ovfx','1');
+  });
+}
+
+// ── Patch-2 Step 1: inline progress badge ────────────────────────────
+// Last-session best weight for an exercise (no new parsing/storage).
+function _lastBestWeight(hist){
+  try{
+    var m=buildGlobalRepMap()[normalizeEx(hist||'')];
+    if(!m||!m.note) return null;
+    var ws=parseSetWeights(m.note);
+    return ws.length?Math.max.apply(null,ws):null;
+  }catch(e){ return null; }
+}
+function updateProgressBadges(scope){
+  (scope||document).querySelectorAll('.v2-nudge[data-hist]').forEach(function(el){
+    var hist=el.getAttribute('data-hist');
+    var last=_lastBestWeight(hist);
+    if(last==null||!(last>0)){ el.className='v2-nudge'; el.textContent=''; return; }
+    var item=el.closest('.item');
+    var vals=[];
+    if(item) item.querySelectorAll('.rep-input').forEach(function(i){
+      var v=parseFloat(String(i.value).replace(/[^0-9.]/g,''));
+      if(!isNaN(v)&&v>0) vals.push(v);
+    });
+    var planned=vals.length?Math.max.apply(null,vals):last; // ghost == last
+    var hid=item&&item.querySelector('input[type="hidden"][id^="unit-"]');
+    var unit=(hid&&hid.value)||'lbs';
+    var diff=Math.round((planned-last)*10)/10;
+    if(diff>0){ el.className='v2-nudge show up'; el.textContent='↑ +'+diff+' '+unit+' vs last'; }
+    else if(diff<0){ el.className='v2-nudge show down'; el.textContent='↓ '+diff+' '+unit+' vs last'; }
+    else { el.className='v2-nudge show even'; el.textContent='= holding '+last+' '+unit; }
+  });
+}
+document.addEventListener('input',function(e){
+  if(e.target && e.target.classList && e.target.classList.contains('rep-input')){
+    var it=e.target.closest('.item'); if(it) updateProgressBadges(it);
+  }
+},false);
+
+// ── Patch-2 Step 2: swipe affordance (visual only) ───────────────────
+var _SWIPE_ORDER=['prog','a','b','c','d','e'];
+var _SWIPE_LBL={prog:'Progress',a:'Day 1',b:'Day 2',c:'Day 3',d:'Day 4',e:'Day 5'};
+function _currentPanel(){
+  var cur=null;
+  _SWIPE_ORDER.forEach(function(k){ var p=document.getElementById('p-'+k); if(p&&p.classList.contains('show')) cur=k; });
+  return cur;
+}
+function updateSwipeHints(){
+  var l=document.getElementById('swh-l'), r=document.getElementById('swh-r');
+  if(!l||!r) return;
+  var cur=_currentPanel(); var i=cur?_SWIPE_ORDER.indexOf(cur):-1;
+  var prev=(i>0)?_SWIPE_ORDER[i-1]:null;
+  var next=(i>=0&&i<_SWIPE_ORDER.length-1)?_SWIPE_ORDER[i+1]:null;
+  if(prev){ l.textContent=_SWIPE_LBL[prev]; l.removeAttribute('hidden'); } else l.setAttribute('hidden','');
+  if(next){ r.textContent=_SWIPE_LBL[next]; r.removeAttribute('hidden'); } else r.setAttribute('hidden','');
+}
+var _swipeTipT=null;
+function _dismissSwipeTip(){
+  var t=document.getElementById('swipe-tip'); if(!t) return;
+  t.classList.remove('show');
+  if(_swipeTipT){ clearTimeout(_swipeTipT); _swipeTipT=null; }
+}
+function maybeShowSwipeTip(){
+  var t=document.getElementById('swipe-tip'); if(!t) return;
+  try{ if(localStorage.getItem('swipe_hint_shown')==='1') return; }catch(e){ return; }
+  try{ localStorage.setItem('swipe_hint_shown','1'); }catch(e){}
+  t.classList.add('show');
+  _swipeTipT=setTimeout(_dismissSwipeTip,4000);
 }
 
 // Surgical text-only edit for a card we keep verbatim (cardio): only the
@@ -1014,13 +1469,11 @@ function _muscleChipsHTML(sel){
   var selMap={}; sel.forEach(function(k){ selMap[k]=1; });
   var html='';
   MUSCLE_GROUPS.forEach(function(g){
-    html+='<div style="font-size:10px;font-weight:700;color:#888780;margin:7px 0 3px">'+g.bucket+'</div>';
+    html+='<div style="font-size:10px;font-weight:700;color:var(--muted);margin:7px 0 3px">'+g.bucket+'</div>';
     html+='<div style="display:flex;flex-wrap:wrap;gap:5px">';
     g.items.forEach(function(it){
       var on=!!selMap[it.key];
-      html+='<button type="button" data-mk="'+it.key+'" data-sel="'+(on?'1':'0')+'" onclick="toggleMuscleChip(this)" '
-        +'style="padding:5px 9px;font-size:11px;font-weight:600;border-radius:14px;cursor:pointer;border:1.5px solid '
-        +(on?'#5B4EA8;background:#5B4EA8;color:#fff':'#C4C0E8;background:#FAFAF8;color:#5B4EA8')+'">'+it.label+'</button>';
+      html+='<button type="button" class="chip '+(on?'on':'')+'" data-mk="'+it.key+'" data-sel="'+(on?'1':'0')+'" onclick="toggleMuscleChip(this)">'+it.label+'</button>';
     });
     html+='</div>';
   });
@@ -1029,9 +1482,7 @@ function _muscleChipsHTML(sel){
 function toggleMuscleChip(btn){
   var on=btn.getAttribute('data-sel')!=='1';
   btn.setAttribute('data-sel',on?'1':'0');
-  btn.style.border='1.5px solid '+(on?'#5B4EA8':'#C4C0E8');
-  btn.style.background=on?'#5B4EA8':'#FAFAF8';
-  btn.style.color=on?'#fff':'#5B4EA8';
+  btn.className='chip'+(on?' on':'');
 }
 function _readMuscleChips(){
   var out=[];
@@ -1044,9 +1495,7 @@ function _dayChipsHTML(sel){
   var html='<div style="display:flex;flex-wrap:wrap;gap:5px">';
   ['a','b','c','d','e'].forEach(function(d){
     var on=!!selMap[d];
-    html+='<button type="button" data-dk="'+d+'" data-sel="'+(on?'1':'0')+'" onclick="toggleMuscleChip(this)" '
-      +'style="padding:5px 9px;font-size:11px;font-weight:600;border-radius:14px;cursor:pointer;border:1.5px solid '
-      +(on?'#5B4EA8;background:#5B4EA8;color:#fff':'#C4C0E8;background:#FAFAF8;color:#5B4EA8')+'">'+_DAY_LABELS[d]+'</button>';
+    html+='<button type="button" class="chip '+(on?'on':'')+'" data-dk="'+d+'" data-sel="'+(on?'1':'0')+'" onclick="toggleMuscleChip(this)">'+_DAY_LABELS[d]+'</button>';
   });
   return html+'</div>';
 }
@@ -1188,9 +1637,60 @@ function getSessionDuration(day){
 function clearSessionStart(day){ delete sessionStartTimes[day]; }
 
 
+// Step 2 (audit §02): the whole card-head row toggles "done", not just the
+// 28px checkbox. Delegated so per-item markup is unchanged (byte-identity
+// preserved). Interactive children — checkbox, links, the rest-timer pill,
+// inputs — are excluded so they keep working (functionality contract).
+document.addEventListener('click',function(e){
+  if(!e.target.closest) return;
+  var top=e.target.closest('.item-top');
+  if(!top) return;
+  if(e.target.closest('.checkbox, a, button, input, select, textarea, label, .item-timer-btn, .unit-toggle')) return;
+  var cb=top.querySelector('.checkbox');
+  if(cb) cb.click();
+},false);
+
+// ── Step 3 (audit §08): a11y helpers ──
+function _syncCheckboxA11y(scope){
+  (scope||document).querySelectorAll('.checkbox').forEach(function(cb){
+    var it=cb.closest('.item');
+    var done=!!(it&&it.classList.contains('done'));
+    // aria-pressed (legacy div-button checkbox) + aria-checked (Patch 3 Step 3: v2 card role="checkbox") kept in sync.
+    cb.setAttribute('aria-pressed', done?'true':'false');
+    cb.setAttribute('aria-checked', done?'true':'false');
+  });
+}
+function applyA11y(){
+  document.querySelectorAll('.rep-input,.reps-actual-input,#meas-weight-val,#meas-waist-val,#meas-bodyfat-val')
+    .forEach(function(i){ if(!i.getAttribute('inputmode')) i.setAttribute('inputmode','decimal'); });
+  // Markup stays a <div> (byte-identical render guarantee); role+tabindex+
+  // aria-pressed+keydown give the same a11y as a real <button>.
+  document.querySelectorAll('.checkbox').forEach(function(cb){
+    // Patch 3 Step 3: v2 card checkbox is a real <button role="checkbox">; it
+    // already has native focus + keyboard activation and its own aria-label,
+    // so skip the legacy div-enhancement path for it.
+    if(cb.tagName==='BUTTON') return;
+    if(cb.getAttribute('data-a11y')) return;
+    cb.setAttribute('data-a11y','1');
+    cb.setAttribute('role','button');
+    cb.setAttribute('tabindex','0');
+    if(!cb.getAttribute('aria-label')) cb.setAttribute('aria-label','Toggle exercise done');
+    cb.addEventListener('keydown',function(ev){
+      if(ev.key===' '||ev.key==='Enter'||ev.key==='Spacebar'){ ev.preventDefault(); cb.click(); }
+    });
+  });
+  _syncCheckboxA11y();
+}
+
 function tog(id,day,total){
   var el=document.getElementById(id);
   el.classList.toggle('done');
+  var _cb=el.querySelector('.checkbox');
+  if(_cb){
+    var _done=el.classList.contains('done');
+    _cb.setAttribute('aria-pressed', _done?'true':'false');
+    _cb.setAttribute('aria-checked', _done?'true':'false');
+  }
   // Mark session start on first exercise checked
   if(el.classList.contains('done')) markSessionStart(day);
   var p=document.getElementById('p-'+day);
@@ -1248,7 +1748,7 @@ function restoreDraft(day,total){
       var fullKey=key+(inp.getAttribute('data-set')||'');
       if(draft.fields[fullKey]){
         inp.value=draft.fields[fullKey];
-        inp.style.color='#E07B3F';
+        inp.style.color='var(--ghost)';
         inp.style.fontStyle='italic';
       }
     });
@@ -1256,6 +1756,7 @@ function restoreDraft(day,total){
     var d=p.querySelectorAll('.item.done').length;
     document.getElementById('cnt-'+day).textContent=d+' / '+total;
     document.getElementById('bar-'+day).style.width=Math.round(d/total*100)+'%';
+    _syncCheckboxA11y(p);
     return draft.checked.length > 0 || Object.keys(draft.fields).length > 0;
   } catch(e){ return false; }
 }
@@ -1263,6 +1764,7 @@ function restoreDraft(day,total){
 function rst(day,total){
   var p=document.getElementById('p-'+day);
   p.querySelectorAll('.item').forEach(function(el){el.classList.remove('done');});
+  _syncCheckboxA11y(p);
   p.querySelectorAll('input').forEach(function(inp){
     inp.value='';
     inp.style.color='';
@@ -1289,6 +1791,8 @@ function sw(day,btn){
   loadLastTimes();
   initCardioPanels();
   applyArchivedToChecklist();
+  try{ updateProgressBadges(); }catch(e){}
+  try{ updateSwipeHints(); _dismissSwipeTip(); }catch(e){}
 }
 
 // ── Swipe to switch days ─────────────────────────────────────────────
@@ -1347,7 +1851,7 @@ function quickFill(day){
         var sMatch=part.match(/^Set\s*(\d+):\s*(.+?)(\s*x\d+reps)?$/);
         if(sMatch&&sMatch[1]===setNum){
           inp.value=sMatch[2].trim().replace(/\s*(lbs|kg)$/,'');
-          inp.style.color='#E07B3F';
+          inp.style.color='var(--ghost)';
           inp.style.fontStyle='italic';
           filled++;
         }
@@ -1359,7 +1863,7 @@ function quickFill(day){
     var match=globalMap[ex]||null;
     if(match&&!inp.value){
       inp.value=match.note;
-      inp.style.color='#E07B3F';
+      inp.style.color='var(--ghost)';
       inp.style.fontStyle='italic';
       filled++;
     }
@@ -1438,6 +1942,9 @@ function setCheckin(day, feeling){
     var p=document.getElementById('p-'+day);
     if(!p) return;
     p.querySelectorAll('.item').forEach(function(item){
+      // Step 5: v2 cards render their own rest pill / reps / RPE / pain
+      // (with identical data bindings) — skip injection to avoid dupes.
+      if(item.getAttribute('data-cardv2')) return;
 
       // ── Add manual rest timer button to item-top (ALL items) ──────
       var itemTop=item.querySelector('.item-top');
@@ -1873,7 +2380,7 @@ function loadLastTimes(){
           var sMatch=part.match(/^Set\s*(\d+):\s*(.+)$/);
           if(sMatch && sMatch[1]===setNum){
             inp.value=sMatch[2].trim();
-            inp.style.color='#7F77DD';
+            inp.style.color='var(--ghost)';
             inp.style.fontStyle='italic';
           }
         });
@@ -1887,7 +2394,7 @@ function loadLastTimes(){
       var match=globalMap[ex] || null;
       if(match){
         inp.value=match.note;
-        inp.style.color='#7F77DD';
+        inp.style.color='var(--ghost)';
         inp.style.fontStyle='italic';
       }
     });
@@ -1899,7 +2406,7 @@ function loadLastTimes(){
       var match=globalMap[ex] || null;
       if(match){
         inp.value=match.note;
-        inp.style.color='#7F77DD';
+        inp.style.color='var(--ghost)';
         inp.style.fontStyle='italic';
       }
     });
@@ -1915,14 +2422,25 @@ var pendingLabel=null;
 
 // ── Progress tab switching ──
 function switchProgTab(tab, btn){
+  // Step 2 alias: Measurements merged into Trends. Old callsites passing 'measurements' land on the Trends (stats) panel.
+  if(tab==='measurements') tab='stats';
   document.querySelectorAll('.prog-tab-btn').forEach(function(b){b.classList.remove('active');});
-  if(tab==='stats') renderStats();
-  if(tab==='measurements'){ initMeasDateDefault(); renderMeasurements(); renderGenericMeas('waist'); renderGenericMeas('bodyfat'); }
-  btn.classList.add('active');
+  if(tab==='stats'){
+    renderStats();
+    // Body Measurements section now lives inside the Trends panel — always populate it on tab open.
+    try{ initMeasDateDefault(); renderMeasurements(); renderGenericMeas('waist'); renderGenericMeas('bodyfat'); }catch(e){}
+  }
+  if(btn) btn.classList.add('active');
   document.querySelectorAll('.prog-panel').forEach(function(p){p.classList.remove('show');});
   document.getElementById('prog-panel-'+tab).classList.add('show');
   if(tab==='exercises') renderExerciseList();
   if(tab==='manage') renderManager();
+}
+// Plan entry point — header 📋 button. Switches to Progress view then opens Manage panel.
+function openManage(){
+  var pb=document.getElementById('hdr-prog-btn');
+  if(pb && !document.getElementById('p-prog').classList.contains('show')) sw('prog',pb);
+  switchProgTab('manage', null);
 }
 
 // ── Confirmed clear ──
@@ -1981,25 +2499,106 @@ function selectExercise(key){
   renderExerciseList();
 }
 
+// Step 6 — Lifts sort state.
+var _liftsSort='az';
+function liftsSort(mode, btn){
+  _liftsSort=mode;
+  document.querySelectorAll('.lifts-sort-chip').forEach(function(b){b.classList.remove('on');});
+  if(btn) btn.classList.add('on');
+  renderExerciseList();
+}
+function _liftSparkSVG(weights, delta){
+  // 60×16 inline sparkline, single stroke, no fill. Color follows delta direction.
+  if(!weights || weights.length<2) return '<svg class="lift-spark" width="60" height="16" aria-hidden="true"></svg>';
+  var w=60, h=16, pad=1;
+  var mn=Math.min.apply(null,weights), mx=Math.max.apply(null,weights);
+  var rng=(mx-mn)||1;
+  var pts=weights.map(function(v,i){
+    var x=pad+(i/(weights.length-1))*(w-2*pad);
+    var y=h-pad-((v-mn)/rng)*(h-2*pad);
+    return x.toFixed(1)+','+y.toFixed(1);
+  }).join(' ');
+  var col=delta==null||Math.abs(delta)<1?'var(--muted)':delta>0?'var(--good)':'var(--bad)';
+  return '<svg class="lift-spark" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" aria-hidden="true">'
+    +'<polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'</svg>';
+}
+function _liftStats(sessions){
+  // sessions: newest-first chronology (getAllExercises returns them in iteration order — we re-sort here for safety).
+  var sorted=sessions.slice().sort(function(a,b){
+    return Date.parse((b.date||'').replace(' at ',' '))||0 - (Date.parse((a.date||'').replace(' at ',' '))||0);
+  });
+  // weights chronological (oldest→newest) for sparkline
+  var chrono=sorted.slice().reverse();
+  var weightSeries=chrono.map(function(s){
+    var ws=parseSetWeights(s.note); return ws.length?Math.max.apply(null,ws):null;
+  }).filter(function(v){return v!=null;});
+  var firstMax=weightSeries[0]||null, lastMax=weightSeries[weightSeries.length-1]||null;
+  var delta=null;
+  if(firstMax && lastMax && firstMax>0) delta=Math.round((lastMax-firstMax)/firstMax*100);
+  var lastTs=sorted[0]?Date.parse((sorted[0].date||'').replace(' at ',' ')):0;
+  // Stalling proxy: matches the "high RPE + flat weight" pattern from getOverloadSuggestion via the existing helper.
+  return { delta:delta, lastTs:lastTs||0, weightSeries:weightSeries, count:sessions.length };
+}
 function renderExerciseList(){
   var exMap=getAllExercises();
-  var keys=Object.keys(exMap).sort();
+  var allKeys=Object.keys(exMap);
+  if(!allKeys.length){
+    document.getElementById('ex-list-wrap').innerHTML=
+      '<div class="lifts-sort-row">'
+       +'<button class="lifts-sort-chip on" onclick="liftsSort(\'az\',this)">A–Z</button>'
+       +'<button class="lifts-sort-chip" onclick="liftsSort(\'progressed\',this)">Most progressed</button>'
+       +'<button class="lifts-sort-chip" onclick="liftsSort(\'recent\',this)">Recent</button>'
+       +'<button class="lifts-sort-chip" onclick="liftsSort(\'stalling\',this)">Stalling</button>'
+      +'</div>'
+      +'<div class="prog-empty" style="padding:1rem 0;">No exercise data saved yet. Complete a session to see your exercises here.</div>';
+    document.getElementById('ex-detail-wrap').innerHTML='';
+    return;
+  }
+  // Pre-compute per-key stats for sort + sparkline.
+  var stats={};
+  allKeys.forEach(function(k){ stats[k]=_liftStats(exMap[k]); });
+  // Build "stalling" set via the existing getOverloadSuggestion (matches the deload candidate detection).
+  var stallingKeys={};
+  try{
+    var targets=getExerciseTargets();
+    Object.keys(targets).forEach(function(k){
+      var sugg=getOverloadSuggestion(k);
+      if(sugg && /stall|flat|deload|repeat/i.test(sugg.text||'')) stallingKeys[normalizeEx(prettyExName(k))]=1;
+    });
+  }catch(e){}
+  // Sort by current mode.
+  var keys=allKeys.slice();
+  if(_liftsSort==='az') keys.sort(function(a,b){return a.localeCompare(b);});
+  else if(_liftsSort==='recent') keys.sort(function(a,b){return (stats[b].lastTs||0)-(stats[a].lastTs||0);});
+  else if(_liftsSort==='progressed') keys.sort(function(a,b){return (stats[b].delta||-Infinity)-(stats[a].delta||-Infinity);});
+  else if(_liftsSort==='stalling') keys.sort(function(a,b){
+    var aS=stallingKeys[normalizeEx(a)]?1:0, bS=stallingKeys[normalizeEx(b)]?1:0;
+    if(aS!==bS) return bS-aS;
+    return a.localeCompare(b);
+  });
   _exKeys=keys;
   var wrap=document.getElementById('ex-list-wrap');
   document.getElementById('ex-detail-wrap').innerHTML='';
-  if(!keys.length){
-    wrap.innerHTML='<div class="prog-empty" style="padding:1rem 0;">No exercise data saved yet. Complete a session to see your exercises here.</div>';
-    return;
-  }
-  // Build list with inline chart below selected exercise
-  var html='';
+  // Sort chip row.
+  var html='<div class="lifts-sort-row">'
+    +'<button class="lifts-sort-chip '+(_liftsSort==='az'?'on':'')+'" onclick="liftsSort(\'az\',this)">A–Z</button>'
+    +'<button class="lifts-sort-chip '+(_liftsSort==='progressed'?'on':'')+'" onclick="liftsSort(\'progressed\',this)">Most progressed</button>'
+    +'<button class="lifts-sort-chip '+(_liftsSort==='recent'?'on':'')+'" onclick="liftsSort(\'recent\',this)">Recent</button>'
+    +'<button class="lifts-sort-chip '+(_liftsSort==='stalling'?'on':'')+'" onclick="liftsSort(\'stalling\',this)">Stalling</button>'
+    +'</div>';
   keys.forEach(function(k,i){
     var count=exMap[k].length;
+    var st=stats[k];
     var isSelected=(k===selectedEx);
     var active=isSelected?' active':'';
+    var spark=_liftSparkSVG(st.weightSeries, st.delta);
+    var pillCls=st.delta==null||Math.abs(st.delta)<1?'flat':st.delta>0?'up':'down';
+    var pillTxt=st.delta==null?'—':(st.delta>0?'▲ +'+st.delta+'%':st.delta<0?'▼ '+st.delta+'%':'= 0%');
+    var pill='<span class="lift-pill lift-pill-'+pillCls+'">'+pillTxt+'</span>';
     html+='<button class="ex-list-btn'+active+'" onclick="selectExByIndex('+i+')">'
-      +'<span>'+k+'</span>'
-      +'<span class="ex-session-count">'+count+' session'+(count===1?'':'s')+'</span>'
+      +'<span class="lift-name">'+_esc(k)+'</span>'
+      +'<span class="lift-trail">'+spark+pill+'<span class="ex-session-count">'+count+'</span></span>'
       +'</button>';
     if(isSelected){
       // Inline chart + history below this button
@@ -2040,38 +2639,83 @@ function renderExerciseList(){
       var best1rm=rmSeries.length?Math.max.apply(null,rmSeries.map(function(x){return parseFloat(x.note.match(/[\d.]+/)[0]);})):null;
       if(best1rm!==null) exStatChips+='<span class="ex-stat-chip gold">Est. 1RM: '+best1rm+' lbs</span>';
       exStatChips+='</div>';
-      var rmChartHTML=(rmSeries.length>=2)
-        ? ('<div class="chart-wrap"><div class="chart-title">Estimated 1RM (Epley) &mdash; best set</div>'
-           +'<div class="chart-canvas-wrap"><canvas class="prog-chart" id="rm-'+chartId+'" height="180"></canvas></div></div>')
-        : (rmSeries.length===1
-           ? '<div class="chart-wrap"><div class="chart-title">Estimated 1RM (Epley)</div><div style="font-size:12px;color:#888780;padding:4px 0">'+best1rm+' lbs &middot; log reps on more sessions to see a trend</div></div>'
-           : '');
-      html+='<div class="ex-detail-panel">'
-        +'<div class="chart-wrap">'
-        +'<div class="chart-title">Weight over time &mdash; avg per session</div>'
-        +'<div class="chart-canvas-wrap"><canvas class="prog-chart" id="'+chartId+'" height="180"></canvas></div>'
+      // Step 7 — single chart with metric toggle (Weight / Est. 1RM / Volume), stat chips become the chart caption.
+      // Step 9 — per-history-row delta pill comparing each session's max weight to the previous session's.
+      var sortedSess=sessions.slice().sort(function(a,b){
+        return (Date.parse((b.date||'').replace(' at ',' '))||0)-(Date.parse((a.date||'').replace(' at ',' '))||0);
+      });
+      var histHTMLrows=sortedSess.map(function(s,si){
+        var ws=parseSetWeights(s.note||'');
+        var curMax=ws.length?Math.max.apply(null,ws):null;
+        var prev=sortedSess[si+1];
+        var prevWs=prev?parseSetWeights(prev.note||''):[];
+        var prevMax=prevWs.length?Math.max.apply(null,prevWs):null;
+        var dp=(curMax!=null && prevMax!=null)?deltaPill(curMax, prevMax, {unit:'lbs', threshold:0.5}):'';
+        return '<div class="ex-history-item">'
+          +'<div class="ex-history-date">'+s.date+'</div>'
+          +'<div class="ex-history-sets">'+s.note.replace(/\|/g,' &middot; ')+'</div>'
+          +(dp?'<div class="ex-history-delta">'+dp+'</div>':'')
+          +'</div>';
+      }).join('');
+      var liftChartHTML='<div class="lift-chart-panel">'
+        +'<div class="lift-metric-row" role="tablist" aria-label="Chart metric">'
+          +'<button class="lift-metric-pill on" data-m="weight" onclick="setLiftMetric(\'weight\')">Weight</button>'
+          +'<button class="lift-metric-pill" data-m="1rm" onclick="setLiftMetric(\'1rm\')">Est. 1RM</button>'
+          +'<button class="lift-metric-pill" data-m="volume" onclick="setLiftMetric(\'volume\')">Volume</button>'
         +'</div>'
-        +rmChartHTML
+        +'<div class="chart-canvas-wrap"><canvas id="lift-chart-canvas" height="200"></canvas></div>'
         +exStatChips
-        +histHTML
         +'</div>';
+      html+='<div class="ex-detail-panel">'+liftChartHTML+histHTMLrows+'</div>';
     }
   });
   wrap.innerHTML=html;
-  // Draw chart for selected exercise after DOM update
+  // Single-chart-three-metrics initial draw.
   if(selectedEx && exMap[selectedEx]){
-    var idx=keys.indexOf(selectedEx);
-    var chartId='chart-'+idx;
-    var reversed=exMap[selectedEx].slice().reverse();
-    drawChart(reversed, chartId);
-    // Estimated-1RM trend (chronological), reusing the same chart renderer
-    var rmRev=[];
-    reversed.forEach(function(s){
-      var e=bestEst1RM(s.note);
-      if(e>0) rmRev.push({date:s.date,note:'Set 1: '+Math.round(e)+' lbs'});
-    });
-    if(rmRev.length>=2) drawChart(rmRev, 'rm-'+chartId);
+    try{ _redrawLiftChart(); }catch(e){}
   }
+}
+
+// Step 7 — per-lift metric toggle state + redraw.
+var _currentLiftMetric='weight';
+function setLiftMetric(m){
+  _currentLiftMetric=m;
+  document.querySelectorAll('.lift-metric-pill').forEach(function(b){b.classList.remove('on');});
+  var btn=document.querySelector('.lift-metric-pill[data-m="'+m+'"]');
+  if(btn) btn.classList.add('on');
+  _redrawLiftChart();
+}
+function _redrawLiftChart(){
+  if(!selectedEx) return;
+  var exMap=getAllExercises();
+  var sessions=exMap[selectedEx]||[];
+  var canvas=document.getElementById('lift-chart-canvas');
+  if(!canvas) return;
+  // chronological oldest→newest (history is stored newest-first inside getAllExercises)
+  var chrono=sessions.slice().reverse();
+  var pts;
+  if(_currentLiftMetric==='1rm'){
+    pts=chrono.map(function(s){
+      var e=bestEst1RM(s.note); if(!(e>0)) return null;
+      return {label:fmtChartDate(s.date||''), val:Math.round(e)};
+    }).filter(Boolean);
+  } else if(_currentLiftMetric==='volume'){
+    pts=chrono.map(function(s){
+      var v=0;
+      parseSetWR(s.note||'').forEach(function(p){ if(p.w && p.r) v+=p.w*p.r; });
+      if(!v) return null;
+      return {label:fmtChartDate(s.date||''), val:Math.round(v)};
+    }).filter(Boolean);
+  } else {
+    pts=chrono.map(function(s){
+      var ws=parseSetWeights(s.note);
+      if(!ws.length) return null;
+      var avg=ws.reduce(function(a,b){return a+b;},0)/ws.length;
+      return {label:fmtChartDate(s.date||''), val:Math.round(avg)};
+    }).filter(Boolean);
+  }
+  var unit=_currentLiftMetric==='volume'?'lbs':'lbs';
+  drawChartV2(canvas, pts, {unit:unit, height:200});
 }
 
 function parseSetWeights(noteStr){
@@ -2115,100 +2759,116 @@ function fmtChartDate(d){
   return d.split(',')[0].trim();
 }
 
+// Step 8 — Unified line-chart renderer. Single visual anatomy per audit §07:
+// one line (var(--primary) light / --primary-2 dark, 2px), one gradient fill,
+// three horizontal gridlines, two axis labels (first/last date along bottom,
+// no Y labels), one highlighted last point with inline value label.
+//
+// dataPoints: array of {label:'4/12', val:Number}.
+// opts: {unit:'lbs', height:160, emptyMsg:'Not enough data yet'}
+function drawChartV2(canvas, dataPoints, opts){
+  if(!canvas) return;
+  opts=opts||{};
+  var dpr=window.devicePixelRatio||1;
+  var w=(canvas.parentNode&&canvas.parentNode.offsetWidth)||320;
+  var h=opts.height||160;
+  canvas.width=w*dpr; canvas.height=h*dpr;
+  canvas.style.width=w+'px'; canvas.style.height=h+'px';
+  var ctx=canvas.getContext('2d');
+  if(!ctx) return;
+  ctx.scale(dpr,dpr);
+
+  // Theme-aware colors (read each draw so dark-toggle repaints honor the active theme).
+  var isDark=document.body && document.body.classList && document.body.classList.contains('dark');
+  var stroke=isDark?'#9F97E0':'#5B4EA8';
+  var fillTop=isDark?'rgba(159,151,224,0.22)':'rgba(91,78,168,0.22)';
+  var fillBot=isDark?'rgba(159,151,224,0)':'rgba(91,78,168,0)';
+  var grid=isDark?'#3C3A5C':'#F1EFE8';
+  var axis=isDark?'#9896C8':'#888780';
+  var dotStroke=isDark?'#252540':'#FFFFFF';
+
+  var pad={t:20,r:16,b:22,l:16};
+  var cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
+
+  // Empty / single-point handling.
+  ctx.clearRect(0,0,w,h);
+  if(!dataPoints || !dataPoints.length){
+    ctx.fillStyle=axis; ctx.font='12px system-ui'; ctx.textAlign='center';
+    ctx.fillText(opts.emptyMsg||'Not enough data yet', w/2, h/2);
+    return;
+  }
+  var yVals=dataPoints.map(function(p){return Number(p.val)||0;});
+  var yMin=Math.min.apply(null,yVals), yMax=Math.max.apply(null,yVals);
+  if(yMax===yMin){
+    var pad1=Math.max(1, Math.abs(yMax)*0.05);
+    yMin-=pad1; yMax+=pad1;
+  } else {
+    var rng=yMax-yMin;
+    yMin-=rng*0.10; yMax+=rng*0.18;
+  }
+  var yRange=(yMax-yMin)||1;
+
+  // Three horizontal gridlines.
+  ctx.strokeStyle=grid; ctx.lineWidth=1;
+  for(var t=0;t<3;t++){
+    var yp=pad.t+ch*(t/2);
+    ctx.beginPath(); ctx.moveTo(pad.l,yp); ctx.lineTo(pad.l+cw,yp); ctx.stroke();
+  }
+
+  // Two axis labels along bottom (first / last date).
+  ctx.fillStyle=axis; ctx.font='10px system-ui';
+  if(dataPoints[0]){ ctx.textAlign='left'; ctx.fillText(dataPoints[0].label||'', pad.l, h-4); }
+  if(dataPoints.length>1){ ctx.textAlign='right'; ctx.fillText(dataPoints[dataPoints.length-1].label||'', pad.l+cw, h-4); }
+
+  function xAt(i){ return dataPoints.length>1 ? pad.l+(i/(dataPoints.length-1))*cw : pad.l+cw/2; }
+  function yAt(v){ return pad.t+ch-ch*((Number(v)||0)-yMin)/yRange; }
+
+  if(dataPoints.length>1){
+    // Gradient fill beneath the line.
+    var grad=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
+    grad.addColorStop(0,fillTop); grad.addColorStop(1,fillBot);
+    ctx.beginPath();
+    dataPoints.forEach(function(p,i){ var px=xAt(i), py=yAt(p.val); if(i===0)ctx.moveTo(px,py); else ctx.lineTo(px,py); });
+    ctx.lineTo(pad.l+cw, pad.t+ch); ctx.lineTo(pad.l, pad.t+ch); ctx.closePath();
+    ctx.fillStyle=grad; ctx.fill();
+
+    // Single 2px stroke line.
+    ctx.beginPath();
+    ctx.strokeStyle=stroke; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.lineCap='round';
+    dataPoints.forEach(function(p,i){ var px=xAt(i), py=yAt(p.val); if(i===0)ctx.moveTo(px,py); else ctx.lineTo(px,py); });
+    ctx.stroke();
+  }
+
+  // Highlighted last point + inline value label above.
+  var lastIdx=dataPoints.length-1;
+  var lpx=xAt(lastIdx), lpy=yAt(dataPoints[lastIdx].val);
+  ctx.beginPath(); ctx.arc(lpx,lpy,4,0,Math.PI*2);
+  ctx.fillStyle=stroke; ctx.fill();
+  ctx.strokeStyle=dotStroke; ctx.lineWidth=2; ctx.stroke();
+  var unit=opts.unit||'';
+  var lblTxt=Math.round(dataPoints[lastIdx].val)+(unit?' '+unit:'');
+  ctx.fillStyle=stroke; ctx.font='bold 11px system-ui';
+  // Right-align when the dot is near the right edge; centre otherwise.
+  var nearRight=(pad.l+cw - lpx) < 40;
+  ctx.textAlign=nearRight?'right':'center';
+  var labelX=nearRight?(lpx-6):lpx;
+  ctx.fillText(lblTxt, labelX, lpy-8);
+}
+
+// Per-exercise weight chart — now delegates to drawChartV2 for the unified style.
 function drawChart(sessions, canvasId){
   var canvas=document.getElementById(canvasId||'ex-chart');
   if(!canvas) return;
-  var dpr=window.devicePixelRatio||1;
-  var w=canvas.parentNode.offsetWidth||300;
-  var chartH=180;
-  canvas.width=w*dpr;
-  canvas.height=chartH*dpr;
-  canvas.style.width=w+'px';
-  canvas.style.height=chartH+'px';
-  var ctx=canvas.getContext('2d');
-  ctx.scale(dpr,dpr);
-
-  var points=[];
-  sessions.forEach(function(s,i){
-    var weights=parseSetWeights(s.note);
-    if(weights.length){
-      var avg=weights.reduce(function(a,b){return a+b;},0)/weights.length;
-      points.push({x:i,y:avg,date:s.date,weights:weights});
+  // sessions arrives chronologically oldest→newest from callers (renderExerciseList passes a `.slice().reverse()`).
+  var pts=[];
+  sessions.forEach(function(s){
+    var ws=parseSetWeights(s.note||'');
+    if(ws.length){
+      var avg=ws.reduce(function(a,b){return a+b;},0)/ws.length;
+      pts.push({label:fmtChartDate(s.date||''), val:Math.round(avg)});
     }
   });
-
-  if(points.length<1){ctx.fillStyle='#C8C6BD';ctx.font='12px system-ui';ctx.fillText('Not enough data yet',10,80);return;}
-
-  // More bottom padding so dates fit below dots
-  var pad={t:24,r:16,b:44,l:44};
-  var cw=w-pad.l-pad.r;
-  var ch=chartH-pad.t-pad.b;
-
-  var yVals=points.map(function(p){return p.y;});
-  var yMin=Math.floor(Math.min.apply(null,yVals)*0.9);
-  var yMax=Math.ceil(Math.max.apply(null,yVals)*1.1);
-  if(yMax===yMin){yMin=yMin-5;yMax=yMax+5;}
-
-  // Grid lines + y axis labels
-  ctx.strokeStyle='#F1EFE8';
-  ctx.lineWidth=1;
-  var yTicks=4;
-  for(var t=0;t<=yTicks;t++){
-    var yv=yMin+(yMax-yMin)*t/yTicks;
-    var yp=pad.t+ch-(ch*t/yTicks);
-    ctx.beginPath();ctx.moveTo(pad.l,yp);ctx.lineTo(pad.l+cw,yp);ctx.stroke();
-    ctx.fillStyle='#888780';ctx.font='10px system-ui';ctx.textAlign='right';
-    ctx.fillText(Math.round(yv),pad.l-4,yp+3);
-  }
-
-  if(points.length===1){
-    var px=pad.l+cw/2;
-    var py=pad.t+ch-ch*(points[0].y-yMin)/(yMax-yMin);
-    ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fillStyle='#5B4EA8';ctx.fill();
-    ctx.fillStyle='#3C3489';ctx.font='bold 11px system-ui';ctx.textAlign='center';
-    ctx.fillText(Math.round(points[0].y)+' lbs',px,py-10);
-    // Date below dot
-    var shortDate=fmtChartDate(points[0].date);
-    ctx.fillStyle='#888780';ctx.font='9px system-ui';
-    ctx.fillText(shortDate,px,pad.t+ch+16);
-    return;
-  }
-
-  // Line
-  ctx.beginPath();ctx.strokeStyle='#7F77DD';ctx.lineWidth=2.5;ctx.lineJoin='round';
-  points.forEach(function(p,i){
-    var px=pad.l+(i/(points.length-1))*cw;
-    var py=pad.t+ch-ch*(p.y-yMin)/(yMax-yMin);
-    if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
-  });
-  ctx.stroke();
-
-  // Fill under line
-  ctx.beginPath();
-  points.forEach(function(p,i){
-    var px=pad.l+(i/(points.length-1))*cw;
-    var py=pad.t+ch-ch*(p.y-yMin)/(yMax-yMin);
-    if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
-  });
-  ctx.lineTo(pad.l+cw,pad.t+ch);ctx.lineTo(pad.l,pad.t+ch);ctx.closePath();
-  ctx.fillStyle='rgba(127,119,221,0.12)';ctx.fill();
-
-  // Dots + weight label above + date below
-  points.forEach(function(p,i){
-    var px=pad.l+(i/(points.length-1))*cw;
-    var py=pad.t+ch-ch*(p.y-yMin)/(yMax-yMin);
-    // Dot
-    ctx.beginPath();ctx.arc(px,py,4,0,Math.PI*2);
-    ctx.fillStyle='#5B4EA8';ctx.fill();
-    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
-    // Weight label above dot
-    ctx.fillStyle='#3C3489';ctx.font='bold 10px system-ui';ctx.textAlign='center';
-    ctx.fillText(Math.round(p.y),px,py-10);
-    // Date below x axis — directly under each dot
-    var shortDate=fmtChartDate(p.date);
-    ctx.fillStyle='#888780';ctx.font='9px system-ui';ctx.textAlign='center';
-    ctx.fillText(shortDate,px,pad.t+ch+14);
-  });
+  drawChartV2(canvas, pts, {unit:'lbs', height:180});
 }
 
 var EXERCISE_REGISTRY=[
@@ -2453,7 +3113,7 @@ function renderManager(){
   var dayLabels={a:'Day 1 — Upper A',b:'Day 2 — Lower A',c:'Day 3 — Cardio + Core',d:'Day 4 — Upper B',e:'Day 5 — Lower B + Cardio'};
   var catColors={'Warm-up':'#F59E0B','Upper body':'#7F77DD','Lower body':'#10B981','Core':'#EF4444','Cardio':'#3B82F6','Cool-down':'#8B5CF6'};
 
-  var activeHTML='<button onclick="openBuilder(null)" style="width:100%;padding:11px;margin-bottom:12px;background:#EEEDFE;border:1.5px solid #7F77DD;border-radius:10px;color:#3C3489;font-size:13px;font-weight:700;cursor:pointer;">➕ Add exercise</button>';
+  var activeHTML='<button class="mgr-add-btn" onclick="openBuilder(null)">➕ Add exercise</button>';
   ['a','b','c','d','e'].forEach(function(day){
     var ids=(plan.order[day]||[]).filter(function(id){
       var r=plan.ex[id]; if(!r) return false;
@@ -2482,10 +3142,10 @@ function renderManager(){
           if(!r.linkId) return '';
           var dd={}; Object.keys(plan.ex).forEach(function(k){ if(plan.ex[k].linkId===r.linkId) dd[plan.ex[k].day]=1; });
           var c=Object.keys(dd).length;
-          return c>1?'<span style="font-size:9px;font-weight:700;color:#5B4EA8;background:#EEEDFE;border-radius:10px;padding:1px 6px;margin-left:5px;white-space:nowrap;flex-shrink:0">↔ '+c+' days</span>':'';
+          return c>1?'<span class="mgr-link-pill">↔ '+c+' days</span>':'';
         })()+'</span>'
         +countStr
-        +'<button class="mgr-archive-btn" style="background:#EEEDFE;border-color:#C4C0E8;color:#3C3489;margin-right:5px" onclick="openBuilder(\''+id+'\')" title="Edit / rename / swap">Edit</button>'
+        +'<button class="mgr-archive-btn mgr-edit-btn" onclick="openBuilder(\''+id+'\')" title="Edit / rename / swap">Edit</button>'
         +'<button class="mgr-archive-btn" onclick="confirmArchiveByIndex('+idx+')" title="Archive this exercise">Archive</button>'
         +'</div>');
     });
@@ -2623,12 +3283,8 @@ function showTab(tab){
   var isBackup=(tab==='backup');
   document.getElementById('panel-backup').style.display=isBackup?'block':'none';
   document.getElementById('panel-restore').style.display=isBackup?'none':'block';
-  document.getElementById('tab-backup').style.background=isBackup?'#5B4EA8':'#F5F5F2';
-  document.getElementById('tab-backup').style.color=isBackup?'#fff':'#888780';
-  document.getElementById('tab-backup').style.borderColor=isBackup?'#5B4EA8':'#D3D1C7';
-  document.getElementById('tab-restore').style.background=isBackup?'#F5F5F2':'#5B4EA8';
-  document.getElementById('tab-restore').style.color=isBackup?'#888780':'#fff';
-  document.getElementById('tab-restore').style.borderColor=isBackup?'#D3D1C7':'#5B4EA8';
+  document.getElementById('tab-backup').className='tab-btn '+(isBackup?'on':'off');
+  document.getElementById('tab-restore').className='tab-btn '+(isBackup?'off':'on');
 }
 
 function generateExport(){
@@ -2675,6 +3331,49 @@ function _totalSessions(){ var n=0; ['a','b','c','d','e'].forEach(function(d){ n
 function dismissBackupBanner(){ var b=document.getElementById('backup-banner'); if(b) b.style.display='none'; }
 function dismissMergeBanner(){ var b=document.getElementById('merge-banner'); if(b) b.style.display='none'; }
 function dismissDeloadBanner(){ var b=document.getElementById('deload-banner'); if(b) b.style.display='none'; }
+
+// ── Step 4 (audit §03): unified notice tray (renderer only) ──────────
+function _noticeActive(id){ var b=document.getElementById(id); return !!(b && b.style.display && b.style.display!=='none'); }
+function _noticeStrip(s){ return String(s||'').replace(/^[^A-Za-z0-9]+/,'').trim(); }
+function renderNoticeTray(){
+  var tray=document.getElementById('notice-tray'); if(!tray) return;
+  var dl=document.getElementById('deload-banner-msg'), mg=document.getElementById('merge-banner-msg');
+  var items=[];
+  if(_noticeActive('deload-banner')) items.push({k:'red',ic:'⚠',t:'Consider a deload week',
+    m:_noticeStrip(dl&&dl.textContent)||'Training load is high — ease off this week.',dismiss:'dismissDeloadBanner'});
+  if(_noticeActive('backup-banner')) items.push({k:'warn',ic:'💾',t:'Back up soon',
+    m:'It’s been a while since your last backup.',act:'showExportImport',actLabel:'Back up',dismiss:'dismissBackupBanner'});
+  if(_noticeActive('merge-banner')) items.push({k:'info',ic:'☁',t:'Synced from cloud',
+    m:_noticeStrip(mg&&mg.textContent)||'Cloud history merged in.',dismiss:'dismissMergeBanner'});
+  if(!items.length){ tray.style.display='none'; tray.innerHTML=''; return; }
+  var h='<div class="tray-head"><span>'+items.length+' notice'+(items.length>1?'s':'')+'</span>'
+    +(items.length>=2?'<button type="button" class="tray-clear" onclick="noticeClearAll()">Clear all</button>':'')+'</div>';
+  items.forEach(function(n){
+    h+='<div class="tray-row">'
+      +'<div class="tray-ic '+n.k+'"><span aria-hidden="true">'+n.ic+'</span></div>'
+      +'<div class="tray-bd"><div class="tray-t">'+_esc(n.t)+'</div><div class="tray-m">'+_esc(n.m)+'</div></div>'
+      +(n.act?'<button type="button" class="tray-act" onclick="'+n.act+'()">'+_esc(n.actLabel)+'</button>':'')
+      +'<button type="button" class="tray-x" aria-label="Dismiss notification" onclick="'+n.dismiss+'()">×</button>'
+      +'</div>';
+  });
+  tray.innerHTML=h;
+  tray.style.display='block';
+}
+function noticeClearAll(){
+  ['dismissDeloadBanner','dismissBackupBanner','dismissMergeBanner'].forEach(function(fn){
+    try{ window[fn] && window[fn](); }catch(e){}
+  });
+}
+(function initNoticeTray(){
+  var obs;
+  try{ obs=new MutationObserver(function(){ renderNoticeTray(); }); }catch(e){}
+  ['deload-banner','backup-banner','merge-banner'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el && obs) obs.observe(el,{attributes:true,attributeFilter:['style']});
+  });
+  renderNoticeTray();
+})();
+
 function maybeShowDeloadBanner(){
   if(TEST_MODE) return;
   var b=document.getElementById('deload-banner'); if(!b) return;
@@ -2932,138 +3631,450 @@ function navSession(day,dir){
 }
 
 function buildMuscleMapSVG(muscles){
-  var hi='#7F77DD',mid='#B9B4E6',sk='#F5E6D3',lo='#F5E6D3',ol='#C8C6BD',bg='#F9F9F7';
-  var front=muscles.front||[],back=muscles.back||[];
-  var frontL=muscles.frontLight||[],backL=muscles.backLight||[];
-  function f(g){return front.indexOf(g)!==-1?hi:(frontL.indexOf(g)!==-1?mid:lo);} // front
-  function b(g){return back.indexOf(g)!==-1?hi:(backL.indexOf(g)!==-1?mid:lo);}   // back
+  // ── Palette: cool light theme + matching dark theme ───────────────
+  var dark   = document.body.classList.contains('dark');
+  var ACTIVE = dark ? '#9F97E0' : '#5B4EA8';   // primary accent
+  var BODY   = dark ? '#2E2B4A' : '#E5E0D2';   // silhouette fill
+  var BG     = dark ? '#1A1A2E' : '#F9F9F7';   // card background
+  var TXT    = dark ? '#7E7CA8' : '#888780';   // labels
 
-  var s='<rect x="0" y="0" width="320" height="260" rx="10" fill="'+bg+'"/>';
-  s+='<text x="80" y="15" text-anchor="middle" font-size="9" fill="#888780" font-family="system-ui">FRONT</text>';
-  s+='<text x="240" y="15" text-anchor="middle" font-size="9" fill="#888780" font-family="system-ui">BACK</text>';
+  var front  = muscles.front      || [];
+  var back   = muscles.back       || [];
+  var frontL = muscles.frontLight || [];
+  var backL  = muscles.backLight  || [];
 
-  // ── FRONT FIGURE (ox=0) ──────────────────────────────────────────
-  var x=0;
-  s+='<ellipse cx="'+(x+80)+'" cy="34" rx="13" ry="14" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>'; // head
-  s+='<rect x="'+(x+75)+'" y="47" width="10" height="7" rx="3" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>'; // neck
-  // Torso: chest then core (drawn in order, chest on top)
-  s+='<rect x="'+(x+60)+'" y="54" width="40" height="30" rx="5" fill="'+f('chest')+'" stroke="'+ol+'" stroke-width="1"/>'; // chest
-  s+='<rect x="'+(x+63)+'" y="84" width="34" height="26" rx="4" fill="'+f('core-front')+'" stroke="'+ol+'" stroke-width="1"/>'; // abs
-  // Shoulders (front)
-  s+='<ellipse cx="'+(x+52)+'" cy="63" rx="10" ry="12" fill="'+f('front-shoulder')+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<ellipse cx="'+(x+108)+'" cy="63" rx="10" ry="12" fill="'+f('front-shoulder')+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Upper arms: bicep top, tricep below
-  s+='<rect x="'+(x+39)+'" y="75" width="12" height="18" rx="5" fill="'+f('bicep')+'" stroke="'+ol+'" stroke-width="1"/>'; // L bicep
-  s+='<rect x="'+(x+109)+'" y="75" width="12" height="18" rx="5" fill="'+f('bicep')+'" stroke="'+ol+'" stroke-width="1"/>'; // R bicep
-  s+='<rect x="'+(x+39)+'" y="93" width="12" height="14" rx="5" fill="'+f('tricep')+'" stroke="'+ol+'" stroke-width="1"/>'; // L tricep
-  s+='<rect x="'+(x+109)+'" y="93" width="12" height="14" rx="5" fill="'+f('tricep')+'" stroke="'+ol+'" stroke-width="1"/>'; // R tricep
-  // Forearms (skin)
-  s+='<rect x="'+(x+40)+'" y="107" width="10" height="16" rx="4" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<rect x="'+(x+110)+'" y="107" width="10" height="16" rx="4" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Hip/pelvis
-  s+='<rect x="'+(x+60)+'" y="110" width="40" height="14" rx="4" fill="'+f('hip-flexor')+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Quads
-  s+='<rect x="'+(x+60)+'" y="124" width="17" height="42" rx="7" fill="'+f('quad')+'" stroke="'+ol+'" stroke-width="1"/>'; // L
-  s+='<rect x="'+(x+83)+'" y="124" width="17" height="42" rx="7" fill="'+f('quad')+'" stroke="'+ol+'" stroke-width="1"/>'; // R
-  // Inner thigh overlay
-  s+='<ellipse cx="'+(x+77)+'" cy="146" rx="6" ry="19" fill="'+f('inner-thigh')+'" stroke="'+ol+'" stroke-width="0.5" opacity="0.8"/>';
-  // Knees
-  s+='<ellipse cx="'+(x+68)+'" cy="168" rx="10" ry="7" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<ellipse cx="'+(x+91)+'" cy="168" rx="10" ry="7" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Calves
-  s+='<rect x="'+(x+59)+'" y="175" width="17" height="32" rx="6" fill="'+f('calf')+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<rect x="'+(x+82)+'" y="175" width="17" height="32" rx="6" fill="'+f('calf')+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Feet
-  s+='<ellipse cx="'+(x+67)+'" cy="209" rx="10" ry="4" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<ellipse cx="'+(x+90)+'" cy="209" rx="10" ry="4" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>';
+  function overlay(regions, strong, light){
+    var s = '';
+    light.forEach(function(k){
+      if(regions[k]) s += '<g opacity="0.45">' + regions[k] + '</g>';
+    });
+    strong.forEach(function(k){
+      if(regions[k]) s += regions[k];
+    });
+    return s;
+  }
 
-  // ── BACK FIGURE (ox=160) ─────────────────────────────────────────
-  x=160;
-  s+='<ellipse cx="'+(x+80)+'" cy="34" rx="13" ry="14" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>'; // head
-  s+='<rect x="'+(x+75)+'" y="47" width="10" height="7" rx="3" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>'; // neck
-  // Upper back / traps
-  s+='<rect x="'+(x+60)+'" y="54" width="40" height="30" rx="5" fill="'+b('upper-back')+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Lats (side flanges)
-  s+='<ellipse cx="'+(x+52)+'" cy="76" rx="9" ry="16" fill="'+b('lat')+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<ellipse cx="'+(x+108)+'" cy="76" rx="9" ry="16" fill="'+b('lat')+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Lower back
-  s+='<rect x="'+(x+63)+'" y="84" width="34" height="24" rx="4" fill="'+b('core-back')+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Rear delts
-  s+='<ellipse cx="'+(x+52)+'" cy="61" rx="10" ry="10" fill="'+b('rear-delt')+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<ellipse cx="'+(x+108)+'" cy="61" rx="10" ry="10" fill="'+b('rear-delt')+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Triceps (back view)
-  s+='<rect x="'+(x+39)+'" y="75" width="12" height="28" rx="5" fill="'+b('tricep')+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<rect x="'+(x+109)+'" y="75" width="12" height="28" rx="5" fill="'+b('tricep')+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Forearms
-  s+='<rect x="'+(x+40)+'" y="103" width="10" height="16" rx="4" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<rect x="'+(x+110)+'" y="103" width="10" height="16" rx="4" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Glutes
-  s+='<ellipse cx="'+(x+70)+'" cy="116" rx="14" ry="13" fill="'+b('glute')+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<ellipse cx="'+(x+90)+'" cy="116" rx="14" ry="13" fill="'+b('glute')+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Outer hip
-  s+='<ellipse cx="'+(x+53)+'" cy="112" rx="8" ry="10" fill="'+b('outer-hip')+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<ellipse cx="'+(x+107)+'" cy="112" rx="8" ry="10" fill="'+b('outer-hip')+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Hamstrings
-  s+='<rect x="'+(x+60)+'" y="129" width="17" height="38" rx="7" fill="'+b('hamstring')+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<rect x="'+(x+83)+'" y="129" width="17" height="38" rx="7" fill="'+b('hamstring')+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Knees
-  s+='<ellipse cx="'+(x+68)+'" cy="169" rx="10" ry="7" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<ellipse cx="'+(x+91)+'" cy="169" rx="10" ry="7" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Calves
-  s+='<rect x="'+(x+59)+'" y="176" width="17" height="31" rx="6" fill="'+b('calf')+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<rect x="'+(x+82)+'" y="176" width="17" height="31" rx="6" fill="'+b('calf')+'" stroke="'+ol+'" stroke-width="1"/>';
-  // Feet
-  s+='<ellipse cx="'+(x+67)+'" cy="209" rx="10" ry="4" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<ellipse cx="'+(x+90)+'" cy="209" rx="10" ry="4" fill="'+sk+'" stroke="'+ol+'" stroke-width="1"/>';
+  var sFront = '<g transform="translate(45,18) scale(0.7)">' +
+                 '<g fill="' + BODY   + '">' + MM_SILHOUETTE + '</g>' +
+                 '<g fill="' + ACTIVE + '">' + overlay(MM_FRONT_REGIONS, front, frontL) + '</g>' +
+               '</g>';
 
-  // Legend (3-way: strength / cardio / not worked)
-  s+='<rect x="8" y="232" width="11" height="11" rx="2" fill="'+hi+'"/>';
-  s+='<text x="23" y="241" font-size="9" fill="#888780" font-family="system-ui">Strength</text>';
-  s+='<rect x="78" y="232" width="11" height="11" rx="2" fill="'+mid+'"/>';
-  s+='<text x="93" y="241" font-size="9" fill="#888780" font-family="system-ui">Cardio</text>';
-  s+='<rect x="142" y="232" width="11" height="11" rx="2" fill="'+lo+'" stroke="'+ol+'" stroke-width="1"/>';
-  s+='<text x="157" y="241" font-size="9" fill="#888780" font-family="system-ui">Not worked</text>';
-  return s;
+  var sBack  = '<g transform="translate(205,18) scale(0.7)">' +
+                 '<g fill="' + BODY   + '">' + MM_SILHOUETTE + '</g>' +
+                 '<g fill="' + ACTIVE + '">' + overlay(MM_BACK_REGIONS, back, backL) + '</g>' +
+               '</g>';
+
+  return (
+    '<rect x="0" y="0" width="320" height="260" rx="10" fill="' + BG + '"/>' +
+    '<text x="80"  y="13" text-anchor="middle" font-size="9" font-family="system-ui" font-weight="600" letter-spacing="0.08em" fill="' + TXT + '">FRONT</text>' +
+    '<text x="240" y="13" text-anchor="middle" font-size="9" font-family="system-ui" font-weight="600" letter-spacing="0.08em" fill="' + TXT + '">BACK</text>' +
+    sFront + sBack +
+    '<rect x="10"  y="232" width="11" height="11" rx="2" fill="' + ACTIVE + '"/>' +
+    '<text x="25"  y="241" font-size="9" font-family="system-ui" fill="' + TXT + '">Strength</text>' +
+    '<rect x="78"  y="232" width="11" height="11" rx="2" fill="' + ACTIVE + '" opacity="0.45"/>' +
+    '<text x="93"  y="241" font-size="9" font-family="system-ui" fill="' + TXT + '">Cardio · engaged</text>' +
+    '<rect x="180" y="232" width="11" height="11" rx="2" fill="' + BODY   + '"/>' +
+    '<text x="195" y="241" font-size="9" font-family="system-ui" fill="' + TXT + '">Not worked</text>'
+  );
+}
+
+/* Shared body silhouette + 16 region paths (used by buildMuscleMapSVG;
+   buildMuscleHeatMapSVG will reuse these in the optional Step 2). */
+var MM_SILHOUETTE =
+  '<ellipse cx="50" cy="22" rx="13" ry="16"/>' +
+  '<path d="M 42 32 L 58 32 L 58 54 L 42 54 Z"/>' +
+  '<path d="M 28 50 Q 50 44 72 50 L 76 60 L 24 60 Z"/>' +
+  '<path d="M 22 56 Q 18 64 18 76 L 20 102 Q 22 122 24 134 L 26 148 Q 24 162 28 174 L 72 174 Q 76 162 74 148 L 76 134 Q 78 122 80 102 L 82 76 Q 82 64 78 56 Z"/>' +
+  '<ellipse cx="24" cy="64" rx="11" ry="12"/>' +
+  '<ellipse cx="76" cy="64" rx="11" ry="12"/>' +
+  '<path d="M 14 64 Q 10 76 11 92 L 13 116 Q 14 136 16 150 Q 18 164 23 164 Q 28 164 28 156 L 27 140 Q 26 120 27 102 L 30 80 Q 30 68 26 62 Z"/>' +
+  '<path d="M 86 64 Q 90 76 89 92 L 87 116 Q 86 136 84 150 Q 82 164 77 164 Q 72 164 72 156 L 73 140 Q 74 120 73 102 L 70 80 Q 70 68 74 62 Z"/>' +
+  '<ellipse cx="22" cy="166" rx="6" ry="7"/>' +
+  '<ellipse cx="78" cy="166" rx="6" ry="7"/>' +
+  '<path d="M 27 170 Q 24 200 27 232 L 30 264 Q 30 278 38 280 L 44 280 Q 50 278 50 270 L 50 170 Z"/>' +
+  '<path d="M 73 170 Q 76 200 73 232 L 70 264 Q 70 278 62 280 L 56 280 Q 50 278 50 270 L 50 170 Z"/>' +
+  '<ellipse cx="40" cy="282" rx="9" ry="4"/>' +
+  '<ellipse cx="60" cy="282" rx="9" ry="4"/>';
+
+var MM_FRONT_REGIONS = {
+  'chest':           '<path d="M 28 58 Q 30 80 44 88 Q 49 86 49 76 L 49 56 Q 38 54 28 58 Z"/>' +
+                     '<path d="M 72 58 Q 70 80 56 88 Q 51 86 51 76 L 51 56 Q 62 54 72 58 Z"/>',
+  'front-shoulder':  '<path d="M 24 56 Q 14 58 13 70 Q 14 78 22 80 Q 30 78 32 70 Q 32 60 26 56 Z"/>' +
+                     '<path d="M 76 56 Q 86 58 87 70 Q 86 78 78 80 Q 70 78 68 70 Q 68 60 74 56 Z"/>',
+  'bicep':           '<path d="M 12 78 Q 10 96 14 110 Q 19 116 24 112 Q 26 100 25 86 L 24 72 Q 16 72 12 78 Z"/>' +
+                     '<path d="M 88 78 Q 90 96 86 110 Q 81 116 76 112 Q 74 100 75 86 L 76 72 Q 84 72 88 78 Z"/>',
+  'tricep':          '<path d="M 11 86 Q 10 102 13 118 Q 15 124 18 122 L 18 100 Q 18 86 16 78 Q 12 80 11 86 Z"/>' +
+                     '<path d="M 89 86 Q 90 102 87 118 Q 85 124 82 122 L 82 100 Q 82 86 84 78 Q 88 80 89 86 Z"/>',
+  'core-front':      '<rect x="36" y="100" width="12" height="11" rx="2"/>' +
+                     '<rect x="52" y="100" width="12" height="11" rx="2"/>' +
+                     '<rect x="36" y="113" width="12" height="11" rx="2"/>' +
+                     '<rect x="52" y="113" width="12" height="11" rx="2"/>' +
+                     '<rect x="36" y="126" width="12" height="11" rx="2"/>' +
+                     '<rect x="52" y="126" width="12" height="11" rx="2"/>',
+  'hip-flexor':      '<path d="M 30 144 Q 28 156 32 168 L 46 168 L 49 156 L 49 144 Z"/>' +
+                     '<path d="M 70 144 Q 72 156 68 168 L 54 168 L 51 156 L 51 144 Z"/>',
+  'quad':            '<path d="M 30 174 Q 28 210 32 244 Q 36 256 42 252 Q 44 220 43 174 Z"/>' +
+                     '<path d="M 70 174 Q 72 210 68 244 Q 64 256 58 252 Q 56 220 57 174 Z"/>',
+  'inner-thigh':     '<path d="M 43 178 L 49 178 L 49 244 L 45 244 Z"/>' +
+                     '<path d="M 57 178 L 51 178 L 51 244 L 55 244 Z"/>',
+  'calf':            '<path d="M 31 248 Q 30 268 32 280 L 42 280 Q 44 264 44 248 Z"/>' +
+                     '<path d="M 69 248 Q 70 268 68 280 L 58 280 Q 56 264 56 248 Z"/>'
+};
+
+var MM_BACK_REGIONS = {
+  'upper-back':      '<path d="M 50 46 L 28 56 L 26 72 Q 38 76 50 76 Q 62 76 74 72 L 72 56 Z"/>' +
+                     '<path d="M 42 60 L 58 60 L 56 82 L 44 82 Z"/>',
+  'lat':             '<path d="M 26 72 Q 22 96 28 120 Q 36 124 42 118 L 44 100 L 44 74 Q 36 72 26 72 Z"/>' +
+                     '<path d="M 74 72 Q 78 96 72 120 Q 64 124 58 118 L 56 100 L 56 74 Q 64 72 74 72 Z"/>',
+  'rear-delt':       '<ellipse cx="24" cy="64" rx="10" ry="10"/>' +
+                     '<ellipse cx="76" cy="64" rx="10" ry="10"/>',
+  'tricep':          '<path d="M 12 76 Q 9 96 13 118 Q 17 124 22 122 Q 26 108 26 90 L 26 70 Q 18 70 12 76 Z"/>' +
+                     '<path d="M 88 76 Q 91 96 87 118 Q 83 124 78 122 Q 74 108 74 90 L 74 70 Q 82 70 88 76 Z"/>',
+  'core-back':       '<path d="M 42 120 L 58 120 Q 60 132 60 148 L 40 148 Q 40 132 42 120 Z"/>',
+  'glute':           '<path d="M 28 150 Q 24 168 28 180 Q 36 186 48 180 Q 50 170 49 150 Z"/>' +
+                     '<path d="M 72 150 Q 76 168 72 180 Q 64 186 52 180 Q 50 170 51 150 Z"/>',
+  'outer-hip':       '<path d="M 26 148 Q 22 162 26 176 L 30 176 L 31 150 Z"/>' +
+                     '<path d="M 74 148 Q 78 162 74 176 L 70 176 L 69 150 Z"/>',
+  'hamstring':       '<path d="M 30 178 Q 28 212 32 244 Q 36 256 42 252 Q 44 220 43 178 Z"/>' +
+                     '<path d="M 70 178 Q 72 212 68 244 Q 64 256 58 252 Q 56 220 57 178 Z"/>',
+  'calf':            '<path d="M 31 250 Q 28 270 34 282 L 42 282 Q 46 266 44 250 Z"/>' +
+                     '<path d="M 69 250 Q 72 270 66 282 L 58 282 Q 54 266 56 250 Z"/>'
+};
+
+/* Weekly-volume HEAT view (from audit/buildMuscleMapSVG.js, reviewed —
+   pure SVG string gen, reuses the shared MM_* paths above). */
+function buildMuscleHeatMapSVG(loads){
+  var dark = document.body.classList.contains('dark');
+  var BODY = dark ? '#2E2B4A' : '#E5E0D2';
+  var BG   = dark ? '#1A1A2E' : '#F9F9F7';
+  var TXT  = dark ? '#7E7CA8' : '#888780';
+
+  var HEAT = dark ? {
+    low:        '#3C3A6E',
+    moderate:   '#9F97E0',
+    high:       '#E0A800',
+    overworked: '#FF6464'
+  } : {
+    low:        '#BFBADD',
+    moderate:   '#7F77DD',
+    high:       '#E0A800',
+    overworked: '#9B2222'
+  };
+  HEAT.none = BODY;   // zero weekly volume → painted as the silhouette colour
+
+  loads = loads || {};
+
+  function tinted(regions){
+    var s = '';
+    Object.keys(regions).forEach(function(k){
+      var level = loads[k];
+      if(level && HEAT[level]){
+        s += '<g fill="' + HEAT[level] + '">' + regions[k] + '</g>';
+      }
+    });
+    return s;
+  }
+
+  var sFront = '<g transform="translate(45,18) scale(0.7)">' +
+                 '<g fill="' + BODY + '">' + MM_SILHOUETTE + '</g>' +
+                 tinted(MM_FRONT_REGIONS) +
+               '</g>';
+  var sBack  = '<g transform="translate(205,18) scale(0.7)">' +
+                 '<g fill="' + BODY + '">' + MM_SILHOUETTE + '</g>' +
+                 tinted(MM_BACK_REGIONS) +
+               '</g>';
+
+  return (
+    '<rect x="0" y="0" width="320" height="260" rx="10" fill="' + BG + '"/>' +
+    '<text x="80"  y="13" text-anchor="middle" font-size="9" font-family="system-ui" font-weight="600" letter-spacing="0.08em" fill="' + TXT + '">FRONT</text>' +
+    '<text x="240" y="13" text-anchor="middle" font-size="9" font-family="system-ui" font-weight="600" letter-spacing="0.08em" fill="' + TXT + '">BACK</text>' +
+    sFront + sBack +
+    '<rect x="10"  y="232" width="11" height="11" rx="2" fill="' + HEAT.low        + '"/>' +
+    '<text x="25"  y="241" font-size="9" font-family="system-ui" fill="' + TXT + '">Low</text>' +
+    '<rect x="60"  y="232" width="11" height="11" rx="2" fill="' + HEAT.moderate   + '"/>' +
+    '<text x="75"  y="241" font-size="9" font-family="system-ui" fill="' + TXT + '">Moderate</text>' +
+    '<rect x="135" y="232" width="11" height="11" rx="2" fill="' + HEAT.high       + '"/>' +
+    '<text x="150" y="241" font-size="9" font-family="system-ui" fill="' + TXT + '">High</text>' +
+    '<rect x="190" y="232" width="11" height="11" rx="2" fill="' + HEAT.overworked + '"/>' +
+    '<text x="205" y="241" font-size="9" font-family="system-ui" fill="' + TXT + '">Overworked</text>'
+  );
+}
+
+// Muscles for a logged exercise name (data-ex/histEx). Prefers a model
+// record's user-set muscles, else the DEFAULT_MUSCLES seed.
+function _musclesForHist(exName){
+  try{
+    var plan=getEffectivePlan();
+    var hit=Object.keys(plan.ex).filter(function(k){ return plan.ex[k].histEx===exName; })[0];
+    if(hit){ var mm=getExerciseMuscles(hit); if(mm&&mm.length) return mm; }
+  }catch(e){}
+  return DEFAULT_MUSCLES[normalizeEx(exName||'')] || [];
+}
+function _isoWeekKey(ts){
+  var d=new Date(ts), day=d.getDay();
+  var mon=new Date(d); mon.setDate(d.getDate()-(day===0?6:day-1)); mon.setHours(0,0,0,0);
+  return mon.getFullYear()+'-'+(mon.getMonth()+1)+'-'+mon.getDate()+'|'+mon.getTime();
+}
+function _median(a){
+  if(!a.length) return 0;
+  var b=a.slice().sort(function(x,y){return x-y;});
+  var m=Math.floor(b.length/2);
+  return b.length%2 ? b[m] : (b[m-1]+b[m])/2;
+}
+// Per-muscle weekly training load → {muscleKey:'low|moderate|high|overworked'}.
+// Volume = Σ weight×reps per set (reps fall back to the exercise's target,
+// then 10). This week is bucketed against that muscle's own prior-week
+// history (median of non-zero prior weeks); sparse history → 'moderate'.
+function computeWeeklyMuscleLoad(){
+  var targets=(typeof getExerciseTargets==='function')?getExerciseTargets():{};
+  var weeks={}; // weekTime -> {muscle: vol}
+  ['a','b','c','d','e'].forEach(function(day){
+    getSaved(day).forEach(function(sess){
+      var ts=sessTs(sess); if(!ts) return;
+      var wk=_isoWeekKey(ts);
+      (sess.entries||[]).forEach(function(e){
+        if(!e || !e.ex || !e.note || e.note.indexOf('Set ')!==0) return;
+        if(/-(rpe|pain|pr)$/.test(e.ex)) return;
+        var sets=parseSetWR(e.note); if(!sets.length) return;
+        var t=targets[normalizeEx(e.ex)];
+        var tRep=(t&&t.reps)?t.reps:10;
+        var vol=0;
+        sets.forEach(function(st){ if(st.w>0){ vol += st.w * (st.r!=null?st.r:tRep); } });
+        if(vol<=0) return;
+        var ms=_musclesForHist(e.ex); if(!ms.length) return;
+        if(!weeks[wk]) weeks[wk]={};
+        ms.forEach(function(m){ weeks[wk][m]=(weeks[wk][m]||0)+vol; });
+      });
+    });
+  });
+  var keys=Object.keys(weeks);
+  if(!keys.length) return {};
+  // Use the current ISO week, but if nothing's been logged yet this week
+  // fall back to the most recent week that has data (so the map stays
+  // useful between sessions instead of vanishing).
+  var curKey=_isoWeekKey(Date.now());
+  if(!weeks[curKey] || !Object.keys(weeks[curKey]).length){
+    curKey=keys.slice().sort(function(a,b){ return (+a.split('|')[1])-(+b.split('|')[1]); }).pop();
+  }
+  var curTime=+curKey.split('|')[1];
+  // prior weeks = strictly older than the chosen current week
+  var prior=keys.filter(function(k){ return (+k.split('|')[1]) < curTime; })
+                .sort(function(a,b){ return (+a.split('|')[1])-(+b.split('|')[1]); });
+  var cur=weeks[curKey]||{};
+  // Every renderable muscle is represented; zero-volume ones get 'none'
+  // (painted as the silhouette colour) rather than being omitted.
+  var allMuscles={};
+  Object.keys(MM_FRONT_REGIONS).forEach(function(m){ allMuscles[m]=1; });
+  Object.keys(MM_BACK_REGIONS).forEach(function(m){ allMuscles[m]=1; });
+  var loads={};
+  Object.keys(allMuscles).forEach(function(m){
+    var c=cur[m]||0;
+    if(c===0){ loads[m]='none'; return; }            // not trained this week
+    var hist=prior.map(function(k){ return weeks[k][m]||0; }).filter(function(v){ return v>0; });
+    if(!hist.length){ loads[m]='moderate'; return; }  // trained, no baseline yet
+    var med=_median(hist), prev=0;
+    for(var i=prior.length-1;i>=0;i--){ if((weeks[prior[i]][m]||0)>0){ prev=weeks[prior[i]][m]; break; } }
+    var r=med>0?(c/med):2;
+    if(r<0.5) loads[m]='low';
+    else if(r<1.3) loads[m]='moderate';
+    else if(r<1.8) loads[m]='high';
+    else loads[m]=(c>prev)?'overworked':'high';
+  });
+  return loads;
 }
 
 
+// Step 5 — Sessions tab: cross-day chronological feed.
+var _sessFilterDay='all';
+function sessFilter(d, btn){
+  _sessFilterDay=d;
+  document.querySelectorAll('.sess-filter').forEach(function(b){b.classList.remove('on');});
+  if(btn) btn.classList.add('on');
+  renderProgress();
+}
+function _sessionPRCount(day, sTs, sess){
+  if(!sess || !sess.entries) return 0;
+  var count=0;
+  sess.entries.forEach(function(e){
+    if(!e.note || e.note.indexOf('Set ')!==0) return;
+    var currWeights=parseSetWeights(e.note);
+    if(!currWeights.length) return;
+    var currBest=Math.max.apply(null,currWeights);
+    var prevBest=0;
+    ['a','b','c','d','e'].forEach(function(d2){
+      getSaved(d2).forEach(function(other){
+        if(sessTs(other)>=sTs) return;
+        (other.entries||[]).forEach(function(en){
+          if(en.ex===e.ex && en.note && en.note.indexOf('Set ')===0){
+            parseSetWeights(en.note).forEach(function(w){ if(w>prevBest) prevBest=w; });
+          }
+        });
+      });
+    });
+    if(prevBest>0 && currBest>prevBest) count++;
+  });
+  return count;
+}
+function _weekBucketKey(ts){
+  // Monday-start "week of" bucket. Returns an int (ms at week start) so we can sort.
+  var d=new Date(ts);
+  d.setHours(0,0,0,0);
+  var dow=d.getDay(); // Sun=0..Sat=6
+  var offset=(dow===0?6:dow-1); // back to Monday
+  d.setDate(d.getDate()-offset);
+  return d.getTime();
+}
+function _weekBucketLabel(weekStart){
+  var now=new Date(); now.setHours(0,0,0,0);
+  var thisWeekStart=_weekBucketKey(now.getTime());
+  if(weekStart===thisWeekStart) return 'This week';
+  var lastWeekStart=thisWeekStart - 7*86400*1000;
+  if(weekStart===lastWeekStart) return 'Last week';
+  var diffWeeks=Math.round((thisWeekStart-weekStart)/(7*86400*1000));
+  if(diffWeeks<=4) return diffWeeks+' weeks ago';
+  // Older buckets: by month
+  var d=new Date(weekStart);
+  return d.toLocaleString(undefined,{month:'long',year:'numeric'});
+}
+var _DAY_NUM={a:1,b:2,c:3,d:4,e:5};
+var _DAY_LBL={a:'Day 1',b:'Day 2',c:'Day 3',d:'Day 4',e:'Day 5'};
+function sessOverflow(day, idx, ev){
+  if(ev){ ev.stopPropagation(); }
+  // Close any existing menu first.
+  document.querySelectorAll('.sess-ovf-menu').forEach(function(m){ m.parentNode.removeChild(m); });
+  var btn=document.querySelector('.sess-ovf-btn[data-d="'+day+'"][data-i="'+idx+'"]');
+  if(!btn) return;
+  var menu=document.createElement('div');
+  menu.className='sess-ovf-menu';
+  menu.setAttribute('role','menu');
+  menu.innerHTML=
+    '<button role="menuitem" class="sess-ovf-mi" onclick="editSessionDate(\''+day+'\','+idx+');_closeSessOvf()">✏️ Edit date</button>'
+   +'<button role="menuitem" class="sess-ovf-mi sess-ovf-danger" onclick="confirmDeleteSession(\''+day+'\','+idx+')">🗑 Delete this session</button>';
+  btn.parentNode.appendChild(menu);
+  // Close on outside click.
+  setTimeout(function(){
+    var off=function(e){ if(!menu.contains(e.target) && e.target!==btn){ _closeSessOvf(); document.removeEventListener('click',off,true); } };
+    document.addEventListener('click',off,true);
+  },0);
+}
+function _closeSessOvf(){
+  document.querySelectorAll('.sess-ovf-menu').forEach(function(m){ m.parentNode.removeChild(m); });
+}
+var _pendingDelete=null;
+function confirmDeleteSession(day, idx){
+  _closeSessOvf();
+  var saved=getSaved(day);
+  if(idx<0 || idx>=saved.length) return;
+  _pendingDelete={day:day, idx:idx};
+  var s=saved[idx];
+  var lbl=(s && s.label) || _DAY_LBL[day];
+  var dt=(s && s.date) || '';
+  document.getElementById('sess-del-msg').textContent='Delete '+lbl+' from '+dt+'? This cannot be undone.';
+  document.getElementById('sess-del-overlay').classList.add('show');
+}
+function closeDeleteSessionModal(){
+  document.getElementById('sess-del-overlay').classList.remove('show');
+  _pendingDelete=null;
+}
+function executeDeleteSession(){
+  if(!_pendingDelete) return;
+  var day=_pendingDelete.day, idx=_pendingDelete.idx;
+  var saved=getSaved(day);
+  if(idx>=0 && idx<saved.length){
+    saved.splice(idx,1);
+    localStorage.setItem('gymlog_'+day, JSON.stringify(saved));
+  }
+  closeDeleteSessionModal();
+  renderProgress();
+  try{ renderExerciseList(); }catch(e){}
+  showToast('Session deleted.');
+  // Destructive: overwrite cloud authoritatively so it doesn't merge back.
+  try{ syncToJbin(function(){}, {authoritative:true}); }catch(e){}
+}
+
 function renderProgress(){
-  var total=0;
+  var total=0, allItems=[];
   ['a','b','c','d','e'].forEach(function(day){
     var saved=getSaved(day);
     total+=saved.length;
     var n=saved.length;
-    document.getElementById(countKeys[day]).textContent=n+' session'+(n===1?'':'s');
-    document.getElementById(statKeys[day]).textContent=n;
-    var el=document.getElementById(bodyKeys[day]);
-    if(!n){el.innerHTML='<div class="prog-empty">No sessions saved yet.</div>';return;}
-    if(sessPage[day]>=n) sessPage[day]=0;
-    var idx=sessPage[day];
-    var s=saved[idx];
-    var sessionNum=n-idx;
-    var nav=n>1?('<div class="sess-nav">'
-      +'<button class="sess-nav-btn" onclick="navSession(\"'+day+'\",-1)" '+(idx===0?'disabled':'')+'>&larr; Newer</button>'
-      +'<span class="sess-nav-label">Session '+sessionNum+' of '+n+'</span>'
-      +'<button class="sess-nav-btn" onclick="navSession(\"'+day+'\",1)" '+(idx===n-1?'disabled':'')+'>&rarr; Older</button>'
-      +'</div>'):'';
-    var rows=s.entries.length
-      ?s.entries.filter(function(e){ return !e.ex.endsWith('-rpe')&&!e.ex.endsWith('-pain'); })
-        .map(function(e){return '<div class="prog-session-item"><b>'+e.ex+':</b> <span>'+e.note+'</span></div>';}).join('')
-      :'<div class="prog-session-item" style="color:#C8C6BD;font-style:italic">No notes recorded</div>';
-    var checkinEmoji={great:'💪 Great',okay:'😐 Okay',tired:'😴 Tired'};
-    var checkinHTML=s.checkin?'<div class="prog-session-notes" style="border-top:none;padding-top:0">'+checkinEmoji[s.checkin]+' day</div>':'';
-    var notesHTML=s.notes?'<div class="prog-session-notes">📝 '+s.notes+'</div>':'';
-    var sessHTML='<div class="prog-session">'
-      +'<div class="prog-session-date">'+s.date+(s.duration?' <span class="prog-session-dur">⏱ '+s.duration+'min</span>':'')
-      +' <button class="edit-date-btn" onclick="editSessionDate(\"'+day+'\",'+idx+')" title="Edit date">✏️</button></div>'
-      +checkinHTML+rows+notesHTML+'</div>';
-    var muscles=dayMusclesFor(day);
-    var mapHTML='<div class="muscle-map-wrap"><div class="muscle-map-title">Muscles Worked</div>'
-      +'<svg class="muscle-map-svg" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg">'
-      +buildMuscleMapSVG(muscles)+'</svg></div>';
-    el.innerHTML=nav+sessHTML+mapHTML;
+    // Keep prog-count-X and stat-X updating (functionality contract).
+    var cEl=document.getElementById(countKeys[day]); if(cEl) cEl.textContent=n;
+    var sEl=document.getElementById(statKeys[day]); if(sEl) sEl.textContent=n;
+    saved.forEach(function(s, idx){
+      allItems.push({day:day, idx:idx, sess:s, ts:sessTs(s)});
+    });
   });
   document.getElementById('stat-total').textContent=total;
+
+  var filter=_sessFilterDay;
+  var actionsEl=document.getElementById('sess-filter-actions');
+  if(actionsEl){
+    if(filter==='all'){ actionsEl.style.display='none'; actionsEl.innerHTML=''; }
+    else {
+      actionsEl.style.display='block';
+      actionsEl.innerHTML='<button class="sess-day-clear" onclick="confirmClear(\''+filter+'\',\''+_DAY_LBL[filter]+'\')">🗑 Clear all '+_DAY_LBL[filter]+' history</button>';
+    }
+  }
+
+  // Apply filter.
+  var items=allItems;
+  if(filter!=='all') items=items.filter(function(it){ return it.day===filter; });
+  // Sort chronological desc (newest first), entries without ts sort to bottom.
+  items.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+
+  var feed=document.getElementById('sess-feed');
+  if(!feed) return;
+  if(!items.length){
+    feed.innerHTML='<div class="prog-empty" style="padding:1.5rem 0">'+(filter==='all'?'No sessions saved yet.':'No '+_DAY_LBL[filter]+' sessions saved yet.')+'</div>';
+    return;
+  }
+
+  // Group by week bucket.
+  var groups=[], byKey={};
+  items.forEach(function(it){
+    var wk=it.ts?_weekBucketKey(it.ts):0;
+    if(!byKey[wk]){ byKey[wk]={key:wk, items:[]}; groups.push(byKey[wk]); }
+    byKey[wk].items.push(it);
+  });
+
+  var checkinEmoji={great:'💪',okay:'😐',tired:'😴'};
+  var html='';
+  groups.forEach(function(g){
+    html+='<div class="sess-week-hdr">'+_weekBucketLabel(g.key)+'</div>';
+    g.items.forEach(function(it){
+      var day=it.day, idx=it.idx, s=it.sess;
+      var prCount=_sessionPRCount(day, it.ts, s);
+      var exEntries=(s.entries||[]).filter(function(e){ return !e.ex.endsWith('-rpe')&&!e.ex.endsWith('-pain'); });
+      var exCount=exEntries.filter(function(e){ return e.note && e.note.indexOf('Set ')===0; }).length;
+      var totalEx=counts[day]||0;
+      var mood=s.checkin?'<span class="sess-mood" title="'+s.checkin+'">'+checkinEmoji[s.checkin]+'</span>':'';
+      var dur=s.duration?'<span class="sess-meta-chip">⏱ '+s.duration+'m</span>':'';
+      var exFrac=totalEx?'<span class="sess-meta-chip">'+exCount+'/'+totalEx+' lifts</span>':'<span class="sess-meta-chip">'+exCount+' lifts</span>';
+      var pr=prCount>0?'<span class="sess-meta-chip sess-pr">🏆 '+prCount+' PR'+(prCount>1?'s':'')+'</span>':'';
+      var dpill='<span class="sess-day-pill sess-day-'+day+'">'+_DAY_LBL[day]+'</span>';
+      var rowList=exEntries.length
+        ?exEntries.map(function(e){
+          var sets=(e.note||'').split('|').map(function(x){return x.trim();}).filter(Boolean);
+          if(!sets.length) return '<div class="sess-lift"><span class="sess-lift-name">'+_esc(e.ex)+'</span><span class="sess-lift-sets">'+_esc(e.note||'')+'</span></div>';
+          var setHtml=sets.map(function(st){ return '<span class="sess-lift-set">'+_esc(st)+'</span>'; }).join('');
+          return '<div class="sess-lift"><span class="sess-lift-name">'+_esc(e.ex)+'</span><div class="sess-lift-sets">'+setHtml+'</div></div>';
+        }).join('')
+        :'<div class="sess-lift sess-lift-empty">No notes recorded</div>';
+      var notes=s.notes?'<div class="sess-notes">📝 '+_esc(s.notes)+'</div>':'';
+      var dateBlk='<span class="ps-date" id="pdate-'+day+'-'+idx+'" role="button" tabindex="0" title="Tap to edit date" onclick="editSessionDate(\''+day+'\','+idx+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();editSessionDate(\''+day+'\','+idx+')}">'+_esc(s.date||'')+' <span class="ps-cv" aria-hidden="true">▾</span></span>';
+      html+='<div class="sess-card" data-day="'+day+'" data-idx="'+idx+'">'
+        +'<div class="sess-card-head">'
+        +'<div class="sess-card-head-l">'+dpill+mood+'</div>'
+        +'<div class="sess-card-head-r" style="position:relative">'
+        +'<button class="sess-ovf-btn" data-d="'+day+'" data-i="'+idx+'" aria-label="Session actions" onclick="sessOverflow(\''+day+'\','+idx+',event)">⋯</button>'
+        +'</div></div>'
+        +'<div class="sess-card-meta">'+dateBlk+'<div class="sess-card-chips">'+dur+exFrac+pr+'</div></div>'
+        +'<div class="sess-card-body">'+rowList+notes+'</div>'
+        +'</div>';
+    });
+  });
+  feed.innerHTML=html;
 }
 function showToast(msg){
   var t=document.getElementById('toast');
@@ -3077,6 +4088,8 @@ renderDaySummaries();
 // Order is now governed by plan_v2 via getEffectivePlan()/renderDayItems().
 // Legacy exercise_order no longer drives the DOM (kept only for old backups).
 setTimeout(checkMilestones, 500);
+// Step 3: apply a11y attrs once the cards + injected fields exist.
+setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} }, 0);
 // After a builder save+reload, return to the Manage tab (not Day 1).
 (function returnToManageAfterPlan(){
   try{ if(sessionStorage.getItem('gym_after_plan')!=='manage') return;
@@ -3085,11 +4098,7 @@ setTimeout(checkMilestones, 500);
   setTimeout(function(){
     var pb=document.querySelector('.day-btn.progress-tab');
     if(pb){ sw('prog',pb); }
-    var mb=null;
-    document.querySelectorAll('.prog-tab-btn').forEach(function(b){
-      if((b.getAttribute('onclick')||'').indexOf("'manage'")!==-1) mb=b;
-    });
-    if(mb) switchProgTab('manage',mb);
+    switchProgTab('manage', null);
   },120);
 })();
 (function restoreInProgressDraft(){
@@ -3580,6 +4589,69 @@ function statCard(label,val,sub){
   return '<div class="stat-card"><div class="stat-card-label">'+label+'</div><div class="stat-card-val">'+val+'</div>'+(sub?'<div class="stat-card-sub">'+sub+'</div>':'')+'</div>';
 }
 
+// Step 9 — Trend delta pill helper.
+// opts: { lowerIsBetter:false, unit:'', threshold:0.5 (% noise floor),
+//         absoluteFrom:false (show "from N" instead of "%"),
+//         variant:'pb' (Patch 3 — gold "personal best" pill; renders
+//                       "PB <current>d" regardless of previous, opt-in only) }
+function deltaPill(current, previous, opts){
+  opts=opts||{};
+  // Patch 3 Step 1: PB gold-pill variant. Opt-in via opts.variant; default
+  // arrow rendering is unchanged so the existing 4 call sites stay byte-identical.
+  if(opts.variant==='pb'){
+    if(current==null) return '';
+    return '<span class="delta-pill delta-pb">PB '+current+'d</span>';
+  }
+  if(current==null || previous==null) return '';
+  var diff=current-previous;
+  var pct=(previous!==0)?(diff/Math.abs(previous))*100:null;
+  var threshold=(opts.threshold!=null)?opts.threshold:0.5;
+  if(pct!=null && Math.abs(pct)<threshold && Math.abs(diff)<threshold){
+    return '<span class="delta-pill delta-flat">= no change</span>';
+  }
+  var lowerIsBetter=!!opts.lowerIsBetter;
+  var goodDir=(diff>0)?(!lowerIsBetter):lowerIsBetter;
+  var cls=goodDir?'delta-up':'delta-down';
+  var arrow=(diff>0)?'▲':'▼';
+  var txt;
+  if(opts.absoluteFrom){
+    txt=arrow+' from '+previous;
+  } else if(opts.unit && pct==null){
+    txt=arrow+' '+(diff>0?'+':'')+Math.round(diff)+' '+opts.unit;
+  } else if(pct!=null){
+    txt=arrow+' '+(diff>0?'+':'')+Math.round(pct)+'%';
+  } else {
+    txt=arrow+' '+(diff>0?'+':'')+Math.round(diff);
+  }
+  return '<span class="delta-pill '+cls+'">'+txt+'</span>';
+}
+function _streakPill(current, longest){
+  if(!current || current<=0 || !longest) return '';
+  // Patch 3 Step 1: PB pill now routed through deltaPill's opts.variant:'pb' path
+  // so all "pill" surfaces share one helper. Visual is unchanged.
+  if(current>=longest) return deltaPill(current, longest, {variant:'pb'});
+  if(current>=longest*0.5) return '<span class="delta-pill delta-flat">vs PB '+longest+'d</span>';
+  return '';
+}
+function _weeklyVolumeNow(){
+  var now=Date.now(), now7=now-7*86400*1000, now14=now-14*86400*1000;
+  var thisW=0, prevW=0;
+  ['a','b','c','d','e'].forEach(function(d){
+    getSaved(d).forEach(function(s){
+      var ts=sessTs(s); if(!ts) return;
+      var vol=0;
+      (s.entries||[]).forEach(function(e){
+        if(e.note && e.note.indexOf('Set ')===0){
+          parseSetWeights(e.note).forEach(function(w){ vol+=w; });
+        }
+      });
+      if(ts>=now7) thisW+=vol;
+      else if(ts>=now14) prevW+=vol;
+    });
+  });
+  return {curr:Math.round(thisW), prev:Math.round(prevW)};
+}
+
 function statBox(label,value){
   return '<div class="stat-card"><div class="stat-card-label">'+label+'</div><div class="stat-card-val">'+value+'</div></div>';
 }
@@ -3590,23 +4662,16 @@ function renderStats(){
   if(!el) return;
   if(!s){ el.innerHTML='<p style="color:#888;font-size:14px;text-align:center;padding:16px">No sessions yet — complete a workout to see your stats</p>'; return; }
   var now=Date.now(),MS_DAY=1000*60*60*24;
-  var monthTrend=s.thisMonth>s.lastMonth?'<span style="color:#0A6640">▲ up from '+s.lastMonth+'</span>':
-    s.thisMonth<s.lastMonth?'<span style="color:#C0392B">▼ down from '+s.lastMonth+'</span>':'= same as last';
-  var html='<div class="stats-section"><div class="stats-section-title">Overview</div><div class="stat-grid">'
-    +statCard('Total Sessions',''+s.total,'all time')
-    +statCard('Last Workout',s.daysSinceLast===0?'Today':s.daysSinceLast===1?'Yesterday':s.daysSinceLast+' days ago','')
-    +statCard('This Month',''+s.thisMonth,monthTrend)
-    +statCard('Avg Between',s.avgDaysBetween!==null?s.avgDaysBetween+' days':'—','between sessions')
-    +'</div></div>';
-  html+='<div class="stats-section"><div class="stats-section-title">Streaks & Effort</div><div class="stat-grid">'
-    +statCard('Current Streak',s.streak+(s.streak===1?' day':' days'),'')
-    +statCard('Longest Ever',s.longestStreak+(s.longestStreak===1?' day':' days'),'')
-    +statCard('Avg Exercises',''+s.avgExChecked,'per session')
-    +statCard('Most Done Day',s.favDay,''+s.favCount+' sessions')
-    +'</div></div>';
+  // Step 9: standardised delta pill replaces the ad-hoc inline ▲/▼ span.
+  var monthTrend=deltaPill(s.thisMonth, s.lastMonth, {threshold:0, absoluteFrom:true});
+
+  // ── Step 4: Now / Trends / Awards zones ───────────────────────────────
+
+  // NOW — what's actionable today.
+  var html='<div class="zone-section">'
+    +'<div class="stats-section-title stats-zone-title">Now</div>';
+  html+=renderDeloadCard();
   html+=renderWeeklyConsistency();
-  html+=renderActivityHeatmap();
-  html+=renderRecoverySection();
   html+='<div class="stats-section"><div class="stats-section-title">Days Since Last Done</div><div class="day-since-grid">';
   ['a','b','c','d','e'].forEach(function(d){
     var ts=s.dayLastTs[d],ago=ts?Math.floor((now-ts)/MS_DAY):null;
@@ -3615,25 +4680,79 @@ function renderStats(){
     html+='<div class="day-since-card"><span class="day-since-name">'+s.dayNames[d]+'</span><span class="day-since-val" style="color:'+col+'">'+agoStr+'</span></div>';
   });
   html+='</div></div>';
-  // Volume chart
-  html+='<div class="stats-section"><div class="stats-section-title">Weekly Volume (lbs moved)</div>'
+  // Step 9: current-streak pill (PB or vs-PB) replaces the static "consecutive" sub-text when applicable.
+  var streakSub=_streakPill(s.streak, s.longestStreak)||'consecutive';
+  html+='<div class="stats-section"><div class="stats-section-title">Current Streak</div><div class="stat-grid">'
+    +statCard('Current',s.streak+(s.streak===1?' day':' days'),streakSub)
+    +statCard('Last Workout',s.daysSinceLast===0?'Today':s.daysSinceLast===1?'Yesterday':s.daysSinceLast+' days ago','')
+    +'</div></div>';
+  html+='</div>'; // /zone-section Now
+
+  // TRENDS — how the last few weeks went.
+  html+='<div class="zone-section">'
+    +'<div class="stats-section-title stats-zone-title">Trends</div>';
+  html+=renderActivityHeatmap();
+  // Step 9: weekly volume delta pill (this 7d vs prev 7d).
+  var _wv=_weeklyVolumeNow();
+  var _wvPill=(_wv.curr>0||_wv.prev>0)?deltaPill(_wv.curr, _wv.prev, {threshold:0.5}):'';
+  html+='<div class="stats-section"><div class="stats-section-title">Weekly Volume (lbs moved) '+_wvPill+'</div>'
     +'<div class="vol-chart-wrap"><div class="vol-chart-inner"><canvas id="vol-chart-canvas"></canvas></div></div>'
     +'</div>';
+  try{
+    var _loads=computeWeeklyMuscleLoad();
+    var _hasLoad=_loads && Object.keys(_loads).some(function(k){ return _loads[k] && _loads[k]!=='none'; });
+    if(_hasLoad){
+      html+='<div class="stats-section"><div class="stats-section-title">Weekly Muscle Load</div>'
+        +'<div class="muscle-map-wrap" style="border-top:none;padding:0">'
+        +'<svg class="muscle-map-svg" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg">'
+        +buildMuscleHeatMapSVG(_loads)+'</svg></div>'
+        +'<div style="font-size:11px;color:#888780;line-height:1.5;margin-top:4px">'
+        +'Your most recent training week’s volume per muscle vs your own prior weeks. '
+        +'Amber/red = heavy load — watch fatigue.</div>'
+        +'</div>';
+    }
+  }catch(e){}
+  html+='<div class="stats-section"><div class="stats-section-title">Overview</div><div class="stat-grid">'
+    +statCard('Total Sessions',''+s.total,'all time')
+    +statCard('This Month',''+s.thisMonth,monthTrend)
+    +statCard('Avg Between',s.avgDaysBetween!==null?s.avgDaysBetween+' days':'—','between sessions')
+    +statCard('Avg Exercises',''+s.avgExChecked,'per session')
+    +'</div></div>';
+  html+=renderRecoverySection();
+  // Body measurements section gets appended into the Trends zone after DOM update (see below).
+  html+='<div id="trends-zone-meas-anchor"></div>';
+  html+='</div>'; // /zone-section Trends
+
+  // AWARDS — recognition + tools.
+  html+='<div class="zone-section">'
+    +'<div class="stats-section-title stats-zone-title">Awards</div>';
+  html+=renderMilestones();
+  html+='<div class="stats-section"><div class="stats-section-title">Career Highs</div><div class="stat-grid">'
+    +statCard('Longest Streak',s.longestStreak+(s.longestStreak===1?' day':' days'),'')
+    +statCard('Most Done Day',s.favDay,''+s.favCount+' sessions')
+    +'</div></div>';
   if(s.topSkipped.length){
-    html+='<div class="stats-section"><div class="stats-section-title">Most Skipped Exercises</div><div class="skip-list">';
+    html+='<div class="stats-section"><div class="stats-section-title">Most Skipped — review these</div><div class="skip-list">';
     s.topSkipped.forEach(function(item){
       html+='<div class="skip-row"><span class="skip-row-name">'+item.ex+'</span><span class="skip-row-pct">'+item.pct+'% skipped</span></div>';
     });
     html+='</div></div>';
   }
-  // Tools: CSV export + plate calculator
   html+='<div class="stats-section" style="display:flex;gap:8px;">'
     +'<button onclick="exportCSV()" style="flex:1;padding:11px;background:#E1F5EE;border:1.5px solid #0F6E56;border-radius:10px;color:#085041;font-size:13px;font-weight:600;cursor:pointer;">📥 Export CSV</button>'
     +'<button onclick="openPlateCalc()" style="flex:1;padding:11px;background:#EEEDFE;border:1.5px solid #7F77DD;border-radius:10px;color:#3C3489;font-size:13px;font-weight:600;cursor:pointer;">🏋 Plate Calc</button>'
     +'</div>';
-  html+=renderMilestones();
+  html+='</div>'; // /zone-section Awards
+
   el.innerHTML=html;
-  // Draw volume chart after DOM update
+
+  // Move Body Measurements section (DOM-level sibling of #prog-stats) into the Trends zone.
+  try{
+    var anchor=document.getElementById('trends-zone-meas-anchor');
+    var meas=document.getElementById('meas-wrap-host');
+    if(anchor && meas) anchor.appendChild(meas);
+  }catch(e){}
+
   setTimeout(drawVolumeChart,50);
 }
 
@@ -3805,6 +4924,9 @@ function renderActivityHeatmap(){
 
 // ── Recovery / progression overview ──────────────────────────────────
 function renderRecoverySection(){
+  // Step 3: the deload-suggested banner was promoted to the "Now" zone at the
+  // top of Trends — see renderDeloadCard(). This section keeps only the
+  // per-exercise progression rows.
   var targets=getExerciseTargets();
   var rows=[];
   Object.keys(targets).forEach(function(k){
@@ -3813,42 +4935,67 @@ function renderRecoverySection(){
   });
   if(!rows.length) return '';
   rows.sort(function(a,b){ return a.name.localeCompare(b.name); });
-  var adv=getDeloadAdvice();
   var html='<div class="stats-section"><div class="stats-section-title">Recovery & Progression</div>';
-  if(adv){
-    var dmsg = adv.count>=3
-      ? '🧘 <b>Deload suggested</b> — '+adv.count+' exercises stalling at high effort. Take a lighter week (≈60% weight or fewer sets), then push again.'
-      : '🧘 <b>Deload suggested</b> — '+adv.sess14+' hard sessions in 2 weeks with no PRs (avg RPE '+adv.avgRpe14+'). A lighter week could unlock progress.';
-    html+='<div style="background:#FFF5F5;border:1px solid #C53030;color:#C53030;border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.5;margin-bottom:8px;">'+dmsg+'</div>';
-  }
   html+='<div style="display:flex;flex-direction:column;gap:5px;">';
   rows.forEach(function(r){
-    html+='<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;background:#F5F5F2;border-radius:7px;padding:7px 10px;font-size:12px;">'
-      +'<span style="font-weight:600;color:#3C3489;flex-shrink:0;">'+r.name+'</span>'
-      +'<span style="color:#5F5E5A;text-align:right;">'+r.text+'</span></div>';
+    html+='<div class="lift-stat-row">'
+      +'<span class="k">'+r.name+'</span>'
+      +'<span class="v">'+r.text+'</span></div>';
   });
   html+='</div></div>';
   return html;
 }
 
+// Step 3 — deload "Now" zone card + suppression helpers.
+function isDeloadSuppressed(){
+  try{
+    var snooze=parseInt(localStorage.getItem('deload_snooze_until')||'0',10);
+    if(snooze && Date.now()<snooze) return true;
+    var planned=parseInt(localStorage.getItem('deload_planned')||'0',10);
+    // Once user logs the deload as planned, suppress the card for 14 days (a typical deload + bounce-back window).
+    if(planned && Date.now()-planned < 14*86400*1000) return true;
+  }catch(e){}
+  return false;
+}
+function renderDeloadCard(){
+  if(isDeloadSuppressed()) return '';
+  var adv=getDeloadAdvice();
+  if(!adv) return '';
+  var dmsg = adv.count>=3
+    ? '<b>Deload suggested</b> — '+adv.count+' exercises stalling at high effort. Take a lighter week (≈60% weight or fewer sets), then push again.'
+    : '<b>Deload suggested</b> — '+adv.sess14+' hard sessions in 2 weeks with no PRs (avg RPE '+adv.avgRpe14+'). A lighter week could unlock progress.';
+  return '<div class="deload-card">'
+    +'<div class="deload-card-msg">🧘 '+dmsg+'</div>'
+    +'<div class="deload-card-actions">'
+    +'<button class="deload-plan-btn" onclick="planDeload()">Plan deload</button>'
+    +'<button class="deload-snooze-btn" onclick="snoozeDeload()">Snooze 3d</button>'
+    +'</div></div>';
+}
+function planDeload(){
+  try{ localStorage.setItem('deload_planned', String(Date.now())); }catch(e){}
+  showToast('Logged — push hard again after a lighter week.');
+  try{ renderStats(); }catch(e){}
+}
+function snoozeDeload(){
+  try{ localStorage.setItem('deload_snooze_until', String(Date.now()+3*86400*1000)); }catch(e){}
+  try{ renderStats(); }catch(e){}
+}
+
 // ── Weekly volume chart ──────────────────────────────────────────────
+// Step 8 — Weekly volume now uses the unified line+gradient chart instead of bars.
 function drawVolumeChart(){
   var canvas=document.getElementById('vol-chart-canvas');
   if(!canvas) return;
-  // Gather all sessions, compute weekly total lbs
-  var weekMap={};
-  var weekOrder=[];
+  var weekMap={}, weekOrder=[];
   ['a','b','c','d','e'].forEach(function(d){
     getSaved(d).forEach(function(session){
-      var ts=sessTs(session);
-      if(!ts) return;
-      var dt=new Date(ts);
-      var day=dt.getDay();
+      var ts=sessTs(session); if(!ts) return;
+      var dt=new Date(ts); var day=dt.getDay();
       var mon=new Date(dt); mon.setDate(dt.getDate()-(day===0?6:day-1)); mon.setHours(0,0,0,0);
       var wk=mon.getFullYear()+'-'+String(mon.getMonth()+1).padStart(2,'0')+'-'+String(mon.getDate()).padStart(2,'0');
       if(!weekMap[wk]){ weekMap[wk]=0; weekOrder.push(wk); }
-      session.entries.forEach(function(e){
-        if(e.note&&e.note.indexOf('Set ')===0){
+      (session.entries||[]).forEach(function(e){
+        if(e.note && e.note.indexOf('Set ')===0){
           parseSetWeights(e.note).forEach(function(w){ weekMap[wk]+=w; });
         }
       });
@@ -3857,55 +5004,9 @@ function drawVolumeChart(){
   weekOrder=weekOrder.filter(function(w,i,a){return a.indexOf(w)===i;}).sort();
   var points=weekOrder.slice(-12).map(function(wk){
     var d=new Date(wk+'T12:00:00');
-    var label=(d.getMonth()+1)+'/'+d.getDate();
-    return {label:label,val:Math.round(weekMap[wk])};
+    return {label:(d.getMonth()+1)+'/'+d.getDate(), val:Math.round(weekMap[wk])};
   });
-  if(!points.length){ canvas.getContext('2d').fillStyle='#C8C6BD'; canvas.getContext('2d').font='12px system-ui'; canvas.getContext('2d').fillText('No data yet',10,40); return; }
-
-  var dpr=window.devicePixelRatio||1;
-  var w=canvas.parentNode.offsetWidth||320;
-  var chartH=160;
-  canvas.width=w*dpr; canvas.height=chartH*dpr;
-  canvas.style.width=w+'px'; canvas.style.height=chartH+'px';
-  var ctx=canvas.getContext('2d');
-  ctx.scale(dpr,dpr);
-
-  var pad={t:20,r:10,b:36,l:50};
-  var cw=w-pad.l-pad.r,ch=chartH-pad.t-pad.b;
-  var yMax=Math.ceil(Math.max.apply(null,points.map(function(p){return p.val;}))*1.15)||100;
-  var yMin=0;
-  var barW=Math.min(28,cw/points.length-4);
-
-  // Grid
-  ctx.strokeStyle='#F1EFE8'; ctx.lineWidth=1;
-  for(var t=0;t<=4;t++){
-    var yp=pad.t+ch*(1-t/4);
-    ctx.beginPath(); ctx.moveTo(pad.l,yp); ctx.lineTo(pad.l+cw,yp); ctx.stroke();
-    ctx.fillStyle='#888780'; ctx.font='10px system-ui'; ctx.textAlign='right';
-    ctx.fillText(Math.round(yMax*t/4),pad.l-4,yp+3);
-  }
-
-  // Bars
-  points.forEach(function(p,i){
-    var bx=pad.l+i*(cw/points.length)+(cw/points.length-barW)/2;
-    var bh=ch*(p.val/yMax);
-    var by=pad.t+ch-bh;
-    var grad=ctx.createLinearGradient(bx,by,bx,pad.t+ch);
-    grad.addColorStop(0,'#7F77DD'); grad.addColorStop(1,'rgba(127,119,221,0.4)');
-    ctx.fillStyle=grad;
-    ctx.beginPath();
-    ctx.roundRect?ctx.roundRect(bx,by,barW,bh,3):ctx.rect(bx,by,barW,bh);
-    ctx.fill();
-    // Value on top
-    if(p.val>0){
-      ctx.fillStyle='#3C3489'; ctx.font='bold 9px system-ui'; ctx.textAlign='center';
-      var kStr=p.val>=1000?Math.round(p.val/100)/10+'k':p.val;
-      ctx.fillText(kStr,bx+barW/2,by-3);
-    }
-    // Date below
-    ctx.fillStyle='#888780'; ctx.font='9px system-ui'; ctx.textAlign='center';
-    ctx.fillText(p.label,bx+barW/2,pad.t+ch+14);
-  });
+  drawChartV2(canvas, points, {unit:'lbs', height:160});
 }
 
 // ── CSV export ────────────────────────────────────────────────────────
@@ -4098,7 +5199,10 @@ function deleteGenericMeas(type, idx){
 
 function renderGenericMeas(type){
   var suffixMap={weight:'',waist:'-waist',bodyfat:'-bodyfat'};
-  var sfx=suffixMap[type]||('-'+type);
+  // Patch 3 Step 1 (convert-as-you-touch): the `||` short-circuit coerced
+  // suffixMap.weight='' into the '-weight' fallback, so weight never found its
+  // #meas-history element and silently no-op'd. Use `in` to honour empty-string.
+  var sfx=(type in suffixMap)?suffixMap[type]:('-'+type);
   var histEl=document.getElementById('meas-history'+sfx);
   var summEl=document.getElementById('meas-summary'+sfx);
   var chartWrap=document.getElementById('meas-chart-wrap'+sfx);
@@ -4111,13 +5215,12 @@ function renderGenericMeas(type){
   // Summary chips
   if(data.length>=2){
     var first=data[0],last=data[data.length-1];
-    var change=Math.round((last.value-first.value)*10)/10;
-    var sign=change>0?'+':'';
-    // For waist/bodyfat, down is good (green); for weight same logic
-    var col=change<0?'#0A6640':change>0?'#C0392B':'#888780';
     var weeks=Math.round((new Date(last.date)-new Date(first.date))/(1000*60*60*24*7)*10)/10;
+    // Patch 3 Step 1: standardised delta pill replaces the inline coloured text.
+    // For weight/waist/bodyfat, lower is the "good" direction (John's profile per spec).
+    var pill=deltaPill(last.value, first.value, {lowerIsBetter:true, unit:last.unit, threshold:0});
     summEl.innerHTML=measChip('Current',last.value+' '+last.unit)
-      +measChip('Change','<span style="color:'+col+'">'+sign+change+' '+last.unit+'</span>')
+      +measChip('Change',pill)
       +measChip('Over',weeks+' wks');
   } else if(data.length===1){
     summEl.innerHTML=measChip('Current',data[0].value+' '+data[0].unit);
@@ -4153,73 +5256,33 @@ function measChip(label,val){
 
 function drawMeasChart(data){ drawMeasChartGeneric(data, document.getElementById('meas-chart'), document.getElementById('meas-chart-wrap')); }
 
+// Step 8 — Measurement charts now use the unified renderer for visual parity.
 function drawMeasChartGeneric(data, canvas, wrap){
   if(!canvas||!wrap) return;
   if(!data.length){ wrap.style.display='none'; return; }
   wrap.style.display='block';
-  var dpr=window.devicePixelRatio||1;
-  var w=canvas.parentNode.offsetWidth||320;
-  var chartH=180;
-  canvas.width=w*dpr; canvas.height=chartH*dpr;
-  canvas.style.width=w+'px'; canvas.style.height=chartH+'px';
-  var ctx=canvas.getContext('2d');
-  ctx.scale(dpr,dpr);
-  var points=data.map(function(m,i){return {x:i,y:m.value,date:m.date,unit:m.unit};});
-  var pad={t:20,r:16,b:44,l:50};
-  var cw=w-pad.l-pad.r,ch=chartH-pad.t-pad.b;
-  var yVals=points.map(function(p){return p.y;});
-  var yMin=Math.floor(Math.min.apply(null,yVals)-2);
-  var yMax=Math.ceil(Math.max.apply(null,yVals)+2);
-  if(yMax===yMin){yMin-=5;yMax+=5;}
-  ctx.fillStyle='#FAFAFA'; ctx.fillRect(0,0,w,chartH);
-  var steps=4;
-  ctx.strokeStyle='#EEEDFE'; ctx.lineWidth=1;
-  for(var g=0;g<=steps;g++){
-    var gy=pad.t+ch*(1-g/steps);
-    ctx.beginPath(); ctx.moveTo(pad.l,gy); ctx.lineTo(pad.l+cw,gy); ctx.stroke();
-    ctx.fillStyle='#B4B2A9'; ctx.font='10px system-ui'; ctx.textAlign='right';
-    ctx.fillText(Math.round((yMin+(yMax-yMin)*g/steps)*10)/10,pad.l-6,gy+3);
-  }
-  if(points.length>1){
-    ctx.beginPath(); ctx.strokeStyle='#7F77DD'; ctx.lineWidth=2.5; ctx.lineJoin='round';
-    points.forEach(function(p,i){
-      var px=pad.l+i/(points.length-1)*cw;
-      var py=pad.t+ch*(1-(p.y-yMin)/(yMax-yMin));
-      i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
-    });
-    ctx.stroke();
-    ctx.beginPath(); ctx.fillStyle='rgba(127,119,221,0.08)';
-    points.forEach(function(p,i){
-      var px=pad.l+i/(points.length-1)*cw;
-      var py=pad.t+ch*(1-(p.y-yMin)/(yMax-yMin));
-      i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
-    });
-    ctx.lineTo(pad.l+cw,pad.t+ch); ctx.lineTo(pad.l,pad.t+ch); ctx.closePath(); ctx.fill();
-  }
-  points.forEach(function(p,i){
-    var px=pad.l+(points.length===1?cw/2:i/(points.length-1)*cw);
-    var py=pad.t+ch*(1-(p.y-yMin)/(yMax-yMin));
-    ctx.beginPath(); ctx.arc(px,py,4,0,Math.PI*2);
-    ctx.fillStyle='#7F77DD'; ctx.fill();
-    ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
-    var d=new Date(p.date+'T12:00:00');
-    var label=(d.getMonth()+1)+'/'+d.getDate();
-    ctx.fillStyle='#B4B2A9'; ctx.font='9px system-ui'; ctx.textAlign='center';
-    ctx.fillText(label,px,chartH-pad.b+14);
+  var pts=data.map(function(m){
+    var d=new Date(m.date+'T12:00:00');
+    return {label:(d.getMonth()+1)+'/'+d.getDate(), val:m.value};
   });
+  var unit=(data[0]&&data[0].unit)||'';
+  drawChartV2(canvas, pts, {unit:unit, height:180});
 }
 
 // ── Dark mode ──────────────────────────────────────────────────────────────────
 function toggleDarkMode(){
   var isDark=document.body.classList.toggle('dark');
   localStorage.setItem('darkMode',isDark?'1':'0');
-  document.getElementById('dark-toggle').textContent=isDark?'☀️':'🌙';
+  document.getElementById('dark-toggle').innerHTML='<span aria-hidden="true">'+(isDark?'☀️':'🌙')+'</span>';
+  // Muscle-map / heat SVGs bake the palette in at render time — repaint them.
+  try{ if(typeof renderProgress==='function') renderProgress(); }catch(e){}
+  try{ if(typeof renderStats==='function') renderStats(); }catch(e){}
 }
 (function initDarkMode(){
   if(localStorage.getItem('darkMode')==='1'){
     document.body.classList.add('dark');
     var btn=document.getElementById('dark-toggle');
-    if(btn) btn.textContent='☀️';
+    if(btn) btn.innerHTML='<span aria-hidden="true">☀️</span>';
   }
 })();
 
@@ -4363,6 +5426,9 @@ function showPRToast(prs){
 </script>
 
 <!-- Rest Timer Bar -->
+<div class="swipe-hint l" id="swh-l" aria-hidden="true"></div>
+<div class="swipe-hint r" id="swh-r" aria-hidden="true"></div>
+<div class="swipe-tip" id="swipe-tip" role="status">Tip: swipe ← → to change day</div>
 <div class="rest-timer-bar" id="rest-timer-bar">
   <div style="display:flex;align-items:center;gap:10px">
     <span>⏱ <span id="rest-timer-count">90</span>s</span>
@@ -4382,21 +5448,21 @@ function showPRToast(prs){
     <div class="modal-title">🏋 Plate Calculator</div>
     <div class="modal-sub">Plates needed per side of the bar.</div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
-      <input id="pc-target" type="number" inputmode="decimal" placeholder="Target weight" style="flex:1;padding:10px;border:1.5px solid #C4C0E8;border-radius:8px;font-size:14px;background:#FAFAF8;color:#2C2C2A;outline:none;"/>
+      <input id="pc-target" type="number" inputmode="decimal" placeholder="Target weight" style="flex:1;padding:10px;border-radius:8px;font-size:14px;outline:none;"/>
       <div class="unit-toggle" style="height:auto;">
         <button class="unit-btn active" type="button" onclick="pcUnit('lbs',this)">lbs</button>
         <button class="unit-btn" type="button" onclick="pcUnit('kg',this)">kg</button>
       </div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;font-size:12px;color:#888780;">Bar weight:
-      <input id="pc-bar" type="number" inputmode="decimal" value="45" style="width:74px;padding:8px;border:1.5px solid #C4C0E8;border-radius:8px;font-size:14px;background:#FAFAF8;color:#2C2C2A;outline:none;"/>
+      <input id="pc-bar" type="number" inputmode="decimal" value="45" style="width:74px;padding:8px;border-radius:8px;font-size:14px;outline:none;"/>
       <span id="pc-bar-unit">lbs</span>
     </div>
     <div class="modal-btn-row">
       <button class="modal-btn-primary" onclick="computePlates()">Calculate</button>
       <button class="modal-btn-secondary" onclick="closePlateCalc()">Close</button>
     </div>
-    <div id="pc-result" style="margin-top:12px;font-size:13px;line-height:1.6;color:#2C2C2A;"></div>
+    <div id="pc-result" style="margin-top:12px;font-size:13px;line-height:1.6;color:var(--text);"></div>
   </div>
 </div>
 
@@ -4409,78 +5475,107 @@ function showPRToast(prs){
       .bld-grp{margin-bottom:11px}
       .bld-lbl{font-size:12px;font-weight:700;color:#3C3489;display:block;margin-bottom:2px}
       .bld-hint{font-size:10.5px;color:#888780;font-weight:400;display:block;margin-bottom:5px;line-height:1.4}
-      .bld-in{width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #C4C0E8;border-radius:8px;font-size:13px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
+      .bld-in{width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border-soft);border-radius:8px;font-size:13px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
       body.dark .bld-lbl{color:#C7C4EE} body.dark .bld-hint{color:#9E9CC4}
       body.dark .bld-in{background:#1A1A2E;color:#E8E6F8;border-color:#3C3A5C}
+      .bld-sec{padding-top:12px;margin-top:12px;border-top:1px solid var(--border-soft)}
+      .bld-sec:first-of-type{border-top:0;margin-top:4px;padding-top:0}
+      .bld-sec-h{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+      .bld-more{margin-top:12px;border-top:1px solid var(--border-soft);padding-top:8px}
+      .bld-more>summary{cursor:pointer;list-style:none;font-size:12px;font-weight:700;color:var(--primary);padding:4px 0;display:flex;align-items:center;gap:6px}
+      .bld-more>summary::-webkit-details-marker{display:none}
+      .bld-more>summary::before{content:'▸';font-size:11px;transition:transform .15s}
+      .bld-more[open]>summary::before{transform:rotate(90deg)}
+      .bld-more-body{padding-top:8px}
     </style>
     <div>
-      <div class="bld-grp">
-        <label class="bld-lbl">Which day(s)</label>
-        <span class="bld-hint">Tap every day this exercise belongs to. On multiple days = one linked exercise (shared history); editing it updates all its days.</span>
-        <div id="b-days"></div>
-      </div>
-      <div class="bld-grp">
-        <label class="bld-lbl" for="b-type">Type</label>
-        <span class="bld-hint">Strength = logs weight/sets. Notes-only = checkbox + a notes box (stretches, core).</span>
-        <select id="b-type" class="bld-in">
-          <option value="strength">Strength</option><option value="notes">Notes-only</option>
-        </select>
-      </div>
-      <div class="bld-grp">
-        <label class="bld-lbl" for="b-name">Exercise name</label>
-        <span class="bld-hint">Shown as the card title — e.g. “Chest press machine”</span>
-        <input id="b-name" type="text" class="bld-in" placeholder="Chest press machine"/>
-      </div>
-      <div class="bld-grp">
-        <label class="bld-lbl" for="b-cat">Category</label>
-        <span class="bld-hint">The coloured tag on the card &amp; in Manage (also used in day summaries)</span>
-        <select id="b-cat" class="bld-in">
-          <option value="">— none —</option>
-          <option value="Warm-up">Warm-up</option>
-          <option value="Upper body">Upper body</option>
-          <option value="Lower body">Lower body</option>
-          <option value="Core">Core</option>
-          <option value="Cardio">Cardio</option>
-          <option value="Cool-down">Cool-down</option>
-        </select>
-      </div>
-      <div class="bld-grp">
-        <label class="bld-lbl">Muscles worked</label>
-        <span class="bld-hint">Drives the body figure on the Progress tab — the day's figure is the union of its exercises. Tap to toggle.</span>
-        <div id="b-muscles"></div>
-      </div>
-      <div class="bld-grp">
-        <label class="bld-lbl" for="b-sub">Sets × reps &amp; cues</label>
-        <span class="bld-hint">The grey line under the name — sets, reps, rest, form cues. e.g. “3 × 12 · start light · rest 60–90 sec”</span>
-        <input id="b-sub" type="text" class="bld-in" placeholder="3 × 12 · rest 60–90 sec"/>
-      </div>
-      <div class="bld-grp">
-        <label class="bld-lbl" for="b-loc">Location <span style="font-weight:400;color:#888780">(optional)</span></label>
-        <span class="bld-hint">Where to find it in the gym — e.g. “Selectorized machines · ground floor”</span>
-        <input id="b-loc" type="text" class="bld-in" placeholder="Selectorized machines · ground floor"/>
-      </div>
-      <div class="bld-grp">
-        <label class="bld-lbl" for="b-video">Demo video <span style="font-weight:400;color:#888780">(optional)</span></label>
-        <span class="bld-hint">Paste a video URL, or leave blank — a YouTube search link is created automatically from the name</span>
-        <input id="b-video" type="text" class="bld-in" style="font-size:12px" placeholder="Leave blank for auto YouTube search"/>
-      </div>
-      <div class="bld-grp" style="display:flex;gap:10px;">
-        <div style="width:78px;">
-          <label class="bld-lbl" for="b-sets">Sets</label>
-          <span class="bld-hint">Strength only</span>
-          <input id="b-sets" type="number" min="1" max="6" class="bld-in" placeholder="3"/>
+      <!-- 1 · Identity -->
+      <div class="bld-sec">
+        <div class="bld-sec-h">1 · Identity</div>
+        <div class="bld-grp">
+          <label class="bld-lbl" for="b-name">Exercise name</label>
+          <span class="bld-hint">Shown as the card title — e.g. “Chest press machine”</span>
+          <input id="b-name" type="text" class="bld-in" placeholder="Chest press machine"/>
         </div>
-        <div style="width:88px;">
-          <label class="bld-lbl" for="b-mins">Minutes</label>
-          <span class="bld-hint">Est. time, for day summary</span>
-          <input id="b-mins" type="number" min="0" max="120" class="bld-in" placeholder="5"/>
+        <div class="bld-grp">
+          <label class="bld-lbl" for="b-cat">Category</label>
+          <span class="bld-hint">The coloured tag on the card &amp; in Manage (also used in day summaries)</span>
+          <select id="b-cat" class="bld-in">
+            <option value="">— none —</option>
+            <option value="Warm-up">Warm-up</option>
+            <option value="Upper body">Upper body</option>
+            <option value="Lower body">Lower body</option>
+            <option value="Core">Core</option>
+            <option value="Cardio">Cardio</option>
+            <option value="Cool-down">Cool-down</option>
+          </select>
         </div>
-        <div style="flex:1;">
-          <label class="bld-lbl" for="b-badge">Badge <span style="font-weight:400;color:#888780">(optional)</span></label>
-          <span class="bld-hint">Small card tag — e.g. “knee-aware”</span>
-          <input id="b-badge" type="text" class="bld-in" placeholder="e.g. knee-aware"/>
+        <div class="bld-grp">
+          <label class="bld-lbl" for="b-type">Type</label>
+          <span class="bld-hint">Strength = logs weight/sets. Notes-only = checkbox + a notes box (stretches, core).</span>
+          <select id="b-type" class="bld-in">
+            <option value="strength">Strength</option><option value="notes">Notes-only</option>
+          </select>
         </div>
       </div>
+
+      <!-- 2 · Schedule -->
+      <div class="bld-sec">
+        <div class="bld-sec-h">2 · Schedule</div>
+        <div class="bld-grp">
+          <label class="bld-lbl">Which day(s)</label>
+          <span class="bld-hint">Tap every day this exercise belongs to. On multiple days = one linked exercise (shared history); editing it updates all its days.</span>
+          <div id="b-days"></div>
+        </div>
+        <div class="bld-grp" style="display:flex;gap:10px;">
+          <div style="width:88px;">
+            <label class="bld-lbl" for="b-sets">Sets</label>
+            <span class="bld-hint">Strength only</span>
+            <input id="b-sets" type="number" inputmode="decimal" min="1" max="6" class="bld-in" placeholder="3"/>
+          </div>
+          <div style="flex:1;">
+            <label class="bld-lbl" for="b-mins">Minutes</label>
+            <span class="bld-hint">Est. time — used in the day summary</span>
+            <input id="b-mins" type="number" inputmode="decimal" min="0" max="120" class="bld-in" placeholder="5"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 · Muscles worked -->
+      <div class="bld-sec">
+        <div class="bld-sec-h">3 · Muscles worked</div>
+        <div class="bld-grp" style="margin-bottom:0">
+          <span class="bld-hint">Drives the body figure on the Progress tab — the day's figure is the union of its exercises. Tap to toggle.</span>
+          <div id="b-muscles"></div>
+        </div>
+      </div>
+
+      <!-- More options (collapsed) -->
+      <details class="bld-more">
+        <summary>More options</summary>
+        <div class="bld-more-body">
+          <div class="bld-grp">
+            <label class="bld-lbl" for="b-sub">Sets × reps &amp; cues line</label>
+            <span class="bld-hint">The grey line under the name — sets, reps, rest, form cues. e.g. “3 × 12 · start light · rest 60–90 sec”</span>
+            <input id="b-sub" type="text" class="bld-in" placeholder="3 × 12 · rest 60–90 sec"/>
+          </div>
+          <div class="bld-grp">
+            <label class="bld-lbl" for="b-loc">Location <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+            <span class="bld-hint">Where to find it in the gym — e.g. “Selectorized machines · ground floor”</span>
+            <input id="b-loc" type="text" class="bld-in" placeholder="Selectorized machines · ground floor"/>
+          </div>
+          <div class="bld-grp">
+            <label class="bld-lbl" for="b-video">Demo video <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+            <span class="bld-hint">Paste a video URL, or leave blank — a YouTube search link is created automatically from the name</span>
+            <input id="b-video" type="text" class="bld-in" style="font-size:12px" placeholder="Leave blank for auto YouTube search"/>
+          </div>
+          <div class="bld-grp" style="margin-bottom:0">
+            <label class="bld-lbl" for="b-badge">Badge <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+            <span class="bld-hint">Small card tag — e.g. “knee-aware”</span>
+            <input id="b-badge" type="text" class="bld-in" placeholder="e.g. knee-aware"/>
+          </div>
+        </div>
+      </details>
     </div>
     <div class="modal-btn-row">
       <button class="modal-btn-primary" onclick="saveBuilder()">Save</button>
