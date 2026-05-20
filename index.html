@@ -188,6 +188,12 @@ body.dark #hdr-prog-btn.active{background:var(--primary);color:#fff;border-color
 .hdr-mi:last-child{border-bottom:0}
 .hdr-mi:hover{background:var(--primary-tint)}
 .hdr-mi svg{flex-shrink:0}
+/* v2.58 — Test Mode toggle: themed via classes so off-state inherits .hdr-mi
+   defaults (no leftover yellow chip) and on-state shows a red accent in both themes. */
+#test-toggle.test-on{background:#FFE5E5;color:#C53030}
+#test-toggle.test-on:hover{background:#FFD0D0;color:#C53030}
+body.dark #test-toggle.test-on{background:#3A1A1A;color:#FF8080}
+body.dark #test-toggle.test-on:hover{background:#4A1F1F;color:#FF8080}
 #hdr-menu[hidden]{display:none}
 /* Follow-up 4: AA contrast for the expanded card footer (both themes) */
 .v2-foot .last-time{color:var(--text)}
@@ -656,7 +662,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.57</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.58</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -965,11 +971,16 @@ body.dark #pc-result{color:#E8E6F8}
       <div class="modal-title">Back up your data</div>
       <div class="modal-sub" style="margin-bottom:0.75rem;">Your backup code is below. <b>Long press the box → Select All → Copy</b>, then paste into your Notes app and save it.</div>
       <textarea class="modal-textarea" id="export-text" readonly placeholder="Tap Generate to create your backup code"></textarea>
+      <!-- v2.58: post-generate actions split across two rows so 4 buttons don't squeeze at iPhone widths. -->
       <div class="modal-btn-row">
         <!-- Patch 4: one-tap Copy. Hidden until a code is generated; reset every time the modal opens. -->
         <button id="backup-copy-btn" class="modal-btn-primary" style="display:none;" aria-label="Copy backup code to clipboard" onclick="copyBackupCode()"><span aria-hidden="true">📋</span> Copy code</button>
+        <!-- v2.58: explicit Select All escape hatch for iPhones where the Copy button's programmatic select isn't sticky. -->
+        <button id="backup-select-btn" class="modal-btn-secondary" style="display:none;" aria-label="Select the whole backup code in the box" onclick="selectBackupCode()">Select All</button>
         <button id="backup-gen-btn" class="modal-btn-primary" onclick="generateExport()">Generate backup code</button>
-        <button class="modal-btn-secondary" onclick="closeModal()">Close</button>
+      </div>
+      <div class="modal-btn-row" style="margin-top:6px;">
+        <button class="modal-btn-secondary" style="flex:1;" onclick="closeModal()">Close</button>
       </div>
       <div id="backup-hint" style="display:none;margin-top:0.75rem;background:#E1F5EE;border-radius:8px;padding:10px 12px;font-size:12px;color:#085041;line-height:1.6;">
         ✅ Code generated!<br>
@@ -3279,9 +3290,11 @@ function showExportImport(){
   document.getElementById('restore-hint').style.display='none';
   // Patch 4: reset the one-tap Copy button to pristine hidden state, and
   // restore the Generate button's primary styling (after a previous generate
-  // it was demoted to secondary).
+  // it was demoted to secondary). v2.58: also reset the Select All button.
   var _cb=document.getElementById('backup-copy-btn');
   if(_cb){ _cb.style.display='none'; _cb.disabled=false; _cb.innerHTML='<span aria-hidden="true">📋</span> Copy code'; }
+  var _sb=document.getElementById('backup-select-btn');
+  if(_sb){ _sb.style.display='none'; }
   var _gb=document.getElementById('backup-gen-btn');
   if(_gb){ _gb.className='modal-btn-primary'; _gb.textContent='Generate backup code'; }
   showTab('backup');
@@ -3336,9 +3349,11 @@ function generateExport(){
   document.getElementById('backup-hint').style.display='block';
   // Patch 4: reveal the one-tap Copy button and demote Generate to secondary
   // so Copy reads as the dominant post-generation action. Also relabel Generate
-  // to "Regenerate" since a code already exists.
+  // to "Regenerate" since a code already exists. v2.58: also reveal Select All.
   var _cb=document.getElementById('backup-copy-btn');
   if(_cb){ _cb.style.display=''; _cb.disabled=false; _cb.innerHTML='<span aria-hidden="true">📋</span> Copy code'; }
+  var _sb=document.getElementById('backup-select-btn');
+  if(_sb){ _sb.style.display=''; }
   var _gb=document.getElementById('backup-gen-btn');
   if(_gb){ _gb.className='modal-btn-secondary'; _gb.textContent='Regenerate'; }
   try{ localStorage.setItem('gymlog_last_backup', JSON.stringify({ts:Date.now(), n:_totalSessions()})); }catch(e){}
@@ -3349,6 +3364,23 @@ function generateExport(){
 // first; falls back to execCommand('copy') for iOS PWA / older WebKit where
 // navigator.clipboard.writeText is gated. The textarea's readonly + manual
 // long-press → Select All → Copy fallback is left fully intact.
+// v2.58 — standalone Select All for the backup code. Programmatically focuses
+// + selects the whole textarea so the user can then tap iOS's native "Copy"
+// from the selection menu. This is the explicit escape hatch when the Copy
+// button's modern clipboard path doesn't visibly select on the device.
+function selectBackupCode(){
+  var ta=document.getElementById('export-text');
+  if(!ta || !ta.value){ showToast('Nothing to select yet'); return; }
+  try{
+    ta.focus();
+    ta.select();
+    ta.setSelectionRange(0, ta.value.length);
+    showToast('Selected — long-press the highlight to Copy');
+    try{ haptic('light'); }catch(e){}
+  } catch(e){
+    showToast('Select failed — long-press the box manually');
+  }
+}
 function copyBackupCode(){
   var ta=document.getElementById('export-text');
   if(!ta || !ta.value){ showToast('Nothing to copy yet'); return; }
@@ -4395,9 +4427,13 @@ function _testUpdateUI(){
   var ban=document.getElementById('test-banner');
   if(btn){
     btn.textContent = TEST_MODE ? '🧪 End test (discard)' : '🧪 Test mode';
-    btn.style.background = TEST_MODE ? '#FFE5E5' : '#FFF8E1';
-    btn.style.borderColor = TEST_MODE ? '#C53030' : '#E0A800';
-    btn.style.color = TEST_MODE ? '#C53030' : '#7A5A00';
+    // v2.58 — class-based theming. Off state reads as a normal menu item
+    // (inherits .hdr-mi tokens, themes for light/dark). On state gets the
+    // red-tinted variant that's distinct from background in both themes.
+    btn.classList.toggle('test-on', !!TEST_MODE);
+    // Clear leftover inline styles from prior versions (defensive — older
+    // sessions may have shipped with inline hex overrides on this element).
+    btn.style.background=''; btn.style.borderColor=''; btn.style.color='';
   }
   if(ban) ban.style.display = TEST_MODE ? 'block' : 'none';
 }
