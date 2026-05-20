@@ -676,7 +676,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.62</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.63</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -2095,6 +2095,10 @@ function confirmSave(){
     var ex=inp.getAttribute('data-ex');
     var set=inp.getAttribute('data-set');
     var val=inp.value.trim();
+    // v2.63: strip trailing unit suffix from val so we never produce
+    // "Set N: 90 lbs lbs" when the user typed the unit into the value field.
+    // The canonical unit is appended below from getUnitForInput().
+    val=val.replace(/\s*(lbs|kg)\s*$/i,'').trim();
     if(val){
       var unit=getUnitForInput(inp);
       // Check for actual reps
@@ -2201,7 +2205,9 @@ function migrateSessionsToStructured_v1(){
           // parsers don't capture it, but the writer does going forward).
           var parsed=[];
           e.note.split('|').forEach(function(s){
-            var m=s.trim().match(/Set\s*\d+:\s*([\d.]+)\s*(lbs|kg)?\s*(?:x\s*(\d+)\s*reps)?/i);
+            // v2.63: permissive front matches parser hardening so labeled
+            // weights like "Set 1: Rear: 90 lbs pec: 90 lbs" capture 90.
+            var m=s.trim().match(/Set\s*\d+:[\s\S]*?([\d.]+)\s*(lbs|kg)?\s*(?:x\s*(\d+)\s*reps)?/i);
             if(m){
               parsed.push({
                 w: parseFloat(m[1])||0,
@@ -2830,7 +2836,10 @@ function parseSetWeights(arg){
   sets.forEach(function(s){
     // Strip any "x##reps" suffix before parsing weight
     var cleaned=s.trim().replace(/\s*x\d+reps/,'');
-    var m=cleaned.match(/Set\s*\d+:\s*([\d.]+)/);
+    // v2.63: tolerate optional non-digit prefix between "Set N:" and the
+    // weight number — e.g. "Set 1: Rear: 90 lbs pec: 90 lbs" captures 90.
+    // Bodyweight notes like "Set 1: On step" still correctly fail (no digit).
+    var m=cleaned.match(/Set\s*\d+:[\s\S]*?([\d.]+)/);
     if(m) vals.push(parseFloat(m[1]));
   });
   return vals;
@@ -2847,7 +2856,9 @@ function parseSetWR(arg){
   var noteStr=(typeof arg==='string')?arg:((arg && arg.note)||'');
   var out=[];
   String(noteStr).split('|').forEach(function(s){
-    var m=s.trim().match(/Set\s*\d+:\s*([\d.]+)\s*(?:lbs|kg)?\s*(?:x\s*(\d+)\s*reps)?/i);
+    // v2.63: same permissive front as parseSetWeights — capture the first
+    // numeric weight after "Set N:", then optional unit + optional reps.
+    var m=s.trim().match(/Set\s*\d+:[\s\S]*?([\d.]+)\s*(?:lbs|kg)?\s*(?:x\s*(\d+)\s*reps)?/i);
     if(m) out.push({ w:parseFloat(m[1]), r:m[2]?parseInt(m[2],10):null });
   });
   return out;
@@ -3410,17 +3421,15 @@ function showExportImport(){
 function _patch5DiagStats(){
   var flag=null;
   try{ flag=localStorage.getItem('sessions_migrated_v1'); }catch(e){}
-  var totalSet=0, withSets=0, totalSess=0;
+  var totalSet=0, withSets=0, totalSess=0, doubledUnits=0;
   // v2.62: count an entry as "set-bearing" only if at least one of its
   // pipe-delimited segments actually matches the migration's `Set N: weight`
-  // pattern. The previous loose check (string starts with "Set ") over-counted
-  // free-text notes that happened to lead with the word "Set" (e.g.
-  // "Set up the rack…") or sets logged without a weight — the migration
-  // correctly skips those, so the diagnostic shouldn't expect them.
+  // pattern. v2.63: matches the parser's permissive front so labeled
+  // weights like "Set 1: Rear: 90 lbs pec: 90 lbs" count.
   function _anySetParsable(noteStr){
     var parts=String(noteStr||'').split('|');
     for(var i=0;i<parts.length;i++){
-      if(/Set\s*\d+:\s*[\d.]+/.test(parts[i].trim())) return true;
+      if(/Set\s*\d+:[\s\S]*?[\d.]+/.test(parts[i].trim())) return true;
     }
     return false;
   }
@@ -3431,6 +3440,11 @@ function _patch5DiagStats(){
       saved.forEach(function(sess){
         (sess.entries||[]).forEach(function(e){
           if(!e || typeof e.note!=='string') return;
+          // v2.63: doubled-unit detection (e.g. "90 lbs lbs"). Counted
+          // independent of set-bearing-ness — even a non-set entry could
+          // theoretically pick up a typo, though the writer always builds
+          // strings cleanly so it's mostly historical data.
+          if(/\d\s+(?:lbs|kg)\s+(?:lbs|kg)/i.test(e.note)) doubledUnits++;
           if(e.note.indexOf('Set ')!==0) return;        // quick reject
           if(!_anySetParsable(e.note)) return;          // strict scope match
           totalSet++;
@@ -3439,59 +3453,92 @@ function _patch5DiagStats(){
       });
     });
   }catch(e){}
-  return { flag:flag, withSets:withSets, totalSet:totalSet, totalSess:totalSess };
+  return { flag:flag, withSets:withSets, totalSet:totalSet, totalSess:totalSess, doubledUnits:doubledUnits };
 }
 function _renderPatch5Status(){
   var el=document.getElementById('patch5-status');
   if(!el) return;
   var s=_patch5DiagStats();
   if(!s.totalSet){
-    // No set-bearing entries yet — nothing to report.
-    el.innerHTML='<span class="patch5-icon">·</span> No lift sessions logged yet — migration runs when you log your first session.';
+    el.innerHTML='<div class="patch5-msg"><span class="patch5-icon">·</span> No lift sessions logged yet — migration runs when you log your first session.</div>';
     el.className='patch5-status patch5-neutral';
     return;
   }
-  var ok=(s.flag==='1') && (s.withSets===s.totalSet);
-  var partial=(s.flag==='1') && (s.withSets<s.totalSet) && (s.withSets>0);
+  var ok=(s.flag==='1') && (s.withSets===s.totalSet) && (s.doubledUnits===0);
   var stalled=(s.flag!=='1');
-  var icon, cls, msg, showRerun=false;
+  var partial=(s.flag==='1') && (s.withSets<s.totalSet) && (s.withSets>0);
+  var hasDoubles=s.doubledUnits>0;
+  var icon, cls, msgs=[];
   if(ok){
     icon='✓'; cls='patch5-ok';
-    msg='Structured sets on '+s.withSets+'/'+s.totalSet+' entries · migration flag set.';
-  } else if(partial){
-    icon='⚠'; cls='patch5-warn';
-    msg='Partial: '+s.withSets+'/'+s.totalSet+' entries migrated. Restored sessions read via fallback; this is normal after a stale-backup restore.';
-    showRerun=true;
+    msgs.push('Structured sets on '+s.withSets+'/'+s.totalSet+' entries · migration flag set.');
   } else if(stalled){
     icon='✗'; cls='patch5-bad';
-    msg='Migration flag not set. Reload the app to trigger ('+s.totalSet+' set-bearing entries waiting).';
-    showRerun=true;
+    msgs.push('Migration flag not set. Reload the app to trigger ('+s.totalSet+' set-bearing entries waiting).');
   } else {
-    icon='·'; cls='patch5-neutral';
-    msg=s.withSets+'/'+s.totalSet+' entries structured.';
+    icon='⚠'; cls='patch5-warn';
+    if(partial){
+      msgs.push('Partial: '+s.withSets+'/'+s.totalSet+' entries migrated. Restored sessions read via fallback; this is normal after a stale-backup restore.');
+    }
+    if(hasDoubles){
+      msgs.push(s.doubledUnits+' entr'+(s.doubledUnits===1?'y has':'ies have')+' duplicate units ("lbs lbs"). Cosmetic; weights still parse correctly.');
+    }
   }
-  // v2.61: optional Re-run button on partial/stalled states. Idempotent &
-  // safe — only adds .sets to entries that lack it; never mutates data
-  // that already migrated. Spec's "force re-migrate" path, scoped to the
-  // diagnostic so it's discoverable without polluting the main UI.
-  var rerunHTML=showRerun?'<button type="button" class="patch5-rerun-btn" onclick="reRunMigration()">Re-run migration</button>':'';
-  el.innerHTML='<div class="patch5-msg"><span class="patch5-icon">'+icon+'</span> '+msg+'</div>'+rerunHTML;
+  var showBtn = stalled || partial || hasDoubles;
+  // v2.63: button label reflects what it'll do. "Repair data" when cleanup
+  // work is queued; "Re-run migration" when only migration work is needed.
+  var btnLabel = hasDoubles ? 'Repair data' : 'Re-run migration';
+  var rerunHTML=showBtn?'<button type="button" class="patch5-rerun-btn" onclick="reRunMigration()">'+btnLabel+'</button>':'';
+  el.innerHTML='<div class="patch5-msg"><span class="patch5-icon">'+icon+'</span> '+msgs.join('<br>')+'</div>'+rerunHTML;
   el.className='patch5-status '+cls;
 }
-// v2.61 — clear the migration flag and re-run. The migration function
-// itself short-circuits on entries that already have .sets, so this is
-// safe to call repeatedly. Reports the delta (newly-migrated count) via
-// toast so the user sees concrete feedback.
+// v2.61 — clear the migration flag and re-run. v2.63 — also strip doubled
+// unit suffixes ("90 lbs lbs" → "90 lbs") from .note strings, invalidate
+// any cached .sets on touched entries so they rebuild from the cleaned
+// note, and push the cleaned state to the cloud bin. Idempotent + safe:
+// the migration function short-circuits on entries that already have
+// .sets, and the cleanup regex only matches the doubled-unit pattern.
 function reRunMigration(){
   var before=_patch5DiagStats();
+  var doubledFixed=0;
+  // ── Cleanup pass: strip doubled units in .note, invalidate .sets so
+  //    migration re-derives them from the cleaned text.
+  try{
+    ['a','b','c','d','e'].forEach(function(d){
+      var saved=getSaved(d);
+      var dirty=false;
+      saved.forEach(function(sess){
+        (sess.entries||[]).forEach(function(e){
+          if(!e || typeof e.note!=='string') return;
+          var n=e.note;
+          var fixed=n.replace(/(\d)\s+(lbs|kg)\s+(?:lbs|kg)/gi,'$1 $2');
+          if(fixed!==n){
+            var hits=(n.match(/\d\s+(?:lbs|kg)\s+(?:lbs|kg)/gi)||[]).length;
+            doubledFixed += hits;
+            e.note=fixed;
+            if(e.sets) delete e.sets;  // rebuild from cleaned note via migration below
+            dirty=true;
+          }
+        });
+      });
+      if(dirty){ localStorage.setItem('gymlog_'+d, JSON.stringify(saved)); }
+    });
+  }catch(e){}
+  // ── Re-run migration over the (possibly cleaned) data.
   try{ localStorage.removeItem('sessions_migrated_v1'); }catch(e){}
   try{ migrateSessionsToStructured_v1(); }catch(e){}
   var after=_patch5DiagStats();
-  var delta=after.withSets - before.withSets;
-  if(delta>0){
-    showToast('Migrated '+delta+' more entr'+(delta===1?'y':'ies')+' ✓');
+  var newMigrated=after.withSets - before.withSets;
+  // ── Report + push to cloud if we changed anything.
+  var parts=[];
+  if(doubledFixed>0) parts.push('cleaned '+doubledFixed+' duplicate unit'+(doubledFixed===1?'':'s'));
+  if(newMigrated>0) parts.push('migrated '+newMigrated+' more entr'+(newMigrated===1?'y':'ies'));
+  if(parts.length===0){
+    showToast('Data already clean — no changes ✓');
   } else {
-    showToast('No new entries to migrate — remaining notes don’t match "Set N: weight" pattern.');
+    showToast('Repaired: '+parts.join(', ')+' ✓');
+    // Persist the cleanup to the cloud bin so it survives reload / multi-device.
+    try{ syncToJbin(function(){}); }catch(e){}
   }
   try{ haptic('light'); }catch(e){}
   _renderPatch5Status();
