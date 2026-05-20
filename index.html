@@ -654,7 +654,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.53</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.54</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -964,15 +964,15 @@ body.dark #pc-result{color:#E8E6F8}
       <div class="modal-sub" style="margin-bottom:0.75rem;">Your backup code is below. <b>Long press the box → Select All → Copy</b>, then paste into your Notes app and save it.</div>
       <textarea class="modal-textarea" id="export-text" readonly placeholder="Tap Generate to create your backup code"></textarea>
       <div class="modal-btn-row">
-        <button class="modal-btn-primary" onclick="generateExport()">Generate backup code</button>
+        <!-- Patch 4: one-tap Copy. Hidden until a code is generated; reset every time the modal opens. -->
+        <button id="backup-copy-btn" class="modal-btn-primary" style="display:none;" aria-label="Copy backup code to clipboard" onclick="copyBackupCode()"><span aria-hidden="true">📋</span> Copy code</button>
+        <button id="backup-gen-btn" class="modal-btn-primary" onclick="generateExport()">Generate backup code</button>
         <button class="modal-btn-secondary" onclick="closeModal()">Close</button>
       </div>
       <div id="backup-hint" style="display:none;margin-top:0.75rem;background:#E1F5EE;border-radius:8px;padding:10px 12px;font-size:12px;color:#085041;line-height:1.6;">
         ✅ Code generated!<br>
-        1. Long press the code box above<br>
-        2. Tap <b>Select All</b><br>
-        3. Tap <b>Copy</b><br>
-        4. Open <b>Notes</b> app and paste &amp; save
+        Tap <b>Copy code</b> above, then paste into your <b>Notes</b> app and save.<br>
+        <span style="opacity:0.85;">(If Copy doesn't work on this device: long-press the box → Select All → Copy.)</span>
       </div>
     </div>
 
@@ -3275,6 +3275,13 @@ function showExportImport(){
   document.getElementById('import-text').value='';
   document.getElementById('backup-hint').style.display='none';
   document.getElementById('restore-hint').style.display='none';
+  // Patch 4: reset the one-tap Copy button to pristine hidden state, and
+  // restore the Generate button's primary styling (after a previous generate
+  // it was demoted to secondary).
+  var _cb=document.getElementById('backup-copy-btn');
+  if(_cb){ _cb.style.display='none'; _cb.disabled=false; _cb.innerHTML='<span aria-hidden="true">📋</span> Copy code'; }
+  var _gb=document.getElementById('backup-gen-btn');
+  if(_gb){ _gb.className='modal-btn-primary'; _gb.textContent='Generate backup code'; }
   showTab('backup');
   document.getElementById('modal-overlay').classList.add('show');
 }
@@ -3324,8 +3331,50 @@ function generateExport(){
   ta.focus();
   ta.setSelectionRange(0, ta.value.length);
   document.getElementById('backup-hint').style.display='block';
+  // Patch 4: reveal the one-tap Copy button and demote Generate to secondary
+  // so Copy reads as the dominant post-generation action. Also relabel Generate
+  // to "Regenerate" since a code already exists.
+  var _cb=document.getElementById('backup-copy-btn');
+  if(_cb){ _cb.style.display=''; _cb.disabled=false; _cb.innerHTML='<span aria-hidden="true">📋</span> Copy code'; }
+  var _gb=document.getElementById('backup-gen-btn');
+  if(_gb){ _gb.className='modal-btn-secondary'; _gb.textContent='Regenerate'; }
   try{ localStorage.setItem('gymlog_last_backup', JSON.stringify({ts:Date.now(), n:_totalSessions()})); }catch(e){}
   dismissBackupBanner();
+}
+
+// Patch 4: one-tap copy on the backup modal. Tries the modern Clipboard API
+// first; falls back to execCommand('copy') for iOS PWA / older WebKit where
+// navigator.clipboard.writeText is gated. The textarea's readonly + manual
+// long-press → Select All → Copy fallback is left fully intact.
+function copyBackupCode(){
+  var ta=document.getElementById('export-text');
+  if(!ta || !ta.value){ showToast('Nothing to copy yet'); return; }
+  var txt=ta.value;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(_copyOk, function(){ _copyFallback(ta); });
+    return;
+  }
+  _copyFallback(ta);
+}
+function _copyOk(){
+  var btn=document.getElementById('backup-copy-btn');
+  if(btn){
+    var orig=btn.innerHTML;
+    btn.innerHTML='✓ Copied';
+    btn.disabled=true;
+    setTimeout(function(){ btn.innerHTML=orig; btn.disabled=false; }, 1800);
+  }
+  showToast('Backup code copied');
+  try{ haptic('light'); }catch(e){}
+}
+function _copyFallback(ta){
+  try{
+    ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+    var ok=document.execCommand && document.execCommand('copy');
+    if(ok){ _copyOk(); } else { showToast('Copy failed — long-press the box to copy manually'); }
+  } catch(e){
+    showToast('Copy failed — long-press the box to copy manually');
+  }
 }
 function _totalSessions(){ var n=0; ['a','b','c','d','e'].forEach(function(d){ n+=getSaved(d).length; }); return n; }
 function dismissBackupBanner(){ var b=document.getElementById('backup-banner'); if(b) b.style.display='none'; }
