@@ -202,6 +202,12 @@ body.dark #test-toggle.test-on:hover{background:#4A1F1F;color:#FF8080}
 .patch5-status.patch5-warn .patch5-icon{color:var(--warn)}
 .patch5-status.patch5-bad .patch5-icon{color:var(--bad)}
 .patch5-status.patch5-neutral .patch5-icon{color:var(--muted)}
+.patch5-msg{display:block}
+/* v2.61 — Re-run button on partial/stalled states. Reuses primary tokens. */
+.patch5-rerun-btn{display:inline-block;margin-top:6px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--primary);background:transparent;border:1px solid var(--primary);border-radius:6px;cursor:pointer;font-family:inherit}
+.patch5-rerun-btn:hover{background:var(--primary-tint)}
+body.dark .patch5-rerun-btn{color:var(--primary-2);border-color:var(--primary-2)}
+body.dark .patch5-rerun-btn:hover{background:#2A2850}
 #hdr-menu[hidden]{display:none}
 /* Follow-up 4: AA contrast for the expanded card footer (both themes) */
 .v2-foot .last-time{color:var(--text)}
@@ -670,7 +676,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.60</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.61</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -3434,22 +3440,47 @@ function _renderPatch5Status(){
   var ok=(s.flag==='1') && (s.withSets===s.totalSet);
   var partial=(s.flag==='1') && (s.withSets<s.totalSet) && (s.withSets>0);
   var stalled=(s.flag!=='1');
-  var icon, cls, msg;
+  var icon, cls, msg, showRerun=false;
   if(ok){
     icon='✓'; cls='patch5-ok';
     msg='Structured sets on '+s.withSets+'/'+s.totalSet+' entries · migration flag set.';
   } else if(partial){
     icon='⚠'; cls='patch5-warn';
     msg='Partial: '+s.withSets+'/'+s.totalSet+' entries migrated. Restored sessions read via fallback; this is normal after a stale-backup restore.';
+    showRerun=true;
   } else if(stalled){
     icon='✗'; cls='patch5-bad';
     msg='Migration flag not set. Reload the app to trigger ('+s.totalSet+' set-bearing entries waiting).';
+    showRerun=true;
   } else {
     icon='·'; cls='patch5-neutral';
     msg=s.withSets+'/'+s.totalSet+' entries structured.';
   }
-  el.innerHTML='<span class="patch5-icon">'+icon+'</span> '+msg;
+  // v2.61: optional Re-run button on partial/stalled states. Idempotent &
+  // safe — only adds .sets to entries that lack it; never mutates data
+  // that already migrated. Spec's "force re-migrate" path, scoped to the
+  // diagnostic so it's discoverable without polluting the main UI.
+  var rerunHTML=showRerun?'<button type="button" class="patch5-rerun-btn" onclick="reRunMigration()">Re-run migration</button>':'';
+  el.innerHTML='<div class="patch5-msg"><span class="patch5-icon">'+icon+'</span> '+msg+'</div>'+rerunHTML;
   el.className='patch5-status '+cls;
+}
+// v2.61 — clear the migration flag and re-run. The migration function
+// itself short-circuits on entries that already have .sets, so this is
+// safe to call repeatedly. Reports the delta (newly-migrated count) via
+// toast so the user sees concrete feedback.
+function reRunMigration(){
+  var before=_patch5DiagStats();
+  try{ localStorage.removeItem('sessions_migrated_v1'); }catch(e){}
+  try{ migrateSessionsToStructured_v1(); }catch(e){}
+  var after=_patch5DiagStats();
+  var delta=after.withSets - before.withSets;
+  if(delta>0){
+    showToast('Migrated '+delta+' more entr'+(delta===1?'y':'ies')+' ✓');
+  } else {
+    showToast('No new entries to migrate — remaining notes don’t match "Set N: weight" pattern.');
+  }
+  try{ haptic('light'); }catch(e){}
+  _renderPatch5Status();
 }
 
 function showTab(tab){
