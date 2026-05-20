@@ -676,7 +676,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.63</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.64</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -3531,8 +3531,10 @@ function reRunMigration(){
   var newMigrated=after.withSets - before.withSets;
   // ── Report + push to cloud if we changed anything.
   var parts=[];
-  if(doubledFixed>0) parts.push('cleaned '+doubledFixed+' duplicate unit'+(doubledFixed===1?'':'s'));
-  if(newMigrated>0) parts.push('migrated '+newMigrated+' more entr'+(newMigrated===1?'y':'ies'));
+  // v2.64: numeric-cast both sides so the singular branch fires even if a
+  // value sneaks in as "1" (string) rather than 1 (number).
+  if(doubledFixed>0) parts.push('cleaned '+doubledFixed+' duplicate unit'+(Number(doubledFixed)===1?'':'s'));
+  if(newMigrated>0) parts.push('migrated '+newMigrated+' more entr'+(Number(newMigrated)===1?'y':'ies'));
   if(parts.length===0){
     showToast('Data already clean — no changes ✓');
   } else {
