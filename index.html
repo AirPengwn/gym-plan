@@ -194,6 +194,14 @@ body.dark #hdr-prog-btn.active{background:var(--primary);color:#fff;border-color
 #test-toggle.test-on:hover{background:#FFD0D0;color:#C53030}
 body.dark #test-toggle.test-on{background:#3A1A1A;color:#FF8080}
 body.dark #test-toggle.test-on:hover{background:#4A1F1F;color:#FF8080}
+/* v2.60 — Patch 5 migration health diagnostic line (Backup modal footer).
+   Tiny muted text; reuses existing semantic tokens. */
+.patch5-status{margin-top:8px;font-size:11px;line-height:1.4;color:var(--muted);font-family:inherit;letter-spacing:0}
+.patch5-status .patch5-icon{display:inline-block;min-width:14px;font-weight:700;margin-right:4px}
+.patch5-status.patch5-ok .patch5-icon{color:var(--good)}
+.patch5-status.patch5-warn .patch5-icon{color:var(--warn)}
+.patch5-status.patch5-bad .patch5-icon{color:var(--bad)}
+.patch5-status.patch5-neutral .patch5-icon{color:var(--muted)}
 #hdr-menu[hidden]{display:none}
 /* Follow-up 4: AA contrast for the expanded card footer (both themes) */
 .v2-foot .last-time{color:var(--text)}
@@ -662,7 +670,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.59</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.60</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -987,6 +995,9 @@ body.dark #pc-result{color:#E8E6F8}
         Tap <b>Copy code</b> above, then paste into your <b>Notes</b> app and save.<br>
         <span style="opacity:0.85;">(If Copy doesn't work on this device: long-press the box → Select All → Copy.)</span>
       </div>
+      <!-- v2.60: Patch-5 migration health line. Refreshed every time the
+           modal opens. Reads localStorage; no network, no mutation. -->
+      <div id="patch5-status" class="patch5-status"></div>
     </div>
 
     <!-- Restore panel -->
@@ -3380,8 +3391,65 @@ function showExportImport(){
   if(_sb){ _sb.style.display='none'; }
   var _gb=document.getElementById('backup-gen-btn');
   if(_gb){ _gb.className='modal-btn-primary'; _gb.textContent='Generate backup code'; }
+  // v2.60: refresh the Patch-5 migration health line every time the modal opens.
+  try{ _renderPatch5Status(); }catch(e){}
   showTab('backup');
   document.getElementById('modal-overlay').classList.add('show');
+}
+
+// v2.60 — Patch-5 migration health diagnostic. Reads localStorage only,
+// no mutation. Shown as a small muted line at the bottom of the Backup
+// panel so the user can verify on-device whether the structured-sets
+// migration ran and what proportion of set-bearing entries have .sets.
+function _patch5DiagStats(){
+  var flag=null;
+  try{ flag=localStorage.getItem('sessions_migrated_v1'); }catch(e){}
+  var totalSet=0, withSets=0, totalSess=0;
+  try{
+    ['a','b','c','d','e'].forEach(function(d){
+      var saved=getSaved(d);
+      totalSess+=saved.length;
+      saved.forEach(function(sess){
+        (sess.entries||[]).forEach(function(e){
+          if(!e || typeof e.note!=='string') return;
+          if(e.note.indexOf('Set ')!==0) return; // only set-bearing entries
+          totalSet++;
+          if(Array.isArray(e.sets)) withSets++;
+        });
+      });
+    });
+  }catch(e){}
+  return { flag:flag, withSets:withSets, totalSet:totalSet, totalSess:totalSess };
+}
+function _renderPatch5Status(){
+  var el=document.getElementById('patch5-status');
+  if(!el) return;
+  var s=_patch5DiagStats();
+  if(!s.totalSet){
+    // No set-bearing entries yet — nothing to report.
+    el.innerHTML='<span class="patch5-icon">·</span> No lift sessions logged yet — migration runs when you log your first session.';
+    el.className='patch5-status patch5-neutral';
+    return;
+  }
+  var ok=(s.flag==='1') && (s.withSets===s.totalSet);
+  var partial=(s.flag==='1') && (s.withSets<s.totalSet) && (s.withSets>0);
+  var stalled=(s.flag!=='1');
+  var icon, cls, msg;
+  if(ok){
+    icon='✓'; cls='patch5-ok';
+    msg='Structured sets on '+s.withSets+'/'+s.totalSet+' entries · migration flag set.';
+  } else if(partial){
+    icon='⚠'; cls='patch5-warn';
+    msg='Partial: '+s.withSets+'/'+s.totalSet+' entries migrated. Restored sessions read via fallback; this is normal after a stale-backup restore.';
+  } else if(stalled){
+    icon='✗'; cls='patch5-bad';
+    msg='Migration flag not set. Reload the app to trigger ('+s.totalSet+' set-bearing entries waiting).';
+  } else {
+    icon='·'; cls='patch5-neutral';
+    msg=s.withSets+'/'+s.totalSet+' entries structured.';
+  }
+  el.innerHTML='<span class="patch5-icon">'+icon+'</span> '+msg;
+  el.className='patch5-status '+cls;
 }
 
 function showTab(tab){
