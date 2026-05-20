@@ -676,7 +676,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.68</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.69</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -3477,6 +3477,12 @@ function _patch5DiagStats(){
   try{ flag=localStorage.getItem('sessions_migrated_v1'); }catch(e){}
   var totalSet=0, withSets=0, totalSess=0, doubledUnits=0;
   var combinedRearPec=_findRearPecCombined().length;
+  // v2.69: each "group" of duplicate sessions contributes (group.length - 1)
+  // redundant copies. The first copy in each group is the canonical keeper.
+  var duplicateSessions=0;
+  try{
+    _findDuplicateSessions().forEach(function(g){ duplicateSessions += (g.length-1); });
+  }catch(e){}
   // v2.62: count an entry as "set-bearing" only if at least one of its
   // pipe-delimited segments actually matches the migration's `Set N: weight`
   // pattern. v2.63: matches the parser's permissive front so labeled
@@ -3508,7 +3514,7 @@ function _patch5DiagStats(){
       });
     });
   }catch(e){}
-  return { flag:flag, withSets:withSets, totalSet:totalSet, totalSess:totalSess, doubledUnits:doubledUnits, combinedRearPec:combinedRearPec };
+  return { flag:flag, withSets:withSets, totalSet:totalSet, totalSess:totalSess, doubledUnits:doubledUnits, combinedRearPec:combinedRearPec, duplicateSessions:duplicateSessions };
 }
 // v2.68 — Splits each Rear+Pec combined entry into two entries: the original
 // (renamed-in-place) keeps just the pec values under its existing "Pec fly"
@@ -3570,12 +3576,93 @@ function splitRearPecCombined(){
   try{ haptic('light'); }catch(e){}
   _renderPatch5Status();
   try{
+    // v2.69: authoritative push. Splitting adds a new entry to the session,
+    // which changes its sessKey() (keyed on ts+label+entries.length), causing
+    // mergeSessions to treat the post-split session as a DIFFERENT session
+    // from the pre-split cloud copy → both would survive the merge and you'd
+    // end up with a duplicate session. Authoritative bypasses the merge.
     syncToJbin(function(ok){
       if(ok) showToast('Cloud sync ✓ — split persisted to JSONbin');
       else showToast('⚠️ Cloud sync failed — split saved locally; will retry on next save');
-    });
+    }, {authoritative:true});
   }catch(e){
     showToast('⚠️ Cloud sync threw — split saved locally');
+  }
+}
+
+// v2.69 — find sessions with the same effective timestamp + label inside the
+// same day. Caused by entry-level edits (Split) that pushed non-authoritatively
+// and let the merge create a duplicate. The "richer" one (more entries, then
+// longer JSON) is canonical; the others are stale duplicates safe to remove.
+function _findDuplicateSessions(){
+  var groups=[];
+  try{
+    ['a','b','c','d','e'].forEach(function(day){
+      var saved=getSaved(day);
+      var byKey={};
+      saved.forEach(function(sess, idx){
+        if(!sess) return;
+        var ts=sessTs(sess);
+        var lbl=(sess.label)||'';
+        // Use ts+label as the duplicate key, NOT sessKey (which includes
+        // entries.length — that's exactly why duplicates can exist).
+        var k=ts+'|'+lbl;
+        if(!byKey[k]) byKey[k]=[];
+        byKey[k].push({day:day, idx:idx, sess:sess});
+      });
+      Object.keys(byKey).forEach(function(k){
+        if(byKey[k].length>1) groups.push(byKey[k]);
+      });
+    });
+  }catch(e){}
+  return groups;
+}
+function dedupeDuplicateSessions(){
+  var groups=_findDuplicateSessions();
+  if(!groups.length){ showToast('No duplicate sessions found'); return; }
+  var removed=0;
+  try{
+    // Group changes by day so we only write each day's array once.
+    var perDayKeep={};
+    groups.forEach(function(group){
+      var day=group[0].day;
+      // Pick the canonical: most entries first, then longest JSON, then
+      // newest-looking (sessions with .sets are typically richer). All else
+      // equal, the first occurrence wins.
+      group.sort(function(a,b){
+        var aN=((a.sess.entries)||[]).length;
+        var bN=((b.sess.entries)||[]).length;
+        if(aN!==bN) return bN-aN;
+        return JSON.stringify(b.sess).length - JSON.stringify(a.sess).length;
+      });
+      var keepIdx=group[0].idx;
+      var dropIdxs=group.slice(1).map(function(g){ return g.idx; });
+      if(!perDayKeep[day]) perDayKeep[day]={ drop:{} };
+      dropIdxs.forEach(function(i){ perDayKeep[day].drop[i]=true; removed++; });
+    });
+    Object.keys(perDayKeep).forEach(function(day){
+      var saved=getSaved(day);
+      var drop=perDayKeep[day].drop;
+      var kept=saved.filter(function(_,i){ return !drop[i]; });
+      localStorage.setItem('gymlog_'+day, JSON.stringify(kept));
+    });
+  }catch(e){
+    showToast('⚠️ Dedup threw — no changes saved.');
+    return;
+  }
+  if(removed===0){ showToast('No duplicates removed'); return; }
+  showToast('Removed '+removed+' duplicate session'+(Number(removed)===1?'':'s')+' · syncing…');
+  try{ haptic('light'); }catch(e){}
+  _renderPatch5Status();
+  try{
+    // Authoritative: deduplication is destructive — overwrite cloud rather
+    // than risk merging the duplicates back in.
+    syncToJbin(function(ok){
+      if(ok) showToast('Cloud sync ✓ — dedup persisted to JSONbin');
+      else showToast('⚠️ Cloud sync failed — dedup saved locally; will retry on next save');
+    }, {authoritative:true});
+  }catch(e){
+    showToast('⚠️ Cloud sync threw — dedup saved locally');
   }
 }
 function _renderPatch5Status(){
@@ -3590,8 +3677,10 @@ function _renderPatch5Status(){
   // v2.68: combined Rear+Pec entries are a separate condition with their own
   // action button. They don't break charts, but they mix two lifts into one
   // history series. Surface separately so users can opt into splitting.
+  // v2.69: duplicate sessions (same ts+label) need their own action too.
   var hasCombined=s.combinedRearPec>0;
-  var ok=(s.flag==='1') && (s.withSets===s.totalSet) && (s.doubledUnits===0) && !hasCombined;
+  var hasDuplicates=s.duplicateSessions>0;
+  var ok=(s.flag==='1') && (s.withSets===s.totalSet) && (s.doubledUnits===0) && !hasCombined && !hasDuplicates;
   var stalled=(s.flag!=='1');
   var partial=(s.flag==='1') && (s.withSets<s.totalSet) && (s.withSets>0);
   var hasDoubles=s.doubledUnits>0;
@@ -3613,6 +3702,9 @@ function _renderPatch5Status(){
     if(hasCombined){
       msgs.push(s.combinedRearPec+' entr'+(Number(s.combinedRearPec)===1?'y combines':'ies combine')+' Rear + Pec in one note. Splitting them gives each lift its own clean history.');
     }
+    if(hasDuplicates){
+      msgs.push(s.duplicateSessions+' duplicate session'+(Number(s.duplicateSessions)===1?'':'s')+' detected (same timestamp + label). Deduplicating keeps the richer copy and drops the stale ones.');
+    }
   }
   var showRepairBtn = stalled || partial || hasDoubles;
   var repairLabel = hasDoubles ? 'Repair data' : 'Re-run migration';
@@ -3622,6 +3714,9 @@ function _renderPatch5Status(){
   }
   if(hasCombined){
     html+='<button type="button" class="patch5-rerun-btn" onclick="splitRearPecCombined()">Split into Rear delt + Pec fly</button>';
+  }
+  if(hasDuplicates){
+    html+='<button type="button" class="patch5-rerun-btn" onclick="dedupeDuplicateSessions()">Deduplicate sessions</button>';
   }
   el.innerHTML='<div class="patch5-msg"><span class="patch5-icon">'+icon+'</span> '+msgs.join('<br>')+'</div>'+html;
   el.className='patch5-status '+cls;
