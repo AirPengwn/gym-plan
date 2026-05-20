@@ -676,7 +676,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.67</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.68</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -3439,10 +3439,44 @@ function showExportImport(){
 // no mutation. Shown as a small muted line at the bottom of the Backup
 // panel so the user can verify on-device whether the structured-sets
 // migration ran and what proportion of set-bearing entries have .sets.
+// v2.68 — detects entries whose note crams two lifts into one row using the
+// labeled "Set N: Rear: X lbs pec: Y lbs" pattern (the user's Day D entry).
+// Returns one record per such entry with day / session / entry indices so
+// splitRearPecCombined() can act on them safely.
+function _findRearPecCombined(){
+  var hits=[];
+  try{
+    ['a','b','c','d','e'].forEach(function(day){
+      var saved=getSaved(day);
+      saved.forEach(function(sess, si){
+        (sess.entries||[]).forEach(function(e, ei){
+          if(!e || typeof e.note!=='string') return;
+          if(e.note.indexOf('Set ')!==0) return;
+          var segs=e.note.split('|');
+          // Every non-empty segment must contain BOTH labels with a numeric
+          // weight. Mixed-shape entries (some segments labeled, some clean)
+          // are deliberately skipped — they're ambiguous to auto-split.
+          var allLabeled=true, nonEmpty=0;
+          segs.forEach(function(seg){
+            var t=seg.trim();
+            if(!t.length) return;
+            nonEmpty++;
+            if(!/Rear:\s*[\d.]+/i.test(t) || !/pec:\s*[\d.]+/i.test(t)) allLabeled=false;
+          });
+          if(nonEmpty>0 && allLabeled){
+            hits.push({day:day, sessionIdx:si, entryIdx:ei, ex:e.ex||'', note:e.note});
+          }
+        });
+      });
+    });
+  }catch(e){}
+  return hits;
+}
 function _patch5DiagStats(){
   var flag=null;
   try{ flag=localStorage.getItem('sessions_migrated_v1'); }catch(e){}
   var totalSet=0, withSets=0, totalSess=0, doubledUnits=0;
+  var combinedRearPec=_findRearPecCombined().length;
   // v2.62: count an entry as "set-bearing" only if at least one of its
   // pipe-delimited segments actually matches the migration's `Set N: weight`
   // pattern. v2.63: matches the parser's permissive front so labeled
@@ -3474,7 +3508,75 @@ function _patch5DiagStats(){
       });
     });
   }catch(e){}
-  return { flag:flag, withSets:withSets, totalSet:totalSet, totalSess:totalSess, doubledUnits:doubledUnits };
+  return { flag:flag, withSets:withSets, totalSet:totalSet, totalSess:totalSess, doubledUnits:doubledUnits, combinedRearPec:combinedRearPec };
+}
+// v2.68 — Splits each Rear+Pec combined entry into two entries: the original
+// (renamed-in-place) keeps just the pec values under its existing "Pec fly"
+// name, and a new "Rear delt" entry is inserted into the same session with
+// the rear values. Idempotent (refuses to re-split entries that already match
+// the canonical clean format), best-effort, pushes to cloud on success.
+function splitRearPecCombined(){
+  var hits=_findRearPecCombined();
+  if(!hits.length){ showToast('No combined Rear+Pec entries to split'); return; }
+  var splitCount=0;
+  // Process in reverse-index order so earlier splices don't shift later indices.
+  hits.sort(function(a,b){
+    if(a.day!==b.day) return a.day<b.day?-1:1;
+    if(a.sessionIdx!==b.sessionIdx) return b.sessionIdx-a.sessionIdx;
+    return b.entryIdx-a.entryIdx;
+  });
+  try{
+    hits.forEach(function(hit){
+      var saved=getSaved(hit.day);
+      var sess=saved[hit.sessionIdx];
+      if(!sess || !Array.isArray(sess.entries)) return;
+      var orig=sess.entries[hit.entryIdx];
+      if(!orig || typeof orig.note!=='string') return;
+      var segs=orig.note.split('|');
+      var pecVals=[], rearVals=[];
+      segs.forEach(function(seg){
+        var t=seg.trim();
+        if(!t.length) return;
+        var pec=t.match(/pec:\s*([\d.]+)/i);
+        var rear=t.match(/Rear:\s*([\d.]+)/i);
+        if(pec) pecVals.push(parseFloat(pec[1]));
+        if(rear) rearVals.push(parseFloat(rear[1]));
+      });
+      // Bail if the parse didn't yield consistent counts — safer to leave it alone
+      // than write half a split and corrupt the chart.
+      if(!pecVals.length || pecVals.length!==rearVals.length) return;
+      // Rebuild the original (Pec fly) entry with just pec values.
+      orig.note=pecVals.map(function(v,i){ return 'Set '+(i+1)+': '+v+' lbs'; }).join(' | ');
+      orig.sets=pecVals.map(function(v){ return {w:v, u:'lbs', r:null}; });
+      // Build the new Rear delt sibling.
+      var rearEntry={
+        ex:'Rear delt',
+        note:rearVals.map(function(v,i){ return 'Set '+(i+1)+': '+v+' lbs'; }).join(' | '),
+        sets:rearVals.map(function(v){ return {w:v, u:'lbs', r:null}; })
+      };
+      sess.entries.splice(hit.entryIdx+1, 0, rearEntry);
+      localStorage.setItem('gymlog_'+hit.day, JSON.stringify(saved));
+      splitCount++;
+    });
+  }catch(e){
+    showToast('⚠️ Split threw — no changes saved. Try again or report.');
+    return;
+  }
+  if(splitCount===0){
+    showToast('No Rear+Pec entries split (none matched the canonical pattern)');
+    return;
+  }
+  showToast('Split '+splitCount+' Rear+Pec entr'+(Number(splitCount)===1?'y':'ies')+' · syncing…');
+  try{ haptic('light'); }catch(e){}
+  _renderPatch5Status();
+  try{
+    syncToJbin(function(ok){
+      if(ok) showToast('Cloud sync ✓ — split persisted to JSONbin');
+      else showToast('⚠️ Cloud sync failed — split saved locally; will retry on next save');
+    });
+  }catch(e){
+    showToast('⚠️ Cloud sync threw — split saved locally');
+  }
 }
 function _renderPatch5Status(){
   var el=document.getElementById('patch5-status');
@@ -3485,7 +3587,11 @@ function _renderPatch5Status(){
     el.className='patch5-status patch5-neutral';
     return;
   }
-  var ok=(s.flag==='1') && (s.withSets===s.totalSet) && (s.doubledUnits===0);
+  // v2.68: combined Rear+Pec entries are a separate condition with their own
+  // action button. They don't break charts, but they mix two lifts into one
+  // history series. Surface separately so users can opt into splitting.
+  var hasCombined=s.combinedRearPec>0;
+  var ok=(s.flag==='1') && (s.withSets===s.totalSet) && (s.doubledUnits===0) && !hasCombined;
   var stalled=(s.flag!=='1');
   var partial=(s.flag==='1') && (s.withSets<s.totalSet) && (s.withSets>0);
   var hasDoubles=s.doubledUnits>0;
@@ -3502,15 +3608,22 @@ function _renderPatch5Status(){
       msgs.push('Partial: '+s.withSets+'/'+s.totalSet+' entries migrated. Restored sessions read via fallback; this is normal after a stale-backup restore.');
     }
     if(hasDoubles){
-      msgs.push(s.doubledUnits+' entr'+(s.doubledUnits===1?'y has':'ies have')+' duplicate units ("lbs lbs"). Cosmetic; weights still parse correctly.');
+      msgs.push(s.doubledUnits+' entr'+(Number(s.doubledUnits)===1?'y has':'ies have')+' duplicate units ("lbs lbs"). Cosmetic; weights still parse correctly.');
+    }
+    if(hasCombined){
+      msgs.push(s.combinedRearPec+' entr'+(Number(s.combinedRearPec)===1?'y combines':'ies combine')+' Rear + Pec in one note. Splitting them gives each lift its own clean history.');
     }
   }
-  var showBtn = stalled || partial || hasDoubles;
-  // v2.63: button label reflects what it'll do. "Repair data" when cleanup
-  // work is queued; "Re-run migration" when only migration work is needed.
-  var btnLabel = hasDoubles ? 'Repair data' : 'Re-run migration';
-  var rerunHTML=showBtn?'<button type="button" class="patch5-rerun-btn" onclick="reRunMigration()">'+btnLabel+'</button>':'';
-  el.innerHTML='<div class="patch5-msg"><span class="patch5-icon">'+icon+'</span> '+msgs.join('<br>')+'</div>'+rerunHTML;
+  var showRepairBtn = stalled || partial || hasDoubles;
+  var repairLabel = hasDoubles ? 'Repair data' : 'Re-run migration';
+  var html='';
+  if(showRepairBtn){
+    html+='<button type="button" class="patch5-rerun-btn" onclick="reRunMigration()">'+repairLabel+'</button>';
+  }
+  if(hasCombined){
+    html+='<button type="button" class="patch5-rerun-btn" onclick="splitRearPecCombined()">Split into Rear delt + Pec fly</button>';
+  }
+  el.innerHTML='<div class="patch5-msg"><span class="patch5-icon">'+icon+'</span> '+msgs.join('<br>')+'</div>'+html;
   el.className='patch5-status '+cls;
 }
 // v2.61 — clear the migration flag and re-run. v2.63 — also strip doubled
