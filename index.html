@@ -662,7 +662,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.58</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.59</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -2070,6 +2070,10 @@ function confirmSave(){
   var entries=[];
   // collect rep fields grouped by exercise, include unit
   var exMap={};
+  // Patch 5: capture structured {w,u,r}[] alongside the legacy pipe-delimited
+  // string. The string keeps being written exactly as today (rollback safety
+  // net + cross-version compat); structured form is purely additive.
+  var exSets={};
   p.querySelectorAll('.rep-input').forEach(function(inp){
     var ex=inp.getAttribute('data-ex');
     var set=inp.getAttribute('data-set');
@@ -2082,10 +2086,16 @@ function confirmSave(){
       var setStr='Set '+set+': '+val+' '+unit+(repsVal?' x'+repsVal+'reps':'');
       if(!exMap[ex]) exMap[ex]=[];
       exMap[ex].push(setStr);
+      if(!exSets[ex]) exSets[ex]=[];
+      exSets[ex].push({
+        w: parseFloat(val) || 0,
+        u: unit || 'lbs',
+        r: repsVal ? (parseInt(repsVal,10) || null) : null
+      });
     }
   });
   Object.keys(exMap).forEach(function(ex){
-    if(exMap[ex].length) entries.push({ex:ex,note:exMap[ex].join(' | ')});
+    if(exMap[ex].length) entries.push({ex:ex, note:exMap[ex].join(' | '), sets:exSets[ex]});
   });
   // collect notes fields
   p.querySelectorAll('.notes-input').forEach(function(inp){
@@ -2149,6 +2159,59 @@ function confirmSave(){
 function getSaved(day){
   try{return JSON.parse(localStorage.getItem('gymlog_'+day))||[];}
   catch(e){return[];}
+}
+
+// Patch 5: one-shot migration of legacy pipe-delimited session entries to
+// the new structured {w,u,r}[] form. Idempotent (flag-gated), best-effort
+// (try/catch), additive (the .note string is preserved on every entry as
+// the rollback safety net). Called once during app boot, before any
+// renderProgress/renderExerciseList read.
+function migrateSessionsToStructured_v1(){
+  try{
+    if(localStorage.getItem('sessions_migrated_v1')==='1') return;
+    var days=['a','b','c','d','e'];
+    var totalMigrated=0;
+    days.forEach(function(day){
+      var saved=getSaved(day);
+      if(!Array.isArray(saved) || !saved.length) return;
+      var dirty=false;
+      saved.forEach(function(session){
+        if(!session || !Array.isArray(session.entries)) return;
+        session.entries.forEach(function(e){
+          if(!e || e.sets || !e.note) return;
+          if(typeof e.note!=='string' || e.note.indexOf('Set ')!==0) return;
+          // Parse legacy string → {w,u,r}[]. Extracts unit too (existing
+          // parsers don't capture it, but the writer does going forward).
+          var parsed=[];
+          e.note.split('|').forEach(function(s){
+            var m=s.trim().match(/Set\s*\d+:\s*([\d.]+)\s*(lbs|kg)?\s*(?:x\s*(\d+)\s*reps)?/i);
+            if(m){
+              parsed.push({
+                w: parseFloat(m[1])||0,
+                u: (m[2]||'lbs').toLowerCase(),
+                r: m[3]?(parseInt(m[3],10)||null):null
+              });
+            }
+          });
+          if(parsed.length){
+            e.sets=parsed;
+            dirty=true;
+            totalMigrated++;
+          }
+        });
+      });
+      if(dirty){
+        localStorage.setItem('gymlog_'+day, JSON.stringify(saved));
+      }
+    });
+    localStorage.setItem('sessions_migrated_v1','1');
+    if(totalMigrated){
+      try{ console.log('[migration] structured sets written on', totalMigrated, 'entries'); }catch(_){}
+    }
+  } catch(e){
+    // Best-effort: reader fallback handles any unmigrated entries naturally.
+    try{ console.warn('[migration] skipped:', e && e.message); }catch(_){}
+  }
 }
 
 function clearLog(day){
@@ -2731,8 +2794,21 @@ function _redrawLiftChart(){
   drawChartV2(canvas, pts, {unit:unit, height:200});
 }
 
-function parseSetWeights(noteStr){
-  var sets=noteStr.split('|');
+// Patch 5: dual-signature parsers.
+//   parseSetWeights(arg) and parseSetWR(arg) accept either:
+//     - a raw note string (legacy callers — every existing call site)
+//     - an entry object { ex, note, sets? }
+//   When passed an entry with a structured `.sets` array, the fast path
+//   returns it directly with no regex. Otherwise, falls back to parsing
+//   the pipe-delimited string exactly as before. Existing string call
+//   sites continue working unchanged; only new code that wants the perf
+//   bonus needs to pass `entry` instead of `entry.note`.
+function parseSetWeights(arg){
+  if(arg && typeof arg==='object' && Array.isArray(arg.sets)){
+    return arg.sets.map(function(s){ return Number(s.w)||0; });
+  }
+  var noteStr=(typeof arg==='string')?arg:((arg && arg.note)||'');
+  var sets=String(noteStr).split('|');
   var vals=[];
   sets.forEach(function(s){
     // Strip any "x##reps" suffix before parsing weight
@@ -2744,9 +2820,16 @@ function parseSetWeights(noteStr){
 }
 
 // Parse "Set 1: 90 lbs x12reps | Set 2: 95 lbs x10reps" → [{w,r}]
-function parseSetWR(noteStr){
+// Patch 5: accepts entry object too (see parseSetWeights for rationale).
+function parseSetWR(arg){
+  if(arg && typeof arg==='object' && Array.isArray(arg.sets)){
+    return arg.sets.map(function(s){
+      return { w:Number(s.w)||0, r:(s.r==null?null:Number(s.r)) };
+    });
+  }
+  var noteStr=(typeof arg==='string')?arg:((arg && arg.note)||'');
   var out=[];
-  String(noteStr||'').split('|').forEach(function(s){
+  String(noteStr).split('|').forEach(function(s){
     var m=s.trim().match(/Set\s*\d+:\s*([\d.]+)\s*(?:lbs|kg)?\s*(?:x\s*(\d+)\s*reps)?/i);
     if(m) out.push({ w:parseFloat(m[1]), r:m[2]?parseInt(m[2],10):null });
   });
@@ -4192,6 +4275,10 @@ setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); 
     switchProgTab('manage', null);
   },120);
 })();
+// Patch 5: structured-sets migration runs once per device before any render
+// touches the session data. Idempotent (gated by 'sessions_migrated_v1'),
+// wrapped in its own try/catch.
+try{ migrateSessionsToStructured_v1(); }catch(e){}
 (function restoreInProgressDraft(){
   var days=['a','b','c','d','e'];
   var totals=counts;
