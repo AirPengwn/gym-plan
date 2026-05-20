@@ -654,7 +654,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.54</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.55</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -3349,6 +3349,13 @@ function generateExport(){
 function copyBackupCode(){
   var ta=document.getElementById('export-text');
   if(!ta || !ta.value){ showToast('Nothing to copy yet'); return; }
+  // v2.55 — iPhone long-press → Select All is unreliable on the multi-KB
+  // payload, so always programmatically select the whole textarea first.
+  // The highlight becomes visible to the user (visual confirmation) AND we
+  // still write to the clipboard via the modern API (or execCommand fallback)
+  // in the same tap. Selection persists after copy so the user can also
+  // verify by sight.
+  try{ ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); }catch(e){}
   var txt=ta.value;
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(txt).then(_copyOk, function(){ _copyFallback(ta); });
