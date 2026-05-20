@@ -676,7 +676,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.61</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.62</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -3411,6 +3411,19 @@ function _patch5DiagStats(){
   var flag=null;
   try{ flag=localStorage.getItem('sessions_migrated_v1'); }catch(e){}
   var totalSet=0, withSets=0, totalSess=0;
+  // v2.62: count an entry as "set-bearing" only if at least one of its
+  // pipe-delimited segments actually matches the migration's `Set N: weight`
+  // pattern. The previous loose check (string starts with "Set ") over-counted
+  // free-text notes that happened to lead with the word "Set" (e.g.
+  // "Set up the rack…") or sets logged without a weight — the migration
+  // correctly skips those, so the diagnostic shouldn't expect them.
+  function _anySetParsable(noteStr){
+    var parts=String(noteStr||'').split('|');
+    for(var i=0;i<parts.length;i++){
+      if(/Set\s*\d+:\s*[\d.]+/.test(parts[i].trim())) return true;
+    }
+    return false;
+  }
   try{
     ['a','b','c','d','e'].forEach(function(d){
       var saved=getSaved(d);
@@ -3418,7 +3431,8 @@ function _patch5DiagStats(){
       saved.forEach(function(sess){
         (sess.entries||[]).forEach(function(e){
           if(!e || typeof e.note!=='string') return;
-          if(e.note.indexOf('Set ')!==0) return; // only set-bearing entries
+          if(e.note.indexOf('Set ')!==0) return;        // quick reject
+          if(!_anySetParsable(e.note)) return;          // strict scope match
           totalSet++;
           if(Array.isArray(e.sets)) withSets++;
         });
