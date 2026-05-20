@@ -676,7 +676,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.64</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.66</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -1777,7 +1777,16 @@ function restoreDraft(day,total){
       var key=inp.getAttribute('data-ex')||(inp.id||'');
       var fullKey=key+(inp.getAttribute('data-set')||'');
       if(draft.fields[fullKey]){
-        inp.value=draft.fields[fullKey];
+        var v=draft.fields[fullKey];
+        // v2.66 defensive: if the user has a draft saved by a pre-v2.66 build
+        // (where loadLastTimes pre-fill leaked a trailing "lbs"/"kg" into the
+        // value field), strip it now so the restored value is the canonical
+        // numeric form. Only applies to rep-input — cardio/notes can have
+        // legitimate "lbs" mentions in free text.
+        if(inp.classList.contains('rep-input')){
+          v=String(v).replace(/\s*(lbs|kg)\s*$/i,'').trim();
+        }
+        inp.value=v;
         inp.style.color='var(--ghost)';
         inp.style.fontStyle='italic';
       }
@@ -2465,20 +2474,30 @@ function loadLastTimes(){
       }
     });
 
-    // Pre-populate rep input fields with last known values
+    // Pre-populate rep input fields with last known values.
+    // v2.66 — extract ONLY the numeric weight, never the unit or reps suffix.
+    // This was the upstream source of the "lbs lbs" bug: the old pre-fill
+    // dumped the full "90 lbs" (or "Rear: 90 lbs pec: 90 lbs") into the input,
+    // then the writer auto-appended its own unit. quickFill() was already
+    // correct; this aligns the day-switch pre-fill to the same behavior.
     panel.querySelectorAll('.rep-input').forEach(function(inp){
       if(inp.value) return; // don't overwrite if already typed
       var ex=normalizeEx(inp.getAttribute('data-ex')||'');
       var setNum=inp.getAttribute('data-set');
       var match=globalMap[ex] || null;
       if(match && setNum){
-        // Parse "Set 1: 50 lbs | Set 2: 55 lbs | Set 3: 55 lbs"
         var parts=match.note.split('|');
         parts.forEach(function(part){
           part=part.trim();
-          var sMatch=part.match(/^Set\s*(\d+):\s*(.+)$/);
-          if(sMatch && sMatch[1]===setNum){
-            inp.value=sMatch[2].trim();
+          // Match "Set N:" with N === target set number, then extract the
+          // first numeric weight in the segment. Tolerates labeled notes
+          // like "Set 1: Rear: 90 lbs pec: 90 lbs" → captures 90.
+          var head=part.match(/^Set\s*(\d+):/);
+          if(!head || head[1]!==setNum) return;
+          var after=part.substring(head[0].length).replace(/\s*x\d+reps\s*$/i,'');
+          var wMatch=after.match(/[\d.]+/);
+          if(wMatch){
+            inp.value=wMatch[0];
             inp.style.color='var(--ghost)';
             inp.style.fontStyle='italic';
           }
@@ -3537,13 +3556,28 @@ function reRunMigration(){
   if(newMigrated>0) parts.push('migrated '+newMigrated+' more entr'+(Number(newMigrated)===1?'y':'ies'));
   if(parts.length===0){
     showToast('Data already clean — no changes ✓');
-  } else {
-    showToast('Repaired: '+parts.join(', ')+' ✓');
-    // Persist the cleanup to the cloud bin so it survives reload / multi-device.
-    try{ syncToJbin(function(){}); }catch(e){}
+    try{ haptic('light'); }catch(e){}
+    _renderPatch5Status();
+    return;
   }
+  // v2.65: surface cloud sync outcome instead of swallowing it silently.
+  // Same pattern as confirmSave — if cloud push fails, the user knows the
+  // repair is local-only and can retry via a reload (next syncToJbin will push)
+  // or manually re-tap Repair when on a better connection.
+  showToast('Repaired: '+parts.join(', ')+' · syncing…');
   try{ haptic('light'); }catch(e){}
   _renderPatch5Status();
+  try{
+    syncToJbin(function(ok){
+      if(ok){
+        showToast('Cloud sync ✓ — repair persisted to JSONbin');
+      } else {
+        showToast('⚠️ Cloud sync failed — repair saved locally; will retry on next save');
+      }
+    });
+  } catch(e){
+    showToast('⚠️ Cloud sync threw — repair saved locally');
+  }
 }
 
 function showTab(tab){
