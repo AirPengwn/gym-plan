@@ -687,7 +687,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.71</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.72</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -2210,7 +2210,12 @@ function confirmSave(){
     showToast('📖 Saved locally · reader mode (no cloud push from this device)');
   }
   syncToJbin(function(ok){
-    if(!ok) showToast('⚠️ Cloud sync failed — data saved locally');
+    if(!ok){
+      // v2.72 — include the actual error reason. Opaque "Cloud sync failed"
+      // for an extended period hid the JSONbin versioning-header 403.
+      var err=(window._lastSyncErr||'unknown').slice(0,80);
+      showToast('⚠️ Cloud sync failed — data saved locally · '+err);
+    }
   });
 }
 
@@ -4988,11 +4993,24 @@ function cloudPUT(payload){
     try{ console.log('[reader-mode] cloudPUT suppressed — this device is in reader mode'); }catch(e){}
     return Promise.resolve({ readerMode:true });
   }
+  // v2.72 — X-Bin-Versioning REMOVED. The free JSONbin tier rejects this
+  // header with HTTP 403 "Versioning is not available for the Free users",
+  // which silently broke every cloud write (Repair, Split, Dedupe, every
+  // session save) for an extended period. Versioning was a nice-to-have
+  // audit feature; the app already has its own undo path via the
+  // gymlog_import_undo localStorage snapshot.
   return fetch(JBIN_URL, {
     method:'PUT',
-    headers:{ 'Content-Type':'application/json', 'X-Master-Key':JBIN_KEY, 'X-Bin-Versioning':'true' },
+    headers:{ 'Content-Type':'application/json', 'X-Master-Key':JBIN_KEY },
     body: JSON.stringify(payload)
-  }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+  }).then(function(r){
+    if(!r.ok){
+      // v2.72 — surface body text so future failures expose their actual
+      // cause instead of a generic "HTTP N" message.
+      return r.text().then(function(t){ throw new Error('HTTP '+r.status+(t?(' · '+t.slice(0,200)):'')); });
+    }
+    return r.json();
+  });
 }
 
 // v2.71 — Primary/Reader device mode. Per-device flag so a single user with
@@ -5113,10 +5131,16 @@ function toggleTestMode(){
 function syncToJbin(onDone, opts){
   if(TEST_MODE){ if(typeof onDone==='function') onDone(true); return; }
   opts=opts||{};
+  // v2.72 — capture last error message so the diagnostic surface can show
+  // the actual cause instead of opaque "Cloud sync failed".
   if(opts.authoritative){
     cloudPUT(buildBinPayload())
-      .then(function(){ clearPendingSync(); if(onDone) onDone(true); })
-      .catch(function(err){ console.warn('JSONbin authoritative sync failed:', err); markPendingSync(); if(onDone) onDone(false); });
+      .then(function(){ clearPendingSync(); window._lastSyncErr=null; if(onDone) onDone(true); })
+      .catch(function(err){
+        console.warn('JSONbin authoritative sync failed:', err);
+        window._lastSyncErr=(err && err.message)||String(err);
+        markPendingSync(); if(onDone) onDone(false);
+      });
     return;
   }
   cloudGET()
@@ -5126,11 +5150,10 @@ function syncToJbin(onDone, opts){
       refreshAfterSync();
       return cloudPUT(merged);
     })
-    .then(function(){ clearPendingSync(); if(onDone) onDone(true); })
+    .then(function(){ clearPendingSync(); window._lastSyncErr=null; if(onDone) onDone(true); })
     .catch(function(err){
-      // Do NOT overwrite cloud on failure — the new data is safe in
-      // localStorage and flagged for retry. This is the safe tradeoff.
       console.warn('JSONbin merge sync failed (kept local, will retry):', err);
+      window._lastSyncErr=(err && err.message)||String(err);
       markPendingSync();
       if(onDone) onDone(false);
     });
