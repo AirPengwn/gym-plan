@@ -208,6 +208,17 @@ body.dark #test-toggle.test-on:hover{background:#4A1F1F;color:#FF8080}
 .patch5-rerun-btn:hover{background:var(--primary-tint)}
 body.dark .patch5-rerun-btn{color:var(--primary-2);border-color:var(--primary-2)}
 body.dark .patch5-rerun-btn:hover{background:#2A2850}
+/* v2.70 — Pull-from-cloud row (multi-device sync escape hatch). */
+.multi-device-row{margin-top:14px;padding-top:10px;border-top:1px solid var(--border-soft);text-align:center}
+.multi-device-label{font-size:12px;font-weight:600;color:var(--text);line-height:1.5;margin-bottom:6px}
+/* v2.71 — Primary/Reader device toggle */
+.primary-toggle-label{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text);cursor:pointer;margin-bottom:4px}
+.primary-toggle-label input{width:16px;height:16px;cursor:pointer;accent-color:var(--primary)}
+.primary-toggle-hint{font-size:10.5px;line-height:1.4;margin:0 0 8px;padding:0 8px}
+.primary-toggle-hint.pt-primary{color:var(--good)}
+.primary-toggle-hint.pt-reader{color:var(--warn)}
+body.dark .primary-toggle-hint.pt-primary{color:#5DD8A0}
+body.dark .primary-toggle-hint.pt-reader{color:#FFD740}
 #hdr-menu[hidden]{display:none}
 /* Follow-up 4: AA contrast for the expanded card footer (both themes) */
 .v2-foot .last-time{color:var(--text)}
@@ -676,7 +687,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.67</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.73</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -1004,6 +1015,17 @@ body.dark #pc-result{color:#E8E6F8}
       <!-- v2.60: Patch-5 migration health line. Refreshed every time the
            modal opens. Reads localStorage; no network, no mutation. -->
       <div id="patch5-status" class="patch5-status"></div>
+      <!-- v2.70-71: multi-device tools. Primary/reader toggle gates cloud
+           writes; Pull from cloud is a read-only escape hatch. -->
+      <div class="multi-device-row">
+        <div class="multi-device-label">Multi-device setup</div>
+        <label class="primary-toggle-label" for="primary-device-toggle">
+          <input type="checkbox" id="primary-device-toggle" onchange="togglePrimaryDevice(this.checked)">
+          <span>This is my <b>primary</b> device (writes to cloud)</span>
+        </label>
+        <div class="primary-toggle-hint" id="primary-toggle-hint"></div>
+        <button type="button" class="patch5-rerun-btn" onclick="pullFromCloud()">Pull from cloud</button>
+      </div>
     </div>
 
     <!-- Restore panel -->
@@ -2182,9 +2204,18 @@ function confirmSave(){
   checkMilestones();
   if(prs.length){ showPRToast(prs); setTimeout(function(){ showShareModal(savedDay,savedLabel,savedEntries,prs,sessionObj); },prs.length*2200+400); }
   else { setTimeout(function(){ showShareModal(savedDay,savedLabel,savedEntries,[],sessionObj); },400); }
-  // Auto-sync to JSONbin after every save
+  // Auto-sync to JSONbin after every save. v2.71: reader mode shows an
+  // explicit toast so the user knows the save went local-only.
+  if(!isPrimaryDevice()){
+    showToast('📖 Saved locally · reader mode (no cloud push from this device)');
+  }
   syncToJbin(function(ok){
-    if(!ok) showToast('⚠️ Cloud sync failed — data saved locally');
+    if(!ok){
+      // v2.72 — include the actual error reason. Opaque "Cloud sync failed"
+      // for an extended period hid the JSONbin versioning-header 403.
+      var err=(window._lastSyncErr||'unknown').slice(0,80);
+      showToast('⚠️ Cloud sync failed — data saved locally · '+err);
+    }
   });
 }
 
@@ -3431,6 +3462,8 @@ function showExportImport(){
   if(_gb){ _gb.className='modal-btn-primary'; _gb.textContent='Generate backup code'; }
   // v2.60: refresh the Patch-5 migration health line every time the modal opens.
   try{ _renderPatch5Status(); }catch(e){}
+  // v2.71: sync the Primary/Reader toggle UI to current localStorage state.
+  try{ _renderPrimaryToggleUI(); }catch(e){}
   showTab('backup');
   document.getElementById('modal-overlay').classList.add('show');
 }
@@ -3439,10 +3472,50 @@ function showExportImport(){
 // no mutation. Shown as a small muted line at the bottom of the Backup
 // panel so the user can verify on-device whether the structured-sets
 // migration ran and what proportion of set-bearing entries have .sets.
+// v2.68 — detects entries whose note crams two lifts into one row using the
+// labeled "Set N: Rear: X lbs pec: Y lbs" pattern (the user's Day D entry).
+// Returns one record per such entry with day / session / entry indices so
+// splitRearPecCombined() can act on them safely.
+function _findRearPecCombined(){
+  var hits=[];
+  try{
+    ['a','b','c','d','e'].forEach(function(day){
+      var saved=getSaved(day);
+      saved.forEach(function(sess, si){
+        (sess.entries||[]).forEach(function(e, ei){
+          if(!e || typeof e.note!=='string') return;
+          if(e.note.indexOf('Set ')!==0) return;
+          var segs=e.note.split('|');
+          // Every non-empty segment must contain BOTH labels with a numeric
+          // weight. Mixed-shape entries (some segments labeled, some clean)
+          // are deliberately skipped — they're ambiguous to auto-split.
+          var allLabeled=true, nonEmpty=0;
+          segs.forEach(function(seg){
+            var t=seg.trim();
+            if(!t.length) return;
+            nonEmpty++;
+            if(!/Rear:\s*[\d.]+/i.test(t) || !/pec:\s*[\d.]+/i.test(t)) allLabeled=false;
+          });
+          if(nonEmpty>0 && allLabeled){
+            hits.push({day:day, sessionIdx:si, entryIdx:ei, ex:e.ex||'', note:e.note});
+          }
+        });
+      });
+    });
+  }catch(e){}
+  return hits;
+}
 function _patch5DiagStats(){
   var flag=null;
   try{ flag=localStorage.getItem('sessions_migrated_v1'); }catch(e){}
   var totalSet=0, withSets=0, totalSess=0, doubledUnits=0;
+  var combinedRearPec=_findRearPecCombined().length;
+  // v2.69: each "group" of duplicate sessions contributes (group.length - 1)
+  // redundant copies. The first copy in each group is the canonical keeper.
+  var duplicateSessions=0;
+  try{
+    _findDuplicateSessions().forEach(function(g){ duplicateSessions += (g.length-1); });
+  }catch(e){}
   // v2.62: count an entry as "set-bearing" only if at least one of its
   // pipe-delimited segments actually matches the migration's `Set N: weight`
   // pattern. v2.63: matches the parser's permissive front so labeled
@@ -3474,7 +3547,199 @@ function _patch5DiagStats(){
       });
     });
   }catch(e){}
-  return { flag:flag, withSets:withSets, totalSet:totalSet, totalSess:totalSess, doubledUnits:doubledUnits };
+  return { flag:flag, withSets:withSets, totalSet:totalSet, totalSess:totalSess, doubledUnits:doubledUnits, combinedRearPec:combinedRearPec, duplicateSessions:duplicateSessions };
+}
+// v2.68 — Splits each Rear+Pec combined entry into two entries: the original
+// (renamed-in-place) keeps just the pec values under its existing "Pec fly"
+// name, and a new "Rear delt" entry is inserted into the same session with
+// the rear values. Idempotent (refuses to re-split entries that already match
+// the canonical clean format), best-effort, pushes to cloud on success.
+function splitRearPecCombined(){
+  var hits=_findRearPecCombined();
+  if(!hits.length){ showToast('No combined Rear+Pec entries to split'); return; }
+  var splitCount=0;
+  // Process in reverse-index order so earlier splices don't shift later indices.
+  hits.sort(function(a,b){
+    if(a.day!==b.day) return a.day<b.day?-1:1;
+    if(a.sessionIdx!==b.sessionIdx) return b.sessionIdx-a.sessionIdx;
+    return b.entryIdx-a.entryIdx;
+  });
+  try{
+    hits.forEach(function(hit){
+      var saved=getSaved(hit.day);
+      var sess=saved[hit.sessionIdx];
+      if(!sess || !Array.isArray(sess.entries)) return;
+      var orig=sess.entries[hit.entryIdx];
+      if(!orig || typeof orig.note!=='string') return;
+      var segs=orig.note.split('|');
+      var pecVals=[], rearVals=[];
+      segs.forEach(function(seg){
+        var t=seg.trim();
+        if(!t.length) return;
+        var pec=t.match(/pec:\s*([\d.]+)/i);
+        var rear=t.match(/Rear:\s*([\d.]+)/i);
+        if(pec) pecVals.push(parseFloat(pec[1]));
+        if(rear) rearVals.push(parseFloat(rear[1]));
+      });
+      // Bail if the parse didn't yield consistent counts — safer to leave it alone
+      // than write half a split and corrupt the chart.
+      if(!pecVals.length || pecVals.length!==rearVals.length) return;
+      // Rebuild the original (Pec fly) entry with just pec values.
+      orig.note=pecVals.map(function(v,i){ return 'Set '+(i+1)+': '+v+' lbs'; }).join(' | ');
+      orig.sets=pecVals.map(function(v){ return {w:v, u:'lbs', r:null}; });
+      // Build the new Rear delt sibling.
+      var rearEntry={
+        ex:'Rear delt',
+        note:rearVals.map(function(v,i){ return 'Set '+(i+1)+': '+v+' lbs'; }).join(' | '),
+        sets:rearVals.map(function(v){ return {w:v, u:'lbs', r:null}; })
+      };
+      sess.entries.splice(hit.entryIdx+1, 0, rearEntry);
+      localStorage.setItem('gymlog_'+hit.day, JSON.stringify(saved));
+      splitCount++;
+    });
+  }catch(e){
+    showToast('⚠️ Split threw — no changes saved. Try again or report.');
+    return;
+  }
+  if(splitCount===0){
+    showToast('No Rear+Pec entries split (none matched the canonical pattern)');
+    return;
+  }
+  showToast('Split '+splitCount+' Rear+Pec entr'+(Number(splitCount)===1?'y':'ies')+' · syncing…');
+  try{ haptic('light'); }catch(e){}
+  _renderPatch5Status();
+  try{
+    // v2.69: authoritative push. Splitting adds a new entry to the session,
+    // which changes its sessKey() (keyed on ts+label+entries.length), causing
+    // mergeSessions to treat the post-split session as a DIFFERENT session
+    // from the pre-split cloud copy → both would survive the merge and you'd
+    // end up with a duplicate session. Authoritative bypasses the merge.
+    syncToJbin(function(ok){
+      if(ok) showToast('Cloud sync ✓ — split persisted to JSONbin');
+      else showToast('⚠️ Cloud sync failed — split saved locally; will retry on next save');
+    }, {authoritative:true});
+  }catch(e){
+    showToast('⚠️ Cloud sync threw — split saved locally');
+  }
+}
+
+// v2.70 — Pull from cloud, replacing local entirely. Bypasses the merge so a
+// device with stale data doesn't push its dupes back up. Use this when
+// another device has cleaner data than this one. Snapshots current local
+// state to the existing undo slot first.
+function pullFromCloud(){
+  if(TEST_MODE){ showToast('Test mode is on — cloud sync is disabled'); return; }
+  var ok=true;
+  try{
+    ok=confirm('Pull from cloud?\n\nReplace ALL local data on this device with the version stored in JSONbin. Use this when another device has pushed updates and you need to pull them down here.\n\nYour current local data will be backed up to the undo slot first.');
+  }catch(e){}
+  if(!ok) return;
+  showToast('Pulling from cloud…');
+  // Snapshot current local state for undo (same slot importData uses).
+  try{ localStorage.setItem('gymlog_import_undo', btoa(unescape(encodeURIComponent(JSON.stringify(buildBinPayload()))))); }catch(e){}
+  cloudGET()
+    .then(function(cloud){
+      if(!cloud || typeof cloud!=='object'){
+        showToast('⚠️ Cloud returned empty data — pull aborted');
+        return;
+      }
+      // Clear local gymlog_* + drafts explicitly so cloud-empty days
+      // overwrite local-non-empty days (applyPayloadToLocal only SETS keys
+      // that exist in the payload — without the explicit clear, local-only
+      // sessions would survive the pull).
+      ['a','b','c','d','e'].forEach(function(day){
+        localStorage.removeItem('gymlog_'+day);
+        localStorage.removeItem('gymlog_draft_'+day);
+      });
+      applyPayloadToLocal(cloud);
+      // Clear migration flag too so the v2.70-cleaned data gets verified on
+      // next boot. Migration is idempotent — it'll only act on entries
+      // missing .sets, which should be none.
+      try{ localStorage.removeItem('sessions_migrated_v1'); }catch(e){}
+      try{ haptic('light'); }catch(e){}
+      showToast('Cloud data pulled ✓ — reloading in 2s…');
+      setTimeout(function(){ try{ reloadPage(); }catch(e){ location.reload(); } }, 2000);
+    })
+    .catch(function(err){
+      try{ console.warn('pullFromCloud failed:', err); }catch(_){}
+      showToast('⚠️ Cloud pull failed — local data unchanged. Check connection.');
+    });
+}
+
+// v2.69 — find sessions with the same effective timestamp + label inside the
+// same day. Caused by entry-level edits (Split) that pushed non-authoritatively
+// and let the merge create a duplicate. The "richer" one (more entries, then
+// longer JSON) is canonical; the others are stale duplicates safe to remove.
+function _findDuplicateSessions(){
+  var groups=[];
+  try{
+    ['a','b','c','d','e'].forEach(function(day){
+      var saved=getSaved(day);
+      var byKey={};
+      saved.forEach(function(sess, idx){
+        if(!sess) return;
+        var ts=sessTs(sess);
+        var lbl=(sess.label)||'';
+        // Use ts+label as the duplicate key, NOT sessKey (which includes
+        // entries.length — that's exactly why duplicates can exist).
+        var k=ts+'|'+lbl;
+        if(!byKey[k]) byKey[k]=[];
+        byKey[k].push({day:day, idx:idx, sess:sess});
+      });
+      Object.keys(byKey).forEach(function(k){
+        if(byKey[k].length>1) groups.push(byKey[k]);
+      });
+    });
+  }catch(e){}
+  return groups;
+}
+function dedupeDuplicateSessions(){
+  var groups=_findDuplicateSessions();
+  if(!groups.length){ showToast('No duplicate sessions found'); return; }
+  var removed=0;
+  try{
+    // Group changes by day so we only write each day's array once.
+    var perDayKeep={};
+    groups.forEach(function(group){
+      var day=group[0].day;
+      // Pick the canonical: most entries first, then longest JSON, then
+      // newest-looking (sessions with .sets are typically richer). All else
+      // equal, the first occurrence wins.
+      group.sort(function(a,b){
+        var aN=((a.sess.entries)||[]).length;
+        var bN=((b.sess.entries)||[]).length;
+        if(aN!==bN) return bN-aN;
+        return JSON.stringify(b.sess).length - JSON.stringify(a.sess).length;
+      });
+      var keepIdx=group[0].idx;
+      var dropIdxs=group.slice(1).map(function(g){ return g.idx; });
+      if(!perDayKeep[day]) perDayKeep[day]={ drop:{} };
+      dropIdxs.forEach(function(i){ perDayKeep[day].drop[i]=true; removed++; });
+    });
+    Object.keys(perDayKeep).forEach(function(day){
+      var saved=getSaved(day);
+      var drop=perDayKeep[day].drop;
+      var kept=saved.filter(function(_,i){ return !drop[i]; });
+      localStorage.setItem('gymlog_'+day, JSON.stringify(kept));
+    });
+  }catch(e){
+    showToast('⚠️ Dedup threw — no changes saved.');
+    return;
+  }
+  if(removed===0){ showToast('No duplicates removed'); return; }
+  showToast('Removed '+removed+' duplicate session'+(Number(removed)===1?'':'s')+' · syncing…');
+  try{ haptic('light'); }catch(e){}
+  _renderPatch5Status();
+  try{
+    // Authoritative: deduplication is destructive — overwrite cloud rather
+    // than risk merging the duplicates back in.
+    syncToJbin(function(ok){
+      if(ok) showToast('Cloud sync ✓ — dedup persisted to JSONbin');
+      else showToast('⚠️ Cloud sync failed — dedup saved locally; will retry on next save');
+    }, {authoritative:true});
+  }catch(e){
+    showToast('⚠️ Cloud sync threw — dedup saved locally');
+  }
 }
 function _renderPatch5Status(){
   var el=document.getElementById('patch5-status');
@@ -3485,7 +3750,13 @@ function _renderPatch5Status(){
     el.className='patch5-status patch5-neutral';
     return;
   }
-  var ok=(s.flag==='1') && (s.withSets===s.totalSet) && (s.doubledUnits===0);
+  // v2.68: combined Rear+Pec entries are a separate condition with their own
+  // action button. They don't break charts, but they mix two lifts into one
+  // history series. Surface separately so users can opt into splitting.
+  // v2.69: duplicate sessions (same ts+label) need their own action too.
+  var hasCombined=s.combinedRearPec>0;
+  var hasDuplicates=s.duplicateSessions>0;
+  var ok=(s.flag==='1') && (s.withSets===s.totalSet) && (s.doubledUnits===0) && !hasCombined && !hasDuplicates;
   var stalled=(s.flag!=='1');
   var partial=(s.flag==='1') && (s.withSets<s.totalSet) && (s.withSets>0);
   var hasDoubles=s.doubledUnits>0;
@@ -3502,16 +3773,59 @@ function _renderPatch5Status(){
       msgs.push('Partial: '+s.withSets+'/'+s.totalSet+' entries migrated. Restored sessions read via fallback; this is normal after a stale-backup restore.');
     }
     if(hasDoubles){
-      msgs.push(s.doubledUnits+' entr'+(s.doubledUnits===1?'y has':'ies have')+' duplicate units ("lbs lbs"). Cosmetic; weights still parse correctly.');
+      msgs.push(s.doubledUnits+' entr'+(Number(s.doubledUnits)===1?'y has':'ies have')+' duplicate units ("lbs lbs"). Cosmetic; weights still parse correctly.');
+    }
+    if(hasCombined){
+      msgs.push(s.combinedRearPec+' entr'+(Number(s.combinedRearPec)===1?'y combines':'ies combine')+' Rear + Pec in one note. Splitting them gives each lift its own clean history.');
+    }
+    if(hasDuplicates){
+      msgs.push(s.duplicateSessions+' duplicate session'+(Number(s.duplicateSessions)===1?'':'s')+' detected (same timestamp + label). Deduplicating keeps the richer copy and drops the stale ones.');
     }
   }
-  var showBtn = stalled || partial || hasDoubles;
-  // v2.63: button label reflects what it'll do. "Repair data" when cleanup
-  // work is queued; "Re-run migration" when only migration work is needed.
-  var btnLabel = hasDoubles ? 'Repair data' : 'Re-run migration';
-  var rerunHTML=showBtn?'<button type="button" class="patch5-rerun-btn" onclick="reRunMigration()">'+btnLabel+'</button>':'';
-  el.innerHTML='<div class="patch5-msg"><span class="patch5-icon">'+icon+'</span> '+msgs.join('<br>')+'</div>'+rerunHTML;
+  var showRepairBtn = stalled || partial || hasDoubles;
+  var repairLabel = hasDoubles ? 'Repair data' : 'Re-run migration';
+  var html='';
+  // v2.71 — Write-intent buttons are hidden on reader devices. On a reader,
+  // running Repair/Split/Dedupe would modify local data while the cloud push
+  // is suppressed → local diverges from cloud → next "Pull from cloud" wipes
+  // the local changes. Better to hide them and force the work to happen on
+  // the primary device.
+  var primary=isPrimaryDevice();
+  if(primary){
+    if(showRepairBtn){
+      html+='<button type="button" class="patch5-rerun-btn" onclick="reRunMigration()">'+repairLabel+'</button>';
+    }
+    if(hasCombined){
+      html+='<button type="button" class="patch5-rerun-btn" onclick="splitRearPecCombined()">Split into Rear delt + Pec fly</button>';
+    }
+    if(hasDuplicates){
+      html+='<button type="button" class="patch5-rerun-btn" onclick="dedupeDuplicateSessions()">Deduplicate sessions</button>';
+    }
+  } else if(showRepairBtn || hasCombined || hasDuplicates){
+    // Reader-mode informational note when fixes would be available on a primary device.
+    msgs.push('Reader mode — fixes are hidden here. Apply them on your primary device, then tap "Pull from cloud" to refresh this device.');
+  }
+  el.innerHTML='<div class="patch5-msg"><span class="patch5-icon">'+icon+'</span> '+msgs.join('<br>')+'</div>'+html;
   el.className='patch5-status '+cls;
+}
+
+// v2.71 — Sync the Primary/Reader toggle UI from localStorage. Called from
+// showExportImport (every modal open) and after every togglePrimaryDevice call.
+// Standalone so it doesn't depend on _renderPatch5Status's code path (which
+// early-returns when no sessions exist — would otherwise skip the sync).
+function _renderPrimaryToggleUI(){
+  try{
+    var cb=document.getElementById('primary-device-toggle');
+    var hint=document.getElementById('primary-toggle-hint');
+    var primary=isPrimaryDevice();
+    if(cb) cb.checked=primary;
+    if(hint){
+      hint.textContent = primary
+        ? '✓ Changes on this device sync to cloud.'
+        : '📖 Reader mode — changes save locally only. Use Pull from cloud to refresh from your primary device.';
+      hint.className='primary-toggle-hint '+(primary?'pt-primary':'pt-reader');
+    }
+  }catch(e){}
 }
 // v2.61 — clear the migration flag and re-run. v2.63 — also strip doubled
 // unit suffixes ("90 lbs lbs" → "90 lbs") from .note strings, invalidate
@@ -4461,7 +4775,7 @@ renderDaySummaries();
 // Legacy exercise_order no longer drives the DOM (kept only for old backups).
 setTimeout(checkMilestones, 500);
 // Step 3: apply a11y attrs once the cards + injected fields exist.
-setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} }, 0);
+setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} try{ _renderPrimaryBadge(); }catch(e){} }, 0);
 // After a builder save+reload, return to the Manage tab (not Day 1).
 (function returnToManageAfterPlan(){
   try{ if(sessionStorage.getItem('gym_after_plan')!=='manage') return;
@@ -4669,11 +4983,88 @@ function cloudGET(){
 }
 function cloudPUT(payload){
   if(TEST_MODE) return Promise.reject(new Error('test mode: cloud write blocked'));
+  // v2.71 — Reader-mode devices NEVER write to cloud. cloudPUT is the single
+  // funnel for every push (authoritative or merged), so guarding here covers
+  // every code path that could contaminate the cloud bin from a stale device.
+  // Resolve as success so callers' happy paths run (toasts, UI updates) — the
+  // user is informed of reader mode by the persistent 📖 badge + the toast
+  // surfaced from confirmSave / Repair / Split / Dedupe.
+  if(!isPrimaryDevice()){
+    try{ console.log('[reader-mode] cloudPUT suppressed — this device is in reader mode'); }catch(e){}
+    return Promise.resolve({ readerMode:true });
+  }
+  // v2.72 — X-Bin-Versioning REMOVED. The free JSONbin tier rejects this
+  // header with HTTP 403 "Versioning is not available for the Free users",
+  // which silently broke every cloud write (Repair, Split, Dedupe, every
+  // session save) for an extended period. Versioning was a nice-to-have
+  // audit feature; the app already has its own undo path via the
+  // gymlog_import_undo localStorage snapshot.
   return fetch(JBIN_URL, {
     method:'PUT',
-    headers:{ 'Content-Type':'application/json', 'X-Master-Key':JBIN_KEY, 'X-Bin-Versioning':'true' },
+    headers:{ 'Content-Type':'application/json', 'X-Master-Key':JBIN_KEY },
     body: JSON.stringify(payload)
-  }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+  }).then(function(r){
+    if(!r.ok){
+      // v2.72 — surface body text so future failures expose their actual
+      // cause instead of a generic "HTTP N" message.
+      return r.text().then(function(t){ throw new Error('HTTP '+r.status+(t?(' · '+t.slice(0,200)):'')); });
+    }
+    return r.json();
+  });
+}
+
+// v2.71 — Primary/Reader device mode. Per-device flag so a single user with
+// multiple devices can designate ONE as the writer (typically the phone) and
+// keep all others as read-only mirrors.
+// v2.73 — DEFAULT FLIPPED to reader. Any device that hasn't been explicitly
+// marked primary defaults to read-only. Prevents the "accidentally primary
+// device pushes stale data" failure mode that bit us. The user must
+// deliberately opt the iPhone (or whichever single device they want to use
+// for writes) into primary mode via the Backup modal's toggle.
+function isPrimaryDevice(){
+  try{
+    var v=localStorage.getItem('gym_primary_device');
+    return v==='1';  // strictly opt-in; null/'0'/anything else = reader
+  }catch(e){ return false; }
+}
+function setPrimaryDevice(yes){
+  try{ localStorage.setItem('gym_primary_device', yes?'1':'0'); }catch(e){}
+  try{ _renderPrimaryBadge(); }catch(e){}
+  try{ _renderPrimaryToggleUI(); }catch(e){}
+  try{ _renderPatch5Status(); }catch(e){}
+}
+function togglePrimaryDevice(makesPrimary){
+  if(!makesPrimary){
+    // Switching TO reader mode is a behavioral change — confirm once.
+    var ok=true;
+    try{
+      ok=confirm('Switch this device to Reader mode?\n\n• New workouts save LOCALLY only — no cloud sync\n• Repair / Split / Dedupe actions are hidden (would only modify local without syncing)\n• "Pull from cloud" lets you fetch the latest from your primary device\n\nUse this when one device (your iPhone) is your "writer" and others (PC, tablet) just view data.\n\nYour current data is unchanged either way.');
+    }catch(e){}
+    if(!ok){
+      var cb=document.getElementById('primary-device-toggle');
+      if(cb) cb.checked=true;
+      return;
+    }
+  }
+  setPrimaryDevice(makesPrimary);
+  showToast(makesPrimary
+    ? '✓ Primary device · changes sync to cloud'
+    : '📖 Reader mode · changes save locally only');
+  try{ haptic('light'); }catch(e){}
+}
+// v2.71 — Persistent visual indicator in the header. Prefixes 📖 to the
+// version badge when in reader mode so the user always knows the device's role.
+function _renderPrimaryBadge(){
+  var el=document.getElementById('app-version');
+  if(!el) return;
+  var current=String(el.textContent||'').replace(/^📖\s*/,'').trim();
+  if(isPrimaryDevice()){
+    el.textContent=current;
+    el.setAttribute('title','Primary device · changes sync to cloud');
+  } else {
+    el.textContent='📖 '+current;
+    el.setAttribute('title','Reader mode · this device does NOT write to cloud. Tap Backup → Primary device toggle to change.');
+  }
 }
 
 function markPendingSync(){ try{ localStorage.setItem('gymlog_sync_pending','1'); }catch(e){} }
@@ -4744,10 +5135,16 @@ function toggleTestMode(){
 function syncToJbin(onDone, opts){
   if(TEST_MODE){ if(typeof onDone==='function') onDone(true); return; }
   opts=opts||{};
+  // v2.72 — capture last error message so the diagnostic surface can show
+  // the actual cause instead of opaque "Cloud sync failed".
   if(opts.authoritative){
     cloudPUT(buildBinPayload())
-      .then(function(){ clearPendingSync(); if(onDone) onDone(true); })
-      .catch(function(err){ console.warn('JSONbin authoritative sync failed:', err); markPendingSync(); if(onDone) onDone(false); });
+      .then(function(){ clearPendingSync(); window._lastSyncErr=null; if(onDone) onDone(true); })
+      .catch(function(err){
+        console.warn('JSONbin authoritative sync failed:', err);
+        window._lastSyncErr=(err && err.message)||String(err);
+        markPendingSync(); if(onDone) onDone(false);
+      });
     return;
   }
   cloudGET()
@@ -4757,11 +5154,10 @@ function syncToJbin(onDone, opts){
       refreshAfterSync();
       return cloudPUT(merged);
     })
-    .then(function(){ clearPendingSync(); if(onDone) onDone(true); })
+    .then(function(){ clearPendingSync(); window._lastSyncErr=null; if(onDone) onDone(true); })
     .catch(function(err){
-      // Do NOT overwrite cloud on failure — the new data is safe in
-      // localStorage and flagged for retry. This is the safe tradeoff.
       console.warn('JSONbin merge sync failed (kept local, will retry):', err);
+      window._lastSyncErr=(err && err.message)||String(err);
       markPendingSync();
       if(onDone) onDone(false);
     });
