@@ -548,6 +548,22 @@ body.dark .mgr-archive-btn{background:#3A1A1A;border-color:#7A2020;color:#FF8080
 body.dark .mgr-edit-btn{background:#2A2850;border-color:#3C3A5C;color:#C7C4EE}
 .mgr-link-pill{font-size:9px;font-weight:700;color:#5B4EA8;background:#EEEDFE;border-radius:10px;padding:1px 6px;margin-left:5px;white-space:nowrap;flex-shrink:0}
 body.dark .mgr-link-pill{background:#2A2850;color:#C7C4EE}
+/* v2.79 (Phase B.3) — Manage days rows */
+.mgr-days-list{display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
+.mgr-day-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border:1px solid var(--border);border-radius:10px}
+body.dark .mgr-day-row{background:#252540;border-color:#3C3A5C}
+.mgr-day-reorder{display:flex;gap:2px}
+.mgr-day-name{flex:1;font-size:13px;font-weight:600;color:var(--text)}
+body.dark .mgr-day-name{color:#E8E6F8}
+.mgr-day-name-archived{color:var(--muted);font-weight:500}
+/* v2.80 — plan/day cloud-sync box */
+.plan-sync-box{margin-top:12px;padding:12px;background:var(--primary-tint);border-radius:10px}
+body.dark .plan-sync-box{background:#2A2850}
+.plan-sync-toggle{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text);cursor:pointer}
+.plan-sync-toggle input{width:16px;height:16px;cursor:pointer;accent-color:var(--primary)}
+.plan-sync-hint{font-size:11px;color:var(--muted);line-height:1.4;margin:6px 0 8px}
+.plan-sync-last{font-size:10.5px;color:var(--muted);margin-top:6px}
+.plan-sync-box .patch5-rerun-btn[disabled]{opacity:0.45;cursor:not-allowed}
 .mgr-add-btn{width:100%;padding:11px;margin-bottom:12px;background:#EEEDFE;border:1.5px solid #7F77DD;border-radius:10px;color:#3C3489;font-size:13px;font-weight:700;cursor:pointer}
 body.dark .mgr-add-btn{background:#2A2850;border-color:#5B4EA8;color:#C7C4EE}
 body.dark .mgr-notice{background:#0F3A2E;border-left-color:#5DD8A0;color:#A8E8C8}
@@ -687,7 +703,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.73</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.80</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -720,24 +736,16 @@ body.dark #pc-result{color:#E8E6F8}
 </div>
 <div id="notice-tray" role="region" aria-label="Notifications"></div>
 
-<div class="day-selector" role="tablist" aria-label="Day selector">
-  <button class="day-btn active" onclick="sw('a',this)" aria-label="Day 1 — Upper A">D1</button>
-  <button class="day-btn" onclick="sw('b',this)" aria-label="Day 2 — Lower A · Cardio">D2</button>
-  <button class="day-btn" onclick="sw('c',this)" aria-label="Day 3 — Cardio + Core">D3</button>
-  <button class="day-btn" onclick="sw('d',this)" aria-label="Day 4 — Upper B">D4</button>
-  <button class="day-btn" onclick="sw('e',this)" aria-label="Day 5 — Lower B · Cardio">D5</button>
-</div>
+<!-- v2.76 (Phase A.2): day selector rendered from DAYS_CONFIG via renderDaySelector().
+     First day active by default to match the boot panel (#p-a has 'show'). -->
+<div class="day-selector" id="day-selector" role="tablist" aria-label="Day selector"></div>
 
 <!-- ═══ PROGRESS ═══ -->
 <div class="day-panel" id="p-prog">
   <!-- Stats row -->
-  <div class="prog-stats">
+  <!-- v2.76 (Phase A.2): Total box static; per-day boxes injected by renderProgressDayWidgets() from DAYS_CONFIG. -->
+  <div class="prog-stats" id="prog-stats-row">
     <div class="stat-box"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total</div></div>
-    <div class="stat-box"><div class="stat-num" id="stat-d1">0</div><div class="stat-label">Day 1</div></div>
-    <div class="stat-box"><div class="stat-num" id="stat-d2">0</div><div class="stat-label">Day 2</div></div>
-    <div class="stat-box"><div class="stat-num" id="stat-d3">0</div><div class="stat-label">Day 3</div></div>
-    <div class="stat-box"><div class="stat-num" id="stat-d4">0</div><div class="stat-label">Day 4</div></div>
-    <div class="stat-box"><div class="stat-num" id="stat-d5">0</div><div class="stat-label">Day 5</div></div>
   </div>
 
   <!--
@@ -756,13 +764,9 @@ body.dark #pc-result{color:#E8E6F8}
 
   <!-- SESSIONS PANEL (Step 5 — cross-day chronological feed) -->
   <div class="prog-panel show" id="prog-panel-days">
-    <div class="sess-filter-row" role="tablist" aria-label="Filter sessions by day">
+    <!-- v2.76 (Phase A.2): "All" chip static; per-day chips injected by renderProgressDayWidgets() from DAYS_CONFIG. -->
+    <div class="sess-filter-row" id="sess-filter-row" role="tablist" aria-label="Filter sessions by day">
       <button class="sess-filter on" data-d="all" onclick="sessFilter('all',this)">All</button>
-      <button class="sess-filter" data-d="a" onclick="sessFilter('a',this)">D1<span id="prog-count-a" class="sess-cnt">0</span></button>
-      <button class="sess-filter" data-d="b" onclick="sessFilter('b',this)">D2<span id="prog-count-b" class="sess-cnt">0</span></button>
-      <button class="sess-filter" data-d="c" onclick="sessFilter('c',this)">D3<span id="prog-count-c" class="sess-cnt">0</span></button>
-      <button class="sess-filter" data-d="d" onclick="sessFilter('d',this)">D4<span id="prog-count-d" class="sess-cnt">0</span></button>
-      <button class="sess-filter" data-d="e" onclick="sessFilter('e',this)">D5<span id="prog-count-e" class="sess-cnt">0</span></button>
     </div>
     <div id="sess-filter-actions" style="display:none;margin-bottom:0.5rem;text-align:right"></div>
     <div id="sess-feed"></div>
@@ -842,6 +846,8 @@ body.dark #pc-result{color:#E8E6F8}
     <div class="mgr-notice">
       <strong>Add</strong>, <strong>Edit</strong>, rename, swap and reorder your plan right here. Renaming <strong>keeps all logged history</strong> (the underlying tracking id never changes). Archiving hides an exercise but keeps its history forever — restore anytime.
     </div>
+    <!-- v2.79 (Phase B.3): adjustable day cycle — add / rename / remove / reorder days. -->
+    <div id="mgr-days-wrap"></div>
     <div id="mgr-active-wrap"></div>
     <div class="mgr-archived-section" id="mgr-archived-section" style="display:none">
       <div class="mgr-archived-title">📦 Archived exercises</div>
@@ -858,6 +864,18 @@ body.dark #pc-result{color:#E8E6F8}
     <div class="modal-btn-row">
       <button class="modal-btn-primary" style="background:#C53030;" onclick="executeClear()">Yes, clear it</button>
       <button class="modal-btn-secondary" onclick="closeClearModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Remove day (Phase B.3) — archives, never deletes -->
+<div class="modal-overlay" id="day-del-overlay">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-title" style="color:#C53030;">Remove day?</div>
+    <div class="modal-sub" id="day-del-msg" style="margin:0.75rem 0 1rem;"></div>
+    <div class="modal-btn-row">
+      <button class="modal-btn-primary" style="background:#C53030;" onclick="executeRemoveDay()">Remove</button>
+      <button class="modal-btn-secondary" onclick="closeRemoveDayModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1046,6 +1064,181 @@ body.dark #pc-result{color:#E8E6F8}
 <script>
 var counts={a:10,b:10,c:6,d:9,e:10};
 
+// ── Phase 0 (v2.74): adjustable day cycle ───────────────────────────
+// DAYS_CONFIG is the single source of truth for which days exist, their
+// storage keys, display names, and order. Defaults to the original 5-day
+// cycle (keys a–e) with the exact session labels used by completeDay(), so
+// existing data + rendering stay byte-identical and need zero migration.
+// Persisted in localStorage 'days_config_v1', synced like plan_v2
+// (local-wins, cloud fallback on a true wipe).
+var DEFAULT_DAYS_CONFIG = [
+  { key:'a', name:'Day 1 — Upper A',          short:'D1' },
+  { key:'b', name:'Day 2 — Lower A',          short:'D2' },
+  { key:'c', name:'Day 3 — Cardio + Core',    short:'D3' },
+  { key:'d', name:'Day 4 — Upper B',          short:'D4' },
+  { key:'e', name:'Day 5 — Lower B + Cardio', short:'D5' }
+];
+// Raw config = the full stored array, INCLUDING archived (removed) days.
+// Used by the day-management UI for restore. getDaysConfig() filters to active.
+function _rawDaysConfig(){
+  try{
+    var raw=localStorage.getItem('days_config_v1');
+    if(raw){
+      var parsed=JSON.parse(raw);
+      if(Array.isArray(parsed) && parsed.length && parsed.every(function(d){ return d && typeof d.key==='string' && d.key; })){
+        return parsed;
+      }
+    }
+  }catch(e){}
+  return DEFAULT_DAYS_CONFIG.map(function(d){ return {key:d.key, name:d.name, short:d.short}; });
+}
+// Active day cycle (archived days excluded). This is what everything renders/iterates.
+function getDaysConfig(){ return _rawDaysConfig().filter(function(d){ return !d.archived; }); }
+function getArchivedDaysConfig(){ return _rawDaysConfig().filter(function(d){ return !!d.archived; }); }
+function getDays(){ return getDaysConfig().map(function(d){ return d.key; }); }
+// Resolve from the RAW config so an archived day's name still displays in
+// metrics / the Lifts tab (its exercise history references it).
+function getDayConfig(key){
+  var c=_rawDaysConfig();
+  for(var i=0;i<c.length;i++){ if(c[i].key===key) return c[i]; }
+  return null;
+}
+function getDayName(key){ var c=getDayConfig(key); return c?c.name:('Day '+String(key).toUpperCase()); }
+function getDayShort(key){ var c=getDayConfig(key); if(c&&c.short) return c.short; var i=getDays().indexOf(key); return i>=0?('D'+(i+1)):String(key).toUpperCase(); }
+function getDayNum(key){ var i=getDays().indexOf(key); return i>=0?(i+1):0; }
+function saveDaysConfig(cfg){
+  try{ localStorage.setItem('days_config_v1', JSON.stringify(cfg)); }catch(e){}
+}
+
+// ── Phase B.3: day-cycle mutators ────────────────────────────────────
+// Every mutator persists the full raw config (active+archived), then
+// refreshDayCycle() re-renders all day-derived UI and syncs to cloud.
+function _nextDayKey(){
+  // First a–z letter not used by any active OR archived day, and with no
+  // orphaned gymlog_<key> — guarantees a brand-new day with no stale history.
+  var used={};
+  _rawDaysConfig().forEach(function(d){ used[d.key]=1; });
+  getAllDayKeys().forEach(function(k){ used[k]=1; });
+  for(var i=0;i<26;i++){ var k=String.fromCharCode(97+i); if(!used[k]) return k; }
+  return null;
+}
+function addDay(name){
+  var key=_nextDayKey();
+  if(!key){ showToast('Max day count reached (26)'); return null; }
+  var cfg=_rawDaysConfig();
+  var n=(name||'').trim()||('Day '+(getDays().length+1));
+  cfg.push({ key:key, name:n, short:('D'+(getDays().length+1)) });
+  saveDaysConfig(cfg);
+  refreshDayCycle();
+  showToast('Added '+n+' ✓');
+  return key;
+}
+function renameDay(key, newName){
+  var cfg=_rawDaysConfig(), changed=false;
+  cfg.forEach(function(d){ if(d.key===key && newName && newName.trim()){ d.name=newName.trim(); changed=true; } });
+  if(changed){ saveDaysConfig(cfg); refreshDayCycle(); showToast('Renamed ✓'); }
+}
+function removeDay(key){
+  var active=getDays();
+  if(active.length<=1){ showToast('Keep at least one day'); return; }
+  var cfg=_rawDaysConfig();
+  cfg.forEach(function(d){ if(d.key===key) d.archived=true; });
+  saveDaysConfig(cfg);
+  // If the removed day's panel was showing, switch to the first remaining day.
+  var panel=document.getElementById('p-'+key);
+  var wasShowing=panel && panel.classList.contains('show');
+  refreshDayCycle();
+  if(wasShowing){
+    var first=getDays()[0];
+    var btn=document.querySelector('#day-selector .day-btn');
+    if(first && btn) sw(first, btn);
+  }
+  showToast('Day removed — its history is kept and restorable.');
+}
+function restoreDay(key){
+  var cfg=_rawDaysConfig();
+  cfg.forEach(function(d){ if(d.key===key) delete d.archived; });
+  saveDaysConfig(cfg);
+  refreshDayCycle();
+  showToast('Day restored ✓');
+}
+function moveDay(key, dir){
+  var cfg=_rawDaysConfig();
+  // Operate on the position among ACTIVE entries, but splice within raw cfg.
+  var activeIdxs=[]; cfg.forEach(function(d,i){ if(!d.archived) activeIdxs.push(i); });
+  var pos=-1; for(var j=0;j<activeIdxs.length;j++){ if(cfg[activeIdxs[j]].key===key) pos=j; }
+  if(pos<0) return;
+  var swapPos=pos+dir;
+  if(swapPos<0||swapPos>=activeIdxs.length) return;
+  var iA=activeIdxs[pos], iB=activeIdxs[swapPos];
+  var tmp=cfg[iA]; cfg[iA]=cfg[iB]; cfg[iB]=tmp;
+  saveDaysConfig(cfg);
+  refreshDayCycle();
+}
+// Master re-render hook: rebuild every day-derived surface. v2.80: NO auto-push.
+// Plan/day edits stay LOCAL by default; the user pushes them deliberately via
+// the "Cloud enabled" switch + "Push plan to cloud now" button (pushPlanToCloud).
+function refreshDayCycle(){
+  try{ syncDayPanels(); }catch(e){}
+  try{ renderDayItems(); }catch(e){}
+  try{ renderDaySelector(); }catch(e){}
+  try{ renderProgressDayWidgets(); }catch(e){}
+  try{ if(typeof renderManager==='function') renderManager(); }catch(e){}
+  try{ if(typeof renderProgress==='function') renderProgress(); }catch(e){}
+  try{ if(typeof loadLastTimes==='function') loadLastTimes(); }catch(e){}
+  try{ if(typeof updateSwipeHints==='function') updateSwipeHints(); }catch(e){}
+}
+
+// ── v2.80: Plan/day cloud-sync — 2-step, local-by-default ────────────
+// Plan (plan_v2) and day-cycle (days_config_v1) edits NEVER auto-sync. They
+// live locally until: (1) the "Cloud enabled" switch is on, AND (2) the user
+// taps "Push plan to cloud now". The push is SURGICAL — it overlays only the
+// plan + day config onto the cloud, preserving the cloud's session history
+// untouched, so it's safe to push from any device (incl. a reader PC).
+function getPlanSyncEnabled(){ try{ return localStorage.getItem('plan_sync_enabled')==='1'; }catch(e){ return false; } }
+function setPlanSyncEnabled(on){
+  try{ localStorage.setItem('plan_sync_enabled', on?'1':'0'); }catch(e){}
+  try{ renderDayManager(); }catch(e){}
+}
+function planLastPushed(){ try{ var v=localStorage.getItem('plan_last_pushed'); return v?parseInt(v,10):0; }catch(e){ return 0; } }
+function pushPlanToCloud(){
+  if(!getPlanSyncEnabled()){ showToast('Switch "Cloud enabled" on first'); return; }
+  if(TEST_MODE){ showToast('Test mode — cloud sync disabled'); return; }
+  showToast('Pushing plan to cloud…');
+  cloudGET().then(function(cloud){
+    cloud=(cloud && typeof cloud==='object')?cloud:{};
+    // Overlay ONLY the plan + day config; keep cloud's sessions etc. as-is.
+    try{ var pv=JSON.parse(localStorage.getItem('plan_v2')); if(pv) cloud['plan_v2']=pv; else delete cloud['plan_v2']; }catch(e){}
+    try{ var dc=JSON.parse(localStorage.getItem('days_config_v1')); if(dc) cloud['days_config_v1']=dc; }catch(e){}
+    if(!cloud.__schema) cloud.__schema=SCHEMA_VERSION;
+    return _rawCloudPUT(cloud);
+  }).then(function(){
+    try{ localStorage.setItem('plan_last_pushed', String(Date.now())); }catch(e){}
+    showToast('Plan pushed to cloud ✓ (sessions untouched)');
+    try{ haptic('light'); }catch(e){}
+    try{ renderDayManager(); }catch(e){}
+  }).catch(function(err){
+    showToast('⚠️ Plan push failed — '+(((err&&err.message)||'unknown')).slice(0,80));
+  });
+}
+// Union of active days + any orphaned gymlog_<key> still in localStorage.
+// Used for sync/persistence/restore loops so a day that was REMOVED from the
+// active cycle (Phase B) but still has logged history is never dropped from a
+// backup or cloud push. For the default 5-day cycle this equals getDays().
+// Day keys are single lowercase letters; the multi-char gymlog_* meta keys
+// (gymlog_draft_*, gymlog_migrated_v1, gymlog_sync_pending, etc.) are excluded.
+function getAllDayKeys(){
+  var keys=getDays().slice();
+  try{
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      var m=k && k.match(/^gymlog_([a-z])$/);
+      if(m && keys.indexOf(m[1])===-1) keys.push(m[1]);
+    }
+  }catch(e){}
+  return keys;
+}
+
 // ── Phase 1: data-driven exercise rendering ─────────────────────────
 // EXERCISE_DATA mirrors the former static markup exactly (generated from it).
 // renderDayItems() is the ONLY producer of exercise cards; the single change
@@ -1105,7 +1298,7 @@ var _MODEL=null;
 function buildExerciseModel(){
   if(_MODEL) return _MODEL;
   var m={ order:{}, ex:{} };
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     m.order[d]=[];
     (EXERCISE_DATA[d]||[]).forEach(function(item){
       var rec=parseExerciseRecord(d,item);
@@ -1133,7 +1326,7 @@ function getEffectivePlan(){
     Object.keys(ov.ex[k]).forEach(function(f){ merged[f]=ov.ex[k][f]; });
     merged._edited=true; eff.ex[k]=merged;
   });
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     eff.order[d]=(ov.order && ov.order[d] && ov.order[d].length)? ov.order[d].slice() : base.order[d].slice();
   });
   return eff;
@@ -1335,21 +1528,23 @@ document.addEventListener('input',function(e){
 },false);
 
 // ── Patch-2 Step 2: swipe affordance (visual only) ───────────────────
-var _SWIPE_ORDER=['prog','a','b','c','d','e'];
-var _SWIPE_LBL={prog:'Progress',a:'Day 1',b:'Day 2',c:'Day 3',d:'Day 4',e:'Day 5'};
+// v2.77 (Phase A.3): swipe order/labels derived from DAYS_CONFIG.
+function _swipeOrder(){ return ['prog'].concat(getDays()); }
+function _swipeLbl(k){ return k==='prog'?'Progress':dayLbl(k); }
 function _currentPanel(){
   var cur=null;
-  _SWIPE_ORDER.forEach(function(k){ var p=document.getElementById('p-'+k); if(p&&p.classList.contains('show')) cur=k; });
+  _swipeOrder().forEach(function(k){ var p=document.getElementById('p-'+k); if(p&&p.classList.contains('show')) cur=k; });
   return cur;
 }
 function updateSwipeHints(){
   var l=document.getElementById('swh-l'), r=document.getElementById('swh-r');
   if(!l||!r) return;
-  var cur=_currentPanel(); var i=cur?_SWIPE_ORDER.indexOf(cur):-1;
-  var prev=(i>0)?_SWIPE_ORDER[i-1]:null;
-  var next=(i>=0&&i<_SWIPE_ORDER.length-1)?_SWIPE_ORDER[i+1]:null;
-  if(prev){ l.textContent=_SWIPE_LBL[prev]; l.removeAttribute('hidden'); } else l.setAttribute('hidden','');
-  if(next){ r.textContent=_SWIPE_LBL[next]; r.removeAttribute('hidden'); } else r.setAttribute('hidden','');
+  var order=_swipeOrder();
+  var cur=_currentPanel(); var i=cur?order.indexOf(cur):-1;
+  var prev=(i>0)?order[i-1]:null;
+  var next=(i>=0&&i<order.length-1)?order[i+1]:null;
+  if(prev){ l.textContent=_swipeLbl(prev); l.removeAttribute('hidden'); } else l.setAttribute('hidden','');
+  if(next){ r.textContent=_swipeLbl(next); r.removeAttribute('hidden'); } else r.setAttribute('hidden','');
 }
 var _swipeTipT=null;
 function _dismissSwipeTip(){
@@ -1382,8 +1577,10 @@ function _surgicalEdit(html, rec){
 
 function _ovGet(){ var o=getPlanOverrides(); if(!o||typeof o!=='object') o={}; if(!o.order)o.order={}; if(!o.ex)o.ex={}; return o; }
 function _planCommit(msg){
-  showToast(msg||'Plan updated');
-  try{ syncToJbin(function(){}); }catch(e){}
+  // v2.80: exercise/plan edits save LOCALLY only — no auto cloud push. The
+  // user pushes deliberately via the Plan panel's "Push plan to cloud now"
+  // button (after enabling Cloud sync). Reload re-renders from local plan_v2.
+  showToast(msg||'Plan updated (local)');
   try{ sessionStorage.setItem('gym_after_plan','manage'); }catch(e){}
   setTimeout(function(){ location.reload(); }, 850);
 }
@@ -1541,13 +1738,12 @@ function _readMuscleChips(){
   document.querySelectorAll('#b-muscles button[data-sel="1"]').forEach(function(b){ out.push(b.getAttribute('data-mk')); });
   return out;
 }
-var _DAY_LABELS={a:'Day 1 · Upper A',b:'Day 2 · Lower A',c:'Day 3 · Cardio+Core',d:'Day 4 · Upper B',e:'Day 5 · Lower B'};
 function _dayChipsHTML(sel){
   sel=sel||[]; var selMap={}; sel.forEach(function(k){ selMap[k]=1; });
   var html='<div style="display:flex;flex-wrap:wrap;gap:5px">';
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     var on=!!selMap[d];
-    html+='<button type="button" class="chip '+(on?'on':'')+'" data-dk="'+d+'" data-sel="'+(on?'1':'0')+'" onclick="toggleMuscleChip(this)">'+_DAY_LABELS[d]+'</button>';
+    html+='<button type="button" class="chip '+(on?'on':'')+'" data-dk="'+d+'" data-sel="'+(on?'1':'0')+'" onclick="toggleMuscleChip(this)">'+_esc(getDayName(d))+'</button>';
   });
   return html+'</div>';
 }
@@ -1600,11 +1796,10 @@ function openBuilder(domId){
   if(domId){
     var r=getEffectivePlan().ex[domId]; if(!r){ showToast('Exercise not found'); return; }
     ttl.textContent='Edit exercise';
-    var dnum={a:'Day 1',b:'Day 2',c:'Day 3',d:'Day 4',e:'Day 5'};
     var sib=_unlinkedSiblingDays(domId);
     note.innerHTML='Renaming keeps all logged history — the underlying tracking id never changes.'
       +(sib.length?(' <b>This exercise also has separate copies on '
-        +sib.map(function(d){return dnum[d];}).join(', ')
+        +sib.map(function(d){return dayLbl(d);}).join(', ')
         +'</b> — saving links them so they stay in sync. Untick a day to remove that copy.'):'');
     note.style.display='block'; swap.style.display='';
     document.getElementById('b-days').innerHTML=_dayChipsHTML(_exerciseDays(domId));
@@ -1654,7 +1849,7 @@ function saveBuilder(isSwap){
 
 function renderDayItems(){
   var plan=getEffectivePlan();
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     var host=document.getElementById('items-'+d);
     if(!host) return;
     var ids=(plan.order[d]||[]).filter(function(id){ return plan.ex[id]; });
@@ -1669,10 +1864,99 @@ function renderDayItems(){
     if(rb) rb.setAttribute('onclick',"rst('"+d+"',"+counts[d]+")");
   });
 }
+// v2.78 (Phase B.2): dynamic day-panel injection. The 5 default panels
+// (#p-a..e) stay static (byte-identity gate); panels for any other active
+// day key are built from this scaffold and injected before #toast. Removed
+// days' panels are hidden (data preserved). Must run BEFORE renderDayItems()
+// so each active day has an #items-<key> host for counts to populate.
+function buildDayPanelHTML(key){
+  var name=getDayName(key);
+  return '<div class="day-panel" id="p-'+key+'">'
+    +'<div class="progress-wrap"><div class="progress-label"><span>'+_esc(name)+'</span><span id="cnt-'+key+'">0 / 0</span></div>'
+    +'<div class="progress-track"><div class="progress-fill" id="bar-'+key+'" style="width:0%"></div></div></div>'
+    +'<div id="items-'+key+'"></div>'
+    +'<div class="day-summary" id="summary-'+key+'"></div>'
+    +'<div class="tip">New day — add exercises from the 📋 Plan menu.</div>'
+    +'<div class="btn-row">'
+    +'<button class="complete-btn" onclick="completeDay(\''+key+'\')">✓ Complete '+_esc(name)+' &amp; Save</button>'
+    +'<button class="reset-btn" onclick="rst(\''+key+'\',0)">Reset</button>'
+    +'</div></div>';
+}
+function syncDayPanels(){
+  var active=getDays();
+  var anchor=document.getElementById('toast');
+  // Inject a panel for any active day that doesn't already have one.
+  active.forEach(function(key){
+    if(document.getElementById('p-'+key)) return;
+    var tmp=document.createElement('div');
+    tmp.innerHTML=buildDayPanelHTML(key);
+    var panel=tmp.firstChild;
+    if(anchor && anchor.parentNode) anchor.parentNode.insertBefore(panel, anchor);
+    else document.body.appendChild(panel);
+  });
+  // Hide any day panel whose key is no longer active (data stays in storage).
+  document.querySelectorAll('.day-panel').forEach(function(p){
+    var id=p.id||'';
+    if(id==='p-prog') return;
+    var key=id.replace(/^p-/,'');
+    if(key && active.indexOf(key)===-1){ p.classList.remove('show'); p.style.display='none'; }
+    else { p.style.display=''; }
+  });
+}
+syncDayPanels();
 renderDayItems();
-var statKeys={a:'stat-d1',b:'stat-d2',c:'stat-d3',d:'stat-d4',e:'stat-d5'};
-var countKeys={a:'prog-count-a',b:'prog-count-b',c:'prog-count-c',d:'prog-count-d',e:'prog-count-e'};
-var bodyKeys={a:'prog-body-a',b:'prog-body-b',c:'prog-body-c',d:'prog-body-d',e:'prog-body-e'};
+
+// v2.76 (Phase A.2): render the day selector buttons from DAYS_CONFIG.
+// Preserves the currently-active day across re-renders; defaults to the
+// first day (matches the boot panel #p-a having 'show').
+function renderDaySelector(){
+  var sel=document.getElementById('day-selector');
+  if(!sel) return;
+  var cfg=getDaysConfig();
+  var activeKey=null;
+  var cur=sel.querySelector('.day-btn.active');
+  if(cur){ var mm=(cur.getAttribute('onclick')||'').match(/sw\('([^']+)'/); if(mm) activeKey=mm[1]; }
+  sel.innerHTML=cfg.map(function(d,i){
+    var act=(activeKey ? d.key===activeKey : i===0);
+    return '<button class="day-btn'+(act?' active':'')+'" onclick="sw(\''+d.key+'\',this)" aria-label="'+_esc(d.name)+'">'+_esc(d.short||('D'+(i+1)))+'</button>';
+  }).join('');
+}
+// v2.76 (Phase A.2): inject the per-day Progress widgets (stat boxes + Sessions
+// filter chips) from DAYS_CONFIG. "Total" box and "All" chip stay static;
+// day-specific items are appended idempotently (re-callable when the config
+// changes in Phase B). Stat boxes use id="stat-day-<key>", chips reuse the
+// existing id="prog-count-<key>" convention.
+function renderProgressDayWidgets(){
+  var cfg=getDaysConfig();
+  var statRow=document.getElementById('prog-stats-row');
+  if(statRow){
+    statRow.querySelectorAll('.stat-box[data-day]').forEach(function(b){ b.parentNode.removeChild(b); });
+    cfg.forEach(function(d,i){
+      var box=document.createElement('div');
+      box.className='stat-box';
+      box.setAttribute('data-day', d.key);
+      box.innerHTML='<div class="stat-num" id="stat-day-'+d.key+'">0</div><div class="stat-label">Day '+(i+1)+'</div>';
+      statRow.appendChild(box);
+    });
+  }
+  var chipRow=document.getElementById('sess-filter-row');
+  if(chipRow){
+    chipRow.querySelectorAll('.sess-filter[data-d]').forEach(function(c){ if(c.getAttribute('data-d')!=='all') c.parentNode.removeChild(c); });
+    var f=(typeof _sessFilterDay!=='undefined' && _sessFilterDay)?_sessFilterDay:'all';
+    var allChip=chipRow.querySelector('.sess-filter[data-d="all"]');
+    if(allChip) allChip.className='sess-filter'+(f==='all'?' on':'');
+    cfg.forEach(function(d,i){
+      var btn=document.createElement('button');
+      btn.className='sess-filter'+(f===d.key?' on':'');
+      btn.setAttribute('data-d', d.key);
+      btn.setAttribute('onclick', "sessFilter('"+d.key+"',this)");
+      btn.innerHTML=_esc(d.short||('D'+(i+1)))+'<span id="prog-count-'+d.key+'" class="sess-cnt">0</span>';
+      chipRow.appendChild(btn);
+    });
+  }
+}
+renderDaySelector();
+renderProgressDayWidgets();
 
 // ── Session duration tracking ────────────────────────────────────────
 var sessionStartTimes={};
@@ -1859,7 +2143,6 @@ function sw(day,btn){
 
 // ── Swipe to switch days ─────────────────────────────────────────────
 (function initSwipe(){
-  var dayOrder=['prog','a','b','c','d','e'];
   var touchStartX=0,touchStartY=0,touchStartTime=0;
   document.addEventListener('touchstart',function(e){
     touchStartX=e.touches[0].clientX;
@@ -1871,6 +2154,7 @@ function sw(day,btn){
     var dy=e.changedTouches[0].clientY-touchStartY;
     var dt=Date.now()-touchStartTime;
     if(Math.abs(dx)<50||Math.abs(dy)>Math.abs(dx)*0.8||dt>400) return;
+    var dayOrder=_swipeOrder();  // v2.77: dynamic order from DAYS_CONFIG
     // Find current active day
     var current=null;
     dayOrder.forEach(function(d){
@@ -1971,7 +2255,7 @@ function setCheckin(day, feeling){
 }
 
 (function injectQuickFillButtons(){
-  ['a','b','c','d','e'].forEach(function(day){
+  getDays().forEach(function(day){
     var p=document.getElementById('p-'+day);
     if(!p) return;
     var wrap=p.querySelector('.progress-wrap');
@@ -1985,7 +2269,7 @@ function setCheckin(day, feeling){
 })();
 
 (function injectCheckinBars(){
-  ['a','b','c','d','e'].forEach(function(day){
+  getDays().forEach(function(day){
     var p=document.getElementById('p-'+day);
     if(!p) return;
     var qfBtn=p.querySelector('.quick-fill-btn');
@@ -2000,7 +2284,7 @@ function setCheckin(day, feeling){
 
 // ── RPE slider + actual reps + pain flag + manual timer injection ──────────────────
 (function injectExerciseExtras(){
-  ['a','b','c','d','e'].forEach(function(day){
+  getDays().forEach(function(day){
     var p=document.getElementById('p-'+day);
     if(!p) return;
     p.querySelectorAll('.item').forEach(function(item){
@@ -2232,7 +2516,7 @@ function getSaved(day){
 function migrateSessionsToStructured_v1(){
   try{
     if(localStorage.getItem('sessions_migrated_v1')==='1') return;
-    var days=['a','b','c','d','e'];
+    var days=getDays();
     var totalMigrated=0;
     days.forEach(function(day){
       var saved=getSaved(day);
@@ -2280,7 +2564,7 @@ function migrateSessionsToStructured_v1(){
 }
 
 function clearLog(day){
-  confirmClear(day, 'Day '+{a:1,b:2,c:3,d:4,e:5}[day]);
+  confirmClear(day, dayLbl(day));
 }
 
 function normalizeEx(s){
@@ -2290,8 +2574,10 @@ function normalizeEx(s){
 function buildGlobalRepMap(){
   // Collect the most recent entry for every exercise name across ALL days
   // keyed by normalized exercise name -> {note, date, ts}
+  // Phase B: getAllDayKeys so an exercise's last-session ghost persists even
+  // if the day it was on has been removed from the active cycle.
   var globalMap={};
-  ['a','b','c','d','e'].forEach(function(day){
+  getAllDayKeys().forEach(function(day){
     var saved=getSaved(day);
     saved.forEach(function(session){
       var ts=sessTs(session);
@@ -2313,7 +2599,7 @@ function buildGlobalRepMap(){
 function getExerciseHistory(exKey){
   // Returns array of max weights per session, most recent first
   var sessions=[];
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     getSaved(d).forEach(function(session){
       var ts=sessTs(session);
       session.entries.forEach(function(e){
@@ -2348,7 +2634,7 @@ function getExerciseTargets(){
   if(_exTargets) return _exTargets;
   _exTargets={};
   try{
-    ['a','b','c','d','e'].forEach(function(d){
+    getDays().forEach(function(d){
       (EXERCISE_DATA[d]||[]).forEach(function(it){
         var h=it.html;
         var rm=h.match(/data-ex="([^"]+)"\s+data-set="1"/);
@@ -2365,9 +2651,10 @@ function getExerciseTargets(){
 }
 
 // Per-exercise session history with sets, top weight, reps at top, RPE.
+// Phase B: getAllDayKeys so charts/1RM include history from removed days too.
 function getExerciseProgress(exKey){
   var out=[];
-  ['a','b','c','d','e'].forEach(function(d){
+  getAllDayKeys().forEach(function(d){
     getSaved(d).forEach(function(session){
       var ts=sessTs(session);
       var rpe=null;
@@ -2445,7 +2732,7 @@ function getDeloadAdvice(){
   });
   // Recent overall load
   var now=Date.now(), MS14=14*864e5, sess14=0, pr14=0, rpe14=[];
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     getSaved(d).forEach(function(s){
       if(now-sessTs(s)<=MS14){
         sess14++;
@@ -2466,7 +2753,7 @@ function getDeloadAdvice(){
 function prettyExName(exKey){
   var nm=exKey;
   try{
-    ['a','b','c','d','e'].some(function(d){
+    getDays().some(function(d){
       return (EXERCISE_DATA[d]||[]).some(function(it){
         var rm=it.html.match(/data-ex="([^"]+)"\s+data-set="1"/);
         if(rm && normalizeEx(rm[1])===exKey){ nm=rm[1]; return true; }
@@ -2479,7 +2766,7 @@ function prettyExName(exKey){
 
 function loadLastTimes(){
   var globalMap=buildGlobalRepMap();
-  ['a','b','c','d','e'].forEach(function(day){
+  getDays().forEach(function(day){
     var panel=document.getElementById('p-'+day);
     if(!panel) return;
 
@@ -2621,9 +2908,11 @@ function executeClear(){
 var selectedEx=null;
 
 function getAllExercises(){
-  // Collect every unique exercise name that has set data across all days
+  // Collect every unique exercise name that has set data across all days.
+  // Phase B: getAllDayKeys so the Lifts tab keeps showing an exercise's
+  // history even after the day it lived on is removed from the active cycle.
   var exMap={};
-  ['a','b','c','d','e'].forEach(function(day){
+  getAllDayKeys().forEach(function(day){
     var saved=getSaved(day);
     saved.forEach(function(session){
       session.entries.forEach(function(e){
@@ -3126,7 +3415,7 @@ function renderDaySummaries(){
   var catColors={'Warm-up':'#F59E0B','Upper body':'#7F77DD','Lower body':'#10B981','Core':'#EF4444','Cardio':'#3B82F6','Cool-down':'#8B5CF6'};
   var plan; try{ plan=getEffectivePlan(); }catch(e){ plan={order:{},ex:{}}; }
   var archived=getArchivedExercises();
-  ['a','b','c','d','e'].forEach(function(dayKey){
+  getDays().forEach(function(dayKey){
     var el=document.getElementById('summary-'+dayKey);
     if(!el) return;
     var cats={};
@@ -3275,7 +3564,79 @@ function applyExerciseOrder(){
   });
 }
 
+// v2.79 (Phase B.3): the "Manage days" section — add / rename / remove /
+// reorder the day cycle, plus restore archived days.
+function renderDayManager(){
+  var wrap=document.getElementById('mgr-days-wrap');
+  if(!wrap) return;
+  var active=getDaysConfig();
+  var archived=getArchivedDaysConfig();
+  var html='<div class="mgr-day-label">📆 Days in your cycle</div>';
+  html+='<div class="mgr-days-list">';
+  active.forEach(function(d,i){
+    html+='<div class="mgr-day-row">'
+      +'<div class="mgr-day-reorder">'
+      +'<button class="mgr-reorder-btn" '+(i===0?'disabled':'')+' onclick="moveDay(\''+d.key+'\',-1)" title="Move up">↑</button>'
+      +'<button class="mgr-reorder-btn" '+(i===active.length-1?'disabled':'')+' onclick="moveDay(\''+d.key+'\',1)" title="Move down">↓</button>'
+      +'</div>'
+      +'<span class="mgr-day-name">'+_esc(d.name)+'</span>'
+      +'<button class="mgr-archive-btn mgr-edit-btn" onclick="_promptRenameDay(\''+d.key+'\')">Rename</button>'
+      +'<button class="mgr-archive-btn" onclick="confirmRemoveDay(\''+d.key+'\')" title="Remove this day (history kept)">Remove</button>'
+      +'</div>';
+  });
+  html+='</div>';
+  html+='<button class="mgr-add-btn" onclick="_promptAddDay()" style="margin-top:8px">➕ Add day</button>';
+  // v2.80: plan/day cloud-sync — local by default, 2-step push.
+  var syncOn=getPlanSyncEnabled();
+  var lp=planLastPushed();
+  var lpTxt=lp?('Last pushed: '+new Date(lp).toLocaleString()):'Last pushed: never';
+  html+='<div class="plan-sync-box">'
+    +'<div class="plan-sync-row">'
+    +'<label class="plan-sync-toggle"><input type="checkbox" id="plan-sync-switch" '+(syncOn?'checked':'')+' onchange="setPlanSyncEnabled(this.checked)"><span>Cloud sync for plan &amp; days '+(syncOn?'<b>(Cloud enabled)</b>':'<b>(Local only)</b>')+'</span></label>'
+    +'</div>'
+    +'<div class="plan-sync-hint">Plan &amp; day edits stay on this device until you push. '+(syncOn?'Tap below to write them to the cloud (your workout history is left untouched).':'Switch on to enable the push button.')+'</div>'
+    +'<button class="patch5-rerun-btn" '+(syncOn?'':'disabled')+' onclick="pushPlanToCloud()">⬆ Push plan to cloud now</button>'
+    +'<div class="plan-sync-last">'+lpTxt+'</div>'
+    +'</div>';
+  if(archived.length){
+    html+='<div class="mgr-archived-title" style="margin-top:1rem">📦 Removed days (history kept)</div>';
+    archived.forEach(function(d){
+      html+='<div class="mgr-day-row">'
+        +'<span class="mgr-day-name mgr-day-name-archived">'+_esc(d.name)+'</span>'
+        +'<button class="mgr-restore-btn" onclick="restoreDay(\''+d.key+'\')">Restore</button>'
+        +'</div>';
+    });
+  }
+  wrap.innerHTML=html;
+}
+function _promptAddDay(){
+  var n=prompt('Name this day (e.g. "Day 6 — Arms", "Push", "Conditioning"):','');
+  if(n===null) return;
+  addDay(n);
+}
+function _promptRenameDay(key){
+  var cur=getDayName(key);
+  var n=prompt('Rename day:', cur);
+  if(n===null) return;
+  renameDay(key, n);
+}
+var _pendingRemoveDay=null;
+function confirmRemoveDay(key){
+  _pendingRemoveDay=key;
+  var nm=getDayName(key);
+  var cnt=getSaved(key).length;
+  document.getElementById('day-del-msg').innerHTML='Remove <b>'+_esc(nm)+'</b> from your active cycle?<br><br>'
+    +'Its '+cnt+' logged session'+(cnt===1?'':'s')+' and exercise history are <b>kept</b> and the day can be restored anytime. Nothing is deleted.';
+  document.getElementById('day-del-overlay').classList.add('show');
+}
+function closeRemoveDayModal(){ document.getElementById('day-del-overlay').classList.remove('show'); _pendingRemoveDay=null; }
+function executeRemoveDay(){
+  if(_pendingRemoveDay){ removeDay(_pendingRemoveDay); }
+  closeRemoveDayModal();
+}
+
 function renderManager(){
+  renderDayManager();
   var archived=getArchivedExercises();
   var order=getExerciseOrder();
   var exMap=getAllExercises(); // from history data
@@ -3286,17 +3647,16 @@ function renderManager(){
 
   // Model-driven active list (Phase 2b). Order/edits come from the plan.
   var plan=getEffectivePlan();
-  var dayLabels={a:'Day 1 — Upper A',b:'Day 2 — Lower A',c:'Day 3 — Cardio + Core',d:'Day 4 — Upper B',e:'Day 5 — Lower B + Cardio'};
   var catColors={'Warm-up':'#F59E0B','Upper body':'#7F77DD','Lower body':'#10B981','Core':'#EF4444','Cardio':'#3B82F6','Cool-down':'#8B5CF6'};
 
   var activeHTML='<button class="mgr-add-btn" onclick="openBuilder(null)">➕ Add exercise</button>';
-  ['a','b','c','d','e'].forEach(function(day){
+  getDays().forEach(function(day){
     var ids=(plan.order[day]||[]).filter(function(id){
       var r=plan.ex[id]; if(!r) return false;
       return archived.indexOf(r.histEx)===-1; // hide archived
     });
     if(!ids.length) return;
-    activeHTML+='<div class="mgr-day-label">'+(dayLabels[day]||day)+'</div>';
+    activeHTML+='<div class="mgr-day-label">'+_esc(getDayName(day))+'</div>';
     ids.forEach(function(id,i){
       var r=plan.ex[id];
       var nm=r.name||r.histEx||id;
@@ -3479,7 +3839,7 @@ function showExportImport(){
 function _findRearPecCombined(){
   var hits=[];
   try{
-    ['a','b','c','d','e'].forEach(function(day){
+    getDays().forEach(function(day){
       var saved=getSaved(day);
       saved.forEach(function(sess, si){
         (sess.entries||[]).forEach(function(e, ei){
@@ -3528,7 +3888,7 @@ function _patch5DiagStats(){
     return false;
   }
   try{
-    ['a','b','c','d','e'].forEach(function(d){
+    getDays().forEach(function(d){
       var saved=getSaved(d);
       totalSess+=saved.length;
       saved.forEach(function(sess){
@@ -3647,7 +4007,7 @@ function pullFromCloud(){
       // overwrite local-non-empty days (applyPayloadToLocal only SETS keys
       // that exist in the payload — without the explicit clear, local-only
       // sessions would survive the pull).
-      ['a','b','c','d','e'].forEach(function(day){
+      getDays().forEach(function(day){
         localStorage.removeItem('gymlog_'+day);
         localStorage.removeItem('gymlog_draft_'+day);
       });
@@ -3673,7 +4033,7 @@ function pullFromCloud(){
 function _findDuplicateSessions(){
   var groups=[];
   try{
-    ['a','b','c','d','e'].forEach(function(day){
+    getDays().forEach(function(day){
       var saved=getSaved(day);
       var byKey={};
       saved.forEach(function(sess, idx){
@@ -3839,7 +4199,7 @@ function reRunMigration(){
   // ── Cleanup pass: strip doubled units in .note, invalidate .sets so
   //    migration re-derives them from the cleaned text.
   try{
-    ['a','b','c','d','e'].forEach(function(d){
+    getDays().forEach(function(d){
       var saved=getSaved(d);
       var dirty=false;
       saved.forEach(function(sess){
@@ -3906,8 +4266,8 @@ function showTab(tab){
 
 function generateExport(){
   var data={};
-  // Workout sessions
-  ['a','b','c','d','e'].forEach(function(day){
+  // Workout sessions — getAllDayKeys so archived days' history is backed up too.
+  getAllDayKeys().forEach(function(day){
     var saved=getSaved(day);
     if(saved.length) data['gymlog_'+day]=saved;
   });
@@ -3923,9 +4283,11 @@ function generateExport(){
   try{ var ord=JSON.parse(localStorage.getItem('exercise_order')); if(ord&&Object.keys(ord).length) data['exercise_order']=ord; }catch(e){}
   // Custom plan / exercise edits
   try{ var pv=JSON.parse(localStorage.getItem('plan_v2')); if(pv) data['plan_v2']=pv; }catch(e){}
+  // Phase 0: day-cycle config in backups too.
+  try{ var dc=JSON.parse(localStorage.getItem('days_config_v1')); if(dc) data['days_config_v1']=dc; }catch(e){}
   // In-progress (unsubmitted) drafts — so a backup also protects a workout
   // you're in the middle of entering.
-  ['a','b','c','d','e'].forEach(function(day){
+  getAllDayKeys().forEach(function(day){
     var dr=getDraftRaw(day);
     if(dr) data['gymlog_draft_'+day]=dr;
   });
@@ -4013,7 +4375,7 @@ function _copyFallback(ta){
     showToast('Copy failed — long-press the box to copy manually');
   }
 }
-function _totalSessions(){ var n=0; ['a','b','c','d','e'].forEach(function(d){ n+=getSaved(d).length; }); return n; }
+function _totalSessions(){ var n=0; getDays().forEach(function(d){ n+=getSaved(d).length; }); return n; }
 function dismissBackupBanner(){ var b=document.getElementById('backup-banner'); if(b) b.style.display='none'; }
 function dismissMergeBanner(){ var b=document.getElementById('merge-banner'); if(b) b.style.display='none'; }
 function dismissDeloadBanner(){ var b=document.getElementById('deload-banner'); if(b) b.style.display='none'; }
@@ -4138,8 +4500,13 @@ function importData(){
     // Snapshot CURRENT state before overwriting, so a wrong/stale paste
     // can be undone instead of silently destroying live data.
     try{ localStorage.setItem('gymlog_import_undo', btoa(unescape(encodeURIComponent(JSON.stringify(buildBinPayload()))))); }catch(e){}
-    // Restore workout sessions — support both old format (key=day letter) and new (key=gymlog_X)
-    ['a','b','c','d','e'].forEach(function(day){
+    // Restore workout sessions — support both old format (key=day letter) and
+    // new (key=gymlog_X), for ANY day keys present in the backup (not just the
+    // current active set — a backup may carry days this device doesn't have yet).
+    var _impDays={};
+    Object.keys(data).forEach(function(k){ var mm=k.match(/^gymlog_([a-z])$/); if(mm) _impDays[mm[1]]=1; });
+    getDays().forEach(function(d){ _impDays[d]=1; }); // also check legacy bare-letter keys for active days
+    Object.keys(_impDays).forEach(function(day){
       var sessions=data['gymlog_'+day]||data[day];
       if(sessions && Array.isArray(sessions)){
         localStorage.setItem('gymlog_'+day,JSON.stringify(sessions));
@@ -4168,6 +4535,10 @@ function importData(){
     if(data['plan_v2'] && typeof data['plan_v2']==='object'){
       localStorage.setItem('plan_v2',JSON.stringify(data['plan_v2']));
     }
+    // Phase 0: restore day-cycle config from backup if present.
+    if(Array.isArray(data['days_config_v1'])){
+      localStorage.setItem('days_config_v1',JSON.stringify(data['days_config_v1']));
+    }
     var hint=document.getElementById('restore-hint');
     hint.innerHTML='✅ Restored '+count+' sessions + measurements + settings! '
       +'<button onclick="undoImport()" style="margin-left:6px;padding:4px 10px;border:1px solid #C53030;background:#FFF5F5;color:#C53030;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Undo import</button>';
@@ -4195,7 +4566,7 @@ function undoImport(){
     var p=JSON.parse(decodeURIComponent(escape(atob(snap))));
     applyPayloadToLocal(p);
     // Force-restore drafts exactly (applyPayloadToLocal only takes richer ones)
-    ['a','b','c','d','e'].forEach(function(d){
+    getDays().forEach(function(d){
       if(p['gymlog_draft_'+d]) localStorage.setItem('gymlog_draft_'+d, JSON.stringify(p['gymlog_draft_'+d]));
     });
     localStorage.removeItem('gymlog_import_undo');
@@ -4514,7 +4885,7 @@ function _median(a){
 function computeWeeklyMuscleLoad(){
   var targets=(typeof getExerciseTargets==='function')?getExerciseTargets():{};
   var weeks={}; // weekTime -> {muscle: vol}
-  ['a','b','c','d','e'].forEach(function(day){
+  getDays().forEach(function(day){
     getSaved(day).forEach(function(sess){
       var ts=sessTs(sess); if(!ts) return;
       var wk=_isoWeekKey(ts);
@@ -4587,7 +4958,7 @@ function _sessionPRCount(day, sTs, sess){
     if(!currWeights.length) return;
     var currBest=Math.max.apply(null,currWeights);
     var prevBest=0;
-    ['a','b','c','d','e'].forEach(function(d2){
+    getDays().forEach(function(d2){
       getSaved(d2).forEach(function(other){
         if(sessTs(other)>=sTs) return;
         (other.entries||[]).forEach(function(en){
@@ -4622,8 +4993,9 @@ function _weekBucketLabel(weekStart){
   var d=new Date(weekStart);
   return d.toLocaleString(undefined,{month:'long',year:'numeric'});
 }
-var _DAY_NUM={a:1,b:2,c:3,d:4,e:5};
-var _DAY_LBL={a:'Day 1',b:'Day 2',c:'Day 3',d:'Day 4',e:'Day 5'};
+// v2.77 (Phase A.3): _DAY_NUM / _DAY_LBL maps removed — derived from config.
+// dayLbl(key) → "Day N" using the day's 1-based position in the active cycle.
+function dayLbl(key){ var n=getDayNum(key); return n>0?('Day '+n):('Day '+String(key).toUpperCase()); }
 function sessOverflow(day, idx, ev){
   if(ev){ ev.stopPropagation(); }
   // Close any existing menu first.
@@ -4653,7 +5025,7 @@ function confirmDeleteSession(day, idx){
   if(idx<0 || idx>=saved.length) return;
   _pendingDelete={day:day, idx:idx};
   var s=saved[idx];
-  var lbl=(s && s.label) || _DAY_LBL[day];
+  var lbl=(s && s.label) || dayLbl(day);
   var dt=(s && s.date) || '';
   document.getElementById('sess-del-msg').textContent='Delete '+lbl+' from '+dt+'? This cannot be undone.';
   document.getElementById('sess-del-overlay').classList.add('show');
@@ -4680,13 +5052,14 @@ function executeDeleteSession(){
 
 function renderProgress(){
   var total=0, allItems=[];
-  ['a','b','c','d','e'].forEach(function(day){
+  getDays().forEach(function(day){
     var saved=getSaved(day);
     total+=saved.length;
     var n=saved.length;
-    // Keep prog-count-X and stat-X updating (functionality contract).
-    var cEl=document.getElementById(countKeys[day]); if(cEl) cEl.textContent=n;
-    var sEl=document.getElementById(statKeys[day]); if(sEl) sEl.textContent=n;
+    // Keep the filter-chip count + day stat box updating (functionality contract).
+    // v2.76: ids derived directly from the day key (prog-count-<key>, stat-day-<key>).
+    var cEl=document.getElementById('prog-count-'+day); if(cEl) cEl.textContent=n;
+    var sEl=document.getElementById('stat-day-'+day); if(sEl) sEl.textContent=n;
     saved.forEach(function(s, idx){
       allItems.push({day:day, idx:idx, sess:s, ts:sessTs(s)});
     });
@@ -4699,7 +5072,7 @@ function renderProgress(){
     if(filter==='all'){ actionsEl.style.display='none'; actionsEl.innerHTML=''; }
     else {
       actionsEl.style.display='block';
-      actionsEl.innerHTML='<button class="sess-day-clear" onclick="confirmClear(\''+filter+'\',\''+_DAY_LBL[filter]+'\')">🗑 Clear all '+_DAY_LBL[filter]+' history</button>';
+      actionsEl.innerHTML='<button class="sess-day-clear" onclick="confirmClear(\''+filter+'\',\''+dayLbl(filter)+'\')">🗑 Clear all '+dayLbl(filter)+' history</button>';
     }
   }
 
@@ -4712,7 +5085,7 @@ function renderProgress(){
   var feed=document.getElementById('sess-feed');
   if(!feed) return;
   if(!items.length){
-    feed.innerHTML='<div class="prog-empty" style="padding:1.5rem 0">'+(filter==='all'?'No sessions saved yet.':'No '+_DAY_LBL[filter]+' sessions saved yet.')+'</div>';
+    feed.innerHTML='<div class="prog-empty" style="padding:1.5rem 0">'+(filter==='all'?'No sessions saved yet.':'No '+dayLbl(filter)+' sessions saved yet.')+'</div>';
     return;
   }
 
@@ -4738,7 +5111,7 @@ function renderProgress(){
       var dur=s.duration?'<span class="sess-meta-chip">⏱ '+s.duration+'m</span>':'';
       var exFrac=totalEx?'<span class="sess-meta-chip">'+exCount+'/'+totalEx+' lifts</span>':'<span class="sess-meta-chip">'+exCount+' lifts</span>';
       var pr=prCount>0?'<span class="sess-meta-chip sess-pr">🏆 '+prCount+' PR'+(prCount>1?'s':'')+'</span>':'';
-      var dpill='<span class="sess-day-pill sess-day-'+day+'">'+_DAY_LBL[day]+'</span>';
+      var dpill='<span class="sess-day-pill sess-day-'+day+'">'+dayLbl(day)+'</span>';
       var rowList=exEntries.length
         ?exEntries.map(function(e){
           var sets=(e.note||'').split('|').map(function(x){return x.trim();}).filter(Boolean);
@@ -4792,9 +5165,9 @@ setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); 
 // wrapped in its own try/catch.
 try{ migrateSessionsToStructured_v1(); }catch(e){}
 (function restoreInProgressDraft(){
-  var days=['a','b','c','d','e'];
+  var days=getDays();
   var totals=counts;
-  var dayBtns={a:null,b:null,c:null,d:null,e:null};
+  var dayBtns={};  // v2.77: populated dynamically per active day
   // Map day letter to its tab button
   document.querySelectorAll('.day-btn').forEach(function(btn){
     var onclick=btn.getAttribute('onclick')||'';
@@ -4806,7 +5179,6 @@ try{ migrateSessionsToStructured_v1(); }catch(e){}
   // Collect every day that has a non-empty draft (none are discarded —
   // they all stay in storage; we just surface the first one).
   var draftDays=[];
-  var dayNum={a:1,b:2,c:3,d:4,e:5};
   days.forEach(function(d){
     var raw=localStorage.getItem('gymlog_draft_'+d);
     if(raw){
@@ -4831,8 +5203,8 @@ try{ migrateSessionsToStructured_v1(); }catch(e){}
     }
     restoreDraft(draftDay, totals[draftDay]);
     if(draftDays.length>1){
-      var others=draftDays.slice(1).map(function(d){return 'Day '+dayNum[d];}).join(', ');
-      showToast('Draft restored (Day '+dayNum[draftDay]+'). Also unsaved: '+others+' 💪');
+      var others=draftDays.slice(1).map(function(d){return dayLbl(d);}).join(', ');
+      showToast('Draft restored ('+dayLbl(draftDay)+'). Also unsaved: '+others+' 💪');
     } else {
       showToast('Draft restored — pick up where you left off 💪');
     }
@@ -4842,7 +5214,7 @@ try{ migrateSessionsToStructured_v1(); }catch(e){}
 // ── Autosave draft on every input change (debounced 2s) ────────────
 (function initInputAutosave(){
   var timers={};
-  var days=['a','b','c','d','e'];
+  var days=getDays();
   days.forEach(function(d){
     var panel=document.getElementById('p-'+d);
     if(!panel) return;
@@ -4915,7 +5287,9 @@ function draftWeight(d){
 
 function buildBinPayload(){
   var p={ __schema:SCHEMA_VERSION };
-  ['a','b','c','d','e'].forEach(function(day){
+  // getAllDayKeys (not getDays) so a removed-but-archived day's history is
+  // still backed up / pushed and never silently lost.
+  getAllDayKeys().forEach(function(day){
     p['gymlog_'+day]=getSaved(day);
     var dr=getDraftRaw(day);
     if(dr) p['gymlog_draft_'+day]=dr;
@@ -4925,6 +5299,8 @@ function buildBinPayload(){
   try { p['exercise_order']=JSON.parse(localStorage.getItem('exercise_order'))||{}; }catch(e){ p['exercise_order']={}; }
   try { p['earned_milestones']=JSON.parse(localStorage.getItem('earned_milestones'))||[]; }catch(e){ p['earned_milestones']=[]; }
   try { var pv=JSON.parse(localStorage.getItem('plan_v2')); if(pv) p['plan_v2']=pv; }catch(e){}
+  // Phase 0: day-cycle config travels with the payload (synced like plan_v2).
+  try { var dc=JSON.parse(localStorage.getItem('days_config_v1')); if(dc) p['days_config_v1']=dc; }catch(e){}
   return p;
 }
 
@@ -4934,7 +5310,15 @@ function mergeCloudIntoPayload(cloud){
   var p=buildBinPayload();
   if(!cloud||typeof cloud!=='object') return p;
   var localEmpty=true;
-  ['a','b','c','d','e'].forEach(function(day){
+  // Union of local day keys + any day keys the cloud has — so cross-device
+  // day-set differences (one device added a day the other hasn't) merge
+  // without dropping either side's sessions.
+  var mDayKeys=getAllDayKeys();
+  Object.keys(cloud).forEach(function(k){
+    var mm=k.match(/^gymlog_([a-z])$/);
+    if(mm && mDayKeys.indexOf(mm[1])===-1) mDayKeys.push(mm[1]);
+  });
+  mDayKeys.forEach(function(day){
     if((p['gymlog_'+day]||[]).length) localEmpty=false;
     p['gymlog_'+day]=mergeSessions(p['gymlog_'+day], cloud['gymlog_'+day]);
     var lc=p['gymlog_draft_'+day], cc=cloud['gymlog_draft_'+day];
@@ -4954,13 +5338,22 @@ function mergeCloudIntoPayload(cloud){
   // fallback only on a true wipe so a fresh device gets the user's plan back.
   if(localEmpty && cloud['plan_v2'] && typeof cloud['plan_v2']==='object' && !p['plan_v2'])
     p['plan_v2']=cloud['plan_v2'];
+  // days_config_v1: current-state config — local wins, cloud fallback only on
+  // a true wipe so a fresh device recovers the user's day cycle.
+  if(localEmpty && Array.isArray(cloud['days_config_v1']) && !p['days_config_v1'])
+    p['days_config_v1']=cloud['days_config_v1'];
   return p;
 }
 
 function applyPayloadToLocal(p){
   if(!p||typeof p!=='object') return;
-  ['a','b','c','d','e'].forEach(function(day){
-    if(Array.isArray(p['gymlog_'+day])) localStorage.setItem('gymlog_'+day, JSON.stringify(p['gymlog_'+day]));
+  // Apply EVERY gymlog_<key> array present in the payload (active, archived,
+  // or cloud-introduced days alike) — don't restrict to the current active set.
+  Object.keys(p).forEach(function(k){
+    var mm=k.match(/^gymlog_([a-z])$/);
+    if(mm && Array.isArray(p[k])) localStorage.setItem(k, JSON.stringify(p[k]));
+  });
+  getAllDayKeys().forEach(function(day){
     var dr=p['gymlog_draft_'+day];
     if(dr && draftWeight(dr)>draftWeight(getDraftRaw(day))) localStorage.setItem('gymlog_draft_'+day, JSON.stringify(dr));
   });
@@ -4969,6 +5362,7 @@ function applyPayloadToLocal(p){
   if(Array.isArray(p['earned_milestones'])) localStorage.setItem('earned_milestones', JSON.stringify(p['earned_milestones']));
   if(p['exercise_order'] && typeof p['exercise_order']==='object') localStorage.setItem('exercise_order', JSON.stringify(p['exercise_order']));
   if(p['plan_v2'] && typeof p['plan_v2']==='object') localStorage.setItem('plan_v2', JSON.stringify(p['plan_v2']));
+  if(Array.isArray(p['days_config_v1'])) localStorage.setItem('days_config_v1', JSON.stringify(p['days_config_v1']));
 }
 
 function refreshAfterSync(){
@@ -4981,36 +5375,32 @@ function cloudGET(){
   return fetch(JBIN_URL, { method:'GET', headers:{ 'X-Master-Key':JBIN_KEY, 'X-Bin-Meta':'false' } })
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
 }
-function cloudPUT(payload){
+// v2.80 — the actual network PUT, factored out. No reader-mode gate (callers
+// decide). v2.72: no X-Bin-Versioning header (free tier rejects it with 403).
+function _rawCloudPUT(payload){
   if(TEST_MODE) return Promise.reject(new Error('test mode: cloud write blocked'));
-  // v2.71 — Reader-mode devices NEVER write to cloud. cloudPUT is the single
-  // funnel for every push (authoritative or merged), so guarding here covers
-  // every code path that could contaminate the cloud bin from a stale device.
-  // Resolve as success so callers' happy paths run (toasts, UI updates) — the
-  // user is informed of reader mode by the persistent 📖 badge + the toast
-  // surfaced from confirmSave / Repair / Split / Dedupe.
-  if(!isPrimaryDevice()){
-    try{ console.log('[reader-mode] cloudPUT suppressed — this device is in reader mode'); }catch(e){}
-    return Promise.resolve({ readerMode:true });
-  }
-  // v2.72 — X-Bin-Versioning REMOVED. The free JSONbin tier rejects this
-  // header with HTTP 403 "Versioning is not available for the Free users",
-  // which silently broke every cloud write (Repair, Split, Dedupe, every
-  // session save) for an extended period. Versioning was a nice-to-have
-  // audit feature; the app already has its own undo path via the
-  // gymlog_import_undo localStorage snapshot.
   return fetch(JBIN_URL, {
     method:'PUT',
     headers:{ 'Content-Type':'application/json', 'X-Master-Key':JBIN_KEY },
     body: JSON.stringify(payload)
   }).then(function(r){
     if(!r.ok){
-      // v2.72 — surface body text so future failures expose their actual
-      // cause instead of a generic "HTTP N" message.
       return r.text().then(function(t){ throw new Error('HTTP '+r.status+(t?(' · '+t.slice(0,200)):'')); });
     }
     return r.json();
   });
+}
+function cloudPUT(payload){
+  if(TEST_MODE) return Promise.reject(new Error('test mode: cloud write blocked'));
+  // v2.71 — Reader-mode devices NEVER write SESSION data to cloud. cloudPUT is
+  // the funnel for session-data pushes (confirmSave, clear, delete, restore).
+  // The plan/day push is a SEPARATE, deliberate channel (pushPlanToCloud) that
+  // bypasses this gate because it's surgical (plan-only) + double-confirmed.
+  if(!isPrimaryDevice()){
+    try{ console.log('[reader-mode] cloudPUT suppressed — this device is in reader mode'); }catch(e){}
+    return Promise.resolve({ readerMode:true });
+  }
+  return _rawCloudPUT(payload);
 }
 
 // v2.71 — Primary/Reader device mode. Per-device flag so a single user with
@@ -5185,7 +5575,7 @@ function flushPendingSync(){
     'Leg press B':'Leg press — high foot','Leg press B-notes':'Leg press — high foot-notes',
     'Cable row B':'Cable row — V-bar','Cable row B-notes':'Cable row — V-bar-notes'
   };
-  ['a','b','c','d','e'].forEach(function(day){
+  getDays().forEach(function(day){
     var saved=getSaved(day);
     if(!saved.length) return;
     var changed=false;
@@ -5228,7 +5618,7 @@ function renderProgressBadges(day){
     var key=normalizeEx(rawId);
     // Get the two most recent sessions for this exercise across all days
     var sessions=[];
-    ['a','b','c','d','e'].forEach(function(d){
+    getDays().forEach(function(d){
       getSaved(d).forEach(function(session){
         session.entries.forEach(function(e){
           if(normalizeEx(e.ex)===key && e.note && e.note.indexOf('Set ')===0){
@@ -5255,6 +5645,9 @@ function renderProgressBadges(day){
 // Hook rest timer into tog() — start on check, stop on uncheck
 // ── Incomplete day guard ─────────────────────────────────────────────
 function completeDay(day,label){
+  // Phase B: label optional — derive from DAYS_CONFIG when omitted (dynamically
+  // injected day panels call completeDay('<key>') without a literal label).
+  if(!label) label=getDayName(day);
   var p=document.getElementById('p-'+day);
   var total=counts[day]||0;
   var done=p.querySelectorAll('.item.done').length;
@@ -5284,7 +5677,7 @@ function completeDay(day,label){
 // ── Stats summary ────────────────────────────────────────────────────
 function computeStats(){
   var allSessions=[];
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     getSaved(d).forEach(function(s){
       var ts=sessTs(s);
       if(ts) allSessions.push({ts:ts,day:d,label:s.label,entries:s.entries||[]});
@@ -5330,8 +5723,11 @@ function computeStats(){
     else if((nowD.getMonth()===0&&d.getMonth()===11&&d.getFullYear()===nowD.getFullYear()-1)||
             (nowD.getMonth()>0&&d.getMonth()===nowD.getMonth()-1&&d.getFullYear()===nowD.getFullYear())) lastMonth++;
   });
-  var dayCounts={a:0,b:0,c:0,d:0,e:0},dayLastTs={a:0,b:0,c:0,d:0,e:0};
-  allSessions.forEach(function(s){ dayCounts[s.day]++; if(s.ts>dayLastTs[s.day]) dayLastTs[s.day]=s.ts; });
+  // v2.77: init per-day accumulators from the active cycle; safe-increment so
+  // a session whose day is archived/unknown still tallies without NaN.
+  var dayCounts={},dayLastTs={};
+  getDays().forEach(function(d){ dayCounts[d]=0; dayLastTs[d]=0; });
+  allSessions.forEach(function(s){ dayCounts[s.day]=(dayCounts[s.day]||0)+1; if(s.ts>(dayLastTs[s.day]||0)) dayLastTs[s.day]=s.ts; });
   var totalExChecked=0;
   allSessions.forEach(function(s){
     var c=0;
@@ -5340,7 +5736,7 @@ function computeStats(){
   });
   var avgExChecked=total>0?Math.round(totalExChecked/total*10)/10:0;
   var exApp={},exPoss={};
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     var saved=getSaved(d);
     if(!saved.length) return;
     var dayExSets={};
@@ -5354,11 +5750,12 @@ function computeStats(){
   });
   skipRates.sort(function(a,b){return b.pct-a.pct;});
   var favDay=Object.keys(dayCounts).sort(function(a,b){return dayCounts[b]-dayCounts[a];})[0];
-  var dayNames={a:'Day 1',b:'Day 2',c:'Day 3',d:'Day 4',e:'Day 5'};
-  var dayFullNames={a:'Day 1 — Upper A',b:'Day 2 — Lower A',c:'Day 3 — Cardio+Core',d:'Day 4 — Upper B',e:'Day 5 — Lower B'};
+  // v2.77: day name maps derived from DAYS_CONFIG.
+  var dayNames={}, dayFullNames={};
+  getDays().forEach(function(d){ dayNames[d]=dayLbl(d); dayFullNames[d]=getDayName(d); });
   return {total:total,daysSinceLast:daysSinceLast,avgDaysBetween:avgDaysBetween,streak:streak,longestStreak:longestStreak,
     thisMonth:thisMonth,lastMonth:lastMonth,dayCounts:dayCounts,dayLastTs:dayLastTs,dayNames:dayNames,dayFullNames:dayFullNames,
-    avgExChecked:avgExChecked,topSkipped:skipRates.slice(0,3),favDay:dayFullNames[favDay],favCount:dayCounts[favDay]};
+    avgExChecked:avgExChecked,topSkipped:skipRates.slice(0,3),favDay:(favDay?getDayName(favDay):'—'),favCount:(favDay?dayCounts[favDay]:0)};
 }
 
 function statCard(label,val,sub){
@@ -5412,7 +5809,7 @@ function _streakPill(current, longest){
 function _weeklyVolumeNow(){
   var now=Date.now(), now7=now-7*86400*1000, now14=now-14*86400*1000;
   var thisW=0, prevW=0;
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     getSaved(d).forEach(function(s){
       var ts=sessTs(s); if(!ts) return;
       var vol=0;
@@ -5449,7 +5846,7 @@ function renderStats(){
   html+=renderDeloadCard();
   html+=renderWeeklyConsistency();
   html+='<div class="stats-section"><div class="stats-section-title">Days Since Last Done</div><div class="day-since-grid">';
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     var ts=s.dayLastTs[d],ago=ts?Math.floor((now-ts)/MS_DAY):null;
     var agoStr=ago===null?'Never':ago===0?'Today':ago===1?'Yesterday':ago+' days ago';
     var col=ago===null||ago>14?'#C0392B':ago>7?'#E07B3F':ago>3?'#B8860B':'#0A6640';
@@ -5565,7 +5962,7 @@ var MILESTONES=[
 
 function getTotalPRs(){
   var prs=0;
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     getSaved(d).forEach(function(session){
       if(session.entries){
         session.entries.forEach(function(e){
@@ -5580,7 +5977,7 @@ function getTotalPRs(){
 function getWeeklyConsistency(){
   // Count weeks (Mon-Sun) that had ≥3 sessions
   var allSessions=[];
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     getSaved(d).forEach(function(s){
       var ts=sessTs(s);
       if(ts) allSessions.push({ts:ts,duration:s.duration||null});
@@ -5661,7 +6058,7 @@ function renderWeeklyConsistency(){
 // ── Activity heatmap (GitHub-style, last 13 weeks) ───────────────────
 function renderActivityHeatmap(){
   var cnt={};
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     getSaved(d).forEach(function(s){
       var ts=sessTs(s); if(!ts) return;
       var dt=new Date(ts);
@@ -5763,7 +6160,7 @@ function drawVolumeChart(){
   var canvas=document.getElementById('vol-chart-canvas');
   if(!canvas) return;
   var weekMap={}, weekOrder=[];
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     getSaved(d).forEach(function(session){
       var ts=sessTs(session); if(!ts) return;
       var dt=new Date(ts); var day=dt.getDay();
@@ -5788,7 +6185,7 @@ function drawVolumeChart(){
 // ── CSV export ────────────────────────────────────────────────────────
 function exportCSV(){
   var rows=[['Date','Day','Exercise','Note','Duration (min)','RPE','Discomfort']];
-  ['a','b','c','d','e'].forEach(function(d){
+  getDays().forEach(function(d){
     getSaved(d).forEach(function(session){
       var dur=session.duration||'';
       var entryMap={};
@@ -6123,7 +6520,7 @@ function checkForPRs(day, entries){
   entries.forEach(function(e){
     if(!e.note||e.note.indexOf('Set ')!==0) return;
     var allPrev=[];
-    ['a','b','c','d','e'].forEach(function(d){
+    getDays().forEach(function(d){
       var saved=getSaved(d);
       var start=(d===day)?1:0;
       for(var i=start;i<saved.length;i++){
@@ -6173,11 +6570,11 @@ function showPRToast(prs){
   cloudGET()
     .then(function(cloud){
       if(!cloud || typeof cloud!=='object') return;
-      var before=['a','b','c','d','e'].reduce(function(n,d){ return n+getSaved(d).length; },0);
-      var cloudN=['a','b','c','d','e'].reduce(function(n,d){ return n+((cloud['gymlog_'+d]||[]).length); },0);
+      var before=getDays().reduce(function(n,d){ return n+getSaved(d).length; },0);
+      var cloudN=getDays().reduce(function(n,d){ return n+((cloud['gymlog_'+d]||[]).length); },0);
       var merged=mergeCloudIntoPayload(cloud);
       applyPayloadToLocal(merged);
-      var after=['a','b','c','d','e'].reduce(function(n,d){ return n+getSaved(d).length; },0);
+      var after=getDays().reduce(function(n,d){ return n+getSaved(d).length; },0);
       refreshAfterSync();
       try{ if(typeof applyArchivedToChecklist==='function') applyArchivedToChecklist(); }catch(e){}
       // Visibility: if the cloud held history this device didn't have, say so
