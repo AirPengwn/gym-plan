@@ -39,9 +39,9 @@ body.dark{
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:420px;margin:0 auto}
-.day-selector{display:flex;flex-wrap:wrap;gap:2px;background:var(--primary-tint);border:1px solid var(--border-soft);border-radius:10px;padding:3px;margin-bottom:1rem}
-.day-btn{flex:1;min-width:44px;min-height:44px;padding:8px 6px;border:0;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;background:transparent;color:var(--muted);transition:all 0.15s;line-height:1.2;white-space:nowrap}
-.day-btn.active{background:var(--primary);color:#fff}
+.day-selector{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem}
+.day-btn{flex:1;min-width:44px;min-height:44px;padding:8px 6px;border:1px solid var(--border-soft);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;text-align:center;background:#fff;color:var(--text);transition:all 0.15s;line-height:1.2;white-space:nowrap}
+.day-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 2px 8px rgba(91,78,168,.25)}
 .day-btn.progress-tab{font-size:12px;padding:12px 6px}
 .day-panel{display:none}
 .day-panel.show{display:block}
@@ -180,9 +180,9 @@ body.dark .tray-ic.red{background:#3A1A1A} body.dark .tray-ic.warn{background:#3
 .v2-card.item.done .v2-head .ex-name{color:var(--muted);text-decoration:line-through}
 /* Header icon cluster: 🌙 📊 ⋯ — all three identical 40×40, centered, same shape */
 #dark-toggle,#hdr-prog-btn,#hdr-plan-btn,#hdr-ovf-btn{flex:0 0 auto;width:40px;height:40px;min-width:40px;min-height:40px;padding:0;display:flex;align-items:center;justify-content:center;background:#F5F5F2;border:1px solid #D3D1C7;border-radius:9px;font-size:17px;line-height:1;cursor:pointer;color:inherit;vertical-align:middle}
-#hdr-prog-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+#hdr-prog-btn.active,#hdr-plan-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 body.dark #dark-toggle,body.dark #hdr-prog-btn,body.dark #hdr-plan-btn,body.dark #hdr-ovf-btn{background:#252540;border-color:#3C3A5C;color:#E8E6F8}
-body.dark #hdr-prog-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+body.dark #hdr-prog-btn.active,body.dark #hdr-plan-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 /* Header overflow menu */
 .hdr-mi{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;border-bottom:.5px solid var(--border-soft);padding:11px 14px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;text-align:left}
 .hdr-mi:last-child{border-bottom:0}
@@ -381,9 +381,9 @@ body.dark .ex-sub{color:#9896C8}
 body.dark .ex-loc{color:#7F77DD}
 body.dark .item.done .ex-name{color:#5C5A80;text-decoration:line-through}
 body.dark .item.done .ex-sub,body.dark .item.done .ex-loc{color:#5C5A80}
-body.dark .day-selector{background:#252540;border-color:#3C3A5C}
-body.dark .day-btn{background:transparent;border-color:transparent;color:#B4B2D8}
-body.dark .day-btn.active{background:#5B4EA8;color:#fff}
+body.dark .day-selector{background:transparent;border:0}
+body.dark .day-btn{background:#1A1A2E;border-color:#3C3A5C;color:#C7C4EE}
+body.dark .day-btn.active{background:#5B4EA8;color:#fff;border-color:#5B4EA8}
 body.dark .prog-tab-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
 body.dark .prog-tab-btn.active{background:#5B4EA8;color:#fff}
 body.dark .prog-stats{background:#252540}
@@ -703,7 +703,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.2</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.3</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -844,7 +844,7 @@ body.dark #pc-result{color:#E8E6F8}
 
   <div class="prog-panel" id="prog-panel-manage">
     <div class="mgr-notice">
-      <strong>Add</strong>, <strong>Edit</strong>, rename, swap and reorder your plan right here. Renaming <strong>keeps all logged history</strong> (the underlying tracking id never changes). Archiving hides an exercise but keeps its history forever — restore anytime.
+      <strong>Add</strong>, <strong>Edit</strong>, rename, swap and reorder your plan right here. Renaming <strong>keeps all logged history</strong> (the underlying tracking id never changes). <strong>Remove</strong> takes an exercise off just that day — re-add it anytime from <strong>📚 From library</strong>, and all its history is kept.
     </div>
     <!-- v2.79 (Phase B.3): adjustable day cycle — add / rename / remove / reorder days. -->
     <div id="mgr-days-wrap"></div>
@@ -2085,7 +2085,7 @@ function renderDaySelector(){
     var act=(activeKey ? d.key===activeKey : i===0);
     return '<button class="day-btn'+(act?' active':'')+'" onclick="sw(\''+d.key+'\',this)" aria-label="'+_esc(d.name)+'">'+_esc(d.short||('D'+(i+1)))+'</button>';
   }).join('');
-  _applyBalancedRows(sel, 2);
+  _applyBalancedRows(sel, 5);
 }
 // v2.76 (Phase A.2): inject the per-day Progress widgets (stat boxes + Sessions
 // filter chips) from DAYS_CONFIG. "Total" box and "All" chip stay static;
@@ -2298,6 +2298,8 @@ function rst(day,total){
 function sw(day,btn){
   document.querySelectorAll('.day-panel').forEach(function(p){p.classList.remove('show');});
   document.querySelectorAll('.day-btn').forEach(function(b){b.classList.remove('active');});
+  // v3.2: leaving for a workout day clears the header 📋 Manage highlight.
+  var _pl=document.getElementById('hdr-plan-btn'); if(_pl && day!=='prog') _pl.classList.remove('active');
   document.getElementById('p-'+day).classList.add('show');
   btn.classList.add('active');
   if(day==='prog') renderProgress();
@@ -3041,6 +3043,10 @@ function switchProgTab(tab, btn){
   document.getElementById('prog-panel-'+tab).classList.add('show');
   if(tab==='exercises') renderExerciseList();
   if(tab==='manage') renderManager();
+  // v3.2: header button feedback — 📋 lights up for Manage, 📊 for the data tabs.
+  var planBtn=document.getElementById('hdr-plan-btn'), progBtn=document.getElementById('hdr-prog-btn');
+  if(tab==='manage'){ if(planBtn) planBtn.classList.add('active'); if(progBtn) progBtn.classList.remove('active'); }
+  else { if(planBtn) planBtn.classList.remove('active'); if(progBtn) progBtn.classList.add('active'); }
 }
 // Plan entry point — header 📋 button. Switches to Progress view then opens Manage panel.
 function openManage(){
