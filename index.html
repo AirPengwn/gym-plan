@@ -703,7 +703,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.3</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.5</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -1211,6 +1211,10 @@ function pushPlanToCloud(){
     // Overlay ONLY the plan + day config; keep cloud's sessions etc. as-is.
     try{ var pv=JSON.parse(localStorage.getItem('plan_v2')); if(pv) cloud['plan_v2']=pv; else delete cloud['plan_v2']; }catch(e){}
     try{ var dc=JSON.parse(localStorage.getItem('days_config_v1')); if(dc) cloud['days_config_v1']=dc; }catch(e){}
+    // v3.5: the exercise library rides along (any device can push it — not
+    // primary-gated). Union local+cloud last-write-wins so no device's additions
+    // are clobbered; write the merged result back to local so it converges too.
+    try{ var lb=_mergeLibraries(getUserLibrary(), cloud['exercise_library_v1']); if(lb&&lb.length){ cloud['exercise_library_v1']=lb; saveUserLibrary(lb); } }catch(e){}
     if(!cloud.__schema) cloud.__schema=SCHEMA_VERSION;
     return _rawCloudPUT(cloud);
   }).then(function(){
@@ -1631,6 +1635,84 @@ function planAddExercise(days, fields){
   _planCommit('Added “'+fields.name+'” ('+days.length+' day'+(days.length>1?'s':'')+')');
 }
 
+// v3.3: a seed catalog of ready-made exercises that live in the LIBRARY ONLY —
+// they are NOT on any day until the user adds one via "📚 From library". Adding
+// one creates a real instance carrying these fields (category, cues, location,
+// video, badge, muscles). histEx = the name, so logged history attaches to it.
+// Muscle keys must match MUSCLE_GROUPS (chest/front-shoulder/tricep/lat/
+// upper-back/rear-delt/bicep/core-front/core-back/quad/hamstring/glute/...).
+var EXERCISE_CATALOG=[
+  {name:'Cable bicep curl (straight bar)',type:'strength',cat:'Upper body',sub:'3 × 12 · elbows pinned at sides · do not swing',loc:'Cable crossover · ground floor',video:'https://www.youtube.com/results?search_query=cable+bicep+curl+straight+bar+proper+form',badge:null,sets:3,muscles:['bicep']},
+  {name:'Face pull (rope attachment)',type:'strength',cat:'Upper body',sub:'3 × 15 · pull to forehead · elbows high · great for posture',loc:'Cable crossover · ground floor',video:'https://www.youtube.com/results?search_query=face+pull+cable+rope+proper+form',badge:null,sets:3,muscles:['rear-delt','upper-back']},
+  {name:'Cable chest fly (low to high)',type:'strength',cat:'Upper body',sub:'3 × 12 · start low · sweep up and in · squeeze at top',loc:'Cable crossover · ground floor',video:'https://www.youtube.com/results?search_query=low+to+high+cable+chest+fly+proper+form',badge:null,sets:3,muscles:['chest','front-shoulder']},
+  {name:'Tricep overhead extension (rope)',type:'strength',cat:'Upper body',sub:'2 × 15 · elbows forward · extend fully overhead · controlled lower',loc:'Cable crossover · ground floor',video:'https://www.youtube.com/results?search_query=cable+overhead+tricep+extension+rope+proper+form',badge:null,sets:2,muscles:['tricep']},
+  {name:'Lat pulldown — underhand grip',type:'strength',cat:'Upper body',sub:'3 × 12 · palms facing you · pull to upper chest · different feel than overhand',loc:'Cable area · ground floor',video:'https://www.youtube.com/results?search_query=underhand+reverse+grip+lat+pulldown+proper+form',badge:null,sets:3,muscles:['lat','bicep']},
+  {name:'Dumbbell lateral raise',type:'strength',cat:'Upper body',sub:'3 × 12 · slight bend in elbow · raise to shoulder height only · no swinging',loc:'Dumbbell rack · ground floor',video:'https://www.youtube.com/results?search_query=dumbbell+lateral+raise+proper+form+beginners',badge:null,sets:3,muscles:['front-shoulder','rear-delt']},
+  {name:'Dumbbell single arm bent-over row',type:'strength',cat:'Upper body',sub:'3 × 12 · brace on bench · pull elbow back · squeeze at top',loc:'Dumbbell rack + bench · ground floor',video:'https://www.youtube.com/results?search_query=dumbbell+single+arm+bent+over+row+proper+form',badge:null,sets:3,muscles:['lat','upper-back','rear-delt','bicep']},
+  {name:'Dumbbell shoulder press',type:'strength',cat:'Upper body',sub:'3 × 12 · seated on bench · press straight up · control the lower',loc:'Bench + dumbbell rack · ground floor',video:'https://www.youtube.com/results?search_query=seated+dumbbell+shoulder+press+proper+form+beginners',badge:null,sets:3,muscles:['front-shoulder','tricep','upper-back']},
+  {name:'Dumbbell Romanian deadlift',type:'strength',cat:'Lower body',sub:'3 × 12 · soft knee · hinge at hips · feel stretch in hamstrings · light weight to start',loc:'Dumbbell rack · ground floor',video:'https://www.youtube.com/results?search_query=dumbbell+romanian+deadlift+proper+form+beginners',badge:{cls:'bo',text:'knee-aware'},sets:3,muscles:['hamstring','glute','core-back']},
+  {name:'Dumbbell goblet squat',type:'strength',cat:'Lower body',sub:'3 × 12 · hold dumbbell at chest · only go as low as comfortable · keep chest up',loc:'Dumbbell rack · ground floor',video:'https://www.youtube.com/results?search_query=dumbbell+goblet+squat+proper+form+beginners',badge:{cls:'bo',text:'knee-aware'},sets:3,muscles:['quad','glute','core-front']},
+  {name:'Plate-loaded incline press machine',type:'strength',cat:'Upper body',sub:'3 × 12 · start light with just the machine weight · full range of motion',loc:'Dark strength room · ground floor',video:'https://www.youtube.com/results?search_query=plate+loaded+incline+press+machine+how+to',badge:null,sets:3,muscles:['chest','front-shoulder','tricep']},
+  {name:'TRX row',type:'strength',cat:'Upper body',sub:'3 × 12 · lean back · pull chest to handles · body stays straight',loc:'Torque functional rig · upstairs',video:'https://www.youtube.com/results?search_query=TRX+row+proper+form+beginners',badge:null,sets:3,muscles:['lat','upper-back','rear-delt','bicep']},
+  {name:'TRX plank hold',type:'notes',cat:'Core',sub:'3 × 30 sec · feet in straps · body straight · do not let hips drop',loc:'Torque functional rig · upstairs',video:'https://www.youtube.com/results?search_query=TRX+plank+body+saw+how+to',badge:null,sets:3,muscles:['core-front','core-back']},
+  {name:'Medicine ball slam',type:'strength',cat:'Core',sub:'3 × 10 · raise overhead · slam hard · explosive · pick up and repeat',loc:'Medicine ball rack · upstairs',video:'https://www.youtube.com/results?search_query=medicine+ball+slam+proper+form+how+to',badge:null,sets:3,muscles:['core-front','core-back','front-shoulder','upper-back']},
+  {name:'Resistance band pull-apart',type:'strength',cat:'Upper body',sub:'3 × 15 · arms straight · pull to chest width · squeeze shoulder blades',loc:'Torque rig resistance bands · upstairs',video:'https://www.youtube.com/results?search_query=resistance+band+pull+apart+proper+form',badge:null,sets:3,muscles:['rear-delt','upper-back']},
+  {name:'Air bike intervals',type:'cardio',cat:'Cardio',sub:'5 × 20 sec hard / 40 sec rest · push and pull handles · full body',loc:'Torque air bike · upstairs',video:'https://www.youtube.com/results?search_query=air+bike+intervals+how+to+beginners',badge:null,sets:3,muscles:['quad','hamstring','glute','chest','front-shoulder','tricep']},
+  {name:'Cable upright row',type:'strength',cat:'Upper body',sub:'3 × 12 · pull to chin level · elbows lead · slow controlled lower',loc:'Cable crossover · ground floor',video:'https://www.youtube.com/results?search_query=cable+upright+row+proper+form',badge:null,sets:3,muscles:['upper-back','front-shoulder','rear-delt']}
+];
+function _catalogFind(histEx){
+  var n=normalizeEx(histEx);
+  for(var i=0;i<EXERCISE_CATALOG.length;i++){ if(normalizeEx(EXERCISE_CATALOG[i].name)===n) return EXERCISE_CATALOG[i]; }
+  return null;
+}
+
+// v3.5: the USER library — exercises you save (via the builder's "Save to
+// library") that aren't on a day yet. Stored in 'exercise_library_v1' and synced
+// like plan_v2/days_config_v1 (i.e. from ANY device, NOT primary-only), but
+// merged last-write-wins per name so additions/edits/deletes from any device
+// converge and nothing is silently dropped. Deletes are soft (deleted:true) so
+// they propagate. Each entry: {name,type,cat,sub,loc,video,badge,sets,muscles,
+// deleted,updatedAt}.
+function getUserLibrary(){ try{ var a=JSON.parse(localStorage.getItem('exercise_library_v1')); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+function saveUserLibrary(arr){ try{ localStorage.setItem('exercise_library_v1', JSON.stringify(Array.isArray(arr)?arr:[])); }catch(e){} }
+function getActiveUserLibrary(){ return getUserLibrary().filter(function(e){ return e && e.name && !e.deleted; }); }
+function addToUserLibrary(fields){
+  var lib=getUserLibrary(); var nk=normalizeEx(fields.name||''); if(!nk) return;
+  var entry={ name:fields.name, type:fields.type||'strength', cat:fields.cat||'', sub:fields.sub||'', loc:fields.loc||'',
+    video:fields.video||'', badge:fields.badge||null, sets:fields.sets||3, mins:(fields.mins!=null?fields.mins:null),
+    muscles:(Array.isArray(fields.muscles)?fields.muscles.slice():[]), deleted:false, updatedAt:Date.now() };
+  var found=false;
+  for(var i=0;i<lib.length;i++){ if(normalizeEx(lib[i].name)===nk){ lib[i]=entry; found=true; break; } }
+  if(!found) lib.push(entry);
+  saveUserLibrary(lib);
+}
+function removeFromUserLibrary(name){
+  var lib=getUserLibrary(); var nk=normalizeEx(name||''); var hit=false;
+  lib.forEach(function(e){ if(normalizeEx(e.name)===nk){ e.deleted=true; e.updatedAt=Date.now(); hit=true; } });
+  if(hit) saveUserLibrary(lib);
+  return hit;
+}
+// Field source for planAddExisting when an exercise has no plan record: the
+// user library wins over the read-only seed catalog.
+function _libraryFind(histEx){
+  var n=normalizeEx(histEx);
+  var u=getActiveUserLibrary();
+  for(var i=0;i<u.length;i++){ if(normalizeEx(u[i].name)===n) return u[i]; }
+  return _catalogFind(histEx);
+}
+// Union two library arrays last-write-wins per normalized name (used by sync so
+// any device can contribute; deletes (tombstones) ride along and converge).
+function _mergeLibraries(a, b){
+  var out={};
+  function take(list){ if(!Array.isArray(list)) return; list.forEach(function(e){
+    if(!e || !e.name) return;
+    var k=normalizeEx(e.name); var u=(typeof e.updatedAt==='number')?e.updatedAt:0;
+    if(!out[k] || u>=((out[k].updatedAt)||0)) out[k]=e;
+  }); }
+  take(a); take(b);
+  return Object.keys(out).map(function(k){ return out[k]; });
+}
+
 // v3.2: re-add an EXISTING exercise (by its immutable histEx) to one or more
 // days. Never mints a new tracking id, so all past sessions stay attached;
 // links instances across days via a shared linkId so they stay in sync; and
@@ -1652,7 +1734,9 @@ function planAddExisting(histEx, days){
   var span={}; Object.keys(existingDays).forEach(function(d){ if(active.indexOf(d)!==-1) span[d]=1; });
   newDays.forEach(function(d){ span[d]=1; });
   var linkId=(src&&src.linkId) || (Object.keys(span).length>1 ? ('lk'+Date.now().toString(36)+Math.floor(Math.random()*1e4)) : null);
+  var cat=src?null:_libraryFind(histEx);
   var fields=src ? {name:src.name,sub:src.sub,loc:src.loc,video:src.video,badge:src.badge,cat:src.cat,mins:src.mins,muscles:src.muscles,sets:src.sets,type:src.type}
+           : cat ? {name:cat.name,sub:cat.sub||'',loc:cat.loc||'',video:cat.video||_ytSearch(cat.name+' proper form how to'),badge:cat.badge||null,cat:cat.cat||'',mins:(cat.mins!=null?cat.mins:null),muscles:(cat.muscles||[]).slice(),sets:cat.sets||3,type:cat.type||'strength'}
                  : {name:(prettyExName(histEx)||histEx),sub:'',loc:'',video:_ytSearch((prettyExName(histEx)||histEx)+' proper form how to'),badge:null,cat:'',mins:null,muscles:[],sets:3,type:'strength'};
   // stamp the shared linkId onto existing instances so the whole group is linked
   if(linkId && srcIds.length){
@@ -1696,6 +1780,10 @@ function getExerciseLibrary(){
   Object.keys(hist).forEach(function(k){ var e=ensure(k, prettyExName(k)||k, 'strength'); if(e) e.sessions=(hist[k]||[]).length; });
   // legacy globally-archived names
   getArchivedExercises().forEach(function(h){ ensure(h, h, 'strength'); });
+  // v3.5: the user's saved library entries (win over the read-only seed below).
+  getActiveUserLibrary().forEach(function(c){ var e=ensure(c.name, c.name, c.type); if(e) e.fromUser=true; });
+  // v3.3: seed catalog — ready-made exercises that aren't on any day yet.
+  EXERCISE_CATALOG.forEach(function(c){ var e=ensure(c.name, c.name, c.type); if(e) e.fromCatalog=true; });
   return Object.keys(lib).map(function(nk){ var e=lib[nk]; e.daysList=Object.keys(e.days); return e; })
     .sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
 }
@@ -1931,6 +2019,8 @@ function setBuilderMode(m){
     var el=document.getElementById(id); if(el) el.style.display=lib?'none':'';
   });
   var ls=document.getElementById('b-lib-section'); if(ls) ls.style.display=lib?'block':'none';
+  // v3.5: "Save to library" only when typing a brand-new exercise (not editing, not re-adding).
+  var sl=document.getElementById('b-savelib'); if(sl) sl.style.display=(!lib && !_builderEditId)?'':'none';
   var ttl=document.getElementById('builder-title'); if(ttl && !_builderEditId) ttl.textContent=lib?'Add from library':'Add exercise';
   if(lib){ var s=document.getElementById('b-lib-search'); if(s) s.value=''; _libSelected=null; renderLibraryPicker(); }
 }
@@ -1945,12 +2035,23 @@ function renderLibraryPicker(){
     var meta=(e.daysList&&e.daysList.length)?('on '+e.daysList.map(getDayShort).join(', '))
             :(e.sessions?(e.sessions+' session'+(e.sessions===1?'':'s')):'not scheduled');
     var h=_esc(e.histEx).replace(/'/g,"\\'");
-    return '<div class="bld-lib-item'+(sel?' on':'')+'" onclick="selectLibItem(\''+h+'\')"><span class="lib-nm">'+_esc(e.name)+'</span><span class="lib-meta">'+_esc(meta)+'</span></div>';
+    var tag=e.fromUser?'<span class="lib-tag">yours</span>':'';
+    var del=(e.fromUser && !(e.daysList&&e.daysList.length))?'<button class="lib-del" title="Remove from library" onclick="deleteLibItem(\''+h+'\',event)">✕</button>':'';
+    return '<div class="bld-lib-item'+(sel?' on':'')+'" onclick="selectLibItem(\''+h+'\')"><span class="lib-nm">'+_esc(e.name)+tag+'</span><span class="lib-meta">'+_esc(meta)+'</span>'+del+'</div>';
   }).join('');
 }
 function selectLibItem(histEx){
   var hit=null; getExerciseLibrary().some(function(e){ if(normalizeEx(e.histEx)===normalizeEx(histEx)){ hit=e; return true; } return false; });
   _libSelected=hit; renderLibraryPicker();
+}
+// v3.5: remove a user-saved library template (soft-deleted so the delete syncs).
+function deleteLibItem(histEx, ev){
+  if(ev && ev.stopPropagation) ev.stopPropagation();
+  if(removeFromUserLibrary(histEx)){
+    if(_libSelected && normalizeEx(_libSelected.histEx)===normalizeEx(histEx)) _libSelected=null;
+    renderLibraryPicker();
+    showToast('Removed from library');
+  }
 }
 function saveBuilder(isSwap){
   // v3.2: library mode re-adds an existing exercise by its histEx (linked, history kept).
@@ -1983,6 +2084,27 @@ function saveBuilder(isSwap){
   if(isSwap && _builderEditId){ f.type=type; planSwapExercise(_builderEditId,f,days); }
   else if(_builderEditId){ planEditExercise(_builderEditId,f,days); }
   else { planAddExercise(days,f); }
+}
+// v3.5: save the typed exercise to the library WITHOUT putting it on a day.
+// No reload (no plan change) — it just becomes available in "📚 From library".
+function saveBuilderToLibrary(){
+  var name=(document.getElementById('b-name').value||'').trim();
+  if(!name){ showToast('Name is required'); return; }
+  var type=document.getElementById('b-type').value;
+  var sub=(document.getElementById('b-sub').value||'').trim();
+  var loc=(document.getElementById('b-loc').value||'').trim();
+  var video=(document.getElementById('b-video').value||'').trim();
+  if(!video) video=_ytSearch(name+' proper form how to');
+  var sets=parseInt(document.getElementById('b-sets').value,10)||3;
+  var bt=(document.getElementById('b-badge').value||'').trim();
+  var badge=bt?{cls:'bo',text:bt}:null;
+  var cat=(document.getElementById('b-cat').value||'').trim();
+  var mv=document.getElementById('b-mins').value;
+  var mins=(mv===''||mv==null)?null:(parseInt(mv,10)||0);
+  var muscles=_readMuscleChips();
+  addToUserLibrary({ name:name, type:type, sub:sub, loc:loc, video:video, badge:badge, sets:sets, cat:cat, mins:mins, muscles:muscles });
+  closeBuilder();
+  showToast('“'+name+'” saved to library 📚');
 }
 
 function renderDayItems(){
@@ -3782,9 +3904,9 @@ function renderDayManager(){
   var lpTxt=lp?('Last pushed: '+new Date(lp).toLocaleString()):'Last pushed: never';
   html+='<div class="plan-sync-box">'
     +'<div class="plan-sync-row">'
-    +'<label class="plan-sync-toggle"><input type="checkbox" id="plan-sync-switch" '+(syncOn?'checked':'')+' onchange="setPlanSyncEnabled(this.checked)"><span>Cloud sync for plan &amp; days '+(syncOn?'<b>(Cloud enabled)</b>':'<b>(Local only)</b>')+'</span></label>'
+    +'<label class="plan-sync-toggle"><input type="checkbox" id="plan-sync-switch" '+(syncOn?'checked':'')+' onchange="setPlanSyncEnabled(this.checked)"><span>Cloud sync for plan, days &amp; library '+(syncOn?'<b>(Cloud enabled)</b>':'<b>(Local only)</b>')+'</span></label>'
     +'</div>'
-    +'<div class="plan-sync-hint">Plan &amp; day edits stay on this device until you push. '+(syncOn?'Tap below to write them to the cloud (your workout history is left untouched).':'Switch on to enable the push button.')+'</div>'
+    +'<div class="plan-sync-hint">Plan, day &amp; library edits stay on this device until you push — and you can push from <b>any</b> device. '+(syncOn?'Tap below to write them to the cloud (your workout history is left untouched).':'Switch on to enable the push button.')+'</div>'
     +'<button class="patch5-rerun-btn" '+(syncOn?'':'disabled')+' onclick="pushPlanToCloud()">⬆ Push plan to cloud now</button>'
     +'<div class="plan-sync-last">'+lpTxt+'</div>'
     +'</div>';
@@ -4467,6 +4589,8 @@ function generateExport(){
   try{ var pv=JSON.parse(localStorage.getItem('plan_v2')); if(pv) data['plan_v2']=pv; }catch(e){}
   // Phase 0: day-cycle config in backups too.
   try{ var dc=JSON.parse(localStorage.getItem('days_config_v1')); if(dc) data['days_config_v1']=dc; }catch(e){}
+  // v3.5: user exercise library in backups too.
+  try{ var lb=JSON.parse(localStorage.getItem('exercise_library_v1')); if(lb&&lb.length) data['exercise_library_v1']=lb; }catch(e){}
   // In-progress (unsubmitted) drafts — so a backup also protects a workout
   // you're in the middle of entering.
   getAllDayKeys().forEach(function(day){
@@ -4720,6 +4844,11 @@ function importData(){
     // Phase 0: restore day-cycle config from backup if present.
     if(Array.isArray(data['days_config_v1'])){
       localStorage.setItem('days_config_v1',JSON.stringify(data['days_config_v1']));
+    }
+    // v3.5: restore the user exercise library (union with whatever's local so a
+    // restore never drops library entries either side has).
+    if(Array.isArray(data['exercise_library_v1'])){
+      try{ saveUserLibrary(_mergeLibraries(getUserLibrary(), data['exercise_library_v1'])); }catch(e){}
     }
     var hint=document.getElementById('restore-hint');
     hint.innerHTML='✅ Restored '+count+' sessions + measurements + settings! '
@@ -5483,6 +5612,8 @@ function buildBinPayload(){
   try { var pv=JSON.parse(localStorage.getItem('plan_v2')); if(pv) p['plan_v2']=pv; }catch(e){}
   // Phase 0: day-cycle config travels with the payload (synced like plan_v2).
   try { var dc=JSON.parse(localStorage.getItem('days_config_v1')); if(dc) p['days_config_v1']=dc; }catch(e){}
+  // v3.5: user exercise library travels with the payload too.
+  try { var lb=JSON.parse(localStorage.getItem('exercise_library_v1')); if(lb) p['exercise_library_v1']=lb; }catch(e){}
   return p;
 }
 
@@ -5524,6 +5655,10 @@ function mergeCloudIntoPayload(cloud){
   // a true wipe so a fresh device recovers the user's day cycle.
   if(localEmpty && Array.isArray(cloud['days_config_v1']) && !p['days_config_v1'])
     p['days_config_v1']=cloud['days_config_v1'];
+  // v3.5: exercise library — ALWAYS union (last-write-wins per name), never
+  // localEmpty-gated, so additions/edits/deletes from any device converge.
+  var mlib=_mergeLibraries(p['exercise_library_v1'], cloud['exercise_library_v1']);
+  if(mlib && mlib.length) p['exercise_library_v1']=mlib;
   return p;
 }
 
@@ -5545,6 +5680,7 @@ function applyPayloadToLocal(p){
   if(p['exercise_order'] && typeof p['exercise_order']==='object') localStorage.setItem('exercise_order', JSON.stringify(p['exercise_order']));
   if(p['plan_v2'] && typeof p['plan_v2']==='object') localStorage.setItem('plan_v2', JSON.stringify(p['plan_v2']));
   if(Array.isArray(p['days_config_v1'])) localStorage.setItem('days_config_v1', JSON.stringify(p['days_config_v1']));
+  if(Array.isArray(p['exercise_library_v1'])) localStorage.setItem('exercise_library_v1', JSON.stringify(p['exercise_library_v1']));
 }
 
 function refreshAfterSync(){
@@ -5650,7 +5786,7 @@ function clearPendingSync(){ try{ localStorage.removeItem('gymlog_sync_pending')
 // Uses sessionStorage so a mid-test reload stays in test mode, and the
 // snapshot is persisted so it can still be discarded after a reload.
 var TEST_MODE = sessionStorage.getItem('gym_test_mode')==='1';
-var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','gymlog_sync_pending','darkMode'];
+var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','exercise_library_v1','gymlog_sync_pending','darkMode'];
 function _testKeys(){
   var ks=[];
   for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i);
@@ -6848,6 +6984,10 @@ function showPRToast(prs){
       .bld-lib-item.on{background:var(--primary-tint)}
       .bld-lib-item .lib-nm{flex:1;font-weight:600}
       .bld-lib-item .lib-meta{font-size:10px;color:var(--muted);font-weight:600;white-space:nowrap}
+      .lib-tag{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--primary);background:var(--primary-tint);border-radius:8px;padding:1px 5px;margin-left:6px;vertical-align:middle}
+      .lib-del{flex-shrink:0;width:22px;height:22px;border:0;border-radius:6px;background:transparent;color:#C53030;font-size:12px;font-weight:700;cursor:pointer;line-height:1}
+      .lib-del:hover{background:#FFF5F5}
+      body.dark .lib-del:hover{background:#3A1A1A}
       .bld-lib-empty{padding:14px 10px;font-size:12px;color:var(--muted);text-align:center}
       body.dark .bld-lib-item{color:#E8E6F8}
       body.dark .bld-lib-list{border-color:#3C3A5C}
@@ -6958,6 +7098,7 @@ function showPRToast(prs){
     <div class="modal-btn-row">
       <button class="modal-btn-primary" onclick="saveBuilder()">Save</button>
       <button class="modal-btn-secondary" id="b-swap" style="display:none;background:#FFF3CD;color:#854F0B;" onclick="saveBuilder(true)">Swap</button>
+      <button class="modal-btn-secondary" id="b-savelib" style="display:none;" onclick="saveBuilderToLibrary()">📚 Save to library</button>
       <button class="modal-btn-secondary" onclick="closeBuilder()">Cancel</button>
     </div>
   </div>
