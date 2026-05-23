@@ -4,6 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MyFit</title>
+<!-- v3.9: installable PWA. iOS standalone needs only the apple-* meta (no extra
+     files); the manifest + theme-color make it installable/standalone on Android
+     too. apple-touch-icon.png is OPTIONAL — add that one file for a custom
+     home-screen icon; without it iOS falls back to a screenshot. Status-bar
+     style "default" keeps content below the status bar (no notch overlap, so no
+     safe-area CSS needed). -->
+<meta name="theme-color" content="#5B4EA8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MyFit">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href='data:application/manifest+json,{"name":"MyFit","short_name":"MyFit","start_url":".","display":"standalone","background_color":"%231A1A2E","theme_color":"%235B4EA8"}'>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%235B4EA8"/><text x="32" y="45" font-size="38" font-family="Arial,sans-serif" font-weight="bold" fill="white" text-anchor="middle">M</text></svg>'>
 <style>
 /* ── Design tokens (audit §07). Foundation only — components convert to
    these incrementally in later steps; existing colors are unchanged. ── */
@@ -211,6 +225,10 @@ body.dark .patch5-rerun-btn:hover{background:#2A2850}
 /* v2.70 — Pull-from-cloud row (multi-device sync escape hatch). */
 .multi-device-row{margin-top:14px;padding-top:10px;border-top:1px solid var(--border-soft);text-align:center}
 .multi-device-label{font-size:12px;font-weight:600;color:var(--text);line-height:1.5;margin-bottom:6px}
+.snap-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--border-soft);text-align:left}
+.snap-row:first-child{border-top:0}
+.snap-meta{font-size:11px;color:var(--muted);font-weight:600}
+.snap-empty{font-size:11px;color:var(--muted);padding:6px 0}
 /* v2.71 — Primary/Reader device toggle */
 .primary-toggle-label{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text);cursor:pointer;margin-bottom:4px}
 .primary-toggle-label input{width:16px;height:16px;cursor:pointer;accent-color:var(--primary)}
@@ -703,7 +721,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.5</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.9</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -733,6 +751,11 @@ body.dark #pc-result{color:#E8E6F8}
 <div id="deload-banner" class="legacy-banner" style="display:none;background:#FFF5F5;border:1px solid #C53030;color:#C53030;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:0.75rem;line-height:1.5;align-items:center;justify-content:space-between;gap:8px;">
   <span id="deload-banner-msg">Consider a deload week.</span>
   <button onclick="dismissDeloadBanner()" style="padding:5px 10px;background:#C53030;border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">Got it</button>
+</div>
+<!-- v3.6: glanceable cloud-sync status — only shown when changes haven't synced. -->
+<div id="sync-banner" class="legacy-banner" style="display:none;background:#FFF5F5;border:1px solid #C53030;color:#C53030;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:0.75rem;line-height:1.5;align-items:center;justify-content:space-between;gap:8px;">
+  <span>☁️ Some changes haven't synced to the cloud yet.</span>
+  <button onclick="flushPendingSync();refreshSyncBanner();" style="padding:5px 10px;background:#C53030;border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">Retry sync</button>
 </div>
 <div id="notice-tray" role="region" aria-label="Notifications"></div>
 
@@ -893,6 +916,30 @@ body.dark #pc-result{color:#E8E6F8}
   </div>
 </div>
 
+<!-- v3.9: manual Reset confirmation (protects an in-progress workout) -->
+<div class="modal-overlay" id="reset-overlay">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-title" style="color:#C53030;">Reset this day?</div>
+    <div class="modal-sub" id="reset-msg" style="margin:0.75rem 0 1rem;"></div>
+    <div class="modal-btn-row">
+      <button class="modal-btn-primary" style="background:#C53030;" onclick="executeReset()">Reset</button>
+      <button class="modal-btn-secondary" onclick="closeResetModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- v3.6: snapshot restore confirmation -->
+<div class="modal-overlay" id="snap-overlay">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-title" style="color:#5B4EA8;">Restore snapshot?</div>
+    <div class="modal-sub" id="snap-msg" style="margin:0.75rem 0 1rem;"></div>
+    <div class="modal-btn-row">
+      <button class="modal-btn-primary" onclick="executeSnapRestore()">Restore</button>
+      <button class="modal-btn-secondary" onclick="closeSnapRestore()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- v3.2: remove-from-this-day confirmation modal -->
 <div class="modal-overlay" id="exrm-overlay">
   <div class="modal" style="max-width:340px;">
@@ -916,7 +963,7 @@ body.dark #pc-result{color:#E8E6F8}
   <div class="tip">Knees and hip fully rest today. Focus on form &mdash; weight will follow.</div>
   <div class="btn-row">
     <button class="complete-btn" onclick="completeDay('a','Day 1 — Upper A')">✓ Complete Day 1 &amp; Save</button>
-    <button class="reset-btn" onclick="rst('a',10)">Reset</button>
+    <button class="reset-btn" onclick="confirmReset('a',10)">Reset</button>
   </div>
 </div>
 
@@ -931,7 +978,7 @@ body.dark #pc-result{color:#E8E6F8}
   <div class="tip">Hip flaring? Skip leg press, add extra sets on adductor/abductor instead.</div>
   <div class="btn-row">
     <button class="complete-btn" onclick="completeDay('b','Day 2 — Lower A')">✓ Complete Day 2 &amp; Save</button>
-    <button class="reset-btn" onclick="rst('b',10)">Reset</button>
+    <button class="reset-btn" onclick="confirmReset('b',10)">Reset</button>
   </div>
 </div>
 
@@ -946,7 +993,7 @@ body.dark #pc-result{color:#E8E6F8}
   <div class="tip">Keep cardio at a conversational pace &mdash; you should be able to talk throughout.</div>
   <div class="btn-row">
     <button class="complete-btn" onclick="completeDay('c','Day 3 — Cardio + Core')">✓ Complete Day 3 &amp; Save</button>
-    <button class="reset-btn" onclick="rst('c',6)">Reset</button>
+    <button class="reset-btn" onclick="confirmReset('c',6)">Reset</button>
   </div>
 </div>
 
@@ -961,7 +1008,7 @@ body.dark #pc-result{color:#E8E6F8}
   <div class="tip">Same muscles as Day 1 but from different angles &mdash; you will feel the difference.</div>
   <div class="btn-row">
     <button class="complete-btn" onclick="completeDay('d','Day 4 — Upper B')">✓ Complete Day 4 &amp; Save</button>
-    <button class="reset-btn" onclick="rst('d',9)">Reset</button>
+    <button class="reset-btn" onclick="confirmReset('d',9)">Reset</button>
   </div>
 </div>
 
@@ -976,7 +1023,7 @@ body.dark #pc-result{color:#E8E6F8}
   <div class="tip">Day 5 closes the cycle. Notice what feels stronger vs the first time through.</div>
   <div class="btn-row">
     <button class="complete-btn" onclick="completeDay('e','Day 5 — Lower B + Cardio')">✓ Complete Day 5 &amp; Save</button>
-    <button class="reset-btn" onclick="rst('e',10)">Reset</button>
+    <button class="reset-btn" onclick="confirmReset('e',10)">Reset</button>
   </div>
 </div>
 
@@ -1044,6 +1091,19 @@ body.dark #pc-result{color:#E8E6F8}
         </label>
         <div class="primary-toggle-hint" id="primary-toggle-hint"></div>
         <button type="button" class="patch5-rerun-btn" onclick="pullFromCloud()">Pull from cloud</button>
+      </div>
+      <!-- v3.6: on-device snapshots — automatic safety net, restore any point. -->
+      <div class="multi-device-row">
+        <div class="multi-device-label">📸 On-device snapshots <span style="font-weight:400;color:var(--muted)">(auto, last 7)</span></div>
+        <div class="primary-toggle-hint">A full local snapshot is saved after each completed session — restore one if a sync or edit ever goes wrong.</div>
+        <div id="snapshots-wrap"></div>
+      </div>
+      <!-- v3.8: cloud archive — rolling daily snapshots in a separate bin. -->
+      <div class="multi-device-row">
+        <div class="multi-device-label">☁️ Cloud archive <span style="font-weight:400;color:var(--muted)">(rollback, ~daily × 14)</span></div>
+        <div class="primary-toggle-hint">A separate cloud copy is written ~daily (primary device) so a bad write to the live bin is recoverable from the cloud.</div>
+        <button type="button" class="patch5-rerun-btn" onclick="loadCloudArchive()">Load cloud archive</button>
+        <div id="cloud-archive-wrap"></div>
       </div>
     </div>
 
@@ -2121,7 +2181,7 @@ function renderDayItems(){
     var cntEl=document.getElementById('cnt-'+d);
     if(cntEl && /^\s*0\s*\//.test(cntEl.textContent)) cntEl.textContent='0 / '+counts[d];
     var rb=document.querySelector('#p-'+d+' .reset-btn');
-    if(rb) rb.setAttribute('onclick',"rst('"+d+"',"+counts[d]+")");
+    if(rb) rb.setAttribute('onclick',"confirmReset('"+d+"',"+counts[d]+")");
   });
 }
 // v2.78 (Phase B.2): dynamic day-panel injection. The 5 default panels
@@ -2139,7 +2199,7 @@ function buildDayPanelHTML(key){
     +'<div class="tip">New day — add exercises from the 📋 Plan menu.</div>'
     +'<div class="btn-row">'
     +'<button class="complete-btn" onclick="completeDay(\''+key+'\')">✓ Complete '+_esc(name)+' &amp; Save</button>'
-    +'<button class="reset-btn" onclick="rst(\''+key+'\',0)">Reset</button>'
+    +'<button class="reset-btn" onclick="confirmReset(\''+key+'\',0)">Reset</button>'
     +'</div></div>';
 }
 function syncDayPanels(){
@@ -2417,6 +2477,33 @@ function rst(day,total){
   localStorage.removeItem('gymlog_draft_'+day);
   setTimeout(function(){ loadLastTimes(); }, 50);
 }
+
+// v3.9: the manual per-day Reset button routes through here so an accidental
+// tap can't wipe an in-progress workout. If nothing real is entered (no checks,
+// only ghost pre-fills) it just resets silently. Post-save still calls rst().
+var _pendingResetDay=null;
+function confirmReset(day,total){
+  var p=document.getElementById('p-'+day);
+  var hasWork=false;
+  if(p){
+    if(p.querySelector('.item.done')) hasWork=true;            // checked something
+    else {
+      // Only the actual entry fields count — not RPE sliders (default "0") etc.
+      var ins=p.querySelectorAll('.rep-input, .notes-input, .cardio-input, .reps-actual-input');
+      for(var i=0;i<ins.length;i++){
+        // a real (edited) value loses the ghost italic styling on input
+        if((ins[i].value||'').trim() && ins[i].style.fontStyle!=='italic'){ hasWork=true; break; }
+      }
+    }
+  }
+  if(!hasWork){ rst(day,total); return; }
+  _pendingResetDay={day:day,total:total};
+  var msgEl=document.getElementById('reset-msg');
+  if(msgEl) msgEl.innerHTML='Clear everything you\'ve checked and typed for <b>'+_esc(getDayName(day))+'</b>?<br><br>This only clears the in-progress entry on this screen — your <b>saved sessions are untouched</b>.';
+  document.getElementById('reset-overlay').classList.add('show');
+}
+function closeResetModal(){ document.getElementById('reset-overlay').classList.remove('show'); _pendingResetDay=null; }
+function executeReset(){ if(_pendingResetDay) rst(_pendingResetDay.day,_pendingResetDay.total); closeResetModal(); }
 
 function sw(day,btn){
   document.querySelectorAll('.day-panel').forEach(function(p){p.classList.remove('show');});
@@ -2771,6 +2858,7 @@ function confirmSave(){
   saved.unshift(sessionObj);
   if(saved.length>2000) saved=saved.slice(0,2000); // safety bound only — was 20 (silently lost history)
   localStorage.setItem('gymlog_'+day,JSON.stringify(saved));
+  try{ takeLocalSnapshot('session'); }catch(e){}  // v3.6: on-device safety net
   document.getElementById('date-modal-overlay').classList.remove('show');
   showToast('Session saved! ✓');
   var savedEntries=saved[0].entries; var savedLabel=label; var savedDay=day;
@@ -2871,7 +2959,21 @@ function normalizeEx(s){
   return s.toLowerCase().replace(/[^a-z0-9]/g,' ').replace(/\s+/g,' ').trim();
 }
 
+// v3.9: cheap signature of all gymlog_* data (sum of raw string lengths). Used
+// to memoize the all-history scans below — when nothing has changed the cached
+// result is reused; any save/sync/restore/import changes a raw length and the
+// cache self-invalidates. No manual invalidation hooks to keep in sync.
+function _gymlogSig(){
+  try{
+    var keys=getAllDayKeys(), sig='';
+    for(var i=0;i<keys.length;i++){ var r=localStorage.getItem('gymlog_'+keys[i]); sig+=keys[i]+':'+((r&&r.length)||0)+';'; }
+    return sig;
+  }catch(e){ return null; }
+}
+var _grmCache=null,_grmSig=null;
 function buildGlobalRepMap(){
+  var _sig=_gymlogSig();
+  if(_grmCache && _sig!==null && _sig===_grmSig) return _grmCache;
   // Collect the most recent entry for every exercise name across ALL days
   // keyed by normalized exercise name -> {note, date, ts}
   // Phase B: getAllDayKeys so an exercise's last-session ghost persists even
@@ -2892,6 +2994,7 @@ function buildGlobalRepMap(){
       });
     });
   });
+  _grmCache=globalMap; _grmSig=_sig;
   return globalMap;
 }
 
@@ -3219,10 +3322,14 @@ function executeClear(){
 // ── Exercise list and detail ──
 var selectedEx=null;
 
+var _exCache=null,_exSig=null;
 function getAllExercises(){
   // Collect every unique exercise name that has set data across all days.
   // Phase B: getAllDayKeys so the Lifts tab keeps showing an exercise's
   // history even after the day it lived on is removed from the active cycle.
+  // v3.9: memoized via _gymlogSig (self-invalidating on any data change).
+  var _sig=_gymlogSig();
+  if(_exCache && _sig!==null && _sig===_exSig) return _exCache;
   var exMap={};
   getAllDayKeys().forEach(function(day){
     var saved=getSaved(day);
@@ -3236,6 +3343,7 @@ function getAllExercises(){
       });
     });
   });
+  _exCache=exMap; _exSig=_sig;
   return exMap;
 }
 
@@ -4128,6 +4236,8 @@ function showExportImport(){
   try{ _renderPatch5Status(); }catch(e){}
   // v2.71: sync the Primary/Reader toggle UI to current localStorage state.
   try{ _renderPrimaryToggleUI(); }catch(e){}
+  // v3.6: refresh the on-device snapshot list.
+  try{ renderSnapshots(); }catch(e){}
   showTab('backup');
   document.getElementById('modal-overlay').classList.add('show');
 }
@@ -5459,7 +5569,7 @@ renderDaySummaries();
 // Legacy exercise_order no longer drives the DOM (kept only for old backups).
 setTimeout(checkMilestones, 500);
 // Step 3: apply a11y attrs once the cards + injected fields exist.
-setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} try{ _renderPrimaryBadge(); }catch(e){} }, 0);
+setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} try{ _renderPrimaryBadge(); }catch(e){} try{ refreshSyncBanner(); }catch(e){} }, 0);
 // After a builder save+reload, return to the Manage tab (not Day 1).
 (function returnToManageAfterPlan(){
   try{ if(sessionStorage.getItem('gym_after_plan')!=='manage') return;
@@ -5588,6 +5698,97 @@ function unionArr(a,b){
   return out;
 }
 
+// ── v3.6 durability ─────────────────────────────────────────────────
+// Source of truth is localStorage on the phone + one cloud bin. These add a
+// belt-and-suspenders local safety net: persistent-storage request (anti-
+// eviction), rotating on-device snapshots of every saved session (recover from
+// a bad write without needing the cloud), and a glanceable cloud-sync status.
+(function requestPersistentStorage(){
+  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+})();
+// v3.7: register the service worker (offline app shell, network-first HTML so
+// updates are never stranded). Relative path → works under a GitHub Pages
+// project subpath. Guarded so jsdom / file:// just skip it.
+(function registerSW(){
+  try{
+    if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+      window.addEventListener('load', function(){
+        navigator.serviceWorker.register('sw.js').then(function(reg){ try{ reg.update(); }catch(e){} }).catch(function(){});
+      });
+    }
+  }catch(e){}
+})();
+var SNAP_KEY='gymlog_snapshots_v1', SNAP_KEEP=7;
+function getSnapshots(){ try{ var a=JSON.parse(localStorage.getItem(SNAP_KEY)); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+// Capture the full data payload (all gymlog days, drafts, plan, days, library,
+// measurements, milestones) before/after a save so a corrupting write is
+// recoverable from on-device history. Never runs in Test Mode.
+function takeLocalSnapshot(reason){
+  if(typeof TEST_MODE!=='undefined' && TEST_MODE) return;
+  try{
+    var arr=getSnapshots();
+    arr.unshift({ ts:Date.now(), reason:reason||'', n:_totalSessions(), data:buildBinPayload() });
+    if(arr.length>SNAP_KEEP) arr=arr.slice(0,SNAP_KEEP);
+    localStorage.setItem(SNAP_KEY, JSON.stringify(arr));
+  }catch(e){
+    // Quota pressure: keep just the newest few and retry once.
+    try{ var a2=getSnapshots().slice(0,2); a2.unshift({ ts:Date.now(), reason:reason||'', n:_totalSessions(), data:buildBinPayload() }); localStorage.setItem(SNAP_KEY, JSON.stringify(a2)); }catch(e2){}
+  }
+}
+var _pendingRestoreData=null;
+function renderSnapshots(){
+  var wrap=document.getElementById('snapshots-wrap'); if(!wrap) return;
+  var snaps=getSnapshots();
+  if(!snaps.length){ wrap.innerHTML='<div class="snap-empty">No snapshots yet — one is saved automatically after each completed session.</div>'; return; }
+  wrap.innerHTML=snaps.map(function(s,i){
+    var when=new Date(s.ts).toLocaleString();
+    return '<div class="snap-row"><span class="snap-meta"><b>'+(s.n||0)+'</b> sessions · '+_esc(when)+'</span>'
+      +'<button class="patch5-rerun-btn" style="margin:0;padding:5px 10px" onclick="confirmRestoreSnapshot('+i+')">Restore</button></div>';
+  }).join('');
+}
+// Shared restore confirm — used by both on-device snapshots and cloud archive.
+function _openRestoreConfirm(data, ts, n){
+  if(!data) return;
+  _pendingRestoreData=data;
+  document.getElementById('snap-msg').innerHTML='Restore the snapshot from <b>'+_esc(new Date(ts).toLocaleString())+'</b> (<b>'+(n||0)+'</b> sessions)?<br><br>This replaces the current plan, days, library and logged sessions on <b>this device</b> with that snapshot.';
+  document.getElementById('snap-overlay').classList.add('show');
+}
+function confirmRestoreSnapshot(i){ var s=getSnapshots()[i]; if(s) _openRestoreConfirm(s.data, s.ts, s.n); }
+function closeSnapRestore(){ document.getElementById('snap-overlay').classList.remove('show'); _pendingRestoreData=null; }
+function executeSnapRestore(){
+  var data=_pendingRestoreData; closeSnapRestore();
+  if(!data) return;
+  try{ applyPayloadToLocal(data); }catch(e){}
+  showToast('Snapshot restored — reloading…');
+  setTimeout(function(){ location.reload(); }, 700);
+}
+// ── v3.8 cloud-archive restore UI ──
+var _cloudArcSnaps=[];
+function loadCloudArchive(){
+  if(TEST_MODE){ showToast('Test mode is on — cloud is disabled'); return; }
+  var wrap=document.getElementById('cloud-archive-wrap'); if(wrap) wrap.innerHTML='<div class="snap-empty">Loading…</div>';
+  var idP=_archiveId()?Promise.resolve(_archiveId()):cloudGET().then(function(c){ var id=c&&c.__archive_bin; if(id) _setArchiveId(id); return id; });
+  idP.then(function(id){
+    if(!id){ if(wrap) wrap.innerHTML='<div class="snap-empty">No cloud archive yet — it’s created automatically after your first daily sync (primary device).</div>'; return; }
+    return _archiveGET(id).then(function(arc){
+      _cloudArcSnaps=(arc && Array.isArray(arc.snapshots))?arc.snapshots:[];
+      if(!_cloudArcSnaps.length){ if(wrap) wrap.innerHTML='<div class="snap-empty">Cloud archive is empty so far.</div>'; return; }
+      if(wrap) wrap.innerHTML=_cloudArcSnaps.map(function(s,i){
+        return '<div class="snap-row"><span class="snap-meta"><b>'+(s.n||0)+'</b> sessions · '+_esc(new Date(s.ts).toLocaleString())+'</span>'
+          +'<button class="patch5-rerun-btn" style="margin:0;padding:5px 10px" onclick="confirmRestoreCloud('+i+')">Restore</button></div>';
+      }).join('');
+    });
+  }).catch(function(err){ if(wrap) wrap.innerHTML='<div class="snap-empty">Couldn’t load cloud archive — '+_esc((((err&&err.message)||'error')).slice(0,60))+'</div>'; });
+}
+function confirmRestoreCloud(i){ var s=_cloudArcSnaps[i]; if(s) _openRestoreConfirm(s.data, s.ts, s.n); }
+// Glanceable cloud-sync status: a top banner only when there are unsynced
+// changes (a primary-device write that hasn't landed). Clean when in sync.
+function refreshSyncBanner(){
+  var b=document.getElementById('sync-banner'); if(!b) return;
+  var pending=false; try{ pending=localStorage.getItem('gymlog_sync_pending')==='1'; }catch(e){}
+  if(pending && !TEST_MODE){ b.style.display='flex'; } else { b.style.display='none'; }
+}
+
 function getDraftRaw(day){
   try{ return JSON.parse(localStorage.getItem('gymlog_draft_'+day)); }catch(e){ return null; }
 }
@@ -5614,6 +5815,8 @@ function buildBinPayload(){
   try { var dc=JSON.parse(localStorage.getItem('days_config_v1')); if(dc) p['days_config_v1']=dc; }catch(e){}
   // v3.5: user exercise library travels with the payload too.
   try { var lb=JSON.parse(localStorage.getItem('exercise_library_v1')); if(lb) p['exercise_library_v1']=lb; }catch(e){}
+  // v3.8: carry the archive bin id so every device discovers the same archive.
+  try { var aid=_archiveId(); if(aid) p['__archive_bin']=aid; }catch(e){}
   return p;
 }
 
@@ -5659,6 +5862,9 @@ function mergeCloudIntoPayload(cloud){
   // localEmpty-gated, so additions/edits/deletes from any device converge.
   var mlib=_mergeLibraries(p['exercise_library_v1'], cloud['exercise_library_v1']);
   if(mlib && mlib.length) p['exercise_library_v1']=mlib;
+  // v3.8: learn/keep the archive bin id from whichever side has it.
+  if(cloud['__archive_bin'] && !_archiveId()){ try{ _setArchiveId(cloud['__archive_bin']); }catch(e){} }
+  var aid2=_archiveId()||cloud['__archive_bin']; if(aid2) p['__archive_bin']=aid2;
   return p;
 }
 
@@ -5708,6 +5914,58 @@ function _rawCloudPUT(payload){
     return r.json();
   });
 }
+// ── v3.8 cloud archive (rollback) ───────────────────────────────────
+// A SEPARATE JSONbin bin holds rolling ~daily snapshots so a bad write to the
+// LIVE bin is recoverable from the cloud (not just on-device). Auto-created on
+// first use; its id is cached locally AND written into the live bin
+// (__archive_bin) so every device discovers the same archive. Best-effort and
+// primary-only — it never disrupts the main sync or the app if it fails.
+var JBIN_API='https://api.jsonbin.io/v3/b';
+var ARCHIVE_KEEP=14, ARCHIVE_MIN_GAP=20*60*60*1000; // ~once per day
+function _archiveId(){ try{ return localStorage.getItem('jsonbin_archive_id')||''; }catch(e){ return ''; } }
+function _setArchiveId(id){ try{ if(id) localStorage.setItem('jsonbin_archive_id', id); }catch(e){} }
+function _archiveLast(){ try{ return parseInt(localStorage.getItem('jsonbin_archive_last')||'0',10)||0; }catch(e){ return 0; } }
+function _createArchiveBin(){
+  return fetch(JBIN_API, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'X-Master-Key':JBIN_KEY, 'X-Bin-Private':'true', 'X-Bin-Name':'myfit-archive' },
+    body: JSON.stringify({ __myfit_archive:true, snapshots:[] })
+  }).then(function(r){ if(!r.ok) throw new Error('archive create HTTP '+r.status); return r.json(); })
+    .then(function(j){ var id=j && j.metadata && j.metadata.id; if(!id) throw new Error('no archive id'); _setArchiveId(id); return id; });
+}
+function _archiveGET(id){
+  return fetch(JBIN_API+'/'+id+'/latest', { method:'GET', headers:{ 'X-Master-Key':JBIN_KEY, 'X-Bin-Meta':'false' } })
+    .then(function(r){ if(!r.ok) throw new Error('archive GET HTTP '+r.status); return r.json(); });
+}
+function _archivePUT(id, obj){
+  return fetch(JBIN_API+'/'+id, { method:'PUT', headers:{ 'Content-Type':'application/json', 'X-Master-Key':JBIN_KEY }, body: JSON.stringify(obj) })
+    .then(function(r){ if(!r.ok) throw new Error('archive PUT HTTP '+r.status); return r.json(); });
+}
+function _ensureArchiveId(cloud){
+  var id=_archiveId();
+  if(id) return Promise.resolve(id);
+  if(cloud && cloud.__archive_bin){ _setArchiveId(cloud.__archive_bin); return Promise.resolve(cloud.__archive_bin); }
+  return _createArchiveBin();
+}
+// Append a rolling snapshot to the archive bin. Primary-only, ~daily, best-effort.
+function maybeArchiveToCloud(cloud){
+  try{
+    if(TEST_MODE) return Promise.resolve();
+    if(typeof isPrimaryDevice==='function' && !isPrimaryDevice()) return Promise.resolve();
+    if(Date.now()-_archiveLast() < ARCHIVE_MIN_GAP) return Promise.resolve();
+  }catch(e){ return Promise.resolve(); }
+  return _ensureArchiveId(cloud).then(function(id){
+    return _archiveGET(id).catch(function(){ return { snapshots:[] }; }).then(function(arc){
+      var snaps=(arc && Array.isArray(arc.snapshots))?arc.snapshots:[];
+      snaps.unshift({ ts:Date.now(), n:_totalSessions(), data:buildBinPayload() });
+      if(snaps.length>ARCHIVE_KEEP) snaps=snaps.slice(0,ARCHIVE_KEEP);
+      return _archivePUT(id, { __myfit_archive:true, snapshots:snaps }).then(function(){
+        try{ localStorage.setItem('jsonbin_archive_last', String(Date.now())); }catch(e){}
+      });
+    });
+  }).catch(function(){ /* archive is a safety net — never disrupt the app */ });
+}
+
 function cloudPUT(payload){
   if(TEST_MODE) return Promise.reject(new Error('test mode: cloud write blocked'));
   // v2.71 — Reader-mode devices NEVER write SESSION data to cloud. cloudPUT is
@@ -5775,8 +6033,8 @@ function _renderPrimaryBadge(){
   }
 }
 
-function markPendingSync(){ try{ localStorage.setItem('gymlog_sync_pending','1'); }catch(e){} }
-function clearPendingSync(){ try{ localStorage.removeItem('gymlog_sync_pending'); }catch(e){} }
+function markPendingSync(){ try{ localStorage.setItem('gymlog_sync_pending','1'); }catch(e){} try{ refreshSyncBanner(); }catch(e){} }
+function clearPendingSync(){ try{ localStorage.removeItem('gymlog_sync_pending'); }catch(e){} try{ localStorage.setItem('gymlog_last_sync_ok', String(Date.now())); }catch(e){} try{ refreshSyncBanner(); }catch(e){} }
 
 // ── Test Mode ────────────────────────────────────────────────────────
 // ON: ALL JSONbin sync is disabled (no push AND no pull) and a snapshot of
@@ -5855,14 +6113,16 @@ function syncToJbin(onDone, opts){
       });
     return;
   }
+  var _cloudSnap=null;
   cloudGET()
     .then(function(cloud){
+      _cloudSnap=cloud;
       var merged=mergeCloudIntoPayload(cloud);
       applyPayloadToLocal(merged);
       refreshAfterSync();
       return cloudPUT(merged);
     })
-    .then(function(){ clearPendingSync(); window._lastSyncErr=null; if(onDone) onDone(true); })
+    .then(function(){ clearPendingSync(); window._lastSyncErr=null; try{ maybeArchiveToCloud(_cloudSnap); }catch(e){} if(onDone) onDone(true); })
     .catch(function(err){
       console.warn('JSONbin merge sync failed (kept local, will retry):', err);
       window._lastSyncErr=(err && err.message)||String(err);
