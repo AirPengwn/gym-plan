@@ -39,7 +39,7 @@ body.dark{
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:420px;margin:0 auto}
-.day-selector{display:flex;gap:2px;background:var(--primary-tint);border:1px solid var(--border-soft);border-radius:10px;padding:3px;margin-bottom:1rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.day-selector{display:flex;flex-wrap:wrap;gap:2px;background:var(--primary-tint);border:1px solid var(--border-soft);border-radius:10px;padding:3px;margin-bottom:1rem}
 .day-btn{flex:1;min-width:44px;min-height:44px;padding:8px 6px;border:0;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;background:transparent;color:var(--muted);transition:all 0.15s;line-height:1.2;white-space:nowrap}
 .day-btn.active{background:var(--primary);color:#fff}
 .day-btn.progress-tab{font-size:12px;padding:12px 6px}
@@ -245,8 +245,8 @@ body.dark .v2-nudge.down{color:#E0A800}
 .complete-btn{flex:2;padding:11px;font-size:13px;font-weight:600;border-radius:8px;border:none;background:#5B4EA8;color:#fff;cursor:pointer}
 .reset-btn{flex:1;padding:11px;font-size:13px;border-radius:8px;border:0.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer}
 /* progress page */
-.prog-stats{display:flex;gap:5px;margin-bottom:1rem;flex-wrap:wrap}
-.stat-box{flex:1;min-width:52px;background:#fff;border:0.5px solid #E8E8E4;border-radius:10px;padding:8px 4px;text-align:center}
+.prog-stats{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-bottom:1rem}
+.stat-box{flex:1 1 54px;min-width:54px;max-width:96px;background:#fff;border:0.5px solid #E8E8E4;border-radius:10px;padding:8px 4px;text-align:center}
 .stat-num{font-size:20px;font-weight:700;color:#5B4EA8}
 .stat-label{font-size:10px;color:#888780;margin-top:2px;line-height:1.3}
 .prog-day-card{background:#fff;border:0.5px solid #E8E8E4;border-radius:12px;margin-bottom:1rem;overflow:hidden}
@@ -587,7 +587,7 @@ body.dark .deload-snooze-btn{background:transparent;border-color:#7A2020;color:#
    panel doesn't get an awkward gap before the very first header. */
 .zone-section:first-child>.stats-zone-title{margin-top:0}
 /* Step 5 — Sessions feed (cross-day timeline) */
-.sess-filter-row{display:flex;gap:5px;margin-bottom:0.75rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sess-filter-row{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-bottom:0.75rem}
 .sess-filter{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--muted);background:#F5F5F2;border:1px solid var(--border);border-radius:14px;cursor:pointer;white-space:nowrap}
 .sess-filter.on{background:var(--primary);border-color:var(--primary);color:#fff}
 .sess-cnt{font-size:10px;font-weight:700;color:var(--primary);background:#fff;border-radius:8px;padding:1px 6px;min-width:14px;text-align:center}
@@ -703,7 +703,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v2.80</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.2</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -892,14 +892,14 @@ body.dark #pc-result{color:#E8E6F8}
   </div>
 </div>
 
-<!-- Archive confirmation modal -->
-<div class="modal-overlay" id="archive-modal-overlay">
-  <div class="modal" style="max-width:320px;">
-    <div class="modal-title" style="color:#5B4EA8;">Archive exercise?</div>
-    <div class="modal-sub" id="archive-modal-msg" style="margin:0.75rem 0 1rem;"></div>
+<!-- v3.2: remove-from-this-day confirmation modal -->
+<div class="modal-overlay" id="exrm-overlay">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-title" style="color:#C53030;">Remove from this day?</div>
+    <div class="modal-sub" id="exrm-msg" style="margin:0.75rem 0 1rem;"></div>
     <div class="modal-btn-row">
-      <button class="modal-btn-primary" onclick="executeArchive()">Yes, archive it</button>
-      <button class="modal-btn-secondary" onclick="closeArchiveModal()">Cancel</button>
+      <button class="modal-btn-primary" style="background:#C53030;" onclick="executeRemoveFromDay()">Remove</button>
+      <button class="modal-btn-secondary" onclick="closeRemoveFromDayModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1327,7 +1327,12 @@ function getEffectivePlan(){
     merged._edited=true; eff.ex[k]=merged;
   });
   getDays().forEach(function(d){
-    eff.order[d]=(ov.order && ov.order[d] && ov.order[d].length)? ov.order[d].slice() : base.order[d].slice();
+    // v3.2: presence-based — if the overlay defines this day's order (even as an
+    // empty array, e.g. after removing its last exercise) use it verbatim; never
+    // fall back to base for an explicitly-emptied day (that resurrected defaults)
+    // and never crash on a brand-new day absent from base.
+    if(ov.order && Object.prototype.hasOwnProperty.call(ov.order,d)) eff.order[d]=(ov.order[d]||[]).slice();
+    else eff.order[d]=base.order[d]?base.order[d].slice():[];
   });
   return eff;
 }
@@ -1595,7 +1600,7 @@ function _uniqueHist(name){
   return hist;
 }
 function _newId(){ return 'ux'+Date.now().toString(36)+Math.floor(Math.random()*1e6); }
-function _orderArr(ov,day){ return (ov.order[day]&&ov.order[day].length)?ov.order[day].slice():buildExerciseModel().order[day].slice(); }
+function _orderArr(ov,day){ if(ov.order[day]&&ov.order[day].length) return ov.order[day].slice(); var base=buildExerciseModel().order[day]; return base?base.slice():[]; }
 function _instanceRec(day,linkId,hist,type,fields){
   var t=(type==='notes')?'notes':(type==='strength'?'strength':(type==='cardio'?'notes':'strength'));
   var rec={ domId:_newId(), day:day, linkId:linkId, type:t,
@@ -1623,6 +1628,75 @@ function planAddExercise(days, fields){
   });
   localStorage.setItem('plan_v2', JSON.stringify(ov));
   _planCommit('Added “'+fields.name+'” ('+days.length+' day'+(days.length>1?'s':'')+')');
+}
+
+// v3.2: re-add an EXISTING exercise (by its immutable histEx) to one or more
+// days. Never mints a new tracking id, so all past sessions stay attached;
+// links instances across days via a shared linkId so they stay in sync; and
+// un-archives the exercise if it was hidden under the old global-archive model.
+function planAddExisting(histEx, days){
+  if(!Array.isArray(days)) days=[days];
+  days=days.filter(Boolean);
+  if(!histEx || !days.length){ showToast('Pick a day'); return; }
+  var plan=getEffectivePlan();
+  var ov=_ovGet();
+  var nh=normalizeEx(histEx);
+  var srcIds=Object.keys(plan.ex).filter(function(k){ var r=plan.ex[k]; return normalizeEx(r.histEx||r.name)===nh; });
+  var src=srcIds.length?plan.ex[srcIds[0]]:null;
+  var realHist=src?(src.histEx||histEx):histEx;
+  var active=getDays();
+  var existingDays={}; srcIds.forEach(function(id){ var d=plan.ex[id].day; if(d) existingDays[d]=id; });
+  var newDays=days.filter(function(d){ return active.indexOf(d)!==-1 && !existingDays[d]; });
+  // total active-day span after the add decides whether we need a linkId
+  var span={}; Object.keys(existingDays).forEach(function(d){ if(active.indexOf(d)!==-1) span[d]=1; });
+  newDays.forEach(function(d){ span[d]=1; });
+  var linkId=(src&&src.linkId) || (Object.keys(span).length>1 ? ('lk'+Date.now().toString(36)+Math.floor(Math.random()*1e4)) : null);
+  var fields=src ? {name:src.name,sub:src.sub,loc:src.loc,video:src.video,badge:src.badge,cat:src.cat,mins:src.mins,muscles:src.muscles,sets:src.sets,type:src.type}
+                 : {name:(prettyExName(histEx)||histEx),sub:'',loc:'',video:_ytSearch((prettyExName(histEx)||histEx)+' proper form how to'),badge:null,cat:'',mins:null,muscles:[],sets:3,type:'strength'};
+  // stamp the shared linkId onto existing instances so the whole group is linked
+  if(linkId && srcIds.length){
+    srcIds.forEach(function(id){ var r=JSON.parse(JSON.stringify(plan.ex[id])); r.linkId=linkId; ov.ex[id]=r; });
+  }
+  newDays.forEach(function(day){
+    var rec=_instanceRec(day, linkId, realHist, (fields.type==='cardio'?'notes':fields.type), fields);
+    ov.ex[rec.domId]=rec;
+    var ord=_orderArr(ov,day); ord.push(rec.domId); ov.order[day]=ord;
+  });
+  var arch=getArchivedExercises();
+  if(arch.indexOf(realHist)!==-1){ saveArchivedExercises(arch.filter(function(e){ return e!==realHist; })); }
+  localStorage.setItem('plan_v2', JSON.stringify(ov));
+  if(!newDays.length){ showToast('Already on '+days.map(getDayName).join(', ')); return; }
+  _planCommit('Added “'+fields.name+'” from library ('+newDays.length+' day'+(newDays.length>1?'s':'')+')');
+}
+
+// v3.2: every distinct exercise the app knows — active days, removed-day
+// instances, anything with logged history, and legacy-archived names — deduped
+// by tracking id. Powers the builder's "From library" tab. `daysList` = the
+// active days it currently sits on (from plan.order, what's actually rendered).
+function getExerciseLibrary(){
+  var plan=getEffectivePlan();
+  var lib={};
+  function ensure(histEx, name, type){
+    var nk=normalizeEx(histEx||name||''); if(!nk) return null;
+    if(!lib[nk]) lib[nk]={histEx:histEx||name, name:name||histEx, type:type||'strength', days:{}, sessions:0};
+    return lib[nk];
+  }
+  // active-day membership first (so daysList reflects what's really on a day)
+  getDays().forEach(function(day){
+    (plan.order[day]||[]).forEach(function(id){
+      var r=plan.ex[id]; if(!r) return;
+      var e=ensure(r.histEx||r.name, r.name||r.histEx, r.type); if(e) e.days[day]=1;
+    });
+  });
+  // every plan record (covers exercises not currently on any active day)
+  Object.keys(plan.ex).forEach(function(id){ var r=plan.ex[id]; if(r) ensure(r.histEx||r.name, r.name||r.histEx, r.type); });
+  // anything with logged history (covers exercises whose plan record is gone)
+  var hist=getAllExercises();
+  Object.keys(hist).forEach(function(k){ var e=ensure(k, prettyExName(k)||k, 'strength'); if(e) e.sessions=(hist[k]||[]).length; });
+  // legacy globally-archived names
+  getArchivedExercises().forEach(function(h){ ensure(h, h, 'strength'); });
+  return Object.keys(lib).map(function(nk){ var e=lib[nk]; e.daysList=Object.keys(e.days); return e; })
+    .sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
 }
 
 // Edit a (possibly multi-day linked) exercise. Identity (histEx/data-ex)
@@ -1691,9 +1765,24 @@ function planSwapExercise(domId, fields, days){
   planAddExercise(sd.length?sd:[ref.day], fields);
 }
 
+// v3.2: remove a single instance from ONE day only. Other days keep their copy;
+// history (keyed by the immutable histEx) is never touched. If this was the
+// exercise's last active day it simply leaves the cycle and remains in the
+// library (re-addable via the builder's "From library" tab).
+function planRemoveFromDay(domId, day){
+  var plan=getEffectivePlan();
+  var rec=plan.ex[domId];
+  var nm=rec?(rec.name||rec.histEx||domId):'exercise';
+  var ov=_ovGet();
+  ov.order[day]=_orderArr(ov,day).filter(function(x){ return x!==domId; });
+  if(ov.ex[domId]) delete ov.ex[domId];   // drop the overlay instance (history stays in gymlog_*)
+  localStorage.setItem('plan_v2', JSON.stringify(ov));
+  _planCommit('Removed “'+nm+'” from '+getDayName(day));
+}
+
 function planReorder(day, domId, dir){
   var ov=_ovGet();
-  var ord=(ov.order[day]&&ov.order[day].length)?ov.order[day].slice():buildExerciseModel().order[day].slice();
+  var ord=_orderArr(ov,day);
   var i=ord.indexOf(domId); if(i<0) return;
   var j=i+dir; if(j<0||j>=ord.length) return;
   ord.splice(i,1); ord.splice(j,0,domId);
@@ -1820,10 +1909,58 @@ function openBuilder(domId){
     document.getElementById('b-muscles').innerHTML=_muscleChipsHTML([]);
     typeSel.disabled=false;
   }
+  // v3.2: editing is always "create" mode (no library switch); adding shows the toggle.
+  var modeRow=document.getElementById('b-mode-row');
+  if(modeRow) modeRow.style.display=domId?'none':'flex';
+  setBuilderMode('new');
   document.getElementById('builder-modal-overlay').classList.add('show');
 }
 function closeBuilder(){ document.getElementById('builder-modal-overlay').classList.remove('show'); }
+
+// v3.2: builder mode — "new" (type a fresh exercise) vs "lib" (re-add an
+// existing one from the library, preserving history & linking across days).
+var _builderMode='new', _libSelected=null;
+function setBuilderMode(m){
+  _builderMode=(m==='lib')?'lib':'new';
+  var lib=_builderMode==='lib';
+  var bn=document.getElementById('b-mode-new'), bl=document.getElementById('b-mode-lib');
+  if(bn) bn.className='bld-mode'+(lib?'':' on');
+  if(bl) bl.className='bld-mode'+(lib?' on':'');
+  ['b-sec-identity','b-sec-setsmins','b-sec-muscles','b-sec-more'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.style.display=lib?'none':'';
+  });
+  var ls=document.getElementById('b-lib-section'); if(ls) ls.style.display=lib?'block':'none';
+  var ttl=document.getElementById('builder-title'); if(ttl && !_builderEditId) ttl.textContent=lib?'Add from library':'Add exercise';
+  if(lib){ var s=document.getElementById('b-lib-search'); if(s) s.value=''; _libSelected=null; renderLibraryPicker(); }
+}
+function openLibrary(){ openBuilder(null); setBuilderMode('lib'); }
+function renderLibraryPicker(){
+  var listEl=document.getElementById('b-lib-list'); if(!listEl) return;
+  var q=normalizeEx((document.getElementById('b-lib-search')||{}).value||'');
+  var items=getExerciseLibrary().filter(function(e){ return !q || normalizeEx(e.name).indexOf(q)!==-1 || normalizeEx(e.histEx).indexOf(q)!==-1; });
+  if(!items.length){ listEl.innerHTML='<div class="bld-lib-empty">No matching exercises.</div>'; return; }
+  listEl.innerHTML=items.map(function(e){
+    var sel=_libSelected&&normalizeEx(_libSelected.histEx)===normalizeEx(e.histEx);
+    var meta=(e.daysList&&e.daysList.length)?('on '+e.daysList.map(getDayShort).join(', '))
+            :(e.sessions?(e.sessions+' session'+(e.sessions===1?'':'s')):'not scheduled');
+    var h=_esc(e.histEx).replace(/'/g,"\\'");
+    return '<div class="bld-lib-item'+(sel?' on':'')+'" onclick="selectLibItem(\''+h+'\')"><span class="lib-nm">'+_esc(e.name)+'</span><span class="lib-meta">'+_esc(meta)+'</span></div>';
+  }).join('');
+}
+function selectLibItem(histEx){
+  var hit=null; getExerciseLibrary().some(function(e){ if(normalizeEx(e.histEx)===normalizeEx(histEx)){ hit=e; return true; } return false; });
+  _libSelected=hit; renderLibraryPicker();
+}
 function saveBuilder(isSwap){
+  // v3.2: library mode re-adds an existing exercise by its histEx (linked, history kept).
+  if(_builderMode==='lib' && !_builderEditId){
+    if(!_libSelected){ showToast('Pick an exercise from the list'); return; }
+    var ldays=_readDayChips();
+    if(!ldays.length){ showToast('Pick at least one day'); return; }
+    closeBuilder();
+    planAddExisting(_libSelected.histEx, ldays);
+    return;
+  }
   var name=(document.getElementById('b-name').value||'').trim();
   if(!name){ showToast('Name is required'); return; }
   var days=_readDayChips();
@@ -1906,6 +2043,34 @@ function syncDayPanels(){
 syncDayPanels();
 renderDayItems();
 
+// v3.2: balanced-row layout for the day-derived button strips (day selector,
+// Sessions filter chips, stat boxes). Pure flexbox wraps greedily (e.g. 5+1);
+// this lays them out as evenly-split rows with the partial last row centered.
+//   ≤4 → one row · 5-8 → 2 rows · 9-12 → 3 rows · 13+ → 4 rows.
+function _balancedCols(n){
+  n=n||0;
+  if(n<=4) return n||1;
+  if(n<=8) return Math.ceil(n/2);
+  if(n<=12) return Math.ceil(n/3);
+  return Math.ceil(n/4);
+}
+function _applyBalancedRows(el,gap){
+  if(!el) return;
+  var kids=Array.prototype.slice.call(el.children);
+  var n=kids.length; if(!n) return;
+  gap=(gap==null?5:gap);
+  var cols=_balancedCols(n);
+  // Slightly under-fill each track (cols*gap, not (cols-1)*gap) so rounding
+  // never bumps a row down to cols-1; justify-content:center absorbs the slack
+  // and centers any partial last row.
+  var basis='calc((100% - '+(cols*gap)+'px) / '+cols+')';
+  el.style.display='flex';
+  el.style.flexWrap='wrap';
+  el.style.justifyContent='center';
+  el.style.gap=gap+'px';
+  kids.forEach(function(c){ c.style.flex='0 0 '+basis; c.style.maxWidth=basis; c.style.minWidth='0'; });
+}
+
 // v2.76 (Phase A.2): render the day selector buttons from DAYS_CONFIG.
 // Preserves the currently-active day across re-renders; defaults to the
 // first day (matches the boot panel #p-a having 'show').
@@ -1920,6 +2085,7 @@ function renderDaySelector(){
     var act=(activeKey ? d.key===activeKey : i===0);
     return '<button class="day-btn'+(act?' active':'')+'" onclick="sw(\''+d.key+'\',this)" aria-label="'+_esc(d.name)+'">'+_esc(d.short||('D'+(i+1)))+'</button>';
   }).join('');
+  _applyBalancedRows(sel, 2);
 }
 // v2.76 (Phase A.2): inject the per-day Progress widgets (stat boxes + Sessions
 // filter chips) from DAYS_CONFIG. "Total" box and "All" chip stay static;
@@ -1938,6 +2104,7 @@ function renderProgressDayWidgets(){
       box.innerHTML='<div class="stat-num" id="stat-day-'+d.key+'">0</div><div class="stat-label">Day '+(i+1)+'</div>';
       statRow.appendChild(box);
     });
+    _applyBalancedRows(statRow, 5);
   }
   var chipRow=document.getElementById('sess-filter-row');
   if(chipRow){
@@ -1953,6 +2120,7 @@ function renderProgressDayWidgets(){
       btn.innerHTML=_esc(d.short||('D'+(i+1)))+'<span id="prog-count-'+d.key+'" class="sess-cnt">0</span>';
       chipRow.appendChild(btn);
     });
+    _applyBalancedRows(chipRow, 5);
   }
 }
 renderDaySelector();
@@ -3649,7 +3817,8 @@ function renderManager(){
   var plan=getEffectivePlan();
   var catColors={'Warm-up':'#F59E0B','Upper body':'#7F77DD','Lower body':'#10B981','Core':'#EF4444','Cardio':'#3B82F6','Cool-down':'#8B5CF6'};
 
-  var activeHTML='<button class="mgr-add-btn" onclick="openBuilder(null)">➕ Add exercise</button>';
+  var activeHTML='<button class="mgr-add-btn" onclick="openBuilder(null)">➕ Add exercise</button>'
+    +'<button class="mgr-add-btn" onclick="openLibrary()" style="margin-left:6px">📚 From library</button>';
   getDays().forEach(function(day){
     var ids=(plan.order[day]||[]).filter(function(id){
       var r=plan.ex[id]; if(!r) return false;
@@ -3682,53 +3851,44 @@ function renderManager(){
         })()+'</span>'
         +countStr
         +'<button class="mgr-archive-btn mgr-edit-btn" onclick="openBuilder(\''+id+'\')" title="Edit / rename / swap">Edit</button>'
-        +'<button class="mgr-archive-btn" onclick="confirmArchiveByIndex('+idx+')" title="Archive this exercise">Archive</button>'
+        +'<button class="mgr-archive-btn" onclick="confirmRemoveFromDay(\''+id+'\',\''+day+'\')" title="Remove from this day (history kept)">Remove</button>'
         +'</div>');
     });
   });
   activeWrap.innerHTML=activeHTML;
 
-  // Archived exercises
-  if(archived.length){
-    archivedSection.style.display='block';
-    archivedWrap.innerHTML=archived.map(function(ex,idx){
-      var sessionCount=(exMap[ex]||[]).length;
-      var countStr=sessionCount?'<span class="mgr-ex-count">'+sessionCount+' saved</span>':'';
-      return ('<div class="mgr-ex-row archived">'
-        +'<span class="mgr-ex-name archived">'+ex+'</span>'
-        +countStr
-        +'<button class="mgr-restore-btn" onclick="restoreByIndex('+idx+')" title="Restore this exercise">Restore</button>'
-        +'</div>');
-    }).join('');
-  } else {
-    archivedSection.style.display='none';
-  }
+  // v3.2: the standalone "Archived exercises" restore list is retired. The
+  // exercise library (builder ▸ "From library") now surfaces and re-adds
+  // everything — including anything hidden under the old global-archive model.
+  if(archivedSection) archivedSection.style.display='none';
 }
 
-var pendingArchiveEx=null;
 var _mgrActiveExs=[];
-function confirmArchiveByIndex(idx){
-  var ex=_mgrActiveExs[idx];
-  if(ex) confirmArchive(ex);
+// v3.2: per-day Remove (replaces the old global Archive). Removes one instance
+// from one day; history is kept and the exercise stays re-addable via library.
+var _pendingRemoveEx=null;
+function confirmRemoveFromDay(domId, day){
+  _pendingRemoveEx={domId:domId, day:day};
+  var plan=getEffectivePlan();
+  var rec=plan.ex[domId];
+  var nm=(rec&&(rec.name||rec.histEx))||'this exercise';
+  var otherDays=[];
+  if(rec){
+    var grp=_groupDomIds(plan, rec);
+    var seen={};
+    grp.forEach(function(gid){ var r=plan.ex[gid]; if(r&&r.day&&r.day!==day&&!seen[r.day]){ seen[r.day]=1; otherDays.push(getDayName(r.day)); } });
+  }
+  var also=otherDays.length?(' It stays on '+otherDays.join(', ')+'.'):' It will no longer be on any day, but stays in your library to re-add.';
+  document.getElementById('exrm-msg').innerHTML='Remove <b>'+_esc(nm)+'</b> from <b>'+_esc(getDayName(day))+'</b>?<br><br>All its logged history is <b>kept</b>.'+_esc(also);
+  document.getElementById('exrm-overlay').classList.add('show');
 }
-function restoreByIndex(idx){
-  var archived=getArchivedExercises();
-  var ex=archived[idx];
-  if(ex) restoreExercise(ex);
+function closeRemoveFromDayModal(){
+  document.getElementById('exrm-overlay').classList.remove('show');
+  _pendingRemoveEx=null;
 }
-function confirmArchive(exName){
-  pendingArchiveEx=exName;
-  document.getElementById("archive-modal-msg").textContent=
-    'Archive "'+exName+'"? It will be removed from the checklist but ALL its history will be kept forever. You can restore it at any time.';
-  document.getElementById("archive-modal-overlay").classList.add("show");
-}
-function closeArchiveModal(){
-  document.getElementById("archive-modal-overlay").classList.remove("show");
-  pendingArchiveEx=null;
-}
-function executeArchive(){
-  if(pendingArchiveEx) archiveExercise(pendingArchiveEx);
-  closeArchiveModal();
+function executeRemoveFromDay(){
+  if(_pendingRemoveEx) planRemoveFromDay(_pendingRemoveEx.domId, _pendingRemoveEx.day);
+  closeRemoveFromDayModal();
 }
 
 function applyArchivedToChecklist(){
@@ -6644,8 +6804,31 @@ function showPRToast(prs){
   <div class="modal" style="max-width:380px;">
     <div class="modal-title" id="builder-title">Add exercise</div>
     <div class="modal-sub" id="builder-idnote" style="display:none;background:#E1F5EE;color:#085041;border-radius:6px;padding:7px 9px;">Renaming keeps all logged history — the underlying tracking id never changes.</div>
+    <!-- v3.2: mode toggle — type a brand-new exercise, or re-add an existing one from the library -->
+    <div id="b-mode-row" style="display:flex;gap:6px;margin:8px 0 6px;">
+      <button type="button" id="b-mode-new" class="bld-mode on" onclick="setBuilderMode('new')">✏️ Create new</button>
+      <button type="button" id="b-mode-lib" class="bld-mode" onclick="setBuilderMode('lib')">📚 From library</button>
+    </div>
+    <div id="b-lib-section" style="display:none;margin-bottom:8px;">
+      <input id="b-lib-search" type="text" class="bld-in" placeholder="Search your exercises…" oninput="renderLibraryPicker()" style="margin-bottom:8px"/>
+      <div id="b-lib-list" class="bld-lib-list"></div>
+      <span class="bld-hint" style="margin-top:6px;display:block">Pick one, then choose the day(s) below. Re-adding keeps all its history and links it across days.</span>
+    </div>
     <style>
       .bld-grp{margin-bottom:11px}
+      .bld-mode{flex:1;padding:8px 6px;border:1px solid var(--border-soft);border-radius:8px;background:#FAFAF8;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer}
+      .bld-mode.on{background:var(--primary);border-color:var(--primary);color:#fff}
+      body.dark .bld-mode{background:#1A1A2E;color:#9E9CC4;border-color:#3C3A5C}
+      body.dark .bld-mode.on{background:#5B4EA8;color:#fff}
+      .bld-lib-list{max-height:210px;overflow-y:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border-soft);border-radius:8px}
+      .bld-lib-item{display:flex;align-items:center;gap:6px;padding:9px 10px;border-bottom:1px solid var(--border-soft);cursor:pointer;font-size:13px;color:#2C2C2A}
+      .bld-lib-item:last-child{border-bottom:0}
+      .bld-lib-item.on{background:var(--primary-tint)}
+      .bld-lib-item .lib-nm{flex:1;font-weight:600}
+      .bld-lib-item .lib-meta{font-size:10px;color:var(--muted);font-weight:600;white-space:nowrap}
+      .bld-lib-empty{padding:14px 10px;font-size:12px;color:var(--muted);text-align:center}
+      body.dark .bld-lib-item{color:#E8E6F8}
+      body.dark .bld-lib-list{border-color:#3C3A5C}
       .bld-lbl{font-size:12px;font-weight:700;color:#3C3489;display:block;margin-bottom:2px}
       .bld-hint{font-size:10.5px;color:#888780;font-weight:400;display:block;margin-bottom:5px;line-height:1.4}
       .bld-in{width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border-soft);border-radius:8px;font-size:13px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
@@ -6663,7 +6846,7 @@ function showPRToast(prs){
     </style>
     <div>
       <!-- 1 · Identity -->
-      <div class="bld-sec">
+      <div class="bld-sec" id="b-sec-identity">
         <div class="bld-sec-h">1 · Identity</div>
         <div class="bld-grp">
           <label class="bld-lbl" for="b-name">Exercise name</label>
@@ -6700,7 +6883,7 @@ function showPRToast(prs){
           <span class="bld-hint">Tap every day this exercise belongs to. On multiple days = one linked exercise (shared history); editing it updates all its days.</span>
           <div id="b-days"></div>
         </div>
-        <div class="bld-grp" style="display:flex;gap:10px;">
+        <div class="bld-grp" id="b-sec-setsmins" style="display:flex;gap:10px;">
           <div style="width:88px;">
             <label class="bld-lbl" for="b-sets">Sets</label>
             <span class="bld-hint">Strength only</span>
@@ -6715,7 +6898,7 @@ function showPRToast(prs){
       </div>
 
       <!-- 3 · Muscles worked -->
-      <div class="bld-sec">
+      <div class="bld-sec" id="b-sec-muscles">
         <div class="bld-sec-h">3 · Muscles worked</div>
         <div class="bld-grp" style="margin-bottom:0">
           <span class="bld-hint">Drives the body figure on the Progress tab — the day's figure is the union of its exercises. Tap to toggle.</span>
@@ -6724,7 +6907,7 @@ function showPRToast(prs){
       </div>
 
       <!-- More options (collapsed) -->
-      <details class="bld-more">
+      <details class="bld-more" id="b-sec-more">
         <summary>More options</summary>
         <div class="bld-more-body">
           <div class="bld-grp">
