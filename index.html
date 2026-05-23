@@ -843,6 +843,7 @@ body.dark #pc-result{color:#E8E6F8}
   </div>
 
   <div class="prog-panel" id="prog-panel-manage">
+    <div style="font-size:18px;font-weight:800;color:var(--text);margin:2px 0 12px;">📋 Plan &amp; exercises</div>
     <div class="mgr-notice">
       <strong>Add</strong>, <strong>Edit</strong>, rename, swap and reorder your plan right here. Renaming <strong>keeps all logged history</strong> (the underlying tracking id never changes). <strong>Remove</strong> takes an exercise off just that day — re-add it anytime from <strong>📚 From library</strong>, and all its history is kept.
     </div>
@@ -2302,7 +2303,14 @@ function sw(day,btn){
   var _pl=document.getElementById('hdr-plan-btn'); if(_pl && day!=='prog') _pl.classList.remove('active');
   document.getElementById('p-'+day).classList.add('show');
   btn.classList.add('active');
-  if(day==='prog') renderProgress();
+  if(day==='prog'){
+    renderProgress();
+    // v3.3: opening Progress from the Plan screen returns to Sessions so the
+    // stat boxes + tab row are restored (Plan is a distinct screen that hides
+    // them). The after-plan reload boots on Sessions, so this never fights it.
+    var _mg=document.getElementById('prog-panel-manage');
+    if(_mg && _mg.classList.contains('show')) switchProgTab('days', document.querySelector('.prog-tab-row .prog-tab-btn'));
+  }
   else markSessionStart(day);
   loadLastTimes();
   initCardioPanels();
@@ -3043,10 +3051,18 @@ function switchProgTab(tab, btn){
   document.getElementById('prog-panel-'+tab).classList.add('show');
   if(tab==='exercises') renderExerciseList();
   if(tab==='manage') renderManager();
-  // v3.2: header button feedback — 📋 lights up for Manage, 📊 for the data tabs.
+  // v3.3: Plan is its own screen. Manage hides the Progress chrome (stat boxes +
+  // Sessions/Lifts/Trends tabs) so tapping 📋 visibly changes context; the data
+  // tabs restore it. Header buttons mirror the active destination.
   var planBtn=document.getElementById('hdr-plan-btn'), progBtn=document.getElementById('hdr-prog-btn');
-  if(tab==='manage'){ if(planBtn) planBtn.classList.add('active'); if(progBtn) progBtn.classList.remove('active'); }
-  else { if(planBtn) planBtn.classList.remove('active'); if(progBtn) progBtn.classList.add('active'); }
+  var statsRow=document.getElementById('prog-stats-row'), tabRow=document.querySelector('.prog-tab-row');
+  if(tab==='manage'){
+    if(planBtn) planBtn.classList.add('active'); if(progBtn) progBtn.classList.remove('active');
+    if(statsRow) statsRow.style.display='none'; if(tabRow) tabRow.style.display='none';
+  } else {
+    if(planBtn) planBtn.classList.remove('active'); if(progBtn) progBtn.classList.add('active');
+    if(statsRow) statsRow.style.display=''; if(tabRow) tabRow.style.display='';
+  }
 }
 // Plan entry point — header 📋 button. Switches to Progress view then opens Manage panel.
 function openManage(){
