@@ -1,11 +1,24 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v3.9 · **Updated:** 2026-05-23 · **Files:** `index.html` (~490KB, inline
-CSS/JS, no build step) **+ `sw.js`** (service worker, new in v3.7) → deployed to GitHub
-Pages → used on iPhone home screen.
+**App version:** v3.12 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
+CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
-logged history. The user handles **all** git commits/pushes himself; **never run git.**
+logged history.
+
+## Repo + git workflow (changed 2026-05-24 — Claude now manages git)
+
+- **Canonical working copy: `C:\dev\gym-plan`** (git repo, remote
+  https://github.com/AirPengwn/gym-plan). The old `…\OneDrive\Desktop\gym-plan-main` copy is
+  **stale** — work here.
+- **Per shipped version (auto, no prompt):** branch `release/vX.Y` → commit → tag `vX.Y` →
+  merge `--no-ff` into `main` → push `main` + branch + tag. **Pages deploys from `main`.**
+  Tag + branch per version = rollback (`git checkout vX.Y`).
+- Auth: GCM cached as **AirPengwn** (repo owner). Local git `user.name` is still
+  "AirPenguin23" (separate account) → commits authored as that unless changed. Never force-push.
+- History was at v2.73 on `main` until 2026-05-24 (user had deployed via Pages *source
+  settings*); main is now the source of truth.
+- ⚠️ **Pages source must be set to `main` / root** in repo Settings → Pages (user action).
 
 > **Deploy note:** as of v3.7 the app is **two files** — commit BOTH `index.html` and
 > `sw.js` (at the repo root, same directory). If `sw.js` isn't deployed, the SW just
@@ -104,7 +117,8 @@ Harnesses hardcode the absolute path to `index.html`; update it if the project m
 - Plan-mode for any model/schema/data/sync change. Bump the version badge each shippable
   change. Keep changes additive; run the regression suite after each change.
 - Flag interpretation forks; default to layout-only / preserve-current-shape when ambiguous.
-- **User handles all git. Never run git.**
+- **Claude manages git** (see the Repo section up top): auto branch+tag+merge-to-main+push
+  per shipped version.
 
 ## Known / deferred (not blocking)
 
@@ -116,9 +130,8 @@ Harnesses hardcode the absolute path to `index.html`; update it if the project m
 - Multi-day cardio proper support; deload "mode" scaling shown targets; "Reset plan to
   original" undo. Optional, only if asked.
 
-## Git reminder (for the user)
+## History note
 
-Commit at v3.9: `index.html`, **`sw.js`**, the `tests/` folder (new suites:
-`newday_add_spot`, `balanced_rows_spot`, `remove_perday_spot`, `library_spot`,
-`durability_spot`, `sw_spot`, `cloudarchive_spot`, `finalize_spot`), `tests/README.md`,
-`SESSION-HANDOFF.md`. Then push to GitHub Pages and tap in-app **Update**.
+v2.73 → v3.12 was committed in one merge on 2026-05-24 when git management moved to Claude
+and the working copy moved to `C:\dev\gym-plan`. From here, each version is its own
+`release/vX.Y` branch + `vX.Y` tag, merged to `main`.
