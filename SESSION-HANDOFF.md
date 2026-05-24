@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v3.12 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
+**App version:** v3.23 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -28,8 +28,12 @@ logged history.
 
 ## Current state (all green)
 
-- **28 test suites pass** (see `tests/` + `tests/README.md`). Primary gate = `verify.js`
-  (byte-identity of the unedited stock plan vs `index.html.bak`).
+- **32 test suites pass** via `cd tests && npm test` (`run-all.js`). Primary gate =
+  `verify.js` (byte-identity of the unedited stock plan vs `index.html.bak`). **CI runs
+  the whole suite on every push/PR to `main`** (`.github/workflows/test.yml`).
+- **Exercise library = 164 catalog entries + 28 built-ins.** Grown in dup-scanned batches
+  (Phase C). `dupscan.js` is a CI guard: hard-fails on an exact intra-catalog dup, prints
+  advisory near-dup pairs. **Run `node tests/dupscan.js` before adding any breadth batch.**
 - Last **real** workout data = **May 16, 2026**. Anything later is test noise.
 - Owner-only pending: a real-device end-to-end gym pass with **Test Mode OFF** on the
   iPhone (save→sync→reload→history), and confirm the **service worker installs** + the
@@ -55,12 +59,25 @@ logged history.
   days, history, archived, seed catalog, user library) — searchable in the builder's
   **📚 From library** tab. `planAddExisting` re-adds by existing `histEx` (history preserved)
   and links across days via shared `linkId`.
-- **Seed catalog** (`EXERCISE_CATALOG`, v3.4): 17 hardcoded library-only exercises. Read-only
-  seed; ask the user before editing it. Adding one carries cat/sub/loc/video/badge/muscles
-  (muscle keys map to `MUSCLE_GROUPS`).
+- **Seed catalog** (`EXERCISE_CATALOG`): now **164** hardcoded library-only exercises
+  (grown across Phase C batches 1–5). Adding one carries cat/sub/loc/video/badge/muscles
+  (muscle keys must map to `MUSCLE_GROUPS`: chest/front-shoulder/tricep/lat/upper-back/
+  rear-delt/bicep/core-front/core-back/quad/hamstring/glute/calf/hip-flexor/inner-thigh/
+  outer-hip). **Run `dupscan.js` before adding entries**; avoid near-name dups.
+- **Richer metadata (Phase B/B2, v3.14):** every catalog entry carries
+  `equipment` / `pattern` / `unilateral` / `difficulty` / `alternatives[]`.
+  `pattern ∈ push|pull|squat|hinge|lunge|carry|core|cardio|isolation|mobility`. There is a
+  **Mobility** category + `mobility` pattern. `exerciseMeta(name|record)` resolves these;
+  fields persist onto plan records + the user library; the builder has pattern/equipment/
+  unilateral/alternatives inputs (`b-pattern`/`b-equip`/`b-unilat`/`b-alts`). Gated by
+  `metadata_spot.js`. **Built-in (non-catalog) exercises don't yet carry metadata — that's
+  Phase D (`DEFAULT_META`).**
 - **User library** (`exercise_library_v1`, v3.5): builder **📚 Save to library** stores an
   exercise WITHOUT a day. Soft-delete (tombstone + `updatedAt`) so deletes sync. Merged
   last-write-wins per name (`_mergeLibraries`).
+- **Hide / un-hide any library exercise** (`library_hidden_v1`, v3.19):
+  `hideLibraryItem`/`unhideLibraryItem`/`isLibraryHidden`. Reversible, synced, NOT a delete
+  (the entry stays, just flagged `hidden`). Save-to-library un-hides. Rides the payload.
 
 **Durability / pre-production hardening (v3.6–v3.9)**
 - `navigator.storage.persist()` on boot (anti-eviction).
@@ -86,14 +103,27 @@ logged history.
   (`pushPlanToCloud`, ungated `_rawCloudPUT`). Library merges last-write-wins.
 - **Cloud archive**: primary-only, ~daily, separate bin.
 - The "Cloud enabled" switch + "Push plan now" button live in the Plan screen.
+- **Synced payload keys** (mirror in all 7 spots — pushPlanToCloud, generateExport, import,
+  buildBinPayload, mergeCloudIntoPayload, applyPayloadToLocal, TEST_EXTRA_KEYS): `gymlog_*`,
+  `plan_v2`, `days_config_v1`, `exercise_library_v1`, `library_hidden_v1`.
+
+## Infra: CI + automated backup (Phase A, v3.13 — live)
+
+- **`.github/workflows/test.yml`** — runs `npm ci && npm test` (all 32 suites) on every
+  push/PR to `main`, ubuntu + node 20. Test paths are `__dirname`-relative so the suite runs
+  on the Linux runner. This is the merge gate.
+- **`.github/workflows/backup.yml`** — daily cron: reads the JSONbin id/key out of
+  `index.html`, writes a dated JSON snapshot to the **private** `AirPengwn/gym-plan-backups`
+  repo using `secrets.BACKUP_TOKEN`. No-ops if the token is absent. (Private repo chosen
+  deliberately — workout + body-measurement data should not be public.)
 
 ## Running the tests
 
 ```
-cd tests && npm install jsdom    # once
+cd tests && npm ci && npm test    # runs all 32 suites via run-all.js, exits non-zero on fail
 ```
-Then run every harness (see `tests/README.md` for the exact loop) — all print PASS at v3.9.
-Harnesses hardcode the absolute path to `index.html`; update it if the project moves.
+Paths are `__dirname`-relative (run anywhere, incl. CI). `node tests/dupscan.js` before any
+catalog breadth batch.
 
 ## Backups / rollback (now 4 layers)
 
@@ -120,6 +150,15 @@ Harnesses hardcode the absolute path to `index.html`; update it if the project m
 - **Claude manages git** (see the Repo section up top): auto branch+tag+merge-to-main+push
   per shipped version.
 
+## Next up — Phase D (deferred, NOT started)
+
+- **`DEFAULT_META` for built-in exercises**: built-ins (the 28 stock-plan names) don't carry
+  pattern/equipment/etc. yet — `exerciseMeta` only resolves them for catalog/user entries.
+  Phase D adds a metadata map for built-ins so balance checks see the whole plan.
+- **Programming intelligence** (the payoff of the metadata): push:pull / upper:lower balance,
+  neglected-muscle alerts, auto-progression prompts. Build on `pattern`/`muscles`.
+- User has said **no rush** to reach Phase D; keep adding breadth + polish until asked.
+
 ## Known / deferred (not blocking)
 
 - **Pre-fill saved as real**: `loadLastTimes` pre-fills last session's values (ghost-styled)
@@ -133,5 +172,7 @@ Harnesses hardcode the absolute path to `index.html`; update it if the project m
 ## History note
 
 v2.73 → v3.12 was committed in one merge on 2026-05-24 when git management moved to Claude
-and the working copy moved to `C:\dev\gym-plan`. From here, each version is its own
-`release/vX.Y` branch + `vX.Y` tag, merged to `main`.
+and the working copy moved to `C:\dev\gym-plan`. From there each version is its own
+`release/vX.Y` branch + `vX.Y` tag merged `--no-ff` into `main`. v3.13 (CI + backup),
+v3.14 (metadata), v3.16–v3.23 (Phase C breadth batches → 164 catalog entries), v3.19
+(library hide/un-hide), and the `dupscan` dedup tooling all shipped this way.
