@@ -2,7 +2,7 @@
 // v2.80 — plan/day cloud-sync: local by default, 2-step (switch + button),
 // surgical push (plan-only, preserves cloud sessions), works on a reader device.
 const fs=require('fs');const{JSDOM}=require('jsdom');
-const HTML=fs.readFileSync('C:\\dev\\gym-plan\\index.html','utf8');
+const HTML=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8');
 function store(i){const m=new Map(Object.entries(i||{}));return{getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(''+k,''+v),removeItem:k=>m.delete(k),clear:()=>m.clear(),key:x=>{const a=[...m.keys()];return x<a.length?a[x]:null},get length(){return m.size}};}
 function app(st){
   const ctx=new Proxy(function(){return ctx},{get:()=>ctx,set:()=>true,apply:()=>ctx});

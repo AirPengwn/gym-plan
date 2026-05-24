@@ -1,4 +1,10 @@
 {
+  "name": "gym-plan-tests",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node run-all.js"
+  },
   "dependencies": {
     "jsdom": "^29.1.1"
   }

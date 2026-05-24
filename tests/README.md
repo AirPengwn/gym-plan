@@ -31,7 +31,12 @@ for t in verify funcsmoke verif_s1 buildcard heatcheck msvgcheck \
 done
 ```
 
-All should print PASS at v3.12. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
+All should print PASS at v3.13. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
+
+**CI / one-command run (v3.13):** `cd tests && npm ci && npm test` runs every CI-safe suite
+via `run-all.js` (exits non-zero on any failure). A GitHub Action
+(`.github/workflows/test.yml`) runs this on every push/PR to `main`. Test paths are now
+`__dirname`-relative, so the suite runs anywhere (incl. the Linux CI runner).
 
 ## What each gates
 

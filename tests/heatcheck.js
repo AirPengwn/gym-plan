@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('fs');const{JSDOM}=require('jsdom');
-const html=fs.readFileSync('C:\\dev\\gym-plan\\index.html','utf8');
+const html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8');
 const ctx=new Proxy(function(){return ctx;},{get:()=>ctx,set:()=>true,apply:()=>ctx});
 const now=Date.now();
 function sess(daysAgo, ex, note){

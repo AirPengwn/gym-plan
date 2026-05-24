@@ -3,7 +3,7 @@
 // focused on Pec fly + Rear delt state per user request.
 const fs=require('fs');
 const https=require('https');
-const HTML=fs.readFileSync('C:\\dev\\gym-plan\\index.html','utf8');
+const HTML=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8');
 const ID  = (HTML.match(/var JBIN_ID\s*=\s*'([^']+)'/)||[])[1];
 const KEY = (HTML.match(/var JBIN_KEY\s*=\s*'([^']+)'/)||[])[1];
 if(!ID || !KEY){ console.error('Could not read JBIN_ID/KEY from index.html'); process.exit(1); }

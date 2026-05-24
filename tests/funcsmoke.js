@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('jsdom');
 
-const IDX = 'C:\\dev\\gym-plan\\index.html';
+const IDX = require('path').join(__dirname,'..','index.html');
 const HTML = fs.readFileSync(IDX, 'utf8');
 
 let failures = 0, passes = 0;

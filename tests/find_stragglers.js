@@ -2,7 +2,7 @@
 // Find the 2 set-bearing entries in cloud that lack .sets.
 const fs=require('fs');
 const https=require('https');
-const HTML=fs.readFileSync('C:\\dev\\gym-plan\\index.html','utf8');
+const HTML=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8');
 const ID  = (HTML.match(/var JBIN_ID\s*=\s*'([^']+)'/)||[])[1];
 const KEY = (HTML.match(/var JBIN_KEY\s*=\s*'([^']+)'/)||[])[1];
 https.request({method:'GET',hostname:'api.jsonbin.io',path:'/v3/b/'+ID,headers:{'X-Master-Key':KEY,'X-Bin-Meta':'false'}}, res=>{

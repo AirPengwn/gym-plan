@@ -3,7 +3,7 @@
 // the live index.html and assert generated cards carry every hook the
 // existing handlers/IIFEs depend on.
 const fs=require('fs');
-const idx=fs.readFileSync('C:\\dev\\gym-plan\\index.html','utf8');
+const idx=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8');
 function grab(name){
   var i=idx.indexOf('function '+name+'(');
   if(i<0) throw new Error('not found: '+name);

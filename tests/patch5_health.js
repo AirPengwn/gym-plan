@@ -6,7 +6,7 @@
 // (c) BAD  — flag not set (migration didn't run)
 // (d) NEUTRAL — no lift sessions yet (fresh device)
 const fs=require('fs');const{JSDOM}=require('jsdom');
-const HTML=fs.readFileSync('C:\\dev\\gym-plan\\index.html','utf8');
+const HTML=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8');
 function store(init){const m=new Map(Object.entries(init||{}));return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(''+k,''+v),removeItem:k=>m.delete(k),clear:()=>m.clear(),key:i=>{const a=[...m.keys()];return i<a.length?a[i]:null;},get length(){return m.size;}};}
 function app(st){
   const ctx=new Proxy(function(){return ctx;},{get:()=>ctx,set:()=>true,apply:()=>ctx});
@@ -89,7 +89,7 @@ var afterSnap=afterKeys.map(function(k){ return k+'='+ST.getItem(k); }).join('|'
 ok(beforeSnap===afterSnap,'read-only · 3 calls to _renderPatch5Status() do not mutate localStorage');
 
 // CSS sanity: status rule + state classes present in stylesheet.
-var src=fs.readFileSync('C:\\dev\\gym-plan\\index.html','utf8');
+var src=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8');
 ok(/\.patch5-status\{[^}]*color:var\(--muted\)/.test(src),'CSS · base .patch5-status uses --muted token');
 ok(/\.patch5-status\.patch5-ok \.patch5-icon\{color:var\(--good\)\}/.test(src),'CSS · OK icon = --good');
 ok(/\.patch5-status\.patch5-warn \.patch5-icon\{color:var\(--warn\)\}/.test(src),'CSS · WARN icon = --warn');
