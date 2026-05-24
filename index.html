@@ -733,7 +733,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.14</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.15</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -2091,6 +2091,10 @@ function openBuilder(domId){
     set('b-cat', _cm.cat||r.cat||'');
     set('b-mins', _cm.mins!=null?_cm.mins:(r.mins!=null?r.mins:''));
     document.getElementById('b-muscles').innerHTML=_muscleChipsHTML(getExerciseMuscles(domId));
+    var _md=(typeof exerciseMeta==='function')?exerciseMeta(r):{};
+    set('b-pattern',_md.pattern||''); set('b-equip',_md.equipment||''); set('b-diff',_md.difficulty||'');
+    var _u=document.getElementById('b-unilat'); if(_u) _u.checked=!!_md.unilateral;
+    set('b-alts', Array.isArray(_md.alternatives)?_md.alternatives.join(', '):'');
     typeSel.disabled=true; // structure frozen on edit
   } else {
     ttl.textContent='Add exercise';
@@ -2098,6 +2102,8 @@ function openBuilder(domId){
     document.getElementById('b-days').innerHTML=_dayChipsHTML([]);
     set('b-type','strength'); set('b-name',''); set('b-sub','');
     set('b-loc',''); set('b-video',''); set('b-sets','3'); set('b-badge',''); set('b-cat',''); set('b-mins','');
+    set('b-pattern',''); set('b-equip',''); set('b-diff',''); set('b-alts','');
+    var _u2=document.getElementById('b-unilat'); if(_u2) _u2.checked=false;
     document.getElementById('b-muscles').innerHTML=_muscleChipsHTML([]);
     typeSel.disabled=false;
   }
@@ -2188,7 +2194,9 @@ function saveBuilder(isSwap){
   var mv=document.getElementById('b-mins').value;
   var mins=(mv===''||mv==null)?null:(parseInt(mv,10)||0);
   var muscles=_readMuscleChips();
-  var f={ name:name, sub:sub, loc:loc, video:video, badge:badge, sets:sets, type:type, cat:cat, mins:mins, muscles:muscles };
+  var md=_readBuilderMeta();
+  var f={ name:name, sub:sub, loc:loc, video:video, badge:badge, sets:sets, type:type, cat:cat, mins:mins, muscles:muscles,
+    equipment:md.equipment, pattern:md.pattern, unilateral:md.unilateral, difficulty:md.difficulty, alternatives:md.alternatives };
   closeBuilder();
   if(isSwap && _builderEditId){ f.type=type; planSwapExercise(_builderEditId,f,days); }
   else if(_builderEditId){ planEditExercise(_builderEditId,f,days); }
@@ -2211,9 +2219,23 @@ function saveBuilderToLibrary(){
   var mv=document.getElementById('b-mins').value;
   var mins=(mv===''||mv==null)?null:(parseInt(mv,10)||0);
   var muscles=_readMuscleChips();
-  addToUserLibrary({ name:name, type:type, sub:sub, loc:loc, video:video, badge:badge, sets:sets, cat:cat, mins:mins, muscles:muscles });
+  var md=_readBuilderMeta();
+  addToUserLibrary({ name:name, type:type, sub:sub, loc:loc, video:video, badge:badge, sets:sets, cat:cat, mins:mins, muscles:muscles,
+    equipment:md.equipment, pattern:md.pattern, unilateral:md.unilateral, difficulty:md.difficulty, alternatives:md.alternatives });
   closeBuilder();
   showToast('“'+name+'” saved to library 📚');
+}
+// v3.15: read the optional training-metadata inputs from the builder.
+function _readBuilderMeta(){
+  function val(id){ var el=document.getElementById(id); return el?(el.value||'').trim():''; }
+  var u=document.getElementById('b-unilat');
+  return {
+    equipment: val('b-equip'),
+    pattern: val('b-pattern'),
+    unilateral: !!(u && u.checked),
+    difficulty: val('b-diff'),
+    alternatives: val('b-alts').split(',').map(function(s){ return s.trim(); }).filter(Boolean)
+  };
 }
 
 function renderDayItems(){
@@ -7443,6 +7465,38 @@ function showPRToast(prs){
             <label class="bld-lbl" for="b-video">Demo video <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
             <span class="bld-hint">Paste a video URL, or leave blank — a YouTube search link is created automatically from the name</span>
             <input id="b-video" type="text" class="bld-in" style="font-size:12px" placeholder="Leave blank for auto YouTube search"/>
+          </div>
+          <div class="bld-grp">
+            <label class="bld-lbl">Training metadata <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+            <span class="bld-hint">Powers balance checks, swap suggestions &amp; filters.</span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <select id="b-pattern" class="bld-in" style="flex:1;min-width:118px">
+                <option value="">Pattern —</option>
+                <option value="push">Push</option><option value="pull">Pull</option>
+                <option value="squat">Squat</option><option value="hinge">Hinge</option>
+                <option value="lunge">Lunge</option><option value="carry">Carry</option>
+                <option value="core">Core</option><option value="isolation">Isolation</option>
+                <option value="cardio">Cardio</option>
+              </select>
+              <select id="b-equip" class="bld-in" style="flex:1;min-width:118px">
+                <option value="">Equipment —</option>
+                <option>Barbell</option><option>Dumbbell</option><option>Machine</option>
+                <option>Cable</option><option>Bodyweight</option><option>Kettlebell</option>
+                <option>Band</option><option>Other</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
+              <select id="b-diff" class="bld-in" style="flex:1;min-width:118px">
+                <option value="">Difficulty —</option>
+                <option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+              </select>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);white-space:nowrap"><input type="checkbox" id="b-unilat"> Unilateral</label>
+            </div>
+          </div>
+          <div class="bld-grp">
+            <label class="bld-lbl" for="b-alts">Alternatives <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+            <span class="bld-hint">Comma-separated swap options — e.g. “Leg press, Barbell squat”</span>
+            <input id="b-alts" type="text" class="bld-in" placeholder="Leg press, Barbell squat"/>
           </div>
           <div class="bld-grp" style="margin-bottom:0">
             <label class="bld-lbl" for="b-badge">Badge <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
