@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v3.27 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
+**App version:** v3.28 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -28,7 +28,7 @@ logged history.
 
 ## Current state (all green)
 
-- **33 test suites pass** via `cd tests && npm test` (`run-all.js`). Primary gate =
+- **35 test suites pass** via `cd tests && npm test` (`run-all.js`). Primary gate =
   `verify.js` (byte-identity of the unedited stock plan vs `index.html.bak`). **CI runs
   the whole suite on every push/PR to `main`** (`.github/workflows/test.yml`).
 - **Exercise library = 191 catalog entries + 28 built-ins.** Grown in dup-scanned batches
@@ -118,7 +118,21 @@ logged history.
 - The "Cloud enabled" switch + "Push plan now" button live in the Plan screen.
 - **Synced payload keys** (mirror in all 7 spots — pushPlanToCloud, generateExport, import,
   buildBinPayload, mergeCloudIntoPayload, applyPayloadToLocal, TEST_EXTRA_KEYS): `gymlog_*`,
-  `plan_v2`, `days_config_v1`, `exercise_library_v1`, `library_hidden_v1`.
+  `plan_v2`, `days_config_v1`, `exercise_library_v1`, `library_hidden_v1`, `plan_templates_v1`.
+
+## Plan templates (v3.28)
+
+- **Built-in `PLAN_TEMPLATES`** (PPL 3-day, Upper/Lower 4-day, Full Body 3-day, Bro Split
+  5-day) + **user custom templates** (`plan_templates_v1`, LWW-merged like the user library,
+  soft-delete tombstones, synced). Template exercises are catalog names so they resolve full
+  metadata/muscles/cues on apply.
+- `applyTemplate(id, mode)`: **always snapshots first**; `replace` ARCHIVES current active
+  days (history kept + restorable) then installs the program, `append` adds the template's
+  days alongside. Builds the overlay + day config then commits once.
+- `saveCurrentPlanAsTemplate(name)` snapshots the current plan's active days + exercise names.
+  UI: **📐 Templates** button on the 📋 Manage screen → modal (`#tpl-overlay`) listing
+  built-ins + customs with day/exercise preview, Replace/Add-days/Delete, and a
+  save-current-plan field. Gated by `templates_spot.js`.
 
 ## Infra: CI + automated backup (Phase A, v3.13 — live)
 
