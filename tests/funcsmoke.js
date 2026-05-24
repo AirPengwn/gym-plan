@@ -221,6 +221,7 @@ function domIdByDataEx(doc, day, ex){
   ok(w.document.getElementById('day-selector').style.display!=='none','day-selector visible on the Workout screen');
   w.openSync();
   ok(w.document.getElementById('day-selector').style.display==='none','day-selector hidden on the Sync screen');
+  ok(w.document.getElementById('swh-l').hasAttribute('hidden') && w.document.getElementById('swh-r').hasAttribute('hidden'),'swipe hints hidden off the Workout screen');
   w.openManage();
   ok(w.document.getElementById('day-selector').style.display==='none','day-selector hidden on the Plan screen');
   w.navWorkout();

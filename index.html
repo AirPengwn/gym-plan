@@ -785,7 +785,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.32</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.33</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -1724,7 +1724,11 @@ function updateSwipeHints(){
   var l=document.getElementById('swh-l'), r=document.getElementById('swh-r');
   if(!l||!r) return;
   var order=_swipeOrder();
-  var cur=_currentPanel(); var i=cur?order.indexOf(cur):-1;
+  var cur=_currentPanel();
+  // v3.32: the swipe hints belong only on a Workout day screen. Hide them on
+  // Progress / Plan / Sync / Settings (cur is null or not a workout-day key).
+  if(!cur || getDays().indexOf(cur)===-1){ l.setAttribute('hidden',''); r.setAttribute('hidden',''); return; }
+  var i=order.indexOf(cur);
   var prev=(i>0)?order[i-1]:null;
   var next=(i>=0&&i<order.length-1)?order[i+1]:null;
   if(prev){ l.textContent=_swipeLbl(prev); l.removeAttribute('hidden'); } else l.setAttribute('hidden','');
@@ -3228,8 +3232,8 @@ function openSync(){
 }
 // v3.32: day-selector (D1…Dn chips) belongs only on the Workout screen.
 function _setDaySelectorVisible(show){
-  var d=document.getElementById('day-selector'); if(!d) return;
-  d.style.display = show ? 'flex' : 'none';
+  var d=document.getElementById('day-selector'); if(d) d.style.display = show ? 'flex' : 'none';
+  try{ updateSwipeHints(); }catch(e){}   // v3.32: keep swipe hints in lockstep (hidden off-Workout)
 }
 function renderSettings(){
   var v=document.getElementById('set-ver'); if(v){ var b=document.getElementById('app-version'); v.textContent=b?b.textContent:''; }
