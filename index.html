@@ -768,7 +768,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.28</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.29</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -969,10 +969,14 @@ body.dark #pc-result{color:#E8E6F8}
   <div class="modal" style="max-width:380px;max-height:84vh;overflow-y:auto;text-align:left;">
     <div class="modal-title" style="color:#5B4EA8;">📐 Plan templates</div>
     <div class="modal-sub" style="margin:0.4rem 0 0.9rem;">Apply a ready-made program, or save your current plan to reuse later. Applying always saves a backup snapshot first, and <b>Replace</b> archives your current days (history kept &amp; restorable).</div>
-    <div id="tpl-save-row" style="display:flex;gap:6px;margin-bottom:0.9rem;">
-      <input id="tpl-save-name" type="text" placeholder="Save current plan as…" style="flex:1;min-width:0;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--card);color:var(--text);">
-      <button class="modal-btn-primary" style="margin:0;padding:8px 12px;white-space:nowrap;" onclick="tplSaveCurrent()">Save</button>
+    <div id="tpl-save-row" style="margin-bottom:1rem;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--primary-tint);">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px;">💾 Save your current plan as a template</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="tpl-save-name" type="text" placeholder="Template name…" aria-label="Template name" style="flex:1;min-width:0;padding:9px 11px;border:1.5px solid var(--primary);border-radius:8px;font-size:13px;background:var(--card);color:var(--text);">
+        <button class="modal-btn-primary" style="margin:0;padding:9px 16px;white-space:nowrap;flex:0 0 auto;" onclick="tplSaveCurrent()">Save</button>
+      </div>
     </div>
+    <div style="font-size:12px;font-weight:700;color:var(--muted);margin:0 0 7px 2px;">Or start from a ready-made program</div>
     <div id="tpl-list"></div>
     <div class="modal-btn-row" style="margin-top:0.9rem;">
       <button class="modal-btn-secondary" onclick="closeTemplates()">Close</button>
@@ -2175,23 +2179,23 @@ function isLibraryHidden(name){
 // Applying a template is non-destructive: it snapshots first, and "Replace"
 // ARCHIVES the current days (history kept + restorable) rather than deleting.
 var PLAN_TEMPLATES=[
-  { id:'ppl3', name:'Push / Pull / Legs', blurb:'3-day · classic split, hits everything twice over ~6 days', days:[
+  { id:'ppl3', name:'Push / Pull / Legs', blurb:'Classic split — hits everything ~twice a week', days:[
     { name:'Push — Chest / Shoulders / Triceps', ex:['Barbell bench press','Incline dumbbell press','Dumbbell shoulder press','Dumbbell lateral raise','Tricep pushdown','Dip'] },
     { name:'Pull — Back / Biceps', ex:['Pull-up','Barbell bent-over row','Lat pulldown — underhand grip','Face pull (rope attachment)','Hammer curl','Cable bicep curl (straight bar)'] },
     { name:'Legs', ex:['Barbell back squat','Barbell Romanian deadlift','Leg press','Seated leg curl','Standing calf raise','Hanging leg raise'] }
   ]},
-  { id:'ul4', name:'Upper / Lower', blurb:'4-day · upper and lower twice a week', days:[
+  { id:'ul4', name:'Upper / Lower', blurb:'Upper & lower, each trained twice a week', days:[
     { name:'Upper A', ex:['Barbell bench press','Barbell bent-over row','Dumbbell shoulder press','Lat pulldown — underhand grip','Tricep pushdown','Hammer curl'] },
     { name:'Lower A', ex:['Barbell back squat','Barbell Romanian deadlift','Leg press','Standing calf raise','Hanging leg raise'] },
     { name:'Upper B', ex:['Incline dumbbell press','Pull-up','Arnold press','Cable rear delt fly','Skull crusher','Cable bicep curl (straight bar)'] },
     { name:'Lower B', ex:['Barbell deadlift','Bulgarian split squat','Seated leg curl','Leg extension','Seated calf raise','Plank'] }
   ]},
-  { id:'fb3', name:'Full Body', blurb:'3-day · whole body each session, great for 3×/week', days:[
+  { id:'fb3', name:'Full Body', blurb:'Whole body each session — great for 3×/week', days:[
     { name:'Full Body A', ex:['Barbell back squat','Barbell bench press','Barbell bent-over row','Dumbbell shoulder press','Plank'] },
     { name:'Full Body B', ex:['Barbell deadlift','Incline dumbbell press','Lat pulldown — underhand grip','Walking lunge','Hanging leg raise'] },
     { name:'Full Body C', ex:['Front squat','Dip','Pull-up','Hip thrust','Cable crunch'] }
   ]},
-  { id:'bro5', name:'Bro Split', blurb:'5-day · one muscle group per day', days:[
+  { id:'bro5', name:'Bro Split', blurb:'One muscle group per day', days:[
     { name:'Chest', ex:['Barbell bench press','Incline dumbbell press','Dumbbell fly','Cable chest fly (low to high)','Dip'] },
     { name:'Back', ex:['Pull-up','Barbell bent-over row','Lat pulldown — underhand grip','T-bar row','Straight-arm pulldown'] },
     { name:'Legs', ex:['Barbell back squat','Leg press','Barbell Romanian deadlift','Seated leg curl','Standing calf raise'] },
