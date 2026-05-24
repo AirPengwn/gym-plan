@@ -21,7 +21,7 @@ const w=app(ST); const D=w.document;
 
 // ── every catalog entry carries the new metadata ──
 var cat=w.EXERCISE_CATALOG;
-var PATTERNS={push:1,pull:1,squat:1,hinge:1,lunge:1,carry:1,core:1,cardio:1,isolation:1};
+var PATTERNS={push:1,pull:1,squat:1,hinge:1,lunge:1,carry:1,core:1,cardio:1,isolation:1,mobility:1};
 ok(cat.every(function(e){ return PATTERNS[e.pattern]; }),'every catalog entry has a valid pattern');
 ok(cat.every(function(e){ return e.equipment && e.difficulty; }),'every catalog entry has equipment + difficulty');
 ok(cat.every(function(e){ return Array.isArray(e.alternatives) && e.alternatives.length; }),'every catalog entry has alternatives');
