@@ -785,7 +785,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.34</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.35</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -2742,10 +2742,57 @@ function setBuilderMode(m){
 function openLibrary(){ openBuilder(null); setBuilderMode('lib'); }
 var _libShowHidden=false;
 function toggleLibHidden(){ _libShowHidden=!_libShowHidden; renderLibraryPicker(); }
+// v3.35: resolve a library entry's display details (cues / muscles / equipment /
+// pattern / difficulty / video / alternatives) via the shared field resolver, and
+// map muscle keys to friendly labels. Memoized per normalized name.
+var _MLABEL=null, _libDetCache={};
+function _muscleLabel(k){
+  if(!_MLABEL){ _MLABEL={}; try{ (MUSCLE_GROUPS||[]).forEach(function(b){ (b.items||[]).forEach(function(it){ if(it&&it.key) _MLABEL[it.key]=it.label; }); }); }catch(e){} }
+  return _MLABEL[k]||k;
+}
+function _libDetails(entry){
+  var nm=entry.histEx||entry.name, key=normalizeEx(nm);
+  if(_libDetCache[key]) return _libDetCache[key];
+  var f; try{ f=_templateExFields(nm); }catch(e){ f={muscles:[]}; }
+  _libDetCache[key]=f; return f;
+}
+function _capWord(s){ return s?String(s).charAt(0).toUpperCase()+String(s).slice(1):''; }
+// v3.35: render the selected exercise's details below the picker list.
+function renderLibDetail(){
+  var box=document.getElementById('b-lib-detail'); if(!box) return;
+  var e=_libSelected;
+  if(!e){ box.innerHTML=''; box.style.display='none'; return; }
+  var f=_libDetails(e);
+  var muscles=(f.muscles||[]).map(_muscleLabel);
+  var tags=[];
+  if(f.pattern) tags.push(_capWord(f.pattern));
+  if(f.equipment) tags.push(f.equipment);
+  if(f.difficulty) tags.push(f.difficulty);
+  if(f.unilateral) tags.push('Unilateral');
+  var html='<div class="lib-detail">'
+    +'<div class="lib-d-name">'+_esc(e.name)+'</div>'
+    +(tags.length?'<div class="lib-d-tags">'+tags.map(function(t){return '<span class="lib-d-tag">'+_esc(t)+'</span>';}).join('')+'</div>':'')
+    +(f.sub?'<div class="lib-d-sub">'+_esc(f.sub)+'</div>':'')
+    +(muscles.length?'<div class="lib-d-row"><b>Muscles:</b> '+_esc(muscles.join(', '))+'</div>':'')
+    +(f.cat?'<div class="lib-d-row"><b>Category:</b> '+_esc(f.cat)+'</div>':'')
+    +((f.alternatives&&f.alternatives.length)?'<div class="lib-d-row"><b>Alternatives:</b> '+_esc(f.alternatives.join(', '))+'</div>':'')
+    +(f.video?'<a class="lib-d-video" href="'+_esc(f.video)+'" target="_blank" rel="noopener">▶ Watch demo</a>':'')
+    +'</div>';
+  box.innerHTML=html; box.style.display='';
+}
 function renderLibraryPicker(){
   var listEl=document.getElementById('b-lib-list'); if(!listEl) return;
   var q=normalizeEx((document.getElementById('b-lib-search')||{}).value||'');
-  var all=getExerciseLibrary().filter(function(e){ return !q || normalizeEx(e.name).indexOf(q)!==-1 || normalizeEx(e.histEx).indexOf(q)!==-1; });
+  var all=getExerciseLibrary().filter(function(e){
+    if(!q) return true;
+    if(normalizeEx(e.name).indexOf(q)!==-1 || normalizeEx(e.histEx).indexOf(q)!==-1) return true;
+    var f=_libDetails(e);   // v3.35: also match category / muscle / pattern / equipment
+    if(f.cat && normalizeEx(f.cat).indexOf(q)!==-1) return true;
+    if(f.pattern && normalizeEx(f.pattern).indexOf(q)!==-1) return true;
+    if(f.equipment && normalizeEx(f.equipment).indexOf(q)!==-1) return true;
+    if((f.muscles||[]).some(function(m){ return normalizeEx(m).indexOf(q)!==-1 || normalizeEx(_muscleLabel(m)).indexOf(q)!==-1; })) return true;
+    return false;
+  });
   var hiddenCount=all.filter(function(e){ return e.hidden; }).length;
   var items=_libShowHidden ? all.filter(function(e){ return e.hidden; }) : all.filter(function(e){ return !e.hidden; });
   var rows;
@@ -2764,6 +2811,7 @@ function renderLibraryPicker(){
   }).join('');
   var toggle=(hiddenCount||_libShowHidden)?'<button type="button" class="lib-hidden-toggle" onclick="toggleLibHidden()">'+(_libShowHidden?'← back to library':('Hidden ('+hiddenCount+') · show'))+'</button>':'';
   listEl.innerHTML=rows+toggle;
+  renderLibDetail();   // v3.35: keep the selected-exercise details panel in sync
 }
 function selectLibItem(histEx){
   var hit=null; getExerciseLibrary().some(function(e){ if(normalizeEx(e.histEx)===normalizeEx(histEx)){ hit=e; return true; } return false; });
@@ -8167,9 +8215,10 @@ function showPRToast(prs){
       <button type="button" id="b-mode-lib" class="bld-mode" onclick="setBuilderMode('lib')">📚 From library</button>
     </div>
     <div id="b-lib-section" style="display:none;margin-bottom:8px;">
-      <input id="b-lib-search" type="text" class="bld-in" placeholder="Search your exercises…" oninput="renderLibraryPicker()" style="margin-bottom:8px"/>
+      <input id="b-lib-search" type="text" class="bld-in" placeholder="Search by name, muscle or category…" oninput="renderLibraryPicker()" style="margin-bottom:8px"/>
       <div id="b-lib-list" class="bld-lib-list"></div>
-      <span class="bld-hint" style="margin-top:6px;display:block">Pick one, then choose the day(s) below. Re-adding keeps all its history and links it across days.</span>
+      <div id="b-lib-detail" style="display:none"></div>
+      <span class="bld-hint" style="margin-top:6px;display:block">Search a name, a muscle (e.g. “quad”, “lats”) or a category (e.g. “core”, “cardio”). Tap one to see its details, then choose the day(s) below — re-adding keeps all its history and links it across days.</span>
     </div>
     <style>
       .bld-grp{margin-bottom:11px}
@@ -8194,6 +8243,16 @@ function showPRToast(prs){
       .lib-del:hover{background:#FFF5F5}
       body.dark .lib-del:hover{background:#3A1A1A}
       .bld-lib-empty{padding:14px 10px;font-size:12px;color:var(--muted);text-align:center}
+      /* v3.35 — selected-exercise details card */
+      .lib-detail{margin-top:8px;padding:11px 12px;border:1px solid var(--primary);border-radius:8px;background:var(--primary-tint)}
+      .lib-d-name{font-size:13px;font-weight:800;color:var(--text)}
+      .lib-d-tags{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+      .lib-d-tag{font-size:9.5px;font-weight:700;color:var(--primary);background:#fff;border-radius:8px;padding:2px 7px}
+      body.dark .lib-d-tag{background:#1A1A2E}
+      .lib-d-sub{font-size:11.5px;color:var(--muted);margin:4px 0;line-height:1.45}
+      .lib-d-row{font-size:11.5px;color:var(--text);margin-top:3px}
+      .lib-d-row b{color:var(--muted);font-weight:700}
+      .lib-d-video{display:inline-block;margin-top:8px;font-size:12px;font-weight:700;color:var(--primary);text-decoration:none}
       body.dark .bld-lib-item{color:#E8E6F8}
       body.dark .bld-lib-list{border-color:#3C3A5C}
       .bld-lbl{font-size:12px;font-weight:700;color:#3C3489;display:block;margin-bottom:2px}

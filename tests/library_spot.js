@@ -129,5 +129,36 @@ w.hideLibraryItem('Hack squat');
 w.addToUserLibrary({name:'Hack squat', type:'strength', muscles:[]});
 ok(!w.isLibraryHidden('Hack squat'),'Save-to-library un-hides a previously hidden exercise');
 
+// ── v3.35 picker: search by muscle / category + selected-exercise details ──
+w.openLibrary();
+function listNames(){ return [].slice.call(D.querySelectorAll('#b-lib-list .bld-lib-item .lib-nm')).map(function(s){ return s.textContent.replace(/✓ /,'').trim(); }); }
+// search by MUSCLE — "quad" should surface quad movements (e.g. goblet squat / leg press)
+D.getElementById('b-lib-search').value='quad';
+w.renderLibraryPicker();
+var quadHits=listNames();
+ok(quadHits.length>0 && quadHits.some(function(n){ return /squat|leg press|lunge|leg extension/i.test(n); }),'search "quad" matches quad exercises by muscle');
+ok(!quadHits.some(function(n){ return /bicep curl/i.test(n); }),'muscle search excludes unrelated (no bicep curl under "quad")');
+// search by CATEGORY — "cardio" surfaces cardio entries
+D.getElementById('b-lib-search').value='cardio';
+w.renderLibraryPicker();
+ok(listNames().some(function(n){ return /rowing|bike|elliptical|air bike|stair/i.test(n); }),'search "cardio" matches by category');
+// search by friendly muscle label — "lats" matches lat exercises
+D.getElementById('b-lib-search').value='lats';
+w.renderLibraryPicker();
+ok(listNames().some(function(n){ return /pulldown|pull-up|row/i.test(n); }),'search "lats" matches by muscle label');
+
+// ── details panel on selection ──
+D.getElementById('b-lib-search').value='';
+w.renderLibraryPicker();
+w.selectLibItem('Dumbbell goblet squat');
+var det=D.querySelector('#b-lib-detail .lib-detail');
+ok(!!det && D.getElementById('b-lib-detail').style.display!=='none','selecting an exercise shows its details panel');
+ok(/squat/i.test(det.textContent) && /quad|glute/i.test(det.textContent),'details show pattern + muscles');
+ok(!!D.querySelector('#b-lib-detail .lib-d-video'),'details include a Watch demo link');
+ok(/hold dumbbell at chest/i.test(det.textContent),'details show the coaching cue (sub)');
+// deselect / empty → panel hidden
+w._libSelected=null; w.renderLibraryPicker();
+ok(D.getElementById('b-lib-detail').style.display==='none','details panel hidden when nothing selected');
+
 console.log('\n'+(fail?('LIBRARY SPOT-CHECK: '+fail+' FAILED'):'LIBRARY SPOT-CHECK: ALL PASS'));
 process.exit(fail?1:0);
