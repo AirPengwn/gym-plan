@@ -117,5 +117,17 @@ w.selectLibItem('Cable upright row');
 var none=[].slice.call(D.querySelectorAll('#b-days button[data-sel="1"]'));
 ok(none.length===0,'unscheduled exercise lights no day pills');
 
+// ── v3.19 hide / un-hide any library exercise (synced, reversible, not a delete) ──
+w.hideLibraryItem('Hack squat');
+ok(w.isLibraryHidden('Hack squat'),'hideLibraryItem marks a catalog exercise hidden');
+var hk=w.getExerciseLibrary().filter(function(e){ return /^hack squat$/i.test(e.name); })[0];
+ok(hk && hk.hidden===true,'getExerciseLibrary flags the hidden entry (still present, just flagged)');
+ok(Array.isArray(w.buildBinPayload()['library_hidden_v1']),'library_hidden_v1 rides the sync/backup payload');
+w.unhideLibraryItem('Hack squat');
+ok(!w.isLibraryHidden('Hack squat'),'unhideLibraryItem restores it');
+w.hideLibraryItem('Hack squat');
+w.addToUserLibrary({name:'Hack squat', type:'strength', muscles:[]});
+ok(!w.isLibraryHidden('Hack squat'),'Save-to-library un-hides a previously hidden exercise');
+
 console.log('\n'+(fail?('LIBRARY SPOT-CHECK: '+fail+' FAILED'):'LIBRARY SPOT-CHECK: ALL PASS'));
 process.exit(fail?1:0);
