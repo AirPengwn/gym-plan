@@ -566,6 +566,25 @@ body.dark .mgr-archive-btn{background:#3A1A1A;border-color:#7A2020;color:#FF8080
 body.dark .mgr-edit-btn{background:#2A2850;border-color:#3C3A5C;color:#C7C4EE}
 .mgr-link-pill{font-size:9px;font-weight:700;color:#5B4EA8;background:#EEEDFE;border-radius:10px;padding:1px 6px;margin-left:5px;white-space:nowrap;flex-shrink:0}
 body.dark .mgr-link-pill{background:#2A2850;color:#C7C4EE}
+/* v3.25 (Phase D) — Plan balance card */
+.bal-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:4px 0 14px}
+body.dark .bal-card{background:#252540;border-color:#3C3A5C}
+.bal-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:10px}
+.bal-sub{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.03em}
+.bal-row{margin-bottom:9px}
+.bal-lbls{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:3px}
+.bal-lbls b{color:var(--text);font-weight:700}
+.bal-track{height:7px;border-radius:5px;background:#E879A6;overflow:hidden}
+body.dark .bal-track{background:#7d3b56}
+.bal-fill{height:100%;background:#7F77DD;border-radius:5px 0 0 5px}
+.bal-core{font-size:11px;color:var(--muted);margin:6px 0 2px}
+.bal-core b{color:var(--text)}
+.bal-flags{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.bal-flag{font-size:11px;color:#B45309;line-height:1.35}
+body.dark .bal-flag{color:#FBBF24}
+.bal-flag-untrained{color:#9333EA}
+body.dark .bal-flag-untrained{color:#C4A6F5}
+.bal-ok{font-size:11px;color:#10B981;margin-top:8px}
 /* v2.79 (Phase B.3) — Manage days rows */
 .mgr-days-list{display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
 .mgr-day-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border:1px solid var(--border);border-radius:10px}
@@ -733,7 +752,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.24</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.25</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -884,6 +903,7 @@ body.dark #pc-result{color:#E8E6F8}
     </div>
     <!-- v2.79 (Phase B.3): adjustable day cycle — add / rename / remove / reorder days. -->
     <div id="mgr-days-wrap"></div>
+    <div id="mgr-balance-wrap"></div>
     <div id="mgr-active-wrap"></div>
     <div class="mgr-archived-section" id="mgr-archived-section" style="display:none">
       <div class="mgr-archived-title">📦 Archived exercises</div>
@@ -1930,17 +1950,45 @@ function _catalogFind(histEx){
   for(var i=0;i<EXERCISE_CATALOG.length;i++){ if(normalizeEx(EXERCISE_CATALOG[i].name)===n) return EXERCISE_CATALOG[i]; }
   return null;
 }
-// v3.14: resolve an exercise's metadata — explicit record fields win, else fall
-// back to the catalog (by histEx/name). Accepts a plan record OR a name string.
-// Returns normalized fields (absent = ''/false/[]). Phase D will extend this with
-// defaults for the built-in exercises; for now it covers catalog/library/added.
+// v3.25 (Phase D): metadata defaults for the built-in plan exercises. They already
+// carry muscles (DEFAULT_MUSCLES); this adds pattern/equipment so the whole plan —
+// not just catalog/library picks — feeds the balance analysis. Keyed by
+// normalizeEx(histEx) (the built-ins' stable tracking key). Stretches / warm-up
+// stay pattern-less on purpose (no training stimulus to balance).
+var DEFAULT_META={
+  'chest press':{pattern:'push',equipment:'Machine',difficulty:'Beginner'},
+  'pec fly':{pattern:'push',equipment:'Machine',difficulty:'Beginner'},
+  'lat pulldown':{pattern:'pull',equipment:'Cable',difficulty:'Beginner'},
+  'lat pulldown wide':{pattern:'pull',equipment:'Cable',difficulty:'Beginner'},
+  'cable row':{pattern:'pull',equipment:'Cable',difficulty:'Beginner'},
+  'cable row v bar':{pattern:'pull',equipment:'Cable',difficulty:'Beginner'},
+  'rear delt':{pattern:'pull',equipment:'Machine',difficulty:'Beginner'},
+  'tricep rope':{pattern:'push',equipment:'Cable',difficulty:'Beginner'},
+  'db curl':{pattern:'pull',equipment:'Dumbbell',difficulty:'Beginner'},
+  'cable rotation':{pattern:'core',equipment:'Cable',difficulty:'Beginner'},
+  'russian twist':{pattern:'core',equipment:'Other',difficulty:'Beginner'},
+  'leg press':{pattern:'squat',equipment:'Machine',difficulty:'Beginner'},
+  'leg press high foot':{pattern:'squat',equipment:'Machine',difficulty:'Beginner'},
+  'leg curl':{pattern:'hinge',equipment:'Machine',difficulty:'Beginner'},
+  'hip abductor':{pattern:'isolation',equipment:'Machine',difficulty:'Beginner'},
+  'hip adductor':{pattern:'isolation',equipment:'Machine',difficulty:'Beginner'},
+  'calf raises':{pattern:'isolation',equipment:'Machine',difficulty:'Beginner'},
+  'treadmill walk':{pattern:'cardio',equipment:'Machine',difficulty:'Beginner'},
+  'cardio machine':{pattern:'cardio',equipment:'Machine',difficulty:'Beginner'}
+};
+// v3.14: resolve an exercise's metadata — explicit record fields win, else the
+// catalog/user library (by histEx/name), else the built-in DEFAULT_META.
+// Accepts a plan record OR a name string. Returns normalized fields (absent =
+// ''/false/[]).
 function exerciseMeta(recOrName){
   var src = (recOrName && typeof recOrName==='object') ? recOrName : null;
   var key = src ? (src.histEx||src.name) : recOrName;
   var cat = (typeof key==='string') ? (_libraryFind(key) || _catalogFind(key)) : null;
+  var def = (typeof key==='string') ? (DEFAULT_META[normalizeEx(key)]||null) : null;
   function pick(f){
     if(src && src[f]!=null && src[f]!=='') return src[f];
     if(cat && cat[f]!=null && cat[f]!=='') return cat[f];
+    if(def && def[f]!=null && def[f]!=='') return def[f];
     return null;
   }
   var alts = pick('alternatives');
@@ -1951,6 +1999,68 @@ function exerciseMeta(recOrName){
     difficulty: pick('difficulty') || '',
     alternatives: Array.isArray(alts) ? alts : []
   };
+}
+
+// v3.25 (Phase D): which balance bucket an exercise belongs to. Compound patterns
+// decide it directly; isolation / unknown fall back to the worked muscles. Returns
+// 'push'|'pull'|'lower'|'core'|null (cardio / mobility / pure stretch → null, i.e.
+// no resistance stimulus to balance).
+var _PUSH_M={chest:1,'front-shoulder':1,tricep:1};
+var _PULL_M={lat:1,'upper-back':1,'rear-delt':1,bicep:1};
+var _LOWER_M={quad:1,hamstring:1,glute:1,calf:1,'inner-thigh':1,'outer-hip':1,'hip-flexor':1};
+var _CORE_M={'core-front':1,'core-back':1};
+function _balanceGroup(pattern, muscles){
+  var p=pattern||'', ms=Array.isArray(muscles)?muscles:[];
+  if(p==='squat'||p==='hinge'||p==='lunge') return 'lower';
+  if(p==='push') return 'push';
+  if(p==='pull') return 'pull';
+  if(p==='core'||p==='carry') return 'core';
+  if(p==='cardio'||p==='mobility') return null;
+  // isolation or unknown → infer from the dominant muscle family
+  var n={push:0,pull:0,lower:0,core:0};
+  ms.forEach(function(m){ if(_PUSH_M[m])n.push++; if(_PULL_M[m])n.pull++; if(_LOWER_M[m])n.lower++; if(_CORE_M[m])n.core++; });
+  var best=null,bv=0; ['lower','push','pull','core'].forEach(function(k){ if(n[k]>bv){bv=n[k];best=k;} });
+  return bv>0?best:null;
+}
+// v3.25 (Phase D): weekly plan-balance analysis (read-only — never writes/syncs).
+// Scans the effective plan across active days, resolving each placement's pattern
+// (exerciseMeta, incl. DEFAULT_META) + muscles (getExerciseMuscles). A linked
+// exercise on N days counts N times (it's trained N×/week). Returns push/pull/
+// lower/core tallies, per-muscle coverage, the untrained major muscles, and plain
+// advisory flags. Stretches / warm-up / cardio contribute no resistance volume.
+function analyzePlanBalance(){
+  var plan; try{ plan=getEffectivePlan(); }catch(e){ plan={order:{},ex:{}}; }
+  var archived=getArchivedExercises();
+  var g={push:0,pull:0,lower:0,core:0}, byMuscle={}, total=0;
+  var days; try{ days=getDays(); }catch(e){ days=[]; }
+  days.forEach(function(day){
+    (plan.order[day]||[]).forEach(function(domId){
+      var rec=plan.ex[domId]; if(!rec) return;
+      if(rec.histEx && archived.indexOf(rec.histEx)!==-1) return;
+      if(rec.type==='cardio') return;                 // engaged, not trained-for-balance
+      var ms=getExerciseMuscles(domId)||[];
+      var meta=exerciseMeta(rec);
+      var grp=_balanceGroup(meta.pattern, ms);
+      if(grp){ g[grp]++; total++; }
+      ms.forEach(function(m){ byMuscle[m]=(byMuscle[m]||0)+1; });
+    });
+  });
+  // every trainable muscle group from MUSCLE_GROUPS → which got zero work
+  var allM=[]; try{ (MUSCLE_GROUPS||[]).forEach(function(b){ (b.items||[]).forEach(function(it){ if(it&&it.key) allM.push(it.key); }); }); }catch(e){}
+  var untrained=allM.filter(function(k){ return !byMuscle[k]; });
+  var flags=[];
+  function ratioFlag(a,b,la,lb){
+    if(a===0 && b===0) return;
+    if(a===0){ flags.push({kind:'gap',text:'No '+la+' work this week — add a '+la+' movement.'}); return; }
+    if(b===0){ flags.push({kind:'gap',text:'No '+lb+' work this week — add a '+lb+' movement.'}); return; }
+    var hi=Math.max(a,b), lo=Math.min(a,b);
+    if(hi/lo>=2){ var more=(a>b)?la:lb, less=(a>b)?lb:la; flags.push({kind:'imbalance',text:'Heavy on '+more+' vs '+less+' ('+a+':'+b+') — consider more '+less+'.'}); }
+  }
+  ratioFlag(g.push, g.pull, 'push', 'pull');
+  ratioFlag(g.push+g.pull, g.lower, 'upper', 'lower');
+  if(untrained.length) flags.push({kind:'untrained',text:untrained.length+' muscle group'+(untrained.length>1?'s':'')+' untrained this week.'});
+  return { push:g.push, pull:g.pull, lower:g.lower, core:g.core, upper:g.push+g.pull,
+    total:total, byMuscle:byMuscle, untrained:untrained, flags:flags };
 }
 
 // v3.5: the USER library — exercises you save (via the builder's "Save to
@@ -4358,8 +4468,41 @@ function executeRemoveDay(){
   closeRemoveDayModal();
 }
 
+// v3.25 (Phase D): render the read-only "Plan balance" card at the top of Manage.
+function renderPlanBalance(){
+  var wrap=document.getElementById('mgr-balance-wrap'); if(!wrap) return;
+  var a; try{ a=analyzePlanBalance(); }catch(e){ wrap.innerHTML=''; return; }
+  if(!a || !a.total){ wrap.innerHTML=''; return; }   // empty plan → no card
+  var labelOf={}; try{ (MUSCLE_GROUPS||[]).forEach(function(b){ (b.items||[]).forEach(function(it){ if(it&&it.key) labelOf[it.key]=it.label; }); }); }catch(e){}
+  function bar(la,x,y,lb){
+    var t=x+y, px=t?Math.round(100*x/t):50;
+    return '<div class="bal-row"><div class="bal-lbls"><span>'+la+' <b>'+x+'</b></span><span><b>'+y+'</b> '+lb+'</span></div>'
+      +'<div class="bal-track"><div class="bal-fill" style="width:'+px+'%"></div></div></div>';
+  }
+  var html='<div class="bal-card"><div class="bal-title">📊 Plan balance <span class="bal-sub">this week</span></div>';
+  html+=bar('Push',a.push,a.pull,'Pull');
+  html+=bar('Upper',a.upper,a.lower,'Lower');
+  if(a.core) html+='<div class="bal-core">Core / rotation: <b>'+a.core+'</b></div>';
+  if(a.flags.length){
+    html+='<div class="bal-flags">';
+    a.flags.forEach(function(f){
+      if(f.kind==='untrained'){
+        var names=a.untrained.map(function(k){ return labelOf[k]||k; });
+        html+='<div class="bal-flag bal-flag-untrained">• Not trained: '+_esc(names.join(', '))+'</div>';
+      } else {
+        html+='<div class="bal-flag">• '+_esc(f.text)+'</div>';
+      }
+    });
+    html+='</div>';
+  } else {
+    html+='<div class="bal-ok">• Balanced across push / pull / lower and all major muscle groups ✓</div>';
+  }
+  html+='</div>';
+  wrap.innerHTML=html;
+}
 function renderManager(){
   renderDayManager();
+  renderPlanBalance();
   var archived=getArchivedExercises();
   var order=getExerciseOrder();
   var exMap=getAllExercises(); // from history data
