@@ -176,7 +176,8 @@ function domIdByDataEx(doc, day, ex){
   // there (same ids + handlers preserved); the ⋯ overflow menu is gone — its items
   // (Update / Backup / Test mode) now live on the Settings tab.
   var bar=w.document.querySelector('.tabbar');
-  ok(!!bar && bar.querySelectorAll('.tab').length===4,'bottom tab bar has 4 tabs');
+  ok(!!bar && bar.querySelectorAll('.tab').length===5,'bottom tab bar has 5 tabs (Workout/Progress/Plan/Sync/Settings)');
+  ok(!!w.document.getElementById('nav-sync') && /openSync\(\)/.test(w.document.getElementById('nav-sync').getAttribute('onclick')||''),'☁️ Sync tab calls openSync()');
   var hp=w.document.getElementById('hdr-prog-btn');
   ok(!!hp && !!hp.closest('.tabbar'),'📊 Progress lives in the bottom bar');
   ok(hp.classList.contains('progress-tab') && /sw\('prog',this\)/.test(hp.getAttribute('onclick')||''),'📊 keeps progress-tab class + sw("prog") handler (returnToManageAfterPlan still works)');
@@ -197,7 +198,14 @@ function domIdByDataEx(doc, day, ex){
   var sp=w.document.getElementById('p-settings');
   ok(!!sp,'Settings panel (#p-settings) exists');
   ok(w.document.querySelectorAll('#test-toggle').length===1 && !!w.document.getElementById('test-toggle').closest('#p-settings'),'#test-toggle preserved (single) and now in Settings (_testUpdateUI still works)');
-  ok(!!sp.querySelector('[onclick="reloadPage()"]') && !!sp.querySelector('[onclick="showExportImport()"]'),'Update + Backup handlers live on the Settings tab');
+  ok(!!sp.querySelector('[onclick="reloadPage()"]'),'Update handler lives on the Settings tab');
+  // v3.32: cloud + backup moved to the ☁️ Sync tab
+  var syp=w.document.getElementById('p-sync');
+  ok(!!syp && !!syp.querySelector('[onclick="showExportImport()"]'),'Backup & restore launcher lives on the Sync tab');
+  w.openSync();
+  ok(syp.classList.contains('show') && syp.style.display!=='none' && w.document.getElementById('nav-sync').classList.contains('active'),'☁️ Sync opens its panel (not blank) + highlights the tab');
+  ok(!!w.document.getElementById('plan-sync-switch') && !!syp.querySelector('.plan-sync-box [onclick="pushPlanToCloud()"]'),'Sync tab renders the cloud-sync controls (switch + push)');
+  ok(!!syp.querySelector('[onclick="pullFromCloud()"]'),'Sync tab has Pull from cloud');
   // navigation actually switches panels + highlights the right tab
   hp.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
   ok(w.document.getElementById('p-prog').classList.contains('show'),'tapping 📊 switches to Progress panel');
@@ -209,6 +217,13 @@ function domIdByDataEx(doc, day, ex){
   ok(sp.style.display!=='none','Settings panel is not inline-hidden by syncDayPanels (renders, not blank)');
   w.navWorkout();
   ok(w.document.getElementById('nav-workout').classList.contains('active') && !w.document.getElementById('p-prog').classList.contains('show'),'🏋️ Workout returns to a day + highlights its tab');
+  // v3.32: the D1…Dn day chips show ONLY on Workout
+  ok(w.document.getElementById('day-selector').style.display!=='none','day-selector visible on the Workout screen');
+  w.openSync();
+  ok(w.document.getElementById('day-selector').style.display==='none','day-selector hidden on the Sync screen');
+  w.openManage();
+  ok(w.document.getElementById('day-selector').style.display==='none','day-selector hidden on the Plan screen');
+  w.navWorkout();
   // Follow-up 2: cardio "Watch demo" → overflow
   if(typeof w.enhanceCardioCards==='function') w.enhanceCardioCards();
   var wu=w.document.querySelector('#items-a .item .cardio-fields');

@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v3.31 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
+**App version:** v3.32 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -42,16 +42,22 @@ logged history.
 ## What this build does (v2.80 → v3.9, this session)
 
 **UX / navigation**
-- **Bottom tab bar (v3.30):** primary nav is a fixed 4-tab bar — **🏋️ Workout · 📊 Progress ·
-  📋 Plan · ⚙️ Settings**. The header slimmed to just the title/version + 🌙 dark toggle; the
-  old ⋯ overflow menu is gone (Update / Backup / Test mode moved to the **Settings** tab,
-  `#p-settings`). The 📊/📋 buttons kept their ids (`hdr-prog-btn`/`hdr-plan-btn`) + handlers
-  (`sw('prog',…)` / `openManage()`), just relocated into the bar. New: `navWorkout()`,
-  `openSettings()`, `renderSettings()`, `_syncNav()` (derives which one tab is active from the
-  visible panel). `#test-toggle` (and `_testUpdateUI`) now live in Settings. Pure layout/nav —
-  no data/sync change; `verify.js` byte-identity still green. Gated by the rewritten header
-  block in `funcsmoke.js`. NOTE: cloud-sync controls still live in the 📋 Plan tab (could move
-  to Settings later); the workout day-selector still shows on all tabs (future polish).
+- **Bottom tab bar (v3.30 → 5 tabs in v3.32):** primary nav is a fixed bar —
+  **🏋️ Workout · 📊 Progress · 📋 Plan · ☁️ Sync · ⚙️ Settings**. Header slimmed to
+  title/version + 🌙 dark toggle; the old ⋯ overflow menu is gone. The 📊/📋 buttons kept their
+  ids (`hdr-prog-btn`/`hdr-plan-btn`) + handlers, relocated into the bar. `navWorkout()`,
+  `openSettings()`, `openSync()`, `renderSettings()`, `renderSync()`, `_syncNav()` drive it.
+  `#test-toggle` + `_testUpdateUI` live in Settings.
+- **v3.32 IA pass:** the **☁️ Sync** tab (`p-sync`/`renderSync`/`openSync`) now holds ALL cloud
+  + backup — the plan/days/library cloud-sync box moved out of the 📋 Plan screen, plus
+  Pull-from-cloud and a Backup&restore launcher (`showExportImport`). Plan got a **☁️ Cloud
+  sync & backup** jump button, and **removed days are pinned to the bottom**
+  (`mgr-removed-wrap`/`renderRemovedDays`, below balance + exercises). The **day-selector chips
+  show only on Workout** (`_setDaySelectorVisible`; `sw` hides on `prog`, openSettings/openSync
+  hide, `renderDaySelector` re-hides if a non-Workout panel is up). Settings = Test mode +
+  Update + version. Non-day-keyed panels (`p-prog`/`p-settings`/`p-sync`) are excluded from
+  `syncDayPanels()`'s inline-hide loop — **the v3.31 fix** (that loop had blanked `p-settings`).
+  `plansync_spot` now renders via `renderSync()`. Pure layout/nav; `verify.js` still green.
 - Balanced-row layout (`_balancedCols`/`_applyBalancedRows`): day tabs, Progress filter
   chips, and stat boxes wrap into centered rows (5→3+2, 6→3+3, …) instead of a horizontal
   scrollbar. Day tabs restyled as distinct bordered buttons.
