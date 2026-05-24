@@ -1,7 +1,7 @@
 'use strict';
 // Patch 3 spot-check: per-step verification per HANDOFF-patch-3.md.
 const fs=require('fs');const{JSDOM}=require('jsdom');
-const HTML=fs.readFileSync('C:\\dev\\gym-plan\\index.html','utf8');
+const HTML=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8');
 function store(init){const m=new Map(Object.entries(init||{}));return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(''+k,''+v),removeItem:k=>m.delete(k),clear:()=>m.clear(),key:i=>{const a=[...m.keys()];return i<a.length?a[i]:null;},get length(){return m.size;}};}
 function app(st){
   const ctx=new Proxy(function(){return ctx;},{get:()=>ctx,set:()=>true,apply:()=>ctx});
@@ -115,7 +115,7 @@ ok(cb.getAttribute('tabindex')==null,'Step 3 · no redundant tabindex on real <b
 
 // ─── Step 4 ───
 // Comment block immediately above prog-tab-row.
-var htmlSrc=fs.readFileSync('C:\\dev\\gym-plan\\index.html','utf8');
+var htmlSrc=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8');
 ok(/Tab labels \(Sessions \/ Lifts \/ Trends\) intentionally diverge/.test(htmlSrc),'Step 4 · alias comment present in source');
 ok(/<!--[\s\S]*?Tab labels \(Sessions \/ Lifts \/ Trends\)[\s\S]*?-->\s*<!-- Sessions \/ Lifts \/ Trends tabs/.test(htmlSrc),'Step 4 · comment immediately precedes the prog-tab-row markup');
 

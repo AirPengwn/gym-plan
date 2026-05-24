@@ -733,7 +733,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.12</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.13</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -2899,12 +2899,16 @@ function confirmSave(){
   if(!isPrimaryDevice()){
     showToast('📖 Saved locally · reader mode (no cloud push from this device)');
   }
+  if(isPrimaryDevice() && !TEST_MODE) showToast('Saved ✓ · syncing to cloud…');
   syncToJbin(function(ok){
     if(!ok){
       // v2.72 — include the actual error reason. Opaque "Cloud sync failed"
       // for an extended period hid the JSONbin versioning-header 403.
       var err=(window._lastSyncErr||'unknown').slice(0,80);
       showToast('⚠️ Cloud sync failed — data saved locally · '+err);
+    } else if(isPrimaryDevice() && !TEST_MODE){
+      // v3.13 — positive confirmation on the happy path (not just failures).
+      showToast('Synced to cloud ☁ ✓');
     }
   });
 }

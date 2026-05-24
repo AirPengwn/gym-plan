@@ -2,7 +2,7 @@
 // v3.9 — finalization hardening: confirm-on-Reset (manual only), installable-PWA
 // meta, and memoized history scans (self-invalidating).
 const fs=require('fs');const{JSDOM}=require('jsdom');
-const ROOT='C:\\dev\\gym-plan\\';
+const ROOT=(require('path').join(__dirname,'..')+require('path').sep);
 const HTML=fs.readFileSync(ROOT+'index.html','utf8');
 function store(i){const m=new Map(Object.entries(i||{}));return{getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(''+k,''+v),removeItem:k=>m.delete(k),clear:()=>m.clear(),key:x=>{const a=[...m.keys()];return x<a.length?a[x]:null},get length(){return m.size}};}
 function app(st){

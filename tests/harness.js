@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = 'C:\\dev\\gym-plan';
+const ROOT = path.join(__dirname, '..');
 const BAK = path.join(ROOT, 'index.html.bak');
 const OUT_DATA = path.join('C:\\Users\\airpe\\AppData\\Local\\Temp\\gymbuild', 'exdata.gen.js');
 

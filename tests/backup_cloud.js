@@ -5,10 +5,10 @@
 // backup before a large refactor, for rollback to v2.73.
 const fs=require('fs');
 const https=require('https');
-const HTML=fs.readFileSync('C:\\dev\\gym-plan\\index.html','utf8');
+const HTML=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8');
 const ID=(HTML.match(/var JBIN_ID\s*=\s*'([^']+)'/)||[])[1];
 const KEY=(HTML.match(/var JBIN_KEY\s*=\s*'([^']+)'/)||[])[1];
-const OUT='C:\\dev\\gym-plan\\backups\\v2.73-2026-05-21\\jsonbin-cloud-backup.json';
+const OUT=require('path').join(__dirname,'..','backups','v2.73-2026-05-21','jsonbin-cloud-backup.json');
 
 https.request({method:'GET',hostname:'api.jsonbin.io',path:'/v3/b/'+ID,headers:{'X-Master-Key':KEY,'X-Bin-Meta':'false'}}, res=>{
   let chunks=[]; res.on('data',c=>chunks.push(c));

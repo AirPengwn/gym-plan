@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const ROOT = 'C:\\dev\\gym-plan';
+const ROOT = path.join(__dirname, '..');
 const IDX = path.join(ROOT, 'index.html');
 const BAK = path.join(ROOT, 'index.html.bak');
 const days = ['a','b','c','d','e'];

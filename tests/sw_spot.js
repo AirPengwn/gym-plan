@@ -3,7 +3,7 @@
 // intercepts non-GET or cross-origin (so JSONbin sync is untouched), and
 // index.html registers it with a relative path (works under a Pages subpath).
 const fs=require('fs');
-const ROOT='C:\\dev\\gym-plan\\';
+const ROOT=(require('path').join(__dirname,'..')+require('path').sep);
 let fail=0; const ok=(c,l)=>{console.log((c?'  PASS ':'  FAIL ')+l); if(!c) fail++; };
 
 var sw=fs.readFileSync(ROOT+'sw.js','utf8');

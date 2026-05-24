@@ -1,7 +1,7 @@
 'use strict';
 // Patch 4 spot-check: 7 verification steps from HANDOFF-patch-4.md §Verification.
 const fs=require('fs');const{JSDOM}=require('jsdom');
-const HTML=fs.readFileSync('C:\\dev\\gym-plan\\index.html','utf8');
+const HTML=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8');
 function store(init){const m=new Map(Object.entries(init||{}));return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(''+k,''+v),removeItem:k=>m.delete(k),clear:()=>m.clear(),key:i=>{const a=[...m.keys()];return i<a.length?a[i]:null;},get length(){return m.size;}};}
 function app(st){
   const ctx=new Proxy(function(){return ctx;},{get:()=>ctx,set:()=>true,apply:()=>ctx});
@@ -156,7 +156,7 @@ return Promise.resolve().then(function(){
   ok(/End test/.test(testBtn.textContent),'v2.58 · test-toggle label changes to "End test (discard)" when ON');
   ok(testBtn.style.background==='' && testBtn.style.color===''&&testBtn.style.borderColor==='','v2.58 · test-toggle inline styles cleared (CSS classes drive theme)');
   // CSS source: themed on-state rules present for both light and dark.
-  var src=fs.readFileSync('C:\\dev\\gym-plan\\index.html','utf8');
+  var src=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8');
   ok(/#test-toggle\.test-on\{background:#FFE5E5;color:#C53030\}/.test(src),'v2.58 · light-mode .test-on CSS rule present');
   ok(/body\.dark #test-toggle\.test-on\{background:#3A1A1A;color:#FF8080\}/.test(src),'v2.58 · dark-mode .test-on CSS rule present');
   ok(!/btn\.style\.background\s*=\s*TEST_MODE/.test(src),'v2.58 · old inline-hex assignments in _testUpdateUI removed');
