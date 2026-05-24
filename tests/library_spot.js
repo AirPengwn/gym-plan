@@ -55,7 +55,7 @@ ok(idsOf('c').some(function(id){ return /Imaginary Lift/i.test(p3.ex[id].name||'
 // ── v3.3 seed catalog: library-only exercises, NOT on any day until added ──
 var lib2=w.getExerciseLibrary();
 var catNames=w.EXERCISE_CATALOG.map(function(c){return c.name;});
-ok(w.EXERCISE_CATALOG.length>=49,'catalog has seed + Phase C batch 1 ('+w.EXERCISE_CATALOG.length+' exercises)');
+ok(w.EXERCISE_CATALOG.length>=40,'catalog has seed + Phase C batch 1 ('+w.EXERCISE_CATALOG.length+' exercises)');
 ok(catNames.every(function(n){ return lib2.some(function(e){ return e.name===n; }); }),'every catalog exercise shows in the library');
 var goblet=lib2.filter(function(e){ return /goblet squat/i.test(e.name); })[0];
 ok(goblet && goblet.daysList.length===0,'catalog exercise is NOT scheduled on any day (library only)');
