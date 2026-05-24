@@ -22,7 +22,7 @@ w.TEST_MODE=false;  // allow the surgical push to run (mock the network below)
 
 // ── default LOCAL ──
 ok(w.getPlanSyncEnabled()===false,'default · plan sync OFF (local only)');
-w.renderManager();
+w.renderSync();
 var sw=D.getElementById('plan-sync-switch');
 ok(sw && !sw.checked,'UI · switch rendered, unchecked by default');
 var pushBtn=D.querySelector('.plan-sync-box .patch5-rerun-btn');
@@ -43,7 +43,7 @@ ok(putCalls===0,'guard · pushPlanToCloud is a no-op while switch OFF');
 // ── enable switch ──
 w.setPlanSyncEnabled(true);
 ok(w.getPlanSyncEnabled()===true,'enable · plan sync ON');
-w.renderManager();
+w.renderSync();
 pushBtn=D.querySelector('.plan-sync-box .patch5-rerun-btn');
 ok(pushBtn && !pushBtn.hasAttribute('disabled'),'UI · push button ENABLED when cloud-on');
 
@@ -67,7 +67,7 @@ return w.pushPlanToCloud(), new Promise(function(r){ setTimeout(r,40); }).then(f
 
     // ── switch back to local → button disabled again ──
     w.setPlanSyncEnabled(false);
-    w.renderManager();
+    w.renderSync();
     var pb2=D.querySelector('.plan-sync-box .patch5-rerun-btn');
     ok(pb2 && pb2.hasAttribute('disabled'),'toggle · back to local → button disabled');
 
