@@ -17,8 +17,11 @@ const w=new JSDOM(HTML,{runScripts:'dangerously',pretendToBeVisual:true,beforePa
 
 function norm(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,' ').replace(/\s+/g,' ').trim(); }
 var FILLER={machine:1,seated:1,standing:1,barbell:1,dumbbell:1,db:1,bb:1,cable:1,the:1,a:1,with:1,grip:1,bar:1,rope:1,straight:1,wide:1,close:1,single:1,arm:1,two:1,one:1,assisted:1,attachment:1,low:1,high:1,to:1,'2':1,'3':1};
-function core(name){ return norm(name).split(' ').filter(function(t){ return t && !FILLER[t]; }).sort(); }
+// equipment/word synonyms so "Pec deck" ≈ "Pec fly", "run" treated like "walk" on a treadmill, etc.
+var SYN={deck:'fly',crossover:'fly',chinup:'pullup',pullups:'pullup',pushups:'pushup',run:'walk',jog:'walk',ext:'extension',raises:'raise',curls:'curl',rows:'row'};
+function core(name){ return norm(name).split(' ').filter(function(t){ return t && !FILLER[t]; }).map(function(t){ return SYN[t]||t; }).sort(); }
 function coreKey(name){ return core(name).join(' '); }
+function isSubset(a,b){ if(!a.length) return false; var s={}; b.forEach(function(t){s[t]=1;}); return a.every(function(t){ return s[t]; }); }
 
 var catNames=w.EXERCISE_CATALOG.map(function(e){return e.name;});
 var model=w.buildExerciseModel();
@@ -41,10 +44,10 @@ function nearPairs(a, b, sameList){
     b.forEach(function(y){
       if(sameList && norm(x)>=norm(y)) return;        // avoid dup pairs / self
       if(norm(x)===norm(y)) return;                    // exact handled elsewhere
-      var cx=coreKey(x), cy=coreKey(y);
+      var ax=core(x), ay=core(y), cx=ax.join(' '), cy=ay.join(' ');
       if(!cx||!cy) return;
       var contains=(norm(x).indexOf(norm(y))!==-1)||(norm(y).indexOf(norm(x))!==-1);
-      if(cx===cy || contains) out.push(x+'  ~  '+y);
+      if(cx===cy || contains || isSubset(ax,ay) || isSubset(ay,ax)) out.push(x+'  ~  '+y);
     });
   });
   return out;
