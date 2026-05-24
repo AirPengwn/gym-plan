@@ -1,0 +1,77 @@
+# Test harnesses — gym-plan
+
+jsdom-based regression + spot-check suites for `index.html`. Each is a standalone
+Node script that loads the live `index.html`, runs functions in a jsdom window
+(with a mocked localStorage/sessionStorage and `fetch` stubbed out), and asserts.
+
+## Setup (once)
+
+```
+cd tests
+npm init -y
+npm install jsdom
+```
+
+(The harnesses read `index.html` via an absolute path:
+`C:\Users\airpe\OneDrive\Desktop\gym-plan-main\index.html`. If the project moves,
+update that path at the top of each file.)
+
+## Run the full suite
+
+```
+cd tests
+for t in verify funcsmoke verif_s1 buildcard heatcheck msvgcheck \
+         dayconfig_spot daymgr_spot plansync_spot newday_add_spot \
+         balanced_rows_spot remove_perday_spot library_spot durability_spot \
+         sw_spot cloudarchive_spot finalize_spot sessgroup_spot \
+         patch3_spot patch4_spot \
+         patch5_spot patch5_lossless patch5_health patch5_repair \
+         patch5_split patch5_dedupe patch5_pull patch5_primary patch5_prefill; do
+  printf "%-18s " "$t:"; node $t.js >/dev/null 2>&1 && echo PASS || echo FAIL
+done
+```
+
+All should print PASS at v3.12. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
+
+## What each gates
+
+**Core regression (must always pass):**
+- `verify.js` — **byte-identity**: the 5 default days' rendered items match `index.html.bak`. The safety gate for the data-driven refactor. data-ex multiset preserved.
+- `funcsmoke.js` — 151 functional checks (cards, dark mode, header cluster, ghost values, RPE, etc.).
+- `verif_s1.js` — VERIFICATION.md §1 universal regression, 10 manual steps automated.
+- `buildcard.js` — `buildCardHTML_v2` strength/notes rendering.
+- `heatcheck.js` / `msvgcheck.js` — muscle map + weekly heat map (Do-Not-Touch surface).
+
+**Feature spot-checks:**
+- `patch3_spot.js` — delta pills + PB variant + zone titles + v2-card checkbox.
+- `patch4_spot.js` — backup-modal Copy/Select-All, test-mode theming.
+- `patch5_*.js` — structured session entries + migration + Repair/Split/Dedupe + Pull-from-cloud + Primary/Reader mode + pre-fill fix. (`patch5_lossless` is the hard "no metric changes" canary.)
+- `dayconfig_spot.js` — DAYS_CONFIG helpers + sync round-trip (Phase 0).
+- `daymgr_spot.js` — add/rename/reorder/remove(archive)/restore day lifecycle + history persistence (Phase B.3).
+- `plansync_spot.js` — 2-step local-default plan/day cloud sync, surgical push (Phase B / v2.80).
+- `newday_add_spot.js` — adding an exercise to a brand-new day (never in the base model, never archived/restored) doesn't crash and actually lands/renders (v3.0 `_orderArr` fix).
+- `balanced_rows_spot.js` — `_balancedCols` math + day-selector/stat-box/filter-chip strips lay out as balanced wrapped rows (5→3+2 etc.) instead of a horizontal scroll (v3.2); also the Plan-as-its-own-screen nav (v3.3): 📋 hides the Progress chrome + highlights, 📊 restores it and lands on Sessions.
+- `remove_perday_spot.js` — per-day Remove takes an exercise off ONE day only (other days + history intact), defaults don't resurrect (presence-based order), last-day removal keeps it in the library (v3.2).
+- `durability_spot.js` — v3.6 safety net: on-device snapshots rotate (keep `SNAP_KEEP`), restore re-applies a snapshot, snapshots skip in Test Mode, and the sync-status banner tracks pending/last-sync-ok.
+- `sw_spot.js` — v3.7 service worker (`sw.js`): parses, network-first for HTML, never touches non-GET or cross-origin (JSONbin/YouTube), versioned cache, and `index.html` registers it with a relative path.
+- `cloudarchive_spot.js` — v3.8 cloud rollback: archive bin id rides the payload + is discovered from the live bin during merge; reader devices and Test Mode never write the archive.
+- `finalize_spot.js` — v3.9: confirm-on-Reset only nags when there's real in-progress work; installable-PWA meta present; `getAllExercises` is memoized and self-invalidates on data change.
+- `sessgroup_spot.js` — v3.10 saved-session display grouping (display only): strength sets stay inline + their `-notes` fold under the exercise; cardio's per-field entries collapse under one clean, named `<details>` header (`_humanizeCardioBase`); no raw `data-ex` keys leak.
+- `library_spot.js` — `getExerciseLibrary` surfaces defaults + history-only + archived; `planAddExisting` re-adds by existing `histEx` (history preserved) and links across days; no duplicates (v3.2). Also the v3.4 seed `EXERCISE_CATALOG` (17 library-only exercises): all show in the library, none auto-scheduled, and adding one carries its category/cues/badge/muscles/video. And the v3.5 user library (`exercise_library_v1`): Save-to-library persists with no day, appears as `fromUser`, add-to-day carries fields, delete soft-tombstones, `_mergeLibraries` is last-write-wins per name (adds/edits/deletes converge across devices), and it rides the sync/backup payload.
+
+**Live cloud utilities (hit the real JSONbin — use deliberately):**
+- `review_live.js` — fetch + focused health review (Pec fly/Rear delt + summary). No writes.
+- `backup_cloud.js` — write cloud snapshot to `backups/.../jsonbin-cloud-backup.json`.
+- `probe_put.js` — endpoint health (GET + no-op PUT).
+- `restore_cloud.js` — one-shot surgical cloud fix (specific to a past incident; read before reuse).
+- `find_stragglers.js` — list set-bearing entries missing `.sets`.
+
+**Build helpers (from the original Phase-1 refactor):** `harness.js`, `exdata.gen.js`, `integrate.js`.
+
+## Note on the byte-identity gate
+
+`verify.js` hardcodes `days = ['a','b','c','d','e']` and the default `counts`. It checks
+that `EXERCISE_DATA` + the static `#items-a..e` placeholders render identical to
+`index.html.bak`. The adjustable-day-cycle work (Phase 0/A/B) deliberately kept the 5
+static panels + `EXERCISE_DATA` intact so this gate stays meaningful. Dynamic day
+behavior is covered by `dayconfig_spot` / `daymgr_spot` / `plansync_spot` instead.
