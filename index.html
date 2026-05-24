@@ -733,7 +733,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.10</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.11</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -2114,7 +2114,13 @@ function renderLibraryPicker(){
 }
 function selectLibItem(histEx){
   var hit=null; getExerciseLibrary().some(function(e){ if(normalizeEx(e.histEx)===normalizeEx(histEx)){ hit=e; return true; } return false; });
-  _libSelected=hit; renderLibraryPicker();
+  _libSelected=hit;
+  // v3.11: reflect the days this exercise is ALREADY on in the pills below, so
+  // you can see its current assignment and add more. (Adding only adds new days;
+  // existing days are left as-is — use a day's Remove button to take it off.)
+  var bd=document.getElementById('b-days');
+  if(bd) bd.innerHTML=_dayChipsHTML((hit && hit.daysList) ? hit.daysList : []);
+  renderLibraryPicker();
 }
 // v3.5: remove a user-saved library template (soft-deleted so the delete syncs).
 function deleteLibItem(histEx, ev){
@@ -7294,7 +7300,10 @@ function showPRToast(prs){
       .bld-lib-list{max-height:210px;overflow-y:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border-soft);border-radius:8px}
       .bld-lib-item{display:flex;align-items:center;gap:6px;padding:9px 10px;border-bottom:1px solid var(--border-soft);cursor:pointer;font-size:13px;color:#2C2C2A}
       .bld-lib-item:last-child{border-bottom:0}
-      .bld-lib-item.on{background:var(--primary-tint)}
+      .bld-lib-item.on{background:var(--primary);box-shadow:inset 3px 0 0 #2E2566}
+      .bld-lib-item.on .lib-nm{color:#fff}
+      .bld-lib-item.on .lib-meta{color:rgba(255,255,255,.82)}
+      .bld-lib-item.on .lib-nm::before{content:'✓ ';font-weight:800;color:#fff}
       .bld-lib-item .lib-nm{flex:1;font-weight:600}
       .bld-lib-item .lib-meta{font-size:10px;color:var(--muted);font-weight:600;white-space:nowrap}
       .lib-tag{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--primary);background:var(--primary-tint);border-radius:8px;padding:1px 5px;margin-left:6px;vertical-align:middle}
