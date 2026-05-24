@@ -35,6 +35,10 @@ All should print PASS at v3.16. (Note: `sw.js` ships alongside `index.html` from
 `metadata_spot.js` (v3.14) checks the richer exercise metadata: catalog entries carry
 equipment/pattern/difficulty/alternatives, fields persist onto plan records + the user
 library, and `exerciseMeta()` resolves them.
+`dupscan.js` is the exercise-name near-duplicate analyzer: it hard-fails on an EXACT
+normalized duplicate *within* `EXERCISE_CATALOG`, and prints advisory near-dup pairs
+(catalog↔built-in and within-catalog) so new breadth batches don't add redundant
+"same movement, different name" entries. Run `node dupscan.js` before adding a batch.
 
 **CI / one-command run (v3.13):** `cd tests && npm ci && npm test` runs every CI-safe suite
 via `run-all.js` (exits non-zero on any failure). A GitHub Action
