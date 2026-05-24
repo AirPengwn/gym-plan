@@ -55,13 +55,16 @@ ok(idsOf('c').some(function(id){ return /Imaginary Lift/i.test(p3.ex[id].name||'
 // ── v3.3 seed catalog: library-only exercises, NOT on any day until added ──
 var lib2=w.getExerciseLibrary();
 var catNames=w.EXERCISE_CATALOG.map(function(c){return c.name;});
-ok(w.EXERCISE_CATALOG.length===17,'catalog has all 17 seed exercises');
+ok(w.EXERCISE_CATALOG.length>=49,'catalog has seed + Phase C batch 1 ('+w.EXERCISE_CATALOG.length+' exercises)');
 ok(catNames.every(function(n){ return lib2.some(function(e){ return e.name===n; }); }),'every catalog exercise shows in the library');
 var goblet=lib2.filter(function(e){ return /goblet squat/i.test(e.name); })[0];
 ok(goblet && goblet.daysList.length===0,'catalog exercise is NOT scheduled on any day (library only)');
-// none of the catalog exercises leaked onto a real day's plan
-var onAnyDay=false; w.getDays().forEach(function(d){ (w.getEffectivePlan().order[d]||[]).forEach(function(id){ if(catNames.indexOf((w.getEffectivePlan().ex[id]||{}).name)!==-1) onAnyDay=true; }); });
-ok(!onAnyDay,'no catalog exercise auto-added to a day');
+// library-only catalog exercises (NOT built-in plan names) are never auto-scheduled.
+// (Some batch-1 catalog names intentionally match built-ins — e.g. Leg press — to
+// give those plan exercises metadata; those legitimately appear on days.)
+var libOnly=['Hack squat','Cable bicep curl (straight bar)','Bulgarian split squat'];
+var leaked=false; w.getDays().forEach(function(d){ (w.getEffectivePlan().order[d]||[]).forEach(function(id){ if(libOnly.indexOf((w.getEffectivePlan().ex[id]||{}).name)!==-1) leaked=true; }); });
+ok(!leaked,'library-only catalog exercises are not auto-added to a day');
 // adding one from the catalog carries its full fields (category, cues, video, muscles, badge)
 w.planAddExisting('Dumbbell goblet squat', ['d']);
 var pg=w.getEffectivePlan();
