@@ -172,43 +172,40 @@ function domIdByDataEx(doc, day, ex){
   ok(/sw\('b',this\)/.test(dbtns[1].getAttribute('onclick')||''),'sw() handler still bound per pill (D2)');
   dbtns[1].dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
   ok(w.document.getElementById('p-b').classList.contains('show'),'tapping D2 switches to Day 2 panel');
-  // Header cluster has 📊 next to ⋯, sw('prog') handler preserved
+  // v3.30: navigation moved to a fixed bottom tab bar (4 tabs). 📊/📋 relocated
+  // there (same ids + handlers preserved); the ⋯ overflow menu is gone — its items
+  // (Update / Backup / Test mode) now live on the Settings tab.
+  var bar=w.document.querySelector('.tabbar');
+  ok(!!bar && bar.querySelectorAll('.tab').length===4,'bottom tab bar has 4 tabs');
   var hp=w.document.getElementById('hdr-prog-btn');
-  var ho=w.document.getElementById('hdr-ovf-btn');
-  ok(hp && ho,'header has 📊 and ⋯ icon buttons');
-  ok(hp.classList.contains('progress-tab') && /sw\('prog',this\)/.test(hp.getAttribute('onclick')||''),'header 📊 keeps progress-tab class + sw("prog") handler (returnToManageAfterPlan still works)');
-  ok(hp.getAttribute('aria-label')==='Progress and stats','header 📊 aria-label="Progress and stats"');
-  // both icon buttons share the same CSS-driven size/shape rule
-  ok(/#dark-toggle,#hdr-prog-btn,#hdr-plan-btn,#hdr-ovf-btn\{[^}]*width:40px;height:40px/.test(w.document.documentElement.innerHTML),'🌙 📊 📋 ⋯ all same 40×40 shape (single shared CSS rule)');
-  ok(!!w.document.getElementById('hdr-plan-btn') && /openManage\(\)/.test(w.document.getElementById('hdr-plan-btn').getAttribute('onclick')||''),'header 📋 Plan button present and calls openManage()');
-  ok(typeof w.openManage==='function','openManage() function defined');
+  ok(!!hp && !!hp.closest('.tabbar'),'📊 Progress lives in the bottom bar');
+  ok(hp.classList.contains('progress-tab') && /sw\('prog',this\)/.test(hp.getAttribute('onclick')||''),'📊 keeps progress-tab class + sw("prog") handler (returnToManageAfterPlan still works)');
+  ok(hp.getAttribute('aria-label')==='Progress and stats','📊 aria-label="Progress and stats" preserved');
+  var hpl=w.document.getElementById('hdr-plan-btn');
+  ok(!!hpl && !!hpl.closest('.tabbar') && /openManage\(\)/.test(hpl.getAttribute('onclick')||''),'📋 Plan in the bottom bar, calls openManage()');
+  ok(!!w.document.getElementById('nav-workout') && /navWorkout\(\)/.test(w.document.getElementById('nav-workout').getAttribute('onclick')||''),'🏋️ Workout tab calls navWorkout()');
+  ok(!!w.document.getElementById('nav-settings') && /openSettings\(\)/.test(w.document.getElementById('nav-settings').getAttribute('onclick')||''),'⚙️ Settings tab calls openSettings()');
+  ok(typeof w.openManage==='function' && typeof w.openSettings==='function' && typeof w.navWorkout==='function','nav functions defined');
   ok(!Array.from(w.document.querySelectorAll('.prog-tab-btn')).some(function(b){return /manage/.test(b.getAttribute('onclick')||'');}),'Manage tab button removed from prog-tab-row');
+  // header collapses to just the dark-mode toggle (no 📊/📋/⋯ icons, no overflow menu)
+  ok(!w.document.getElementById('hdr-ovf-btn') && !w.document.getElementById('hdr-menu'),'⋯ overflow menu removed from the header');
   var dk2=w.document.getElementById('dark-toggle');
+  ok(!!dk2 && !dk2.closest('.tabbar'),'🌙 dark toggle stays in the (slim) header');
+  ok(/#dark-toggle\{[^}]*width:40px;height:40px/.test(w.document.documentElement.innerHTML),'🌙 keeps its 40×40 header button shape');
   ok(!/padding:|font-size:|background:|border:/.test(dk2.getAttribute('style')||''),'🌙 inline-style overrides removed so the shared CSS rule applies');
-  ok(/align-items:center/.test(dk2.parentNode.getAttribute('style')||''),'cluster wrapper sets align-items:center (vertical alignment)');
+  // Settings tab hosts what used to be in the ⋯ menu
+  var sp=w.document.getElementById('p-settings');
+  ok(!!sp,'Settings panel (#p-settings) exists');
+  ok(w.document.querySelectorAll('#test-toggle').length===1 && !!w.document.getElementById('test-toggle').closest('#p-settings'),'#test-toggle preserved (single) and now in Settings (_testUpdateUI still works)');
+  ok(!!sp.querySelector('[onclick="reloadPage()"]') && !!sp.querySelector('[onclick="showExportImport()"]'),'Update + Backup handlers live on the Settings tab');
+  // navigation actually switches panels + highlights the right tab
   hp.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
-  ok(w.document.getElementById('p-prog').classList.contains('show'),'tapping header 📊 switches to Progress panel');
-  // Follow-up 3: header collapse
-  ok(!!w.document.getElementById('dark-toggle') && !w.document.getElementById('dark-toggle').closest('#hdr-menu'),'🌙 stays inline (not in menu)');
-  var hm=w.document.getElementById('hdr-menu');
-  ok(hm && hm.hasAttribute('hidden'),'header overflow menu hidden by default');
-  ok(w.document.querySelectorAll('#test-toggle').length===1 && w.document.getElementById('test-toggle').closest('#hdr-menu'),'#test-toggle preserved (single) and inside the menu (_testUpdateUI still works)');
-  ok(!!hm.querySelector('[onclick="reloadPage()"]') && !!hm.querySelector('[onclick="showExportImport()"]'),'Update + Backup handlers preserved in menu');
-  w.hdrMenuToggle(); ok(!hm.hasAttribute('hidden'),'hdrMenuToggle opens the menu');
-  // Bug fix: selecting any menu item closes the menu
-  var backupMi=hm.querySelector('[onclick="showExportImport()"]');
-  backupMi.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
-  ok(hm.hasAttribute('hidden'),'clicking a menu item (Backup) closes the menu');
-  w.hdrMenuToggle();
-  var testMi=hm.querySelector('#test-toggle');
-  testMi.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
-  ok(hm.hasAttribute('hidden'),'clicking Test mode / End test closes the menu');
-  // End test to restore localStorage to its pre-toggle snapshot (we toggled it twice)
-  // Reopen + click menu background should NOT close (only items do)
-  w.hdrMenuToggle();
-  hm.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
-  ok(!hm.hasAttribute('hidden'),'clicking the menu background (not an item) does not close');
-  w.hdrMenuToggle(); // close for cleanup
+  ok(w.document.getElementById('p-prog').classList.contains('show'),'tapping 📊 switches to Progress panel');
+  ok(hp.classList.contains('active'),'📊 tab highlights when Progress is open');
+  w.openSettings();
+  ok(sp.classList.contains('show') && w.document.getElementById('nav-settings').classList.contains('active'),'⚙️ Settings opens its panel + highlights the tab');
+  w.navWorkout();
+  ok(w.document.getElementById('nav-workout').classList.contains('active') && !w.document.getElementById('p-prog').classList.contains('show'),'🏋️ Workout returns to a day + highlights its tab');
   // Follow-up 2: cardio "Watch demo" → overflow
   if(typeof w.enhanceCardioCards==='function') w.enhanceCardioCards();
   var wu=w.document.querySelector('#items-a .item .cardio-fields');

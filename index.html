@@ -193,10 +193,27 @@ body.dark .tray-ic.red{background:#3A1A1A} body.dark .tray-ic.warn{background:#3
 .v2-ovf .ex-loc,.v2-ovf .ex-link,.v2-ovf .ex-link-stretch{position:static;font-size:var(--fs-sm)}
 .v2-card.item.done .v2-head .ex-name{color:var(--muted);text-decoration:line-through}
 /* Header icon cluster: 🌙 📊 ⋯ — all three identical 40×40, centered, same shape */
-#dark-toggle,#hdr-prog-btn,#hdr-plan-btn,#hdr-ovf-btn{flex:0 0 auto;width:40px;height:40px;min-width:40px;min-height:40px;padding:0;display:flex;align-items:center;justify-content:center;background:#F5F5F2;border:1px solid #D3D1C7;border-radius:9px;font-size:17px;line-height:1;cursor:pointer;color:inherit;vertical-align:middle}
-#hdr-prog-btn.active,#hdr-plan-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-body.dark #dark-toggle,body.dark #hdr-prog-btn,body.dark #hdr-plan-btn,body.dark #hdr-ovf-btn{background:#252540;border-color:#3C3A5C;color:#E8E6F8}
-body.dark #hdr-prog-btn.active,body.dark #hdr-plan-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+#dark-toggle{flex:0 0 auto;width:40px;height:40px;min-width:40px;min-height:40px;padding:0;display:flex;align-items:center;justify-content:center;background:#F5F5F2;border:1px solid #D3D1C7;border-radius:9px;font-size:17px;line-height:1;cursor:pointer;color:inherit;vertical-align:middle}
+body.dark #dark-toggle{background:#252540;border-color:#3C3A5C;color:#E8E6F8}
+/* v3.30 — bottom tab bar (primary navigation) */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:flex;max-width:600px;margin:0 auto;background:var(--surface,#fff);border-top:1px solid var(--border,#E6E4DD);padding:6px 4px;padding-bottom:calc(6px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(31,29,56,.06)}
+body.dark .tabbar{background:#1C1B30;border-top-color:#3C3A5C}
+.tabbar .tab{flex:1;border:0;background:none;cursor:pointer;padding:5px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font-size:11px;font-weight:600;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.tabbar .tab .tab-ic{font-size:21px;line-height:1}
+.tabbar .tab.active{color:var(--primary)}
+body.dark .tabbar .tab{color:#8F8DB8}
+body.dark .tabbar .tab.active{color:#B4ADF0}
+body{padding-bottom:calc(70px + env(safe-area-inset-bottom)) !important}
+/* v3.30 — Settings screen */
+.set-group{background:var(--card,#fff);border:1px solid var(--border);border-radius:14px;padding:4px 14px;margin-bottom:12px}
+body.dark .set-group{background:#252540;border-color:#3C3A5C}
+.set-gh{font-size:12px;font-weight:800;color:var(--text);padding:11px 0 9px;border-bottom:1px solid var(--border)}
+.set-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:13px 0;border:0;border-bottom:1px solid var(--border);background:none;font-size:13px;color:var(--text);font-family:inherit;cursor:pointer}
+.set-item:last-child{border-bottom:0}
+.set-caret{color:var(--muted);font-size:15px;flex-shrink:0}
+.set-sub{color:var(--muted);font-size:12px;font-weight:600}
+.set-note{font-size:12px;color:var(--muted);line-height:1.5;padding:11px 0}
+.set-about{font-size:11px;color:var(--muted);text-align:center;margin-top:16px}
 /* Header overflow menu */
 .hdr-mi{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;border-bottom:.5px solid var(--border-soft);padding:11px 14px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;text-align:left}
 .hdr-mi:last-child{border-bottom:0}
@@ -768,19 +785,11 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.29</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.30</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
     <button onclick="toggleDarkMode()" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
-    <button type="button" id="hdr-prog-btn" class="day-btn progress-tab" onclick="sw('prog',this)" aria-label="Progress and stats" title="Progress and stats"><span aria-hidden="true">📊</span></button>
-    <button type="button" id="hdr-plan-btn" onclick="openManage()" aria-label="Plan" title="Plan"><span aria-hidden="true">📋</span></button>
-    <button type="button" id="hdr-ovf-btn" aria-label="More actions" aria-haspopup="true" onclick="hdrMenuToggle(event)"><span aria-hidden="true">⋯</span></button>
-    <div id="hdr-menu" hidden role="menu" style="position:absolute;top:100%;right:0;margin-top:6px;background:var(--surface);border:1px solid var(--border-soft);border-radius:10px;box-shadow:0 8px 24px rgba(31,29,56,.18);z-index:1100;min-width:172px;overflow:hidden;">
-      <button role="menuitem" onclick="reloadPage()" class="hdr-mi"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M11.5 2.5A5.5 5.5 0 1 0 12 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><polyline points="9,0.5 12,2.5 10,5.5" fill="currentColor"/></svg> Update</button>
-      <button role="menuitem" onclick="showExportImport()" class="hdr-mi"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 1v8M3 6l3.5 3.5L10 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 10v1.5a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Backup</button>
-      <button role="menuitem" onclick="toggleTestMode()" id="test-toggle" aria-label="Toggle Test Mode (sandbox — no cloud save)" class="hdr-mi">🧪 Test mode</button>
-    </div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -927,6 +936,33 @@ body.dark #pc-result{color:#E8E6F8}
     </div>
   </div>
 </div>
+
+<!-- ═══ SETTINGS (v3.30) ═══ -->
+<div class="day-panel" id="p-settings">
+  <div style="font-size:18px;font-weight:800;color:var(--text);margin:2px 0 14px;">⚙️ Settings</div>
+  <div class="set-group">
+    <div class="set-gh">💾 Backup &amp; restore</div>
+    <button class="set-item" onclick="showExportImport()"><span>Backup code · snapshots · cloud archive · import/export</span><span class="set-caret">›</span></button>
+  </div>
+  <div class="set-group">
+    <div class="set-gh">☁️ Cloud &amp; devices</div>
+    <div class="set-note">Plan, day &amp; library cloud sync lives in the <b>📋 Plan</b> tab. Your <b>Primary / Reader</b> device choice and the <b>cloud archive</b> are inside <b>Backup &amp; restore</b> above.</div>
+  </div>
+  <div class="set-group">
+    <div class="set-gh">⚙️ App</div>
+    <button class="set-item" id="test-toggle" onclick="toggleTestMode()">🧪 Test mode</button>
+    <button class="set-item" onclick="reloadPage()"><span>🔄 Update to latest</span><span class="set-caret">›</span></button>
+  </div>
+  <div class="set-about">MyFit <span id="set-ver"></span> · Anytime Fitness Guilford</div>
+</div>
+
+<!-- ═══ BOTTOM TAB BAR (v3.30) ═══ -->
+<nav class="tabbar" role="tablist" aria-label="Main navigation">
+  <button type="button" class="tab" id="nav-workout" data-nav="workout" onclick="navWorkout()" aria-label="Workout"><span class="tab-ic" aria-hidden="true">🏋️</span>Workout</button>
+  <button type="button" class="tab progress-tab" id="hdr-prog-btn" data-nav="progress" onclick="sw('prog',this)" aria-label="Progress and stats"><span class="tab-ic" aria-hidden="true">📊</span>Progress</button>
+  <button type="button" class="tab" id="hdr-plan-btn" data-nav="plan" onclick="openManage()" aria-label="Plan"><span class="tab-ic" aria-hidden="true">📋</span>Plan</button>
+  <button type="button" class="tab" id="nav-settings" data-nav="settings" onclick="openSettings()" aria-label="Settings"><span class="tab-ic" aria-hidden="true">⚙️</span>Settings</button>
+</nav>
 
 <!-- Clear confirmation modal -->
 <div class="modal-overlay" id="clear-modal-overlay">
@@ -3125,7 +3161,8 @@ function sw(day,btn){
   // v3.2: leaving for a workout day clears the header 📋 Manage highlight.
   var _pl=document.getElementById('hdr-plan-btn'); if(_pl && day!=='prog') _pl.classList.remove('active');
   document.getElementById('p-'+day).classList.add('show');
-  btn.classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(day!=='prog') _lastWorkoutDay=day;   // v3.30: remember for the Workout tab
   if(day==='prog'){
     renderProgress();
     // v3.3: opening Progress from the Plan screen returns to Sessions so the
@@ -3140,6 +3177,49 @@ function sw(day,btn){
   applyArchivedToChecklist();
   try{ updateProgressBadges(); }catch(e){}
   try{ updateSwipeHints(); _dismissSwipeTip(); }catch(e){}
+  try{ _syncNav(); }catch(e){}
+}
+
+// ── v3.30: bottom-bar navigation ─────────────────────────────────────
+var _lastWorkoutDay='a';
+function _dayBtnFor(d){
+  var found=null;
+  document.querySelectorAll('.day-selector .day-btn').forEach(function(b){
+    if((b.getAttribute('onclick')||'').indexOf("'"+d+"'")!==-1) found=b;
+  });
+  return found;
+}
+function navWorkout(){
+  var d=_lastWorkoutDay; var days=getDays();
+  if(days.indexOf(d)===-1) d=days[0]||'a';
+  var btn=_dayBtnFor(d);
+  if(btn) sw(d, btn); else if(document.getElementById('p-'+d)) sw(d, _dayBtnFor(days[0])||btn);
+}
+function openSettings(){
+  document.querySelectorAll('.day-panel').forEach(function(p){p.classList.remove('show');});
+  document.querySelectorAll('.day-btn').forEach(function(b){b.classList.remove('active');});
+  var sp=document.getElementById('p-settings'); if(sp) sp.classList.add('show');
+  try{ renderSettings(); }catch(e){}
+  try{ window.scrollTo(0,0); }catch(e){}
+  _syncNav();
+}
+function renderSettings(){
+  var v=document.getElementById('set-ver'); if(v){ var b=document.getElementById('app-version'); v.textContent=b?b.textContent:''; }
+  try{ _testUpdateUI(); }catch(e){}   // label the test-mode button (#test-toggle)
+}
+// Highlight exactly one bottom tab based on what's actually visible.
+function _syncNav(){
+  var on='workout';
+  var sp=document.getElementById('p-settings');
+  var pp=document.getElementById('p-prog');
+  if(sp && sp.classList.contains('show')) on='settings';
+  else if(pp && pp.classList.contains('show')){
+    var mg=document.getElementById('prog-panel-manage');
+    on=(mg && mg.classList.contains('show'))?'plan':'progress';
+  }
+  [['workout','nav-workout'],['progress','hdr-prog-btn'],['plan','hdr-plan-btn'],['settings','nav-settings']].forEach(function(p){
+    var el=document.getElementById(p[1]); if(el) el.classList.toggle('active', p[0]===on);
+  });
 }
 
 // ── Swipe to switch days ─────────────────────────────────────────────
@@ -3908,11 +3988,12 @@ function switchProgTab(tab, btn){
     if(planBtn) planBtn.classList.remove('active'); if(progBtn) progBtn.classList.add('active');
     if(statsRow) statsRow.style.display=''; if(tabRow) tabRow.style.display='';
   }
+  try{ _syncNav(); }catch(e){}
 }
-// Plan entry point — header 📋 button. Switches to Progress view then opens Manage panel.
+// Plan entry point — bottom-bar 📋 button. Switches to Progress view then opens Manage panel.
 function openManage(){
   var pb=document.getElementById('hdr-prog-btn');
-  if(pb && !document.getElementById('p-prog').classList.contains('show')) sw('prog',pb);
+  if(!document.getElementById('p-prog').classList.contains('show')) sw('prog', pb||document.getElementById('hdr-plan-btn'));
   switchProgTab('manage', null);
 }
 
@@ -6290,16 +6371,14 @@ renderDaySummaries();
 // Legacy exercise_order no longer drives the DOM (kept only for old backups).
 setTimeout(checkMilestones, 500);
 // Step 3: apply a11y attrs once the cards + injected fields exist.
-setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} try{ _renderPrimaryBadge(); }catch(e){} try{ refreshSyncBanner(); }catch(e){} }, 0);
+setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} try{ _renderPrimaryBadge(); }catch(e){} try{ refreshSyncBanner(); }catch(e){} try{ _syncNav(); }catch(e){} }, 0);
 // After a builder save+reload, return to the Manage tab (not Day 1).
 (function returnToManageAfterPlan(){
   try{ if(sessionStorage.getItem('gym_after_plan')!=='manage') return;
     sessionStorage.removeItem('gym_after_plan');
   }catch(e){ return; }
   setTimeout(function(){
-    var pb=document.querySelector('.day-btn.progress-tab');
-    if(pb){ sw('prog',pb); }
-    switchProgTab('manage', null);
+    openManage();   // v3.30: robust (bottom-bar 📋), no longer depends on a header selector
   },120);
 })();
 // Patch 5: structured-sets migration runs once per device before any render

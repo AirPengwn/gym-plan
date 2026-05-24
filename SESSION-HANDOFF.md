@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v3.29 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
+**App version:** v3.30 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -42,6 +42,16 @@ logged history.
 ## What this build does (v2.80 → v3.9, this session)
 
 **UX / navigation**
+- **Bottom tab bar (v3.30):** primary nav is a fixed 4-tab bar — **🏋️ Workout · 📊 Progress ·
+  📋 Plan · ⚙️ Settings**. The header slimmed to just the title/version + 🌙 dark toggle; the
+  old ⋯ overflow menu is gone (Update / Backup / Test mode moved to the **Settings** tab,
+  `#p-settings`). The 📊/📋 buttons kept their ids (`hdr-prog-btn`/`hdr-plan-btn`) + handlers
+  (`sw('prog',…)` / `openManage()`), just relocated into the bar. New: `navWorkout()`,
+  `openSettings()`, `renderSettings()`, `_syncNav()` (derives which one tab is active from the
+  visible panel). `#test-toggle` (and `_testUpdateUI`) now live in Settings. Pure layout/nav —
+  no data/sync change; `verify.js` byte-identity still green. Gated by the rewritten header
+  block in `funcsmoke.js`. NOTE: cloud-sync controls still live in the 📋 Plan tab (could move
+  to Settings later); the workout day-selector still shows on all tabs (future polish).
 - Balanced-row layout (`_balancedCols`/`_applyBalancedRows`): day tabs, Progress filter
   chips, and stat boxes wrap into centered rows (5→3+2, 6→3+3, …) instead of a horizontal
   scrollbar. Day tabs restyled as distinct bordered buttons.
