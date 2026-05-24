@@ -785,7 +785,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.30</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.31</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -2867,7 +2867,7 @@ function syncDayPanels(){
   // Hide any day panel whose key is no longer active (data stays in storage).
   document.querySelectorAll('.day-panel').forEach(function(p){
     var id=p.id||'';
-    if(id==='p-prog') return;
+    if(id==='p-prog'||id==='p-settings') return;   // not day-keyed panels
     var key=id.replace(/^p-/,'');
     if(key && active.indexOf(key)===-1){ p.classList.remove('show'); p.style.display='none'; }
     else { p.style.display=''; }
@@ -3198,7 +3198,7 @@ function navWorkout(){
 function openSettings(){
   document.querySelectorAll('.day-panel').forEach(function(p){p.classList.remove('show');});
   document.querySelectorAll('.day-btn').forEach(function(b){b.classList.remove('active');});
-  var sp=document.getElementById('p-settings'); if(sp) sp.classList.add('show');
+  var sp=document.getElementById('p-settings'); if(sp){ sp.style.display=''; sp.classList.add('show'); }
   try{ renderSettings(); }catch(e){}
   try{ window.scrollTo(0,0); }catch(e){}
   _syncNav();
