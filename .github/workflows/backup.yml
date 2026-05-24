@@ -1,0 +1,59 @@
+name: cloud-backup
+
+# Daily off-provider backup: pull the live JSONbin bin and commit a dated JSON
+# into a SEPARATE PRIVATE repo (keeps workout + body-measurement data out of this
+# public repo). The JSONbin key is read from index.html (already in this repo, so
+# no extra secret for it). Pushing to the private repo needs a token.
+#
+# ── ONE-TIME SETUP (you, in the browser) ─────────────────────────────────────
+#   1. Create a PRIVATE repo:  AirPengwn/gym-plan-backups  (tick "Add a README").
+#   2. Make a token with write access to it:
+#        Settings → Developer settings → Personal access tokens →
+#        Fine-grained → Repositories: only gym-plan-backups → Contents: Read/Write.
+#   3. Add it here as a secret:
+#        this repo → Settings → Secrets and variables → Actions → New secret
+#        Name: BACKUP_TOKEN   Value: <the token>
+#   Until BACKUP_TOKEN exists the job runs green and just skips.
+#   Test it anytime with the "Run workflow" button (workflow_dispatch).
+
+on:
+  schedule:
+    - cron: '17 8 * * *'   # daily ~08:17 UTC
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch live bin from JSONbin
+        run: |
+          ID=$(grep -oP "JBIN_ID\s*=\s*'\K[^']+" index.html | head -1)
+          KEY=$(grep -oP "JBIN_KEY\s*=\s*'\K[^']+" index.html | head -1)
+          if [ -z "$ID" ] || [ -z "$KEY" ]; then echo "::error::could not read JSONbin id/key from index.html"; exit 1; fi
+          curl -sf -H "X-Master-Key: $KEY" -H "X-Bin-Meta: false" \
+            "https://api.jsonbin.io/v3/b/$ID/latest" -o bin.json
+          test -s bin.json
+          echo "fetched $(wc -c < bin.json) bytes"
+
+      - name: Commit to private backup repo
+        env:
+          TOKEN: ${{ secrets.BACKUP_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "BACKUP_TOKEN not set — skipping (add the secret to enable backups)."
+            exit 0
+          fi
+          git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/AirPengwn/gym-plan-backups.git" bkp
+          mkdir -p bkp/cloud
+          cp bin.json "bkp/cloud/cloud-$(date +%F).json"
+          # keep the most recent 60 daily snapshots
+          ls -1t bkp/cloud/cloud-*.json | tail -n +61 | xargs -r rm -f
+          cd bkp
+          if [ -z "$(git status --porcelain)" ]; then echo "no change today"; exit 0; fi
+          git config user.name "gym-plan-backup-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add cloud
+          git commit -m "cloud backup $(date +%F)"
+          git push
