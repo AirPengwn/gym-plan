@@ -204,6 +204,9 @@ function domIdByDataEx(doc, day, ex){
   ok(hp.classList.contains('active'),'📊 tab highlights when Progress is open');
   w.openSettings();
   ok(sp.classList.contains('show') && w.document.getElementById('nav-settings').classList.contains('active'),'⚙️ Settings opens its panel + highlights the tab');
+  // regression guard: syncDayPanels() must NOT leave an inline display:none on
+  // p-settings (it isn't a day-keyed panel) — that bug rendered Settings blank.
+  ok(sp.style.display!=='none','Settings panel is not inline-hidden by syncDayPanels (renders, not blank)');
   w.navWorkout();
   ok(w.document.getElementById('nav-workout').classList.contains('active') && !w.document.getElementById('p-prog').classList.contains('show'),'🏋️ Workout returns to a day + highlights its tab');
   // Follow-up 2: cardio "Watch demo" → overflow
