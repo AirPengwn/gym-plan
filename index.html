@@ -785,7 +785,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.33</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.34</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -1004,6 +1004,21 @@ body.dark #pc-result{color:#E8E6F8}
     <div class="modal-btn-row">
       <button class="modal-btn-primary" style="background:#C53030;" onclick="executeDeleteSession()">Delete</button>
       <button class="modal-btn-secondary" onclick="closeDeleteSessionModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- v3.34: add / rename a day — edit its name AND its button label -->
+<div class="modal-overlay" id="day-edit-overlay" onclick="if(event.target===this)closeDayEdit()">
+  <div class="modal" style="max-width:340px;text-align:left;">
+    <div class="modal-title" id="day-edit-title" style="color:#5B4EA8;">Edit day</div>
+    <label style="display:block;font-size:12px;font-weight:700;color:var(--text);margin:0.8rem 0 4px;">Day name</label>
+    <input id="day-edit-name" type="text" placeholder="e.g. Day 1 — Upper A" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--card,#fff);color:var(--text);">
+    <label style="display:block;font-size:12px;font-weight:700;color:var(--text);margin:0.8rem 0 4px;">Button label <span style="font-weight:400;color:var(--muted)">(the tab chip, e.g. D1, Push, Legs)</span></label>
+    <input id="day-edit-short" type="text" maxlength="6" placeholder="D1" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--card,#fff);color:var(--text);">
+    <div class="modal-btn-row" style="margin-top:1rem;">
+      <button class="modal-btn-primary" onclick="saveDayEdit()">Save</button>
+      <button class="modal-btn-secondary" onclick="closeDayEdit()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1295,12 +1310,13 @@ function _nextDayKey(){
   for(var i=0;i<26;i++){ var k=String.fromCharCode(97+i); if(!used[k]) return k; }
   return null;
 }
-function addDay(name){
+function addDay(name, short){
   var key=_nextDayKey();
   if(!key){ showToast('Max day count reached (26)'); return null; }
   var cfg=_rawDaysConfig();
   var n=(name||'').trim()||('Day '+(getDays().length+1));
-  cfg.push({ key:key, name:n, short:('D'+(getDays().length+1)) });
+  var sh=(short||'').trim()||('D'+(getDays().length+1));
+  cfg.push({ key:key, name:n, short:sh.slice(0,6) });
   saveDaysConfig(cfg);
   refreshDayCycle();
   showToast('Added '+n+' ✓');
@@ -1310,6 +1326,24 @@ function renameDay(key, newName){
   var cfg=_rawDaysConfig(), changed=false;
   cfg.forEach(function(d){ if(d.key===key && newName && newName.trim()){ d.name=newName.trim(); changed=true; } });
   if(changed){ saveDaysConfig(cfg); refreshDayCycle(); showToast('Renamed ✓'); }
+}
+// v3.34: set a day's short button label (the "D1" chip text), independent of name.
+function setDayLabel(key, short){
+  var cfg=_rawDaysConfig(), changed=false;
+  cfg.forEach(function(d){ if(d.key===key){ var s=(short||'').trim().slice(0,6); if(s && s!==d.short){ d.short=s; changed=true; } } });
+  if(changed){ saveDaysConfig(cfg); refreshDayCycle(); }
+  return changed;
+}
+// v3.34: edit a day's name AND label together (used by the day-edit modal).
+function editDayMeta(key, name, short){
+  var cfg=_rawDaysConfig(), changed=false;
+  cfg.forEach(function(d){ if(d.key===key){
+    var n=(name||'').trim(), s=(short||'').trim().slice(0,6);
+    if(n && n!==d.name){ d.name=n; changed=true; }
+    if(s && s!==d.short){ d.short=s; changed=true; }
+  } });
+  if(changed){ saveDaysConfig(cfg); refreshDayCycle(); showToast('Day updated ✓'); }
+  return changed;
 }
 function removeDay(key){
   var active=getDays();
@@ -4777,16 +4811,39 @@ function renderSync(){
     +'</div>';
   wrap.innerHTML=html;
 }
-function _promptAddDay(){
-  var n=prompt('Name this day (e.g. "Day 6 — Arms", "Push", "Conditioning"):','');
-  if(n===null) return;
-  addDay(n);
+// v3.34: add/rename a day via a 2-field modal (name + button label).
+var _dayEditKey=null;
+function _promptAddDay(){ openDayEdit(null); }
+function _promptRenameDay(key){ openDayEdit(key); }
+function openDayEdit(key){
+  _dayEditKey=key||null;
+  var nameI=document.getElementById('day-edit-name'), shortI=document.getElementById('day-edit-short');
+  var title=document.getElementById('day-edit-title');
+  if(_dayEditKey){
+    if(title) title.textContent='Edit day';
+    var c=getDayConfig(_dayEditKey)||{};
+    if(nameI) nameI.value=c.name||'';
+    if(shortI) shortI.value=c.short||'';
+  } else {
+    if(title) title.textContent='Add day';
+    var n=getDays().length+1;
+    if(nameI) nameI.value='';
+    if(shortI) shortI.value='D'+n;
+  }
+  var ov=document.getElementById('day-edit-overlay'); if(ov) ov.classList.add('show');
+  if(nameI){ try{ nameI.focus(); }catch(e){} }
 }
-function _promptRenameDay(key){
-  var cur=getDayName(key);
-  var n=prompt('Rename day:', cur);
-  if(n===null) return;
-  renameDay(key, n);
+function closeDayEdit(){ var ov=document.getElementById('day-edit-overlay'); if(ov) ov.classList.remove('show'); _dayEditKey=null; }
+function saveDayEdit(){
+  var nameI=document.getElementById('day-edit-name'), shortI=document.getElementById('day-edit-short');
+  var name=(nameI?nameI.value:'').trim(), short=(shortI?shortI.value:'').trim();
+  if(_dayEditKey){
+    editDayMeta(_dayEditKey, name, short);
+  } else {
+    if(!name && !short){ showToast('Enter a name or label'); return; }
+    addDay(name, short);
+  }
+  closeDayEdit();
 }
 var _pendingRemoveDay=null;
 function confirmRemoveDay(key){
