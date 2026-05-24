@@ -733,7 +733,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.18</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.19</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -1287,6 +1287,7 @@ function pushPlanToCloud(){
     // primary-gated). Union local+cloud last-write-wins so no device's additions
     // are clobbered; write the merged result back to local so it converges too.
     try{ var lb=_mergeLibraries(getUserLibrary(), cloud['exercise_library_v1']); if(lb&&lb.length){ cloud['exercise_library_v1']=lb; saveUserLibrary(lb); } }catch(e){}
+    try{ var hl=_mergeLibraries(getHiddenLibrary(), cloud['library_hidden_v1']); if(hl&&hl.length){ cloud['library_hidden_v1']=hl; saveHiddenLibrary(hl); } }catch(e){}
     if(!cloud.__schema) cloud.__schema=SCHEMA_VERSION;
     return _rawCloudPUT(cloud);
   }).then(function(){
@@ -1813,6 +1814,7 @@ function addToUserLibrary(fields){
   for(var i=0;i<lib.length;i++){ if(normalizeEx(lib[i].name)===nk){ lib[i]=entry; found=true; break; } }
   if(!found) lib.push(entry);
   saveUserLibrary(lib);
+  unhideLibraryItem(fields.name);   // v3.19: saving brings it back if it was hidden
 }
 function removeFromUserLibrary(name){
   var lib=getUserLibrary(); var nk=normalizeEx(name||''); var hit=false;
@@ -1839,6 +1841,27 @@ function _mergeLibraries(a, b){
   }); }
   take(a); take(b);
   return Object.keys(out).map(function(k){ return out[k]; });
+}
+
+// v3.19: hide ANY library exercise (catalog seed / built-in / history) from the
+// "From library" picker — a synced, reversible visibility filter. NOT a delete:
+// day membership and logged history are untouched. Stored in 'library_hidden_v1'
+// and LWW-merged like the user library (so hide/un-hide converge across devices).
+function getHiddenLibrary(){ try{ var a=JSON.parse(localStorage.getItem('library_hidden_v1')); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+function saveHiddenLibrary(arr){ try{ localStorage.setItem('library_hidden_v1', JSON.stringify(Array.isArray(arr)?arr:[])); }catch(e){} }
+function _setHidden(name, hidden){
+  var arr=getHiddenLibrary(), nk=normalizeEx(name||''); if(!nk) return;
+  var found=false;
+  for(var i=0;i<arr.length;i++){ if(normalizeEx(arr[i].name)===nk){ arr[i]={name:arr[i].name||name, hidden:!!hidden, updatedAt:Date.now()}; found=true; break; } }
+  if(!found) arr.push({ name:name, hidden:!!hidden, updatedAt:Date.now() });
+  saveHiddenLibrary(arr);
+}
+function hideLibraryItem(name){ _setHidden(name, true); }
+function unhideLibraryItem(name){ _setHidden(name, false); }
+function isLibraryHidden(name){
+  var nk=normalizeEx(name||''), arr=getHiddenLibrary();
+  for(var i=0;i<arr.length;i++){ if(normalizeEx(arr[i].name)===nk) return !!arr[i].hidden; }
+  return false;
 }
 
 // v3.2: re-add an EXISTING exercise (by its immutable histEx) to one or more
@@ -1912,7 +1935,7 @@ function getExerciseLibrary(){
   getActiveUserLibrary().forEach(function(c){ var e=ensure(c.name, c.name, c.type); if(e) e.fromUser=true; });
   // v3.3: seed catalog — ready-made exercises that aren't on any day yet.
   EXERCISE_CATALOG.forEach(function(c){ var e=ensure(c.name, c.name, c.type); if(e) e.fromCatalog=true; });
-  return Object.keys(lib).map(function(nk){ var e=lib[nk]; e.daysList=Object.keys(e.days); return e; })
+  return Object.keys(lib).map(function(nk){ var e=lib[nk]; e.daysList=Object.keys(e.days); e.hidden=isLibraryHidden(e.histEx||e.name); return e; })
     .sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
 }
 
@@ -2159,20 +2182,30 @@ function setBuilderMode(m){
   if(lib){ var s=document.getElementById('b-lib-search'); if(s) s.value=''; _libSelected=null; renderLibraryPicker(); }
 }
 function openLibrary(){ openBuilder(null); setBuilderMode('lib'); }
+var _libShowHidden=false;
+function toggleLibHidden(){ _libShowHidden=!_libShowHidden; renderLibraryPicker(); }
 function renderLibraryPicker(){
   var listEl=document.getElementById('b-lib-list'); if(!listEl) return;
   var q=normalizeEx((document.getElementById('b-lib-search')||{}).value||'');
-  var items=getExerciseLibrary().filter(function(e){ return !q || normalizeEx(e.name).indexOf(q)!==-1 || normalizeEx(e.histEx).indexOf(q)!==-1; });
-  if(!items.length){ listEl.innerHTML='<div class="bld-lib-empty">No matching exercises.</div>'; return; }
-  listEl.innerHTML=items.map(function(e){
-    var sel=_libSelected&&normalizeEx(_libSelected.histEx)===normalizeEx(e.histEx);
-    var meta=(e.daysList&&e.daysList.length)?('on '+e.daysList.map(getDayShort).join(', '))
-            :(e.sessions?(e.sessions+' session'+(e.sessions===1?'':'s')):'not scheduled');
+  var all=getExerciseLibrary().filter(function(e){ return !q || normalizeEx(e.name).indexOf(q)!==-1 || normalizeEx(e.histEx).indexOf(q)!==-1; });
+  var hiddenCount=all.filter(function(e){ return e.hidden; }).length;
+  var items=_libShowHidden ? all.filter(function(e){ return e.hidden; }) : all.filter(function(e){ return !e.hidden; });
+  var rows;
+  if(!items.length){ rows='<div class="bld-lib-empty">'+(_libShowHidden?'No hidden exercises.':'No matching exercises.')+'</div>'; }
+  else rows=items.map(function(e){
     var h=_esc(e.histEx).replace(/'/g,"\\'");
+    var onDay=!!(e.daysList&&e.daysList.length);
+    if(_libShowHidden){
+      return '<div class="bld-lib-item hidden-row"><span class="lib-nm">'+_esc(e.name)+'</span><button class="lib-del" title="Un-hide" onclick="unhideLibItem(\''+h+'\',event)">↩</button></div>';
+    }
+    var sel=_libSelected&&normalizeEx(_libSelected.histEx)===normalizeEx(e.histEx);
+    var meta=onDay?('on '+e.daysList.map(getDayShort).join(', ')):(e.sessions?(e.sessions+' session'+(e.sessions===1?'':'s')):'not scheduled');
     var tag=e.fromUser?'<span class="lib-tag">yours</span>':'';
-    var del=(e.fromUser && !(e.daysList&&e.daysList.length))?'<button class="lib-del" title="Remove from library" onclick="deleteLibItem(\''+h+'\',event)">✕</button>':'';
+    var del=onDay?'':'<button class="lib-del" title="Remove / hide from library" onclick="deleteLibItem(\''+h+'\',event)">✕</button>';
     return '<div class="bld-lib-item'+(sel?' on':'')+'" onclick="selectLibItem(\''+h+'\')"><span class="lib-nm">'+_esc(e.name)+tag+'</span><span class="lib-meta">'+_esc(meta)+'</span>'+del+'</div>';
   }).join('');
+  var toggle=(hiddenCount||_libShowHidden)?'<button type="button" class="lib-hidden-toggle" onclick="toggleLibHidden()">'+(_libShowHidden?'← back to library':('Hidden ('+hiddenCount+') · show'))+'</button>':'';
+  listEl.innerHTML=rows+toggle;
 }
 function selectLibItem(histEx){
   var hit=null; getExerciseLibrary().some(function(e){ if(normalizeEx(e.histEx)===normalizeEx(histEx)){ hit=e; return true; } return false; });
@@ -2184,14 +2217,23 @@ function selectLibItem(histEx){
   if(bd) bd.innerHTML=_dayChipsHTML((hit && hit.daysList) ? hit.daysList : []);
   renderLibraryPicker();
 }
-// v3.5: remove a user-saved library template (soft-deleted so the delete syncs).
+// v3.19: remove/hide a library exercise from the picker. User-saved entries are
+// soft-deleted (tombstone); catalog/built-in/history entries are hidden (both
+// synced, reversible — un-hide from the "Hidden" view; re-Save un-hides too).
 function deleteLibItem(histEx, ev){
   if(ev && ev.stopPropagation) ev.stopPropagation();
-  if(removeFromUserLibrary(histEx)){
-    if(_libSelected && normalizeEx(_libSelected.histEx)===normalizeEx(histEx)) _libSelected=null;
-    renderLibraryPicker();
-    showToast('Removed from library');
-  }
+  var entry=null; getExerciseLibrary().some(function(e){ if(normalizeEx(e.histEx)===normalizeEx(histEx)){ entry=e; return true; } return false; });
+  if(entry && entry.fromUser && !entry.fromCatalog) removeFromUserLibrary(histEx);
+  else hideLibraryItem(histEx);
+  if(_libSelected && normalizeEx(_libSelected.histEx)===normalizeEx(histEx)) _libSelected=null;
+  renderLibraryPicker();
+  showToast('Removed from library');
+}
+function unhideLibItem(histEx, ev){
+  if(ev && ev.stopPropagation) ev.stopPropagation();
+  unhideLibraryItem(histEx);
+  renderLibraryPicker();
+  showToast('Restored to library');
 }
 function saveBuilder(isSwap){
   // v3.2: library mode re-adds an existing exercise by its histEx (linked, history kept).
@@ -4801,6 +4843,7 @@ function generateExport(){
   try{ var dc=JSON.parse(localStorage.getItem('days_config_v1')); if(dc) data['days_config_v1']=dc; }catch(e){}
   // v3.5: user exercise library in backups too.
   try{ var lb=JSON.parse(localStorage.getItem('exercise_library_v1')); if(lb&&lb.length) data['exercise_library_v1']=lb; }catch(e){}
+  try{ var hl=JSON.parse(localStorage.getItem('library_hidden_v1')); if(hl&&hl.length) data['library_hidden_v1']=hl; }catch(e){}
   // In-progress (unsubmitted) drafts — so a backup also protects a workout
   // you're in the middle of entering.
   getAllDayKeys().forEach(function(day){
@@ -5059,6 +5102,9 @@ function importData(){
     // restore never drops library entries either side has).
     if(Array.isArray(data['exercise_library_v1'])){
       try{ saveUserLibrary(_mergeLibraries(getUserLibrary(), data['exercise_library_v1'])); }catch(e){}
+    }
+    if(Array.isArray(data['library_hidden_v1'])){
+      try{ saveHiddenLibrary(_mergeLibraries(getHiddenLibrary(), data['library_hidden_v1'])); }catch(e){}
     }
     var hint=document.getElementById('restore-hint');
     hint.innerHTML='✅ Restored '+count+' sessions + measurements + settings! '
@@ -5956,6 +6002,7 @@ function buildBinPayload(){
   try { var dc=JSON.parse(localStorage.getItem('days_config_v1')); if(dc) p['days_config_v1']=dc; }catch(e){}
   // v3.5: user exercise library travels with the payload too.
   try { var lb=JSON.parse(localStorage.getItem('exercise_library_v1')); if(lb) p['exercise_library_v1']=lb; }catch(e){}
+  try { var hl=JSON.parse(localStorage.getItem('library_hidden_v1')); if(hl) p['library_hidden_v1']=hl; }catch(e){}
   // v3.8: carry the archive bin id so every device discovers the same archive.
   try { var aid=_archiveId(); if(aid) p['__archive_bin']=aid; }catch(e){}
   return p;
@@ -6003,6 +6050,8 @@ function mergeCloudIntoPayload(cloud){
   // localEmpty-gated, so additions/edits/deletes from any device converge.
   var mlib=_mergeLibraries(p['exercise_library_v1'], cloud['exercise_library_v1']);
   if(mlib && mlib.length) p['exercise_library_v1']=mlib;
+  var mhid=_mergeLibraries(p['library_hidden_v1'], cloud['library_hidden_v1']);
+  if(mhid && mhid.length) p['library_hidden_v1']=mhid;
   // v3.8: learn/keep the archive bin id from whichever side has it.
   if(cloud['__archive_bin'] && !_archiveId()){ try{ _setArchiveId(cloud['__archive_bin']); }catch(e){} }
   var aid2=_archiveId()||cloud['__archive_bin']; if(aid2) p['__archive_bin']=aid2;
@@ -6028,6 +6077,7 @@ function applyPayloadToLocal(p){
   if(p['plan_v2'] && typeof p['plan_v2']==='object') localStorage.setItem('plan_v2', JSON.stringify(p['plan_v2']));
   if(Array.isArray(p['days_config_v1'])) localStorage.setItem('days_config_v1', JSON.stringify(p['days_config_v1']));
   if(Array.isArray(p['exercise_library_v1'])) localStorage.setItem('exercise_library_v1', JSON.stringify(p['exercise_library_v1']));
+  if(Array.isArray(p['library_hidden_v1'])) localStorage.setItem('library_hidden_v1', JSON.stringify(p['library_hidden_v1']));
 }
 
 function refreshAfterSync(){
@@ -6185,7 +6235,7 @@ function clearPendingSync(){ try{ localStorage.removeItem('gymlog_sync_pending')
 // Uses sessionStorage so a mid-test reload stays in test mode, and the
 // snapshot is persisted so it can still be discarded after a reload.
 var TEST_MODE = sessionStorage.getItem('gym_test_mode')==='1';
-var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','gymlog_sync_pending','darkMode'];
+var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','gymlog_sync_pending','darkMode'];
 function _testKeys(){
   var ks=[];
   for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i);
@@ -7390,6 +7440,9 @@ function showPRToast(prs){
       .bld-lib-item .lib-meta{font-size:10px;color:var(--muted);font-weight:600;white-space:nowrap}
       .lib-tag{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--primary);background:var(--primary-tint);border-radius:8px;padding:1px 5px;margin-left:6px;vertical-align:middle}
       .lib-del{flex-shrink:0;width:22px;height:22px;border:0;border-radius:6px;background:transparent;color:#C53030;font-size:12px;font-weight:700;cursor:pointer;line-height:1}
+      .bld-lib-item.hidden-row{opacity:.6}
+      .bld-lib-item.hidden-row .lib-del{color:var(--primary)}
+      .lib-hidden-toggle{width:100%;border:0;border-top:1px solid var(--border-soft);background:transparent;color:var(--muted);font-size:11px;font-weight:600;padding:8px;cursor:pointer}
       .lib-del:hover{background:#FFF5F5}
       body.dark .lib-del:hover{background:#3A1A1A}
       .bld-lib-empty{padding:14px 10px;font-size:12px;color:var(--muted);text-align:center}
