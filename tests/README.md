@@ -31,7 +31,10 @@ for t in verify funcsmoke verif_s1 buildcard heatcheck msvgcheck \
 done
 ```
 
-All should print PASS at v3.13. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
+All should print PASS at v3.14. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
+`metadata_spot.js` (v3.14) checks the richer exercise metadata: catalog entries carry
+equipment/pattern/difficulty/alternatives, fields persist onto plan records + the user
+library, and `exerciseMeta()` resolves them.
 
 **CI / one-command run (v3.13):** `cd tests && npm ci && npm test` runs every CI-safe suite
 via `run-all.js` (exits non-zero on any failure). A GitHub Action
