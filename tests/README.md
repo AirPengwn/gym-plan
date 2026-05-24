@@ -31,7 +31,7 @@ for t in verify funcsmoke verif_s1 buildcard heatcheck msvgcheck \
 done
 ```
 
-All should print PASS at v3.27. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
+All should print PASS at v3.28. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
 `metadata_spot.js` (v3.14) checks the richer exercise metadata: catalog entries carry
 equipment/pattern/difficulty/alternatives, fields persist onto plan records + the user
 library, and `exerciseMeta()` resolves them.
@@ -60,6 +60,7 @@ via `run-all.js` (exits non-zero on any failure). A GitHub Action
 - `heatcheck.js` / `msvgcheck.js` — muscle map + weekly heat map (Do-Not-Touch surface).
 
 **Feature spot-checks:**
+- `templates_spot.js` — v3.28 plan templates: built-in programs (PPL/Upper-Lower/Full-Body/Bro) + user-saved custom templates (`plan_templates_v1`). Every template exercise resolves to a pattern + muscles; `applyTemplate('append')` adds days alongside, `applyTemplate('replace')` archives current days (logged history preserved) and installs the program; custom save/delete (soft tombstone) + LWW merge; rides the sync payload; modal renders.
 - `toast_spot.js` — v3.27 `showToast(msg, opts)`: plain auto-dismiss by default, optional longer duration, and a `{sticky:true}` toast that stays until the ✕ is tapped (used for the sync-result messages so "synced ✓" / "sync failed" can't vanish too fast).
 - `patch3_spot.js` — delta pills + PB variant + zone titles + v2-card checkbox.
 - `patch4_spot.js` — backup-modal Copy/Select-All, test-mode theming.

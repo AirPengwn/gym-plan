@@ -588,6 +588,19 @@ body.dark .bal-flag{color:#FBBF24}
 .bal-flag-untrained{color:#9333EA}
 body.dark .bal-flag-untrained{color:#C4A6F5}
 .bal-ok{font-size:11px;color:#10B981;margin-top:8px}
+/* v3.28 — plan templates modal */
+.tpl-item{border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.tpl-item.open{border-color:#7F77DD}
+.tpl-row{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer}
+.tpl-name{font-size:13px;font-weight:700;color:var(--text)}
+.tpl-tag{font-size:9px;font-weight:700;color:#7F77DD;background:#7F77DD18;border-radius:8px;padding:1px 6px}
+.tpl-blurb{font-size:11px;color:var(--muted);margin-top:2px}
+.tpl-caret{color:var(--muted);font-size:12px;flex-shrink:0}
+.tpl-detail{padding:2px 12px 12px;border-top:1px solid var(--border)}
+.tpl-day{margin-top:9px}
+.tpl-day b{font-size:12px;color:var(--text)}
+.tpl-exs{font-size:11px;color:var(--muted);line-height:1.5;margin-top:2px}
+.tpl-apply-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
 /* v2.79 (Phase B.3) — Manage days rows */
 .mgr-days-list{display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
 .mgr-day-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border:1px solid var(--border);border-radius:10px}
@@ -755,7 +768,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.27</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.28</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -947,6 +960,22 @@ body.dark #pc-result{color:#E8E6F8}
     <div class="modal-btn-row">
       <button class="modal-btn-primary" style="background:#C53030;" onclick="executeDeleteSession()">Delete</button>
       <button class="modal-btn-secondary" onclick="closeDeleteSessionModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- v3.28: plan templates browser/apply + save-current -->
+<div class="modal-overlay" id="tpl-overlay" onclick="if(event.target===this)closeTemplates()">
+  <div class="modal" style="max-width:380px;max-height:84vh;overflow-y:auto;text-align:left;">
+    <div class="modal-title" style="color:#5B4EA8;">📐 Plan templates</div>
+    <div class="modal-sub" style="margin:0.4rem 0 0.9rem;">Apply a ready-made program, or save your current plan to reuse later. Applying always saves a backup snapshot first, and <b>Replace</b> archives your current days (history kept &amp; restorable).</div>
+    <div id="tpl-save-row" style="display:flex;gap:6px;margin-bottom:0.9rem;">
+      <input id="tpl-save-name" type="text" placeholder="Save current plan as…" style="flex:1;min-width:0;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--card);color:var(--text);">
+      <button class="modal-btn-primary" style="margin:0;padding:8px 12px;white-space:nowrap;" onclick="tplSaveCurrent()">Save</button>
+    </div>
+    <div id="tpl-list"></div>
+    <div class="modal-btn-row" style="margin-top:0.9rem;">
+      <button class="modal-btn-secondary" onclick="closeTemplates()">Close</button>
     </div>
   </div>
 </div>
@@ -1311,6 +1340,7 @@ function pushPlanToCloud(){
     // are clobbered; write the merged result back to local so it converges too.
     try{ var lb=_mergeLibraries(getUserLibrary(), cloud['exercise_library_v1']); if(lb&&lb.length){ cloud['exercise_library_v1']=lb; saveUserLibrary(lb); } }catch(e){}
     try{ var hl=_mergeLibraries(getHiddenLibrary(), cloud['library_hidden_v1']); if(hl&&hl.length){ cloud['library_hidden_v1']=hl; saveHiddenLibrary(hl); } }catch(e){}
+    try{ var ct=_mergeLibraries(getCustomTemplates(), cloud['plan_templates_v1']); if(ct&&ct.length){ cloud['plan_templates_v1']=ct; saveCustomTemplates(ct); } }catch(e){}
     if(!cloud.__schema) cloud.__schema=SCHEMA_VERSION;
     return _rawCloudPUT(cloud);
   }).then(function(){
@@ -2136,6 +2166,174 @@ function isLibraryHidden(name){
   var nk=normalizeEx(name||''), arr=getHiddenLibrary();
   for(var i=0;i<arr.length;i++){ if(normalizeEx(arr[i].name)===nk) return !!arr[i].hidden; }
   return false;
+}
+
+// ── v3.28: Plan templates ────────────────────────────────────────────
+// Ready-made programs (and user-saved custom ones) that build out a whole day
+// cycle in one tap. Exercise names reference EXERCISE_CATALOG so each lands with
+// full metadata/muscles/cues via the same resolution planAddExisting uses.
+// Applying a template is non-destructive: it snapshots first, and "Replace"
+// ARCHIVES the current days (history kept + restorable) rather than deleting.
+var PLAN_TEMPLATES=[
+  { id:'ppl3', name:'Push / Pull / Legs', blurb:'3-day · classic split, hits everything twice over ~6 days', days:[
+    { name:'Push — Chest / Shoulders / Triceps', ex:['Barbell bench press','Incline dumbbell press','Dumbbell shoulder press','Dumbbell lateral raise','Tricep pushdown','Dip'] },
+    { name:'Pull — Back / Biceps', ex:['Pull-up','Barbell bent-over row','Lat pulldown — underhand grip','Face pull (rope attachment)','Hammer curl','Cable bicep curl (straight bar)'] },
+    { name:'Legs', ex:['Barbell back squat','Barbell Romanian deadlift','Leg press','Seated leg curl','Standing calf raise','Hanging leg raise'] }
+  ]},
+  { id:'ul4', name:'Upper / Lower', blurb:'4-day · upper and lower twice a week', days:[
+    { name:'Upper A', ex:['Barbell bench press','Barbell bent-over row','Dumbbell shoulder press','Lat pulldown — underhand grip','Tricep pushdown','Hammer curl'] },
+    { name:'Lower A', ex:['Barbell back squat','Barbell Romanian deadlift','Leg press','Standing calf raise','Hanging leg raise'] },
+    { name:'Upper B', ex:['Incline dumbbell press','Pull-up','Arnold press','Cable rear delt fly','Skull crusher','Cable bicep curl (straight bar)'] },
+    { name:'Lower B', ex:['Barbell deadlift','Bulgarian split squat','Seated leg curl','Leg extension','Seated calf raise','Plank'] }
+  ]},
+  { id:'fb3', name:'Full Body', blurb:'3-day · whole body each session, great for 3×/week', days:[
+    { name:'Full Body A', ex:['Barbell back squat','Barbell bench press','Barbell bent-over row','Dumbbell shoulder press','Plank'] },
+    { name:'Full Body B', ex:['Barbell deadlift','Incline dumbbell press','Lat pulldown — underhand grip','Walking lunge','Hanging leg raise'] },
+    { name:'Full Body C', ex:['Front squat','Dip','Pull-up','Hip thrust','Cable crunch'] }
+  ]},
+  { id:'bro5', name:'Bro Split', blurb:'5-day · one muscle group per day', days:[
+    { name:'Chest', ex:['Barbell bench press','Incline dumbbell press','Dumbbell fly','Cable chest fly (low to high)','Dip'] },
+    { name:'Back', ex:['Pull-up','Barbell bent-over row','Lat pulldown — underhand grip','T-bar row','Straight-arm pulldown'] },
+    { name:'Legs', ex:['Barbell back squat','Leg press','Barbell Romanian deadlift','Seated leg curl','Standing calf raise'] },
+    { name:'Shoulders', ex:['Barbell overhead press','Dumbbell lateral raise','Cable rear delt fly','Dumbbell front raise','Barbell shrug'] },
+    { name:'Arms', ex:['Cable bicep curl (straight bar)','Hammer curl','Tricep pushdown','Skull crusher','Concentration curl'] }
+  ]}
+];
+// Custom templates the user saves from their current plan. Stored in
+// 'plan_templates_v1', LWW-merged by name (soft-delete tombstones) and synced
+// exactly like the user library so they converge across devices.
+function getCustomTemplates(){ try{ var a=JSON.parse(localStorage.getItem('plan_templates_v1')); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+function saveCustomTemplates(arr){ try{ localStorage.setItem('plan_templates_v1', JSON.stringify(Array.isArray(arr)?arr:[])); }catch(e){} }
+function getActiveCustomTemplates(){ return getCustomTemplates().filter(function(t){ return t && t.name && !t.deleted && Array.isArray(t.days) && t.days.length; }); }
+// Built-ins + active customs, normalized to {id,name,blurb,days,custom}.
+function getAllTemplates(){
+  var out=PLAN_TEMPLATES.map(function(t){ return {id:t.id,name:t.name,blurb:t.blurb||'',days:t.days,custom:false}; });
+  getActiveCustomTemplates().forEach(function(t){
+    out.push({ id:'custom:'+normalizeEx(t.name), name:t.name, blurb:t.blurb||'Custom', days:t.days, custom:true });
+  });
+  return out;
+}
+function _templateById(id){ var all=getAllTemplates(); for(var i=0;i<all.length;i++){ if(all[i].id===id) return all[i]; } return null; }
+// Snapshot the CURRENT plan (active days + their exercise names, in order) into a
+// reusable custom template. Names only — applying re-resolves full fields.
+function saveCurrentPlanAsTemplate(name){
+  name=String(name||'').trim(); if(!name){ showToast('Name the template first'); return false; }
+  var plan=getEffectivePlan(), archived=getArchivedExercises(), days=[];
+  getDays().forEach(function(key){
+    var ex=[];
+    (plan.order[key]||[]).forEach(function(domId){
+      var r=plan.ex[domId]; if(!r) return;
+      if(r.histEx && archived.indexOf(r.histEx)!==-1) return;
+      var nm=r.name||r.histEx; if(nm) ex.push(nm);
+    });
+    if(ex.length) days.push({ name:getDayName(key), ex:ex });
+  });
+  if(!days.length){ showToast('Nothing to save — add some exercises first'); return false; }
+  var arr=getCustomTemplates(), nk=normalizeEx(name), found=false;
+  var entry={ name:name, blurb:days.length+'-day · saved '+new Date().toLocaleDateString(), days:days, deleted:false, updatedAt:Date.now() };
+  for(var i=0;i<arr.length;i++){ if(normalizeEx(arr[i].name)===nk){ arr[i]=entry; found=true; break; } }
+  if(!found) arr.push(entry);
+  saveCustomTemplates(arr);
+  showToast('“'+name+'” saved as a template 📐');
+  return true;
+}
+function removeCustomTemplate(name){
+  var arr=getCustomTemplates(), nk=normalizeEx(name||''), hit=false;
+  arr.forEach(function(t){ if(normalizeEx(t.name)===nk){ t.deleted=true; t.updatedAt=Date.now(); hit=true; } });
+  if(hit) saveCustomTemplates(arr);
+  return hit;
+}
+// Resolve an exercise NAME to full instance fields (catalog/library first, then
+// built-in DEFAULT_MUSCLES + DEFAULT_META). Mirrors planAddExisting's field map.
+function _templateExFields(name){
+  var cat=_libraryFind(name)||_catalogFind(name);
+  if(cat) return {name:cat.name,sub:cat.sub||'',loc:cat.loc||'',video:cat.video||_ytSearch(cat.name+' proper form how to'),badge:cat.badge||null,cat:cat.cat||'',mins:(cat.mins!=null?cat.mins:null),muscles:(cat.muscles||[]).slice(),sets:cat.sets||3,type:cat.type||'strength',equipment:cat.equipment||'',pattern:cat.pattern||'',unilateral:!!cat.unilateral,difficulty:cat.difficulty||'',alternatives:(cat.alternatives||[]).slice()};
+  var meta=exerciseMeta(name), ms=(DEFAULT_MUSCLES[normalizeEx(name)]||[]).slice();
+  return {name:name,sub:'',loc:'',video:_ytSearch(name+' proper form how to'),badge:null,cat:'',mins:null,muscles:ms,sets:3,type:'strength',equipment:meta.equipment,pattern:meta.pattern,unilateral:meta.unilateral,difficulty:meta.difficulty,alternatives:meta.alternatives};
+}
+// Apply a template. mode 'replace' archives current active days first (history
+// kept + restorable); mode 'append' adds the template's days alongside. Always
+// snapshots first; builds everything then commits once (single reload).
+function applyTemplate(id, mode){
+  var tpl=_templateById(id);
+  if(!tpl || !Array.isArray(tpl.days) || !tpl.days.length){ showToast('Template not found'); return false; }
+  mode=(mode==='append')?'append':'replace';
+  try{ takeLocalSnapshot('before template: '+tpl.name); }catch(e){}
+  var cfg=_rawDaysConfig();
+  if(mode==='replace'){ cfg.forEach(function(d){ if(!d.archived) d.archived=true; }); }
+  var ov=_ovGet();
+  var used={}; cfg.forEach(function(d){ used[d.key]=1; }); getAllDayKeys().forEach(function(k){ used[k]=1; });
+  function nextKey(){ for(var i=0;i<26;i++){ var k=String.fromCharCode(97+i); if(!used[k]){ used[k]=1; return k; } } return null; }
+  // exercise names appearing on >1 template day share a linkId (kept in sync)
+  var nameCount={};
+  tpl.days.forEach(function(td){ (td.ex||[]).forEach(function(n){ var k=normalizeEx(n); nameCount[k]=(nameCount[k]||0)+1; }); });
+  var linkFor={};
+  var dnum=(mode==='append')?getDays().length:0, made=0;
+  tpl.days.forEach(function(td){
+    var key=nextKey(); if(!key) return;
+    dnum++; made++;
+    cfg.push({ key:key, name:td.name||('Day '+dnum), short:'D'+dnum });
+    var ord=[];
+    (td.ex||[]).forEach(function(exName){
+      var f=_templateExFields(exName), nk=normalizeEx(exName);
+      var linkId=null;
+      if(nameCount[nk]>1){ if(!linkFor[nk]) linkFor[nk]='lk'+Date.now().toString(36)+Math.floor(Math.random()*1e4)+made; linkId=linkFor[nk]; }
+      var rec=_instanceRec(key, linkId, exName, (f.type==='cardio'?'notes':f.type), f);
+      ov.ex[rec.domId]=rec; ord.push(rec.domId);
+    });
+    ov.order[key]=ord;
+  });
+  if(!made){ showToast('Could not apply template (no free day slots)'); return false; }
+  saveDaysConfig(cfg);
+  localStorage.setItem('plan_v2', JSON.stringify(ov));
+  _planCommit((mode==='replace'?'Applied':'Added')+' “'+tpl.name+'” ('+made+' day'+(made>1?'s':'')+')');
+  return true;
+}
+
+// ── v3.28 templates modal UI ──
+var _tplOpen=null;
+function openTemplates(){ _tplOpen=null; renderTemplateList(); var n=document.getElementById('tpl-save-name'); if(n) n.value=''; var o=document.getElementById('tpl-overlay'); if(o) o.classList.add('show'); }
+function closeTemplates(){ var o=document.getElementById('tpl-overlay'); if(o) o.classList.remove('show'); }
+function tplSaveCurrent(){ var n=document.getElementById('tpl-save-name'); if(saveCurrentPlanAsTemplate(n?n.value:'')){ if(n) n.value=''; renderTemplateList(); } }
+function tplToggle(id){ _tplOpen=(_tplOpen===id)?null:id; renderTemplateList(); }
+function tplApply(id, mode){
+  var tpl=_templateById(id); if(!tpl) return;
+  var dn=tpl.days.length;
+  var msg=(mode==='replace')
+    ? 'Replace your plan with “'+tpl.name+'” ('+dn+' days)?\n\nYour current days are archived (history kept & restorable) and a backup snapshot is saved first.'
+    : 'Add the '+dn+' days from “'+tpl.name+'” to your current plan?\n\nA backup snapshot is saved first.';
+  if(!confirm(msg)) return;
+  closeTemplates();
+  applyTemplate(id, mode);
+}
+function tplDelete(id){
+  var tpl=_templateById(id); if(!tpl || !tpl.custom) return;
+  if(!confirm('Delete the custom template “'+tpl.name+'”? Your plan and logged history are unaffected.')) return;
+  removeCustomTemplate(tpl.name); renderTemplateList();
+}
+function renderTemplateList(){
+  var wrap=document.getElementById('tpl-list'); if(!wrap) return;
+  var all=getAllTemplates();
+  if(!all.length){ wrap.innerHTML='<div class="snap-empty">No templates yet.</div>'; return; }
+  wrap.innerHTML=all.map(function(t){
+    var nEx=t.days.reduce(function(s,d){ return s+((d.ex||[]).length); },0);
+    var open=(_tplOpen===t.id);
+    var head='<div class="tpl-row" onclick="tplToggle(\''+t.id+'\')">'
+      +'<div style="flex:1;min-width:0;"><div class="tpl-name">'+_esc(t.name)+(t.custom?' <span class="tpl-tag">custom</span>':'')+'</div>'
+      +'<div class="tpl-blurb">'+_esc(t.blurb||'')+' · '+t.days.length+' days · '+nEx+' exercises</div></div>'
+      +'<span class="tpl-caret">'+(open?'▾':'▸')+'</span></div>';
+    var body='';
+    if(open){
+      body='<div class="tpl-detail">'
+        + t.days.map(function(d){ return '<div class="tpl-day"><b>'+_esc(d.name)+'</b><div class="tpl-exs">'+(d.ex||[]).map(function(x){return _esc(x);}).join(' · ')+'</div></div>'; }).join('')
+        + '<div class="tpl-apply-row">'
+        + '<button class="modal-btn-primary" style="margin:0;padding:7px 12px;" onclick="tplApply(\''+t.id+'\',\'replace\')">Replace plan</button>'
+        + '<button class="modal-btn-secondary" style="margin:0;padding:7px 12px;" onclick="tplApply(\''+t.id+'\',\'append\')">Add days</button>'
+        + (t.custom?'<button class="modal-btn-secondary" style="margin:0;padding:7px 10px;color:#C53030;" onclick="tplDelete(\''+t.id+'\')">Delete</button>':'')
+        + '</div></div>';
+    }
+    return '<div class="tpl-item'+(open?' open':'')+'">'+head+body+'</div>';
+  }).join('');
 }
 
 // v3.2: re-add an EXISTING exercise (by its immutable histEx) to one or more
@@ -4521,7 +4719,8 @@ function renderManager(){
   var catColors={'Warm-up':'#F59E0B','Upper body':'#7F77DD','Lower body':'#10B981','Core':'#EF4444','Cardio':'#3B82F6','Cool-down':'#8B5CF6'};
 
   var activeHTML='<button class="mgr-add-btn" onclick="openBuilder(null)">➕ Add exercise</button>'
-    +'<button class="mgr-add-btn" onclick="openLibrary()" style="margin-left:6px">📚 From library</button>';
+    +'<button class="mgr-add-btn" onclick="openLibrary()" style="margin-left:6px">📚 From library</button>'
+    +'<button class="mgr-add-btn" onclick="openTemplates()" style="margin-left:6px">📐 Templates</button>';
   getDays().forEach(function(day){
     var ids=(plan.order[day]||[]).filter(function(id){
       var r=plan.ex[id]; if(!r) return false;
@@ -5153,6 +5352,7 @@ function generateExport(){
   // v3.5: user exercise library in backups too.
   try{ var lb=JSON.parse(localStorage.getItem('exercise_library_v1')); if(lb&&lb.length) data['exercise_library_v1']=lb; }catch(e){}
   try{ var hl=JSON.parse(localStorage.getItem('library_hidden_v1')); if(hl&&hl.length) data['library_hidden_v1']=hl; }catch(e){}
+  try{ var ct=JSON.parse(localStorage.getItem('plan_templates_v1')); if(ct&&ct.length) data['plan_templates_v1']=ct; }catch(e){}
   // In-progress (unsubmitted) drafts — so a backup also protects a workout
   // you're in the middle of entering.
   getAllDayKeys().forEach(function(day){
@@ -5414,6 +5614,9 @@ function importData(){
     }
     if(Array.isArray(data['library_hidden_v1'])){
       try{ saveHiddenLibrary(_mergeLibraries(getHiddenLibrary(), data['library_hidden_v1'])); }catch(e){}
+    }
+    if(Array.isArray(data['plan_templates_v1'])){
+      try{ saveCustomTemplates(_mergeLibraries(getCustomTemplates(), data['plan_templates_v1'])); }catch(e){}
     }
     var hint=document.getElementById('restore-hint');
     hint.innerHTML='✅ Restored '+count+' sessions + measurements + settings! '
@@ -6356,6 +6559,7 @@ function buildBinPayload(){
   // v3.5: user exercise library travels with the payload too.
   try { var lb=JSON.parse(localStorage.getItem('exercise_library_v1')); if(lb) p['exercise_library_v1']=lb; }catch(e){}
   try { var hl=JSON.parse(localStorage.getItem('library_hidden_v1')); if(hl) p['library_hidden_v1']=hl; }catch(e){}
+  try { var ct=JSON.parse(localStorage.getItem('plan_templates_v1')); if(ct) p['plan_templates_v1']=ct; }catch(e){}
   // v3.8: carry the archive bin id so every device discovers the same archive.
   try { var aid=_archiveId(); if(aid) p['__archive_bin']=aid; }catch(e){}
   return p;
@@ -6405,6 +6609,8 @@ function mergeCloudIntoPayload(cloud){
   if(mlib && mlib.length) p['exercise_library_v1']=mlib;
   var mhid=_mergeLibraries(p['library_hidden_v1'], cloud['library_hidden_v1']);
   if(mhid && mhid.length) p['library_hidden_v1']=mhid;
+  var mtpl=_mergeLibraries(p['plan_templates_v1'], cloud['plan_templates_v1']);
+  if(mtpl && mtpl.length) p['plan_templates_v1']=mtpl;
   // v3.8: learn/keep the archive bin id from whichever side has it.
   if(cloud['__archive_bin'] && !_archiveId()){ try{ _setArchiveId(cloud['__archive_bin']); }catch(e){} }
   var aid2=_archiveId()||cloud['__archive_bin']; if(aid2) p['__archive_bin']=aid2;
@@ -6431,6 +6637,7 @@ function applyPayloadToLocal(p){
   if(Array.isArray(p['days_config_v1'])) localStorage.setItem('days_config_v1', JSON.stringify(p['days_config_v1']));
   if(Array.isArray(p['exercise_library_v1'])) localStorage.setItem('exercise_library_v1', JSON.stringify(p['exercise_library_v1']));
   if(Array.isArray(p['library_hidden_v1'])) localStorage.setItem('library_hidden_v1', JSON.stringify(p['library_hidden_v1']));
+  if(Array.isArray(p['plan_templates_v1'])) localStorage.setItem('plan_templates_v1', JSON.stringify(p['plan_templates_v1']));
 }
 
 function refreshAfterSync(){
@@ -6588,7 +6795,7 @@ function clearPendingSync(){ try{ localStorage.removeItem('gymlog_sync_pending')
 // Uses sessionStorage so a mid-test reload stays in test mode, and the
 // snapshot is persisted so it can still be discarded after a reload.
 var TEST_MODE = sessionStorage.getItem('gym_test_mode')==='1';
-var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','gymlog_sync_pending','darkMode'];
+var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','gymlog_sync_pending','darkMode'];
 function _testKeys(){
   var ks=[];
   for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i);
