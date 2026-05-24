@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v3.23 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
+**App version:** v3.24 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -31,7 +31,7 @@ logged history.
 - **32 test suites pass** via `cd tests && npm test` (`run-all.js`). Primary gate =
   `verify.js` (byte-identity of the unedited stock plan vs `index.html.bak`). **CI runs
   the whole suite on every push/PR to `main`** (`.github/workflows/test.yml`).
-- **Exercise library = 164 catalog entries + 28 built-ins.** Grown in dup-scanned batches
+- **Exercise library = 191 catalog entries + 28 built-ins.** Grown in dup-scanned batches
   (Phase C). `dupscan.js` is a CI guard: hard-fails on an exact intra-catalog dup, prints
   advisory near-dup pairs. **Run `node tests/dupscan.js` before adding any breadth batch.**
 - Last **real** workout data = **May 16, 2026**. Anything later is test noise.
@@ -59,8 +59,8 @@ logged history.
   days, history, archived, seed catalog, user library) — searchable in the builder's
   **📚 From library** tab. `planAddExisting` re-adds by existing `histEx` (history preserved)
   and links across days via shared `linkId`.
-- **Seed catalog** (`EXERCISE_CATALOG`): now **164** hardcoded library-only exercises
-  (grown across Phase C batches 1–5). Adding one carries cat/sub/loc/video/badge/muscles
+- **Seed catalog** (`EXERCISE_CATALOG`): now **191** hardcoded library-only exercises
+  (grown across Phase C batches 1–6). Adding one carries cat/sub/loc/video/badge/muscles
   (muscle keys must map to `MUSCLE_GROUPS`: chest/front-shoulder/tricep/lat/upper-back/
   rear-delt/bicep/core-front/core-back/quad/hamstring/glute/calf/hip-flexor/inner-thigh/
   outer-hip). **Run `dupscan.js` before adding entries**; avoid near-name dups.
@@ -174,5 +174,5 @@ catalog breadth batch.
 v2.73 → v3.12 was committed in one merge on 2026-05-24 when git management moved to Claude
 and the working copy moved to `C:\dev\gym-plan`. From there each version is its own
 `release/vX.Y` branch + `vX.Y` tag merged `--no-ff` into `main`. v3.13 (CI + backup),
-v3.14 (metadata), v3.16–v3.23 (Phase C breadth batches → 164 catalog entries), v3.19
+v3.14 (metadata), v3.16–v3.23 (Phase C breadth batches → 191 catalog entries), v3.19
 (library hide/un-hide), and the `dupscan` dedup tooling all shipped this way.
