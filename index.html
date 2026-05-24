@@ -358,6 +358,9 @@ canvas.prog-chart{display:block;border-radius:8px}
 .mgr-archived-title{font-size:13px;font-weight:700;color:#888780;margin-bottom:0.75rem}
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#2C2C2A;color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:999}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.toast-sticky{pointer-events:auto;white-space:normal;max-width:88vw;display:flex;align-items:center;gap:12px;text-align:left}
+.toast .toast-x{background:none;border:0;color:#fff;font-size:13px;line-height:1;cursor:pointer;padding:4px 6px;margin:-2px -6px -2px 0;opacity:.75;flex-shrink:0}
+.toast .toast-x:hover{opacity:1}
 .unit-toggle{display:flex;border-radius:6px;overflow:hidden;border:1px solid var(--border-soft);flex-shrink:0;height:32px;box-sizing:border-box}
 .unit-btn{padding:0 9px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:#FAFAF8;color:#888780;transition:all 0.15s;height:100%}
 .unit-btn.active{background:#5B4EA8;color:#fff}
@@ -752,7 +755,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.26</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.27</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -3288,18 +3291,20 @@ function confirmSave(){
   // Auto-sync to JSONbin after every save. v2.71: reader mode shows an
   // explicit toast so the user knows the save went local-only.
   if(!isPrimaryDevice()){
-    showToast('📖 Saved locally · reader mode (no cloud push from this device)');
+    showToast('📖 Saved locally · reader mode (no cloud push from this device)', 4500);
   }
-  if(isPrimaryDevice() && !TEST_MODE) showToast('Saved ✓ · syncing to cloud…');
+  if(isPrimaryDevice() && !TEST_MODE) showToast('Saved ✓ · syncing to cloud…', 3000);
   syncToJbin(function(ok){
     if(!ok){
       // v2.72 — include the actual error reason. Opaque "Cloud sync failed"
       // for an extended period hid the JSONbin versioning-header 403.
+      // v3.27 — sticky: a failed sync must not vanish before it's seen.
       var err=(window._lastSyncErr||'unknown').slice(0,80);
-      showToast('⚠️ Cloud sync failed — data saved locally · '+err);
+      showToast('⚠️ Cloud sync failed — data saved locally · '+err, {sticky:true});
     } else if(isPrimaryDevice() && !TEST_MODE){
       // v3.13 — positive confirmation on the happy path (not just failures).
-      showToast('Synced to cloud ☁ ✓');
+      // v3.27 — held a touch longer so it's readable.
+      showToast('Synced to cloud ☁ ✓', 4000);
     }
   });
 }
@@ -6047,11 +6052,29 @@ function renderProgress(){
   });
   feed.innerHTML=html;
 }
-function showToast(msg){
-  var t=document.getElementById('toast');
-  t.textContent=msg;
-  t.classList.add('show');
-  setTimeout(function(){t.classList.remove('show');},2200);
+// v3.27: showToast(msg, opts). opts can be a number (duration ms) or an object
+// { duration, sticky }. A sticky toast stays until tapped (with an ✕) and only
+// auto-clears after a long safety fallback — used for sync results so an
+// important "synced ✓" / "sync failed" message can't vanish before it's read.
+var _toastTimer=null;
+function showToast(msg, opts){
+  var t=document.getElementById('toast'); if(!t) return;
+  var o=(typeof opts==='number')?{duration:opts}:(opts||{});
+  if(_toastTimer){ clearTimeout(_toastTimer); _toastTimer=null; }
+  function hide(){ t.classList.remove('show'); t.classList.remove('toast-sticky'); }
+  if(o.sticky){
+    t.classList.add('toast-sticky');
+    t.innerHTML='<span class="toast-msg"></span><button type="button" class="toast-x" aria-label="Dismiss">✕</button>';
+    t.querySelector('.toast-msg').textContent=msg;
+    t.querySelector('.toast-x').onclick=hide;
+    t.classList.add('show');
+    _toastTimer=setTimeout(hide, o.duration || 15000);   // long safety fallback only
+  } else {
+    t.classList.remove('toast-sticky');
+    t.textContent=msg;
+    t.classList.add('show');
+    _toastTimer=setTimeout(hide, o.duration || 2200);
+  }
 }
 
 renderProgress();
