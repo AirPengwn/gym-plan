@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v3.24 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
+**App version:** v3.25 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -28,7 +28,7 @@ logged history.
 
 ## Current state (all green)
 
-- **32 test suites pass** via `cd tests && npm test` (`run-all.js`). Primary gate =
+- **33 test suites pass** via `cd tests && npm test` (`run-all.js`). Primary gate =
   `verify.js` (byte-identity of the unedited stock plan vs `index.html.bak`). **CI runs
   the whole suite on every push/PR to `main`** (`.github/workflows/test.yml`).
 - **Exercise library = 191 catalog entries + 28 built-ins.** Grown in dup-scanned batches
@@ -70,8 +70,17 @@ logged history.
   **Mobility** category + `mobility` pattern. `exerciseMeta(name|record)` resolves these;
   fields persist onto plan records + the user library; the builder has pattern/equipment/
   unilateral/alternatives inputs (`b-pattern`/`b-equip`/`b-unilat`/`b-alts`). Gated by
-  `metadata_spot.js`. **Built-in (non-catalog) exercises don't yet carry metadata — that's
-  Phase D (`DEFAULT_META`).**
+  `metadata_spot.js`.
+- **Built-in metadata + balance intelligence (Phase D, v3.25):** `DEFAULT_META` (keyed by
+  built-in `histEx`, e.g. `chest press`→push, `leg press`→squat) gives the 28 stock-plan
+  exercises a pattern/equipment so `exerciseMeta` resolves the WHOLE plan (catalog wins where
+  both exist; explicit record fields win over all). `analyzePlanBalance()` is a **read-only**
+  scan (never writes/syncs) → push/pull/lower/core tallies + per-muscle coverage + untrained
+  major muscles + advisory flags; `_balanceGroup(pattern,muscles)` buckets each placement
+  (cardio/mobility/stretch contribute none). `renderPlanBalance()` paints the "📊 Plan
+  balance" card at the top of the 📋 Manage screen. Gated by `balance_spot.js`.
+  **NOTE:** the user flagged that Manage + Progress are getting crowded — a future pass may
+  re-think nav/IA before adding more screens. Keep that in mind.
 - **User library** (`exercise_library_v1`, v3.5): builder **📚 Save to library** stores an
   exercise WITHOUT a day. Soft-delete (tombstone + `updatedAt`) so deletes sync. Merged
   last-write-wins per name (`_mergeLibraries`).
@@ -150,14 +159,16 @@ catalog breadth batch.
 - **Claude manages git** (see the Repo section up top): auto branch+tag+merge-to-main+push
   per shipped version.
 
-## Next up — Phase D (deferred, NOT started)
+## Next up — Phase D follow-ons (NOT started)
 
-- **`DEFAULT_META` for built-in exercises**: built-ins (the 28 stock-plan names) don't carry
-  pattern/equipment/etc. yet — `exerciseMeta` only resolves them for catalog/user entries.
-  Phase D adds a metadata map for built-ins so balance checks see the whole plan.
-- **Programming intelligence** (the payoff of the metadata): push:pull / upper:lower balance,
-  neglected-muscle alerts, auto-progression prompts. Build on `pattern`/`muscles`.
-- User has said **no rush** to reach Phase D; keep adding breadth + polish until asked.
+- **Auto-progression prompts** (deferred from Phase D on purpose — touches history/PR code):
+  scan logged history for stalled lifts and suggest adding weight/reps. Higher risk; do as
+  its own pass with care around the `.note`/`.sets` format and `bestEst1RM`.
+- **Nav / IA rethink** (user-flagged): Manage + Progress are absorbing a lot. Consider how to
+  surface balance / library / day management without overloading two menus, before adding
+  more screens.
+- Optional balance polish: weight muscle volume by sets (not just placements), or let the
+  user dismiss/snooze the balance card (would add a synced key).
 
 ## Known / deferred (not blocking)
 

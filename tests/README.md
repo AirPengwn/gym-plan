@@ -31,10 +31,15 @@ for t in verify funcsmoke verif_s1 buildcard heatcheck msvgcheck \
 done
 ```
 
-All should print PASS at v3.24. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
+All should print PASS at v3.25. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
 `metadata_spot.js` (v3.14) checks the richer exercise metadata: catalog entries carry
 equipment/pattern/difficulty/alternatives, fields persist onto plan records + the user
 library, and `exerciseMeta()` resolves them.
+`balance_spot.js` (v3.25, Phase D) checks `DEFAULT_META` (built-in plan exercises now carry a
+pattern/equipment so `exerciseMeta` resolves the whole plan), `_balanceGroup` bucketing
+(push/pull/lower/core; cardio+mobility excluded), and the read-only `analyzePlanBalance()` +
+`renderPlanBalance()` "Plan balance" card on the Manage screen (push:pull, upper:lower,
+untrained-muscle alerts). The analysis never writes/syncs.
 `dupscan.js` is the exercise-name near-duplicate analyzer: it hard-fails on an EXACT
 normalized duplicate *within* `EXERCISE_CATALOG`, and prints advisory near-dup pairs
 (catalog↔built-in and within-catalog) so new breadth batches don't add redundant
