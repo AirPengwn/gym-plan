@@ -21,9 +21,11 @@ let fail=0; const ok=(c,l)=>{console.log((c?'  PASS ':'  FAIL ')+l); if(!c) fail
 const ST=store(); ST.setItem('gym_primary_device','1');
 const w=app(ST); const D=w.document;
 
-// Add a brand-new 6th day via the manager prompt path.
+// Add a brand-new 6th day via the day-edit modal path (v3.34).
 w.renderManager();
-w._promptAddDay();
+w.openDayEdit(null);
+w.document.getElementById('day-edit-name').value='Day 6 — Arms';
+w.saveDayEdit();
 var newKey=w.getDays()[w.getDays().length-1];
 ok(w.getDays().length===6 && newKey==='f','add · brand-new day "f" created');
 
