@@ -1,0 +1,643 @@
+{
+  "__schema": 2,
+  "gymlog_a": [
+    {
+      "date": "Tue, May 12, 2026 at 11:40 PM",
+      "label": "Day 1 — Upper A",
+      "entries": [
+        {
+          "ex": "Chest press",
+          "note": "Set 1: 90 lbs | Set 2: 90 lbs | Set 3: 90 lbs",
+          "sets": [
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Lat pulldown",
+          "note": "Set 1: 90 lbs | Set 2: 90 lbs | Set 3: 90 lbs",
+          "sets": [
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Cable row",
+          "note": "Set 1: 90 lbs | Set 2: 90 lbs | Set 3: 90 lbs",
+          "sets": [
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Pec fly",
+          "note": "Set 1: 70 lbs | Set 2: 70 lbs",
+          "sets": [
+            {
+              "w": 70,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 70,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Rear delt",
+          "note": "Set 1: 70 lbs | Set 2: 80 lbs",
+          "sets": [
+            {
+              "w": 70,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 80,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Tricep pushdown",
+          "note": "Set 1: 90 lbs | Set 2: 80 lbs",
+          "sets": [
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 80,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Cable rotation",
+          "note": "Set 1: 50 lbs | Set 2: 50 lbs",
+          "sets": [
+            {
+              "w": 50,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 50,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Chest press-notes",
+          "note": "Second 90 tough! 3rd harder!"
+        },
+        {
+          "ex": "Pec fly-notes",
+          "note": "Try 80. Check chest"
+        },
+        {
+          "ex": "Rear delt-notes",
+          "note": "Good progression"
+        },
+        {
+          "ex": "Tricep pushdown-notes",
+          "note": "Watch form"
+        },
+        {
+          "ex": "Dead bug",
+          "note": "16 twice"
+        },
+        {
+          "ex": "Cable rotation-notes",
+          "note": "Watch more videos"
+        },
+        {
+          "ex": "wu-treadmill-speed",
+          "note": "3 mph"
+        },
+        {
+          "ex": "wu-treadmill-incline",
+          "note": "3 degrees"
+        },
+        {
+          "ex": "wu-treadmill-duration",
+          "note": "5 min"
+        },
+        {
+          "ex": "wu-treadmill-distance",
+          "note": "0.24 mile"
+        },
+        {
+          "ex": "wu-treadmill-calories",
+          "note": "33"
+        },
+        {
+          "ex": "wu-treadmill-notes",
+          "note": "Aerobic"
+        }
+      ]
+    }
+  ],
+  "gymlog_b": [
+    {
+      "date": "Sat, May 16, 2026 at 12:00 AM",
+      "label": "Day 2 — Lower A",
+      "entries": [
+        {
+          "ex": "Leg press",
+          "note": "Set 1: 90 lbs | Set 2: 90 lbs | Set 3: 90 lbs",
+          "sets": [
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Leg extension",
+          "note": "Set 1: 90 lbs | Set 2: 90 lbs",
+          "sets": [
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Leg curl",
+          "note": "Set 1: 90 lbs | Set 2: 90 lbs | Set 3: 90 lbs",
+          "sets": [
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Hip abductor",
+          "note": "Set 1: 50 lbs | Set 2: 70 lbs | Set 3: 90 lbs",
+          "sets": [
+            {
+              "w": 50,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 70,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Hip adductor",
+          "note": "Set 1: 50 lbs | Set 2: 70 lbs | Set 3: 80 lbs",
+          "sets": [
+            {
+              "w": 50,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 70,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 80,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Calf raises",
+          "note": "Set 1: On step lbs | Set 2: On step lbs | Set 3: On step lbs"
+        },
+        {
+          "ex": "Leg press-notes",
+          "note": "Additional sled weighs 136 lbs"
+        },
+        {
+          "ex": "wu-treadmill-speed",
+          "note": "3 mph"
+        },
+        {
+          "ex": "wu-treadmill-incline",
+          "note": "3 degrees"
+        },
+        {
+          "ex": "wu-treadmill-duration",
+          "note": "5 min"
+        },
+        {
+          "ex": "wu-treadmill-distance",
+          "note": "0.23 mile"
+        },
+        {
+          "ex": "wu-treadmill-calories",
+          "note": "35"
+        },
+        {
+          "ex": "wu-treadmill-notes",
+          "note": "Mountain peaks"
+        },
+        {
+          "ex": "d2cardio-elliptical-speed",
+          "note": "120"
+        },
+        {
+          "ex": "d2cardio-elliptical-incline",
+          "note": "0 elliptical/3 treadmill"
+        },
+        {
+          "ex": "d2cardio-elliptical-duration",
+          "note": "15 min"
+        },
+        {
+          "ex": "d2cardio-elliptical-distance",
+          "note": ".83 mi"
+        },
+        {
+          "ex": "d2cardio-elliptical-calories",
+          "note": "115 cal"
+        },
+        {
+          "ex": "d2cardio-elliptical-notes",
+          "note": "6.5 min elliptical/8.5 treadmill"
+        }
+      ]
+    }
+  ],
+  "gymlog_c": [],
+  "gymlog_d": [
+    {
+      "date": "Wed, May 6, 2026 at 11:18 PM",
+      "label": "Day 4 — Upper B",
+      "entries": [
+        {
+          "ex": "Lat pulldown wide",
+          "note": "Set 1: 100 lbs | Set 2: 100 lbs | Set 3: 100 lbs",
+          "sets": [
+            {
+              "w": 100,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 100,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 100,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Pec fly",
+          "note": "Set 1: 90 lbs | Set 2: 90 lbs | Set 3: 90 lbs",
+          "sets": [
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Rear delt",
+          "note": "Set 1: 90 lbs | Set 2: 90 lbs | Set 3: 90 lbs",
+          "sets": [
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Cable row — V-bar",
+          "note": "Set 1: 80 lbs | Set 2: 80 lbs | Set 3: 80 lbs",
+          "sets": [
+            {
+              "w": 80,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 80,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 80,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "DB curl",
+          "note": "Set 1: 25 lbs | Set 2: 20 lbs | Set 3: 20 lbs",
+          "sets": [
+            {
+              "w": 25,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 20,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 20,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Tricep rope",
+          "note": "Set 1: 100 lbs | Set 2: 100 lbs | Set 3: 90 lbs",
+          "sets": [
+            {
+              "w": 100,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 100,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Treadmill warm-up",
+          "note": "3mph at 3%"
+        },
+        {
+          "ex": "Lat pulldown wide-notes",
+          "note": "Tough"
+        },
+        {
+          "ex": "Pec fly-notes",
+          "note": "Rear was tough."
+        },
+        {
+          "ex": "Cable row — V-bar-notes",
+          "note": "Can probably go higher"
+        },
+        {
+          "ex": "Tricep rope-notes",
+          "note": "Tough!"
+        },
+        {
+          "ex": "Stretch D4",
+          "note": "Check what three stretches means"
+        }
+      ]
+    }
+  ],
+  "gymlog_e": [
+    {
+      "date": "Sat, May 9, 2026 at 11:30 PM",
+      "label": "Day 5 — Lower B + Cardio",
+      "entries": [
+        {
+          "ex": "Leg press — high foot",
+          "note": "Set 1: 90 lbs | Set 2: 90 lbs | Set 3: 90 lbs",
+          "sets": [
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Leg extension",
+          "note": "Set 1: 90 lbs | Set 2: 90 lbs",
+          "sets": [
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Leg curl",
+          "note": "Set 1: 90 lbs | Set 2: 90 lbs | Set 3: 80 lbs",
+          "sets": [
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 90,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 80,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Hip abductor",
+          "note": "Set 1: 50 lbs | Set 2: 50 lbs | Set 3: 50 lbs",
+          "sets": [
+            {
+              "w": 50,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 50,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 50,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Hip adductor",
+          "note": "Set 1: 50 lbs | Set 2: 50 lbs | Set 3: 50 lbs",
+          "sets": [
+            {
+              "w": 50,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 50,
+              "u": "lbs",
+              "r": null
+            },
+            {
+              "w": 50,
+              "u": "lbs",
+              "r": null
+            }
+          ]
+        },
+        {
+          "ex": "Calf raises",
+          "note": "Set 1: On step | Set 2: On step | Set 3: On step"
+        },
+        {
+          "ex": "Treadmill warm-up",
+          "note": "3mph, 3 degrees"
+        },
+        {
+          "ex": "Leg curl-notes",
+          "note": "Tough! Cramping."
+        },
+        {
+          "ex": "Treadmill cardio",
+          "note": "3 mph, 3 degrees"
+        }
+      ]
+    }
+  ],
+  "archived_exercises": [],
+  "body_measurements": [],
+  "exercise_order": {},
+  "earned_milestones": [
+    "s1",
+    "nightowl",
+    "s5",
+    "month1",
+    "earlybird"
+  ]
+}
