@@ -17,7 +17,7 @@ function app(st){
 }
 let fail=0; const ok=(c,l)=>{console.log((c?'  PASS ':'  FAIL ')+l); if(!c) fail++; };
 const ST=store(); ST.setItem('gym_primary_device','1');
-const w=app(ST);
+const w=app(ST); const D=w.document;
 
 // ── every catalog entry carries the new metadata ──
 var cat=w.EXERCISE_CATALOG;
@@ -44,6 +44,23 @@ ok(w.exerciseMeta(rec).pattern==='squat','exerciseMeta(record) reads explicit fi
 // ── user library stores + resolves metadata ──
 w.addToUserLibrary({name:'My Hinge XYZ', type:'strength', pattern:'hinge', equipment:'Barbell', difficulty:'Intermediate', muscles:['hamstring'], alternatives:['Good morning']});
 ok(w.exerciseMeta('My Hinge XYZ').pattern==='hinge','user-library exercise resolves its pattern');
+
+// ── B2: builder inputs round-trip metadata onto a created exercise ──
+ok(!!D.getElementById('b-pattern') && !!D.getElementById('b-equip') && !!D.getElementById('b-unilat') && !!D.getElementById('b-alts'),'builder metadata inputs present');
+w.openBuilder(null);
+D.getElementById('b-name').value='Builder Meta Test';
+D.getElementById('b-pattern').value='hinge';
+D.getElementById('b-equip').value='Barbell';
+D.getElementById('b-diff').value='Intermediate';
+D.getElementById('b-unilat').checked=true;
+D.getElementById('b-alts').value='Good morning, RDL';
+w.toggleMuscleChip(D.querySelector('#b-days button[data-dk="a"]'));
+w.saveBuilder(false);
+var p3=w.getEffectivePlan();
+var bid=(p3.order['a']||[]).filter(function(id){ return /builder meta test/i.test((p3.ex[id]||{}).name||''); })[0];
+var brec=p3.ex[bid];
+ok(brec && brec.pattern==='hinge' && brec.equipment==='Barbell' && brec.unilateral===true,'builder save persists pattern/equipment/unilateral');
+ok((brec.alternatives||[]).indexOf('RDL')!==-1 && (brec.alternatives||[]).indexOf('Good morning')!==-1,'builder alternatives parsed from comma list');
 
 console.log('\n'+(fail?('METADATA SPOT-CHECK: '+fail+' FAILED'):'METADATA SPOT-CHECK: ALL PASS'));
 process.exit(fail?1:0);
