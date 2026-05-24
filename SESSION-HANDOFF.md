@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v3.25 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
+**App version:** v3.26 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -98,7 +98,11 @@ logged history.
   passes through non-GET + cross-origin (JSONbin/YouTube untouched), versioned cache.
 - **Cloud archive** (v3.8): separate auto-created JSONbin bin (`__archive_bin`, discovered
   via the live bin), rolling ~daily snapshots (last 14), **primary-only**, best-effort.
-  Restore via Backup → ☁️ Cloud archive → Load cloud archive.
+  Restore via Backup → ☁️ Cloud archive → Load cloud archive. **v3.26:** the read path
+  self-heals — a stale/unreadable stored bin id (the cause of the iPhone "load failed":
+  a stored id pointing at a bin that wouldn't read) is dropped and re-resolved from the
+  live cloud; a genuinely-missing archive shows a clear soft message (rebuilds on next
+  primary sync), and only a truly-unreachable cloud shows an error.
 - **Confirm-on-Reset** (`confirmReset`): the manual per-day Reset now confirms when there's
   real in-progress work (post-save still calls `rst()` directly).
 - **Installable PWA meta** + memoized history scans (`getAllExercises`/`buildGlobalRepMap`
