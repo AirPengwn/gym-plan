@@ -31,7 +31,7 @@ for t in verify funcsmoke verif_s1 buildcard heatcheck msvgcheck \
 done
 ```
 
-All should print PASS at v3.25. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
+All should print PASS at v3.26. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
 `metadata_spot.js` (v3.14) checks the richer exercise metadata: catalog entries carry
 equipment/pattern/difficulty/alternatives, fields persist onto plan records + the user
 library, and `exerciseMeta()` resolves them.
@@ -71,7 +71,7 @@ via `run-all.js` (exits non-zero on any failure). A GitHub Action
 - `remove_perday_spot.js` — per-day Remove takes an exercise off ONE day only (other days + history intact), defaults don't resurrect (presence-based order), last-day removal keeps it in the library (v3.2).
 - `durability_spot.js` — v3.6 safety net: on-device snapshots rotate (keep `SNAP_KEEP`), restore re-applies a snapshot, snapshots skip in Test Mode, and the sync-status banner tracks pending/last-sync-ok.
 - `sw_spot.js` — v3.7 service worker (`sw.js`): parses, network-first for HTML, never touches non-GET or cross-origin (JSONbin/YouTube), versioned cache, and `index.html` registers it with a relative path.
-- `cloudarchive_spot.js` — v3.8 cloud rollback: archive bin id rides the payload + is discovered from the live bin during merge; reader devices and Test Mode never write the archive.
+- `cloudarchive_spot.js` — v3.8 cloud rollback: archive bin id rides the payload + is discovered from the live bin during merge; reader devices and Test Mode never write the archive. v3.26: self-healing `loadCloudArchive` — a stale/unreadable local bin id (the iPhone "load failed") is dropped and re-resolved from the live cloud; missing archive → clear soft message; cloud unreachable → honest reassuring error.
 - `finalize_spot.js` — v3.9: confirm-on-Reset only nags when there's real in-progress work; installable-PWA meta present; `getAllExercises` is memoized and self-invalidates on data change.
 - `sessgroup_spot.js` — v3.10 saved-session display grouping (display only): strength sets stay inline + their `-notes` fold under the exercise; cardio's per-field entries collapse under one clean, named `<details>` header (`_humanizeCardioBase`); no raw `data-ex` keys leak.
 - `library_spot.js` — `getExerciseLibrary` surfaces defaults + history-only + archived; `planAddExisting` re-adds by existing `histEx` (history preserved) and links across days; no duplicates (v3.2). Also the v3.4 seed `EXERCISE_CATALOG` (17 library-only exercises): all show in the library, none auto-scheduled, and adding one carries its category/cues/badge/muscles/video. And the v3.5 user library (`exercise_library_v1`): Save-to-library persists with no day, appears as `fromUser`, add-to-day carries fields, delete soft-tombstones, `_mergeLibraries` is last-write-wins per name (adds/edits/deletes converge across devices), and it rides the sync/backup payload.

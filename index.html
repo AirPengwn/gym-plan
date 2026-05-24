@@ -752,7 +752,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.25</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.26</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -6258,18 +6258,44 @@ var _cloudArcSnaps=[];
 function loadCloudArchive(){
   if(TEST_MODE){ showToast('Test mode is on — cloud is disabled'); return; }
   var wrap=document.getElementById('cloud-archive-wrap'); if(wrap) wrap.innerHTML='<div class="snap-empty">Loading…</div>';
-  var idP=_archiveId()?Promise.resolve(_archiveId()):cloudGET().then(function(c){ var id=c&&c.__archive_bin; if(id) _setArchiveId(id); return id; });
-  idP.then(function(id){
-    if(!id){ if(wrap) wrap.innerHTML='<div class="snap-empty">No cloud archive yet — it’s created automatically after your first daily sync (primary device).</div>'; return; }
-    return _archiveGET(id).then(function(arc){
-      _cloudArcSnaps=(arc && Array.isArray(arc.snapshots))?arc.snapshots:[];
-      if(!_cloudArcSnaps.length){ if(wrap) wrap.innerHTML='<div class="snap-empty">Cloud archive is empty so far.</div>'; return; }
-      if(wrap) wrap.innerHTML=_cloudArcSnaps.map(function(s,i){
-        return '<div class="snap-row"><span class="snap-meta"><b>'+(s.n||0)+'</b> sessions · '+_esc(new Date(s.ts).toLocaleString())+'</span>'
-          +'<button class="patch5-rerun-btn" style="margin:0;padding:5px 10px" onclick="confirmRestoreCloud('+i+')">Restore</button></div>';
-      }).join('');
+  function setMsg(html){ if(wrap) wrap.innerHTML='<div class="snap-empty">'+html+'</div>'; }
+  function render(arc){
+    _cloudArcSnaps=(arc && Array.isArray(arc.snapshots))?arc.snapshots:[];
+    if(!_cloudArcSnaps.length){ setMsg('Cloud archive is empty so far — it fills in automatically on a primary device’s daily sync.'); return; }
+    if(wrap) wrap.innerHTML=_cloudArcSnaps.map(function(s,i){
+      return '<div class="snap-row"><span class="snap-meta"><b>'+(s.n||0)+'</b> sessions · '+_esc(new Date(s.ts).toLocaleString())+'</span>'
+        +'<button class="patch5-rerun-btn" style="margin:0;padding:5px 10px" onclick="confirmRestoreCloud('+i+')">Restore</button></div>';
+    }).join('');
+  }
+  // v3.26: self-healing read. Try the locally-known archive bin first; if that
+  // read is rejected (a stale / unreadable / deleted id from a past incident),
+  // drop it and re-resolve the bin id from the LIVE cloud. Only show a hard error
+  // if the cloud itself is unreachable — a missing/unreadable archive is a soft
+  // state (the 3 other backup layers are unaffected; it rebuilds on next sync).
+  var localId=_archiveId();
+  var firstTry = localId
+    ? _archiveGET(localId).then(function(arc){ return {arc:arc}; }, function(){ return {stale:true}; })
+    : Promise.resolve({fresh:true});
+  firstTry.then(function(r){
+    if(r.arc){ render(r.arc); return; }
+    if(r.stale){ try{ localStorage.removeItem('jsonbin_archive_id'); }catch(e){} }  // forget the bad id
+    // re-resolve from the cloud (covers: no local id, or a stale one we just dropped)
+    return cloudGET().then(function(c){
+      var cid = c && c.__archive_bin;
+      var reader = (typeof isPrimaryDevice==='function' && !isPrimaryDevice());
+      if(!cid){
+        setMsg('No cloud archive yet — it’s created automatically on a primary device’s daily sync.'
+          + (reader?' This device is in reader mode; set it as <b>Primary device</b> above so it can build one.':''));
+        return;
+      }
+      _setArchiveId(cid);
+      return _archiveGET(cid).then(render, function(){
+        setMsg('The cloud archive couldn’t be read right now. It rebuilds automatically on the next primary-device daily sync — your other backups (on-device snapshots, live cloud, backup code) are unaffected.');
+      });
     });
-  }).catch(function(err){ if(wrap) wrap.innerHTML='<div class="snap-empty">Couldn’t load cloud archive — '+_esc((((err&&err.message)||'error')).slice(0,60))+'</div>'; });
+  }).catch(function(err){
+    setMsg('Couldn’t reach the cloud right now — '+_esc((((err&&err.message)||'error')).slice(0,50))+'. Your other backups are unaffected; try again on a stronger connection.');
+  });
 }
 function confirmRestoreCloud(i){ var s=_cloudArcSnaps[i]; if(s) _openRestoreConfirm(s.data, s.ts, s.n); }
 // Glanceable cloud-sync status: a top banner only when there are unsynced
