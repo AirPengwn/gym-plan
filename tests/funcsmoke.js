@@ -249,10 +249,15 @@ function domIdByDataEx(doc, day, ex){
   cbtn.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
   ok(cov && !cov.hasAttribute('hidden'),'cardio ⋯ opens overflow (cardToggle reused)');
   ok(!w.document.querySelector('.v2-card .cardio-fields'),'cardio body untouched (still old layout, not v2)');
-  // Follow-up 4: footer contrast rules present
+  // Follow-up 4 + v4.16 (nits 7,9): RPE collapsed to one pill in the footer;
+  // last-time promoted to always-on (above the sets), dark override on .v2-card.
   var sheets=w.document.documentElement.innerHTML;
-  ok(/\.v2-foot \.rpe-top-label,\.v2-foot \.rpe-ends,\.v2-foot \.rpe-top-val\{color:var\(--muted\)\}/.test(sheets),'footer label contrast rule present');
-  ok(/body\.dark \.v2-foot \.last-time\{background:#2A2850\}/.test(sheets),'dark footer last-time bg override present');
+  ok(/\.v2-foot \.rpe-top-val\{color:var\(--muted\)\}/.test(sheets),'footer RPE-pill contrast rule present');
+  ok(/body\.dark \.v2-card \.last-time\{background:#2A2850\}/.test(sheets),'dark always-on last-time bg override present');
+  // v4.16: footer toggle no longer leads with "Last time"; last-time is outside .v2-foot
+  ok(!/Last time, RPE &amp; notes/.test(sheets),'nit 9 · footer toggle relabeled (no "Last time, …")');
+  var _v2c=w.document.querySelector('.v2-card .fields-wrap > .last-time');
+  ok(!!_v2c,'nit 9 · last-time is always-on (direct child of fields-wrap, not in .v2-foot)');
   w.close();
 })();
 
