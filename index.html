@@ -410,13 +410,13 @@ canvas.prog-chart{display:block;border-radius:8px}
 .date-input:focus{border-color:#7F77DD}
 .cardio-fields{padding:0 12px 10px 44px;display:flex;flex-direction:column;gap:8px}
 .cardio-machine-toggle{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:2px}
-.cardio-machine-btn{padding:6px 10px;font-size:12px;font-weight:600;border-radius:8px;border:1.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer}
+.cardio-machine-btn{padding:9px 12px;font-size:12px;font-weight:600;border-radius:8px;border:1.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer;min-height:38px}
 .cardio-machine-btn.active{background:#5B4EA8;border-color:#5B4EA8;color:#fff}
 .cardio-machine-panel{display:none;flex-direction:column;gap:6px}
 .cardio-machine-panel.show{display:flex}
 .cardio-row{display:flex;gap:6px;align-items:center}
 .cardio-label{font-size:11px;color:#888780;white-space:nowrap;min-width:62px}
-.cardio-input{flex:1;font-size:12px;padding:5px 8px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
+.cardio-input{flex:1;font-size:13px;height:40px;padding:0 10px;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
 .cardio-input:focus{border-color:#7F77DD;background:#fff}
 .cardio-input::placeholder{color:var(--muted);font-size:11px;opacity:1}
 .edit-date-btn{background:none;border:none;cursor:pointer;padding:2px 4px;font-size:13px;vertical-align:middle;line-height:1}
@@ -826,7 +826,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.7</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.8</span></div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
     <button onclick="toggleDarkMode()" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
