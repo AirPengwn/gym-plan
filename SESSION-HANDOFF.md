@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.9.1 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
+**App version:** v4.9.2 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -33,7 +33,7 @@ logged history.
 
 Working through a **5-step Claude design review** (`C:\Users\airpe\Downloads\MyFit Build
 Plan.html`). **Each step ships as its own version**, then **PAUSE for the user's on-device
-verify before the next step**. Current badge **v4.9.1, shipped — PENDING owner on-device verify**.
+verify before the next step**. Current badge **v4.9.2, shipped — PENDING owner on-device verify**.
 
 **Done so far:**
 - **Step 1 → v4.3** — bottom tab bar reduced 5 → **4 tabs** (🏋️ Workout / 📊 Progress /
@@ -64,6 +64,17 @@ verify before the next step**. Current badge **v4.9.1, shipped — PENDING owner
   picked up native UA button chrome (extra border/ring) vs the `<div class="checkbox">` on
   cardio cards — added `border:0;-webkit-appearance:none;appearance:none;color:inherit` so both
   render the identical 28px ring. `patch3_spot` assertion loosened to property-checks.
+- **v4.9.2** (fix, owner verify) — **checkbox redesign (owner-supplied spec).** The warm-up
+  `<div>` and strength `<button>` checkboxes looked different only because the `<button>`
+  picked up native UA chrome (a `<div>` can't), so the look is now fully explicit CSS. The
+  spec used nested `.ring`/`.disk` spans, but our checkbox markup is locked (gated SVG + flat
+  `.checkbox > svg`), so it's reproduced with **pseudo-elements**: `.checkbox::before` = the
+  38px 2-tone **groove ring** (`linear-gradient(135deg,#4A476B,#2A2845,#0E0D1F)` + inset
+  highlight + drop shadow); `.checkbox::after` = the 32px **disk** — `#1F1D38` when empty,
+  `radial-gradient(circle at 30% 30%,#9C95EE,#7F77DD,#5B4EA8)` sphere when `.item.done`.
+  Checkmark grown to 18px (z-index above the disk) with an opacity+scale check-in transition.
+  Identical for `<div>` and `<button>`, checked + unchecked. `funcsmoke` updated: assert
+  ::before 38px ring + ::after 32px disk.
 
 **Remaining (version mapping):**
 - **v4.10 — Step 4 part B (bottom-chrome bundle):** (4.2) floating **Complete** bar at ≥80%

@@ -309,9 +309,11 @@ function domIdByDataEx(doc, day, ex){
   // v4.4: hidden state must fully clear the viewport — anchored 66px up, so a small
   // translate (the old 220%) left it peeking behind the tab bar.
   ok(/\.rest-timer-bar\{[^}]*translateY\(calc\(100% \+ 74px \+ env\(safe-area-inset-bottom\)\)\)/.test(src),'rest-timer hidden state fully off-screen (no peek behind the tab bar)');
-  // v4.1: checkbox is a 44×44 tap target with the 28px visual drawn as ::before (markup unchanged)
+  // v4.1: checkbox is a 44×44 tap target with the visual circle drawn as ::before (markup unchanged).
+  // v4.9.2: 38px groove ring (::before) + 32px disk (::after); checked disk = radial sphere.
   ok(/\.checkbox\{[^}]*width:44px;height:44px/.test(src),'v4.1 · checkbox is a 44×44 tap target');
-  ok(/\.checkbox::before\{[^}]*width:28px;height:28px[^}]*border-radius:50%/.test(src),'v4.1 · 28px visual circle drawn as ::before');
+  ok(/\.checkbox::before\{[^}]*width:38px;height:38px[^}]*border-radius:50%/.test(src),'v4.9.2 · 38px groove ring drawn as ::before');
+  ok(/\.checkbox::after\{[^}]*width:32px;height:32px[^}]*border-radius:50%/.test(src),'v4.9.2 · 32px disk drawn as ::after');
   ok(w.document.querySelectorAll('#items-a .checkbox').length>0,'v4.1 · checkbox markup intact (still .checkbox in cards)');
   // v4.8: cardio cards got the same field/button sizing as strength cards
   ok(/\.cardio-input\{[^}]*height:40px/.test(src),'v4.8 · cardio inputs match the 40px field height');
