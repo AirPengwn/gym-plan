@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.13 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
+**App version:** v4.14 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -33,7 +33,7 @@ logged history.
 
 Working through a **5-step Claude design review** (`C:\Users\airpe\Downloads\MyFit Build
 Plan.html`). **Each step ships as its own version**, then **PAUSE for the user's on-device
-verify before the next step**. Current badge **v4.13, shipped — PENDING owner on-device verify**.
+verify before the next step**. Current badge **v4.14, shipped — PENDING owner on-device verify**.
 
 **Done so far:**
 - **Step 1 → v4.3** — bottom tab bar reduced 5 → **4 tabs** (🏋️ Workout / 📊 Progress /
@@ -118,14 +118,21 @@ verify before the next step**. Current badge **v4.13, shipped — PENDING owner 
   `.set-gh` now flex. **Kept as emoji** (JS-driven `textContent`): 🧪 Test mode + 🌙/☀️ Dark
   mode label. None touch `EXERCISE_DATA` — no re-baseline.
 
+- **Step 5.4 finish → v4.14** — remaining card actions/modals. New symbols `ic-reset`
+  (rotate-ccw) + `ic-trash`. Swapped: day ⋯ **Reset day** (↺, all 5 static + dynamic
+  `buildDayPanelHTML` via a single replace), **Plate Calc** button + modal title (🏋→`ic-lifts`),
+  session ⋯ **Delete** + **Clear all history** (🗑→`ic-trash`), **Templates** modal title
+  (📐→`ic-templates`) + **Save as template** (💾→`ic-backup`), builder **From/Save library**
+  (📚→`ic-library`). ⏱ Rest was already an SVG. None touch `EXERCISE_DATA`.
+  **Intentionally LEFT as emoji:** measurement sub-tabs (⚖️ Weight / 📐 Waist / 🔬 Body Fat —
+  no clean monoline equivalents for waist/body-fat), the 🧪 Test-mode + 🌙/☀️ Dark-mode labels
+  (JS-driven `textContent`), transient banners (🧪/💾/☁️), achievements, check-in 💪😐😴, toasts,
+  and per-card `EXERCISE_DATA` content (📍 ex-loc). **Step 5.4 is effectively complete.**
+
 **Remaining (version mapping):**
-- **v4.14+ — Step 5.4 finish (optional):** Workout card actions — ⏱ Rest is already an SVG;
-  🏋 Plate calc button; ↺ Reset (day ⋯, static + dynamic `buildDayPanelHTML`); session ⋯
-  🗑 Delete / 🗑 Clear-all-history; Templates modal (📐/💾); builder 📚 From/Save library;
-  measurement sub-tabs (📐 Waist etc.). Per-card content emoji in `EXERCISE_DATA` (📍 ex-loc)
-  stays unless a deliberate verify.js re-baseline. Banners (🧪/💾/☁️) optional.
-- **Deferred:** (5.2) type tokens; (5.3) color/radius/shadow tokens **[verify.js re-baseline]**;
-  (5.5) `.btn` vocab consolidation. Pick up if/when CSS maintainability matters.
+- **Deferred (cleanup only, low user payoff):** (5.2) type tokens; (5.3) color/radius/shadow
+  tokens **[verify.js re-baseline]**; (5.5) `.btn` vocab consolidation. The v4 "Build Plan"
+  overhaul (Steps 1–5) is otherwise DONE — these three are optional CSS-maintainability passes.
 
 **verify.js re-baseline policy:** steps that change rendered card markup (5.3, 5.4) will break
 the byte-identity gate. When intended, regenerate `index.html.bak` from the freshly-rendered
