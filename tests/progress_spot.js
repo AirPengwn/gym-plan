@@ -68,6 +68,9 @@ ok(measHost && anchor && anchor.contains(measHost),'Step 4 · meas-wrap-host mov
 
 // Step 5 — Sessions feed
 w.renderProgress();
+// v4.1: hero metric line summarizes sessions (replaces the per-day stat boxes)
+var hero=D.getElementById('prog-hero');
+ok(hero && /\bsession/.test(hero.textContent) && /<b>/.test(hero.innerHTML),'v4.1 · hero line renders session summary');
 var feed=D.getElementById('sess-feed');
 ok(feed && feed.querySelectorAll('.sess-card').length===3,'Step 5 · feed renders 3 session cards');
 ok(/sess-day-pill/.test(feed.innerHTML),'Step 5 · day pill rendered');

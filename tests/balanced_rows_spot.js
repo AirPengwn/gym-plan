@@ -32,10 +32,11 @@ ok(sel.children.length===5 && sel.children[0].style.flex.indexOf('0 0')===0,'day
 function colsFrom(el){ var m=(el.style.maxWidth||'').match(/calc\(\s*([0-9.]+)/); return m?Math.round(1/parseFloat(m[1])):0; }
 ok(colsFrom(sel.children[0])===3,'5 days → 3 columns (3-over-2)');
 
-// ── stat boxes + filter chips also balanced ──
-var stat=D.getElementById('prog-stats-row');
-ok(stat && stat.style.display==='flex' && stat.children.length>=6,'stat row rendered (Total + 5 days)');
-ok(stat.children[1] && stat.children[1].style.maxWidth.indexOf('calc(')===0,'stat boxes capped to a column width (no full-width stretch)');
+// ── v4.1: stat-box grid replaced by a single hero metric line; per-day counts
+//    moved to the filter-chip pills (which still wrap). ──
+var hero=D.getElementById('prog-hero');
+ok(!!hero,'progress hero line element present (replaced the stat-box grid)');
+ok(!D.querySelector('#prog-stats-row .stat-box'),'old per-day stat boxes are gone');
 var chips=D.getElementById('sess-filter-row');
 ok(chips && chips.style.flexWrap==='wrap' && !/auto/.test(chips.style.overflowX||''),'filter chips wrap (scrollbar gone)');
 
