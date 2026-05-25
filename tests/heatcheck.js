@@ -46,7 +46,7 @@ ok(svgD.indexOf('#1A1A2E')>=0,'dark mode honored');
 w.document.body.classList.remove('dark');
 w.renderStats();
 const statsHtml=(w.document.getElementById('prog-stats')||{}).innerHTML||'';
-ok(statsHtml.indexOf('Weekly Muscle Load')>=0,'renderStats injects Weekly Muscle Load section');
+ok(statsHtml.indexOf('Weekly muscle load')>=0,'renderStats injects Weekly muscle load section');
 ok(statsHtml.indexOf('Weekly Volume')>=0,'existing Weekly Volume section still present');
 
 // ── v3.37: interactive muscle chips + read-only drill-in (heat-map SVG untouched) ──
@@ -88,7 +88,7 @@ const L2=w2.computeWeeklyMuscleLoad();
 ok(L2 && Object.keys(L2).some(function(k){return L2[k]&&L2[k]!=='none';}),'stale-week: still produces a non-none load (fallback to latest week)');
 w2.renderStats();
 const sh2=(w2.document.getElementById('prog-stats')||{}).innerHTML||'';
-ok(sh2.indexOf('Weekly Muscle Load')>=0,'stale-week: Weekly Muscle Load section still renders');
+ok(sh2.indexOf('Weekly muscle load')>=0,'stale-week: Weekly muscle load section still renders');
 
 console.log('\n'+(fail?('HEATCHECK FAIL '+fail):'HEATCHECK PASS'));
 process.exit(fail?1:0);
