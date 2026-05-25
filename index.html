@@ -806,7 +806,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.2</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.3</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -960,26 +960,25 @@ body.dark #pc-result{color:#E8E6F8}
 </div>
 
 <!-- ═══ SYNC (v3.32) — all cloud / backup / device content ═══ -->
-<div class="day-panel" id="p-sync">
-  <div style="font-size:18px;font-weight:800;color:var(--text);margin:2px 0 14px;">☁️ Sync &amp; backup</div>
-  <div id="sync-body"></div>
-  <div class="set-group">
+<!-- ═══ MORE (v4.3) — Sync + Backup + Appearance + App, folded from the former Sync/Settings tabs ═══ -->
+<div class="day-panel" id="p-more">
+  <div style="font-size:18px;font-weight:800;color:var(--text);margin:2px 0 14px;">⋯ More</div>
+  <div class="set-group" id="more-sync">
+    <div class="set-gh">☁️ Sync</div>
+    <div id="sync-body"></div>
+  </div>
+  <div class="set-group" id="more-backup">
     <div class="set-gh">💾 Backup &amp; restore</div>
     <button class="set-item" onclick="showExportImport()"><span>Backup code · on-device snapshots · cloud archive · import / export · this device (Primary / Reader)</span><span class="set-caret">›</span></button>
   </div>
-</div>
-
-<!-- ═══ SETTINGS (v3.30) ═══ -->
-<div class="day-panel" id="p-settings">
-  <div style="font-size:18px;font-weight:800;color:var(--text);margin:2px 0 14px;">⚙️ Settings</div>
-  <div class="set-group">
+  <div class="set-group" id="more-appearance">
+    <div class="set-gh">🎨 Appearance</div>
+    <div class="set-note">Tap the 🌙 button in the top-right to switch light / dark.</div>
+  </div>
+  <div class="set-group" id="more-app">
     <div class="set-gh">⚙️ App</div>
     <button class="set-item" id="test-toggle" onclick="toggleTestMode()">🧪 Test mode</button>
     <button class="set-item" onclick="reloadPage()"><span>🔄 Update to latest</span><span class="set-caret">›</span></button>
-  </div>
-  <div class="set-group">
-    <div class="set-gh">🌙 Appearance</div>
-    <div class="set-note">Tap the 🌙 button in the top-right to switch light / dark. Cloud sync &amp; backup live on the ☁️ <b>Sync</b> tab.</div>
   </div>
   <div class="set-about">MyFit <span id="set-ver"></span> · Anytime Fitness Guilford</div>
 </div>
@@ -989,8 +988,7 @@ body.dark #pc-result{color:#E8E6F8}
   <button type="button" class="tab" id="nav-workout" data-nav="workout" onclick="navWorkout()" aria-label="Workout"><span class="tab-ic" aria-hidden="true">🏋️</span>Workout</button>
   <button type="button" class="tab progress-tab" id="hdr-prog-btn" data-nav="progress" onclick="sw('prog',this)" aria-label="Progress and stats"><span class="tab-ic" aria-hidden="true">📊</span>Progress</button>
   <button type="button" class="tab" id="hdr-plan-btn" data-nav="plan" onclick="openManage()" aria-label="Plan"><span class="tab-ic" aria-hidden="true">📋</span>Plan</button>
-  <button type="button" class="tab" id="nav-sync" data-nav="sync" onclick="openSync()" aria-label="Sync and backup"><span class="tab-ic" aria-hidden="true">☁️</span>Sync</button>
-  <button type="button" class="tab" id="nav-settings" data-nav="settings" onclick="openSettings()" aria-label="Settings"><span class="tab-ic" aria-hidden="true">⚙️</span>Settings</button>
+  <button type="button" class="tab" id="nav-more" data-nav="more" onclick="openMore()" aria-label="More — sync, backup, settings"><span class="tab-ic" aria-hidden="true">⋯</span>More</button>
 </nav>
 
 <!-- Clear confirmation modal -->
@@ -2997,7 +2995,7 @@ function syncDayPanels(){
   // Hide any day panel whose key is no longer active (data stays in storage).
   document.querySelectorAll('.day-panel').forEach(function(p){
     var id=p.id||'';
-    if(id==='p-prog'||id==='p-settings'||id==='p-sync') return;   // not day-keyed panels
+    if(id==='p-prog'||id==='p-more') return;   // not day-keyed panels
     var key=id.replace(/^p-/,'');
     if(key && active.indexOf(key)===-1){ p.classList.remove('show'); p.style.display='none'; }
     else { p.style.display=''; }
@@ -3051,7 +3049,7 @@ function renderDaySelector(){
   _applyBalancedRows(sel, 5);
   // v3.32: chips live only on the Workout screen — re-hide if a non-Workout panel
   // is currently showing (renderDaySelector also runs after add/rename/reorder day).
-  var hide=['p-prog','p-settings','p-sync'].some(function(id){ var e=document.getElementById(id); return e && e.classList.contains('show'); });
+  var hide=['p-prog','p-more'].some(function(id){ var e=document.getElementById(id); return e && e.classList.contains('show'); });
   if(hide) sel.style.display='none';
 }
 // v2.76 (Phase A.2): inject the per-day Progress widgets (stat boxes + Sessions
@@ -3324,24 +3322,22 @@ function navWorkout(){
   var btn=_dayBtnFor(d);
   if(btn) sw(d, btn); else if(document.getElementById('p-'+d)) sw(d, _dayBtnFor(days[0])||btn);
 }
-function openSettings(){
+// v4.3: Sync + Settings folded into one ⋯ More tab. openMore() shows the panel;
+// openSync()/openSettings() stay as entry points (Plan jump button, backup nag) —
+// they open More and scroll to the relevant group, so every old call-site works.
+function openMore(){
   document.querySelectorAll('.day-panel').forEach(function(p){p.classList.remove('show');});
   document.querySelectorAll('.day-btn').forEach(function(b){b.classList.remove('active');});
-  var sp=document.getElementById('p-settings'); if(sp){ sp.style.display=''; sp.classList.add('show'); }
+  var sp=document.getElementById('p-more'); if(sp){ sp.style.display=''; sp.classList.add('show'); }
+  try{ renderSync(); }catch(e){}
   try{ renderSettings(); }catch(e){}
   _setDaySelectorVisible(false);
   try{ window.scrollTo(0,0); }catch(e){}
   _syncNav();
 }
-function openSync(){
-  document.querySelectorAll('.day-panel').forEach(function(p){p.classList.remove('show');});
-  document.querySelectorAll('.day-btn').forEach(function(b){b.classList.remove('active');});
-  var sp=document.getElementById('p-sync'); if(sp){ sp.style.display=''; sp.classList.add('show'); }
-  try{ renderSync(); }catch(e){}
-  _setDaySelectorVisible(false);
-  try{ window.scrollTo(0,0); }catch(e){}
-  _syncNav();
-}
+function _scrollToMoreGroup(id){ try{ var el=document.getElementById(id); if(el) el.scrollIntoView({block:'start',behavior:'smooth'}); }catch(e){} }
+function openSettings(){ openMore(); _scrollToMoreGroup('more-app'); }
+function openSync(){ openMore(); _scrollToMoreGroup('more-sync'); }
 // v3.32: day-selector (D1…Dn chips) belongs only on the Workout screen.
 function _setDaySelectorVisible(show){
   var d=document.getElementById('day-selector'); if(d) d.style.display = show ? 'flex' : 'none';
@@ -3354,16 +3350,14 @@ function renderSettings(){
 // Highlight exactly one bottom tab based on what's actually visible.
 function _syncNav(){
   var on='workout';
-  var sp=document.getElementById('p-settings');
-  var sy=document.getElementById('p-sync');
+  var mo=document.getElementById('p-more');
   var pp=document.getElementById('p-prog');
-  if(sy && sy.classList.contains('show')) on='sync';
-  else if(sp && sp.classList.contains('show')) on='settings';
+  if(mo && mo.classList.contains('show')) on='more';
   else if(pp && pp.classList.contains('show')){
     var mg=document.getElementById('prog-panel-manage');
     on=(mg && mg.classList.contains('show'))?'plan':'progress';
   }
-  [['workout','nav-workout'],['progress','hdr-prog-btn'],['plan','hdr-plan-btn'],['sync','nav-sync'],['settings','nav-settings']].forEach(function(p){
+  [['workout','nav-workout'],['progress','hdr-prog-btn'],['plan','hdr-plan-btn'],['more','nav-more']].forEach(function(p){
     var el=document.getElementById(p[1]); if(el) el.classList.toggle('active', p[0]===on);
   });
 }
