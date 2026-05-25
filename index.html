@@ -87,12 +87,23 @@ body.dark .day-summary-total span{color:#5C5A80}
 /* v4.1: 44×44 tap target (HIG floor) with the 28px visual circle drawn as ::before.
    CSS-only — the .checkbox markup (gated by verify.js) is unchanged. */
 .checkbox{position:relative;width:44px;height:44px;min-width:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;-webkit-tap-highlight-color:rgba(91,78,168,0.15)}
-.checkbox::before{content:"";position:absolute;width:28px;height:28px;border-radius:50%;border:2px solid #D3D1C7;box-sizing:border-box;transition:all 0.15s}
+/* v4.9.2: 3D beveled rim — inset highlight (top) + inset shadow (bottom) make the
+   ring look raised; outer drop shadow lifts it off the card. Shown in BOTH states. */
+/* v4.9.2: recreate the old native-button look — a big (40px) crisp 3D button.
+   Bi-tonal bevel border (light top-left / dark bottom-right) = the half-light/
+   half-black ring; a 0-blur box-shadow = the distinct dark-blue outer ring.
+   Same for <div> and <button> checkboxes, checked + unchecked. */
+/* v4.9.2: two-piece checkbox drawn with pseudo-elements (markup is locked, so no
+   real .ring/.disk spans). ::before = the 2-tone groove ring (light top-left → dark
+   bottom-right); ::after = the inner disk (dark when empty, purple radial sphere when
+   done). Checkmark sits on top. Identical for <div> and <button> checkboxes. */
+.checkbox::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#4A476B 0%,#2A2845 45%,#0E0D1F 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 6px rgba(0,0,0,.4);z-index:0}
+.checkbox::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;background:#1F1D38;box-shadow:inset 0 -2px 4px rgba(0,0,0,.2);z-index:1;transition:background .15s}
+.item.done .checkbox::after{background:radial-gradient(circle at 30% 30%, #9C95EE 0%, #7F77DD 45%, #5B4EA8 100%)}
 /* Patch 3 Step 3 — when .checkbox is rendered as a real <button> (v2 card), neutralise UA button defaults. */
 button.checkbox{background:transparent;border:0;-webkit-appearance:none;appearance:none;color:inherit;padding:0;font:inherit;line-height:0}
-.item.done .checkbox::before{background:#7F77DD;border-color:#7F77DD}
-.checkmark{width:10px;height:7px;display:none;position:relative;z-index:1}
-.item.done .checkmark{display:block}
+.checkmark{width:18px;height:18px;display:block;position:relative;z-index:2;opacity:0;transform:scale(.6);transition:opacity .15s,transform .15s ease-out}
+.item.done .checkmark{opacity:1;transform:scale(1)}
 .prog-badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;vertical-align:middle}
 .prog-up{background:#D4F0E2;color:#0A6640}
 .prog-down{background:#FFE5E5;color:#C0392B}
@@ -841,7 +852,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.9.1</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.9.2</span></div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
     <button onclick="toggleDarkMode()" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
