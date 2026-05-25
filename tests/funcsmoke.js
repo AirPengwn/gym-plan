@@ -465,8 +465,9 @@ function domIdByDataEx(doc, day, ex){
   ok(/\.notes-input::placeholder\{color:var\(--muted\)/.test(css),'.notes-input::placeholder uses var(--muted)');
   ok(/\.cardio-input::placeholder\{color:var\(--muted\)/.test(css),'.cardio-input::placeholder uses var(--muted)');
   ok(!/\.rep-input::placeholder\{color:#C8C6BD/.test(css) && !/\.notes-input::placeholder\{color:#C8C6BD/.test(css) && !/\.cardio-input::placeholder\{color:#C8C6BD/.test(css),'old raw-hex placeholder rules removed');
-  // 3 · --ghost token defined for both themes (light=primary, dark=primary-2)
-  ok(/--ghost:\s*#5B4EA8/.test(css) && /--ghost:\s*#7F77DD/.test(css),'--ghost token: #5B4EA8 light / #7F77DD dark');
+  // 3 · --ghost token defined for both themes. v4.15 (nit 5): italic stays the cue;
+  //     color bumped to a legible muted tone (was the low-contrast primary purple).
+  ok(/--ghost:\s*#6E6C66/.test(css) && /--ghost:\s*#A7A2CE/.test(css),'--ghost token: #6E6C66 light / #A7A2CE dark');
   // 4 · loadLastTimes uses var(--ghost), not raw hex
   ok(!/inp\.style\.color\s*=\s*'#E07B3F'/.test(css) && !/inp\.style\.color\s*=\s*'#7F77DD'/.test(css),'ghost inline color no longer raw hex (uses var(--ghost))');
   ok((css.match(/inp\.style\.color\s*=\s*'var\(--ghost\)'/g)||[]).length>=6,'all 6 ghost inline assignments now use var(--ghost)');
