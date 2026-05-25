@@ -881,11 +881,13 @@ body.dark #pc-result{color:#E8E6F8}
   <symbol id="ic-test" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-4.6 8.2A2 2 0 0 0 7.2 20h9.6a2 2 0 0 0 1.8-2.8L14 9V3M7.5 14.5h9"/></symbol>
   <symbol id="ic-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14-4.3M4 5v3h3M4 13a8 8 0 0 0 14 4.3M20 19v-3h-3"/></symbol>
   <symbol id="ic-plan" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1M9 11h6M9 15h4"/></symbol>
+  <symbol id="ic-reset" viewBox="0 0 24 24"><path d="M3 4v6h6M5.6 15a8 8 0 1 0 1.9-8.3L3 10"/></symbol>
+  <symbol id="ic-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6M10 11v6M14 11v6"/></symbol>
 </defs></svg>
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.13</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.14</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -1136,10 +1138,10 @@ body.dark #pc-result{color:#E8E6F8}
 <!-- v3.28: plan templates browser/apply + save-current -->
 <div class="modal-overlay" id="tpl-overlay" onclick="if(event.target===this)closeTemplates()">
   <div class="modal" style="max-width:380px;max-height:84vh;overflow-y:auto;text-align:left;">
-    <div class="modal-title" style="color:#5B4EA8;">📐 Plan templates</div>
+    <div class="modal-title" style="color:#5B4EA8;"><svg class="ic" style="margin-right:7px" aria-hidden="true"><use href="#ic-templates"/></svg>Plan templates</div>
     <div class="modal-sub" style="margin:0.4rem 0 0.9rem;">Apply a ready-made program, or save your current plan to reuse later. Applying always saves a backup snapshot first, and <b>Replace</b> archives your current days (history kept &amp; restorable).</div>
     <div id="tpl-save-row" style="margin-bottom:1rem;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--primary-tint);">
-      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px;">💾 Save your current plan as a template</div>
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px;"><svg class="ic ic-sm" style="margin-right:6px" aria-hidden="true"><use href="#ic-backup"/></svg>Save your current plan as a template</div>
       <div style="display:flex;gap:8px;align-items:center;">
         <input id="tpl-save-name" type="text" placeholder="Template name…" aria-label="Template name" style="flex:1;min-width:0;padding:9px 11px;border:1.5px solid var(--primary);border-radius:8px;font-size:13px;background:var(--surface);color:var(--text);">
         <button class="modal-btn-primary" style="margin:0;padding:9px 16px;white-space:nowrap;flex:0 0 auto;" onclick="tplSaveCurrent()">Save</button>
@@ -1204,7 +1206,7 @@ body.dark #pc-result{color:#E8E6F8}
     <div class="day-ovf-wrap">
       <button type="button" class="day-ovf-btn" onclick="toggleDayOverflow(event,'a')" aria-label="Day options" aria-haspopup="true">⋯</button>
       <div id="dayovf-a" class="day-ovf-menu" hidden role="menu">
-        <button type="button" class="reset-btn" role="menuitem" onclick="_dayOvfReset('a',10)">↺ Reset day</button>
+        <button type="button" class="reset-btn" role="menuitem" onclick="_dayOvfReset('a',10)"><svg class="ic ic-sm" style="margin-right:7px" aria-hidden="true"><use href="#ic-reset"/></svg>Reset day</button>
       </div>
     </div>
   </div>
@@ -1225,7 +1227,7 @@ body.dark #pc-result{color:#E8E6F8}
     <div class="day-ovf-wrap">
       <button type="button" class="day-ovf-btn" onclick="toggleDayOverflow(event,'b')" aria-label="Day options" aria-haspopup="true">⋯</button>
       <div id="dayovf-b" class="day-ovf-menu" hidden role="menu">
-        <button type="button" class="reset-btn" role="menuitem" onclick="_dayOvfReset('b',10)">↺ Reset day</button>
+        <button type="button" class="reset-btn" role="menuitem" onclick="_dayOvfReset('b',10)"><svg class="ic ic-sm" style="margin-right:7px" aria-hidden="true"><use href="#ic-reset"/></svg>Reset day</button>
       </div>
     </div>
   </div>
@@ -1246,7 +1248,7 @@ body.dark #pc-result{color:#E8E6F8}
     <div class="day-ovf-wrap">
       <button type="button" class="day-ovf-btn" onclick="toggleDayOverflow(event,'c')" aria-label="Day options" aria-haspopup="true">⋯</button>
       <div id="dayovf-c" class="day-ovf-menu" hidden role="menu">
-        <button type="button" class="reset-btn" role="menuitem" onclick="_dayOvfReset('c',6)">↺ Reset day</button>
+        <button type="button" class="reset-btn" role="menuitem" onclick="_dayOvfReset('c',6)"><svg class="ic ic-sm" style="margin-right:7px" aria-hidden="true"><use href="#ic-reset"/></svg>Reset day</button>
       </div>
     </div>
   </div>
@@ -1267,7 +1269,7 @@ body.dark #pc-result{color:#E8E6F8}
     <div class="day-ovf-wrap">
       <button type="button" class="day-ovf-btn" onclick="toggleDayOverflow(event,'d')" aria-label="Day options" aria-haspopup="true">⋯</button>
       <div id="dayovf-d" class="day-ovf-menu" hidden role="menu">
-        <button type="button" class="reset-btn" role="menuitem" onclick="_dayOvfReset('d',9)">↺ Reset day</button>
+        <button type="button" class="reset-btn" role="menuitem" onclick="_dayOvfReset('d',9)"><svg class="ic ic-sm" style="margin-right:7px" aria-hidden="true"><use href="#ic-reset"/></svg>Reset day</button>
       </div>
     </div>
   </div>
@@ -1288,7 +1290,7 @@ body.dark #pc-result{color:#E8E6F8}
     <div class="day-ovf-wrap">
       <button type="button" class="day-ovf-btn" onclick="toggleDayOverflow(event,'e')" aria-label="Day options" aria-haspopup="true">⋯</button>
       <div id="dayovf-e" class="day-ovf-menu" hidden role="menu">
-        <button type="button" class="reset-btn" role="menuitem" onclick="_dayOvfReset('e',10)">↺ Reset day</button>
+        <button type="button" class="reset-btn" role="menuitem" onclick="_dayOvfReset('e',10)"><svg class="ic ic-sm" style="margin-right:7px" aria-hidden="true"><use href="#ic-reset"/></svg>Reset day</button>
       </div>
     </div>
   </div>
@@ -3151,7 +3153,7 @@ function buildDayPanelHTML(key){
     +'<div class="day-ovf-wrap">'
     +'<button type="button" class="day-ovf-btn" onclick="toggleDayOverflow(event,\''+key+'\')" aria-label="Day options" aria-haspopup="true">⋯</button>'
     +'<div id="dayovf-'+key+'" class="day-ovf-menu" hidden role="menu">'
-    +'<button type="button" class="reset-btn" role="menuitem" onclick="_dayOvfReset(\''+key+'\',0)">↺ Reset day</button>'
+    +'<button type="button" class="reset-btn" role="menuitem" onclick="_dayOvfReset(\''+key+'\',0)"><svg class="ic ic-sm" style="margin-right:7px" aria-hidden="true"><use href="#ic-reset"/></svg>Reset day</button>'
     +'</div></div>'
     +'</div></div>';
 }
@@ -6649,7 +6651,7 @@ function sessOverflow(day, idx, ev){
   menu.setAttribute('role','menu');
   menu.innerHTML=
     '<button role="menuitem" class="sess-ovf-mi" onclick="editSessionDate(\''+day+'\','+idx+');_closeSessOvf()">✏️ Edit date</button>'
-   +'<button role="menuitem" class="sess-ovf-mi sess-ovf-danger" onclick="confirmDeleteSession(\''+day+'\','+idx+')">🗑 Delete this session</button>';
+   +'<button role="menuitem" class="sess-ovf-mi sess-ovf-danger" onclick="confirmDeleteSession(\''+day+'\','+idx+')"><svg class="ic ic-sm" style="margin-right:7px" aria-hidden="true"><use href="#ic-trash"/></svg>Delete this session</button>';
   btn.parentNode.appendChild(menu);
   // Close on outside click.
   setTimeout(function(){
@@ -6772,7 +6774,7 @@ function renderProgress(){
     if(filter==='all'){ actionsEl.style.display='none'; actionsEl.innerHTML=''; }
     else {
       actionsEl.style.display='block';
-      actionsEl.innerHTML='<button class="sess-day-clear" onclick="confirmClear(\''+filter+'\',\''+dayLbl(filter)+'\')">🗑 Clear all '+dayLbl(filter)+' history</button>';
+      actionsEl.innerHTML='<button class="sess-day-clear" onclick="confirmClear(\''+filter+'\',\''+dayLbl(filter)+'\')"><svg class="ic ic-sm" style="margin-right:6px" aria-hidden="true"><use href="#ic-trash"/></svg>Clear all '+dayLbl(filter)+' history</button>';
     }
   }
 
@@ -7819,7 +7821,7 @@ function renderStats(){
   }
   html+='<div class="stats-section" style="display:flex;gap:8px;">'
     +'<button onclick="exportCSV()" style="flex:1;padding:11px;background:#E1F5EE;border:1.5px solid #0F6E56;border-radius:10px;color:#085041;font-size:13px;font-weight:600;cursor:pointer;">📥 Export CSV</button>'
-    +'<button onclick="openPlateCalc()" style="flex:1;padding:11px;background:#EEEDFE;border:1.5px solid #7F77DD;border-radius:10px;color:#3C3489;font-size:13px;font-weight:600;cursor:pointer;">🏋 Plate Calc</button>'
+    +'<button onclick="openPlateCalc()" style="flex:1;padding:11px;background:#EEEDFE;border:1.5px solid #7F77DD;border-radius:10px;color:#3C3489;font-size:13px;font-weight:600;cursor:pointer;"><svg class="ic ic-sm" style="margin-right:6px" aria-hidden="true"><use href="#ic-lifts"/></svg>Plate Calc</button>'
     +'</div>';
   html+='</div>'; // /zone-section Awards
 
@@ -8571,7 +8573,7 @@ function showPRToast(prs){
 <!-- Plate Calculator Modal -->
 <div class="modal-overlay" id="plate-modal-overlay" onclick="if(event.target===this)closePlateCalc()">
   <div class="modal" style="max-width:340px;">
-    <div class="modal-title">🏋 Plate Calculator</div>
+    <div class="modal-title"><svg class="ic" style="margin-right:7px" aria-hidden="true"><use href="#ic-lifts"/></svg>Plate Calculator</div>
     <div class="modal-sub">Plates needed per side of the bar.</div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
       <input id="pc-target" type="number" inputmode="decimal" placeholder="Target weight" style="flex:1;padding:10px;border-radius:8px;font-size:14px;outline:none;"/>
@@ -8600,7 +8602,7 @@ function showPRToast(prs){
     <!-- v3.2: mode toggle — type a brand-new exercise, or re-add an existing one from the library -->
     <div id="b-mode-row" style="display:flex;gap:6px;margin:8px 0 6px;">
       <button type="button" id="b-mode-new" class="bld-mode on" onclick="setBuilderMode('new')">✏️ Create new</button>
-      <button type="button" id="b-mode-lib" class="bld-mode" onclick="setBuilderMode('lib')">📚 From library</button>
+      <button type="button" id="b-mode-lib" class="bld-mode" onclick="setBuilderMode('lib')"><svg class="ic ic-sm" style="margin-right:6px" aria-hidden="true"><use href="#ic-library"/></svg>From library</button>
     </div>
     <div id="b-lib-section" style="display:none;margin-bottom:8px;">
       <input id="b-lib-search" type="text" class="bld-in" placeholder="Search by name, muscle or category…" oninput="renderLibraryPicker()" style="margin-bottom:8px"/>
@@ -8782,7 +8784,7 @@ function showPRToast(prs){
     <div class="modal-btn-row">
       <button class="modal-btn-primary" onclick="saveBuilder()">Save</button>
       <button class="modal-btn-secondary" id="b-swap" style="display:none;background:#FFF3CD;color:#854F0B;" onclick="saveBuilder(true)">Swap</button>
-      <button class="modal-btn-secondary" id="b-savelib" style="display:none;" onclick="saveBuilderToLibrary()">📚 Save to library</button>
+      <button class="modal-btn-secondary" id="b-savelib" style="display:none;" onclick="saveBuilderToLibrary()"><svg class="ic ic-sm" style="margin-right:6px" aria-hidden="true"><use href="#ic-library"/></svg>Save to library</button>
       <button class="modal-btn-secondary" onclick="closeBuilder()">Cancel</button>
     </div>
   </div>
