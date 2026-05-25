@@ -806,7 +806,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.4</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.5</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -860,6 +860,7 @@ body.dark #pc-result{color:#E8E6F8}
     <button class="prog-tab-btn active" onclick="switchProgTab('days',this)"><span style="font-size:18px">📅</span>Sessions</button>
     <button class="prog-tab-btn" onclick="switchProgTab('exercises',this)"><span style="font-size:18px">💪</span>Lifts</button>
     <button class="prog-tab-btn" onclick="switchProgTab('stats',this)"><span style="font-size:18px">📈</span>Trends</button>
+    <button class="prog-tab-btn" onclick="switchProgTab('body',this)"><span style="font-size:18px">⚖️</span>Body</button>
   </div>
 
   <!-- SESSIONS PANEL (Step 5 — cross-day chronological feed) -->
@@ -881,7 +882,11 @@ body.dark #pc-result{color:#E8E6F8}
   <!-- TRENDS PANEL (Stats + Body Measurements merged — Step 2) -->
   <div class="prog-panel" id="prog-panel-stats">
     <div id="prog-stats" style="padding:4px 0"></div>
-    <!-- Body Measurements section (moved from former #prog-panel-measurements; all IDs preserved so renderMeasurements/renderGenericMeas keep working) -->
+  </div>
+
+  <!-- BODY PANEL (v4.5 — Body Measurements promoted to its own Progress sub-tab) -->
+  <div class="prog-panel" id="prog-panel-body">
+    <!-- ids preserved so renderMeasurements / renderGenericMeas keep working -->
     <div id="meas-wrap-host">
     <div class="section-hdr" style="margin-top:1.25rem;">Body Measurements</div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
@@ -962,7 +967,7 @@ body.dark #pc-result{color:#E8E6F8}
 <!-- ═══ SYNC (v3.32) — all cloud / backup / device content ═══ -->
 <!-- ═══ MORE (v4.3) — Sync + Backup + Appearance + App, folded from the former Sync/Settings tabs ═══ -->
 <div class="day-panel" id="p-more">
-  <div style="font-size:18px;font-weight:800;color:var(--text);margin:2px 0 14px;">⋯ More</div>
+  <div style="font-size:18px;font-weight:800;color:var(--text);margin:2px 0 14px;">More</div>
   <div class="set-group" id="more-sync">
     <div class="set-gh">☁️ Sync</div>
     <div id="sync-body"></div>
@@ -4103,12 +4108,12 @@ var pendingLabel=null;
 
 // ── Progress tab switching ──
 function switchProgTab(tab, btn){
-  // Step 2 alias: Measurements merged into Trends. Old callsites passing 'measurements' land on the Trends (stats) panel.
-  if(tab==='measurements') tab='stats';
+  // v4.5: Body Measurements is its own sub-tab now. Old 'measurements' callsites → 'body'.
+  if(tab==='measurements') tab='body';
   document.querySelectorAll('.prog-tab-btn').forEach(function(b){b.classList.remove('active');});
-  if(tab==='stats'){
-    renderStats();
-    // Body Measurements section now lives inside the Trends panel — always populate it on tab open.
+  if(tab==='stats'){ renderStats(); }
+  if(tab==='body'){
+    // populate the three measurement forms/charts when the Body tab opens
     try{ initMeasDateDefault(); renderMeasurements(); renderGenericMeas('waist'); renderGenericMeas('bodyfat'); }catch(e){}
   }
   if(btn) btn.classList.add('active');
@@ -7568,8 +7573,6 @@ function renderStats(){
     +statCard('Avg Exercises',''+s.avgExChecked,'per session')
     +'</div></div>';
   html+=renderRecoverySection();
-  // Body measurements section gets appended into the Trends zone after DOM update (see below).
-  html+='<div id="trends-zone-meas-anchor"></div>';
   html+='</div>'; // /zone-section Trends
 
   // AWARDS — recognition + tools.
@@ -7594,14 +7597,7 @@ function renderStats(){
   html+='</div>'; // /zone-section Awards
 
   el.innerHTML=html;
-
-  // Move Body Measurements section (DOM-level sibling of #prog-stats) into the Trends zone.
-  try{
-    var anchor=document.getElementById('trends-zone-meas-anchor');
-    var meas=document.getElementById('meas-wrap-host');
-    if(anchor && meas) anchor.appendChild(meas);
-  }catch(e){}
-
+  // v4.5: Body Measurements lives in its own #prog-panel-body sub-tab now — no DOM-shuffle.
   setTimeout(drawVolumeChart,50);
 }
 
