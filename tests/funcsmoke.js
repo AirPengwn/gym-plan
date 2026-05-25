@@ -225,6 +225,12 @@ function domIdByDataEx(doc, day, ex){
   w.openManage();
   ok(w.document.getElementById('day-selector').style.display==='none','day-selector hidden on the Plan screen');
   w.navWorkout();
+  // v3.38 hardening: sw() with a stale/unknown day key is a safe no-op (no throw,
+  // doesn't blank the screen) — the workout panel stays shown.
+  var _wkShown=w.document.getElementById('p-'+(w._lastWorkoutDay||'a')).classList.contains('show');
+  var _threwSw=false; try{ w.sw('zzz-nonexistent', null); }catch(e){ _threwSw=true; }
+  ok(!_threwSw,'sw() with an unknown day key does not throw');
+  ok(w.document.getElementById('p-'+(w._lastWorkoutDay||'a')).classList.contains('show')===_wkShown && _wkShown,'sw() with a bad key leaves the current workout panel shown (no blank screen)');
   // Follow-up 2: cardio "Watch demo" → overflow
   if(typeof w.enhanceCardioCards==='function') w.enhanceCardioCards();
   var wu=w.document.querySelector('#items-a .item .cardio-fields');
