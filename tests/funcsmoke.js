@@ -309,6 +309,10 @@ function domIdByDataEx(doc, day, ex){
   // v4.4: hidden state must fully clear the viewport — anchored 66px up, so a small
   // translate (the old 220%) left it peeking behind the tab bar.
   ok(/\.rest-timer-bar\{[^}]*translateY\(calc\(100% \+ 74px \+ env\(safe-area-inset-bottom\)\)\)/.test(src),'rest-timer hidden state fully off-screen (no peek behind the tab bar)');
+  // v4.1: checkbox is a 44×44 tap target with the 28px visual drawn as ::before (markup unchanged)
+  ok(/\.checkbox\{[^}]*width:44px;height:44px/.test(src),'v4.1 · checkbox is a 44×44 tap target');
+  ok(/\.checkbox::before\{[^}]*width:28px;height:28px[^}]*border-radius:50%/.test(src),'v4.1 · 28px visual circle drawn as ::before');
+  ok(w.document.querySelectorAll('#items-a .checkbox').length>0,'v4.1 · checkbox markup intact (still .checkbox in cards)');
   // start/stop toggles the .show class
   if(typeof w.startRestTimer==='function'){
     w.startRestTimer(90);

@@ -67,12 +67,12 @@ ok(Array.isArray(a.flags),'flags is an array');
 w.renderPlanBalance();
 var pill=D.querySelector('#mgr-balance-wrap .bal-pill');
 ok(!!pill,'renderPlanBalance paints a status pill by default');
-ok(/Balance ·/.test((pill&&pill.textContent)||''),'pill shows a "Balance · …" summary');
+ok(/balance ·/i.test((pill&&pill.textContent)||''),'pill shows a "Balance · …" summary');
 ok(!D.querySelector('#mgr-balance-wrap .bal-card'),'full bar-chart card is collapsed by default (pill only)');
 // expand → full card with title + both ratio bars
 w.toggleBalanceCard();
 var card=D.querySelector('#mgr-balance-wrap .bal-card');
-ok(!!card && /Plan balance/.test(card.textContent),'tapping the pill expands the full card with the title');
+ok(!!card && /plan balance/i.test(card.textContent),'tapping the pill expands the full card with the title');
 ok(D.querySelectorAll('#mgr-balance-wrap .bal-track').length>=2,'expanded card shows push:pull AND upper:lower bars');
 w.toggleBalanceCard(); // collapse back for the read-only check below
 
