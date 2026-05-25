@@ -56,6 +56,10 @@ return w.pushPlanToCloud(), new Promise(function(r){ setTimeout(r,40); }).then(f
   ok(put && Array.isArray(put.days_config_v1) && put.days_config_v1.length>=6,'push · local day config (6 days) written');
   ok(put && put.days_config_v1.some(function(d){return d.name==='Test Day';}),'push · the new day is in the pushed config');
   ok(w.planLastPushed()>0,'push · last-pushed timestamp recorded');
+  // v3.42: a successful push must refresh the Sync tab so "Last pushed" updates
+  // (it called renderDayManager before — wrong panel — so the push looked dead).
+  var lastEl=D.querySelector('#sync-body .plan-sync-last');
+  ok(lastEl && !/never/i.test(lastEl.textContent),'push · Sync tab "Last pushed" updated (not "never") — visible confirmation');
 
   // ── reader device DID push (plan channel bypasses reader gate) ──
   ok(w.isPrimaryDevice()===false,'context · this was a READER device');
