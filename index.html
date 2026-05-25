@@ -626,6 +626,23 @@ body.dark .bal-flag{color:#FBBF24}
 .bal-flag-untrained{color:#9333EA}
 body.dark .bal-flag-untrained{color:#C4A6F5}
 .bal-ok{font-size:11px;color:#10B981;margin-top:8px}
+/* v4.6 — Plan: header overflow + balance status pill */
+.mgr-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 12px}
+.mgr-head-title{font-size:18px;font-weight:800;color:var(--text)}
+.mgr-ovf-btn{width:40px;height:40px;border:1px solid var(--border);border-radius:9px;background:var(--card,#fff);color:var(--text);font-size:18px;line-height:1;cursor:pointer;flex-shrink:0}
+body.dark .mgr-ovf-btn{background:#252540;border-color:#3C3A5C}
+.mgr-ovf-menu{position:absolute;top:100%;right:0;margin-top:6px;background:var(--surface);border:1px solid var(--border-soft);border-radius:10px;box-shadow:0 8px 24px rgba(31,29,56,.18);z-index:1100;min-width:208px;overflow:hidden}
+.mgr-ovf-menu[hidden]{display:none}
+.mgr-ovf-menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:11px 14px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;border-bottom:1px solid var(--border-soft)}
+.mgr-ovf-menu button:last-child{border-bottom:0}
+.mgr-ovf-menu button:hover{background:var(--primary-tint)}
+.bal-pill{display:flex;align-items:center;gap:8px;width:100%;border:1px solid var(--border);border-radius:12px;background:var(--card,#fff);padding:10px 12px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;margin-bottom:12px}
+body.dark .bal-pill{background:#252540;border-color:#3C3A5C}
+.bal-pill .bal-pill-dot{width:9px;height:9px;border-radius:50%;background:#10B981;flex-shrink:0}
+.bal-pill.warn .bal-pill-dot{background:#E0A800}
+.bal-pill .bal-pill-txt{flex:1;text-align:left}
+.bal-pill .bal-pill-caret{color:var(--muted);font-size:12px}
+.bal-pill.open{border-color:var(--primary);margin-bottom:6px}
 /* v3.28 — plan templates modal */
 .tpl-item{border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden}
 .tpl-item.open{border-color:#7F77DD}
@@ -806,8 +823,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.5</span></div>
-    <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.6</span></div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
     <button onclick="toggleDarkMode()" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
@@ -948,7 +964,18 @@ body.dark #pc-result{color:#E8E6F8}
   </div>
 
   <div class="prog-panel" id="prog-panel-manage">
-    <div style="font-size:18px;font-weight:800;color:var(--text);margin:2px 0 12px;">📋 Plan &amp; exercises</div>
+    <div class="mgr-head">
+      <div class="mgr-head-title">📋 Plan &amp; exercises</div>
+      <div style="position:relative">
+        <button type="button" class="mgr-ovf-btn" onclick="toggleMgrOverflow(event)" aria-label="Plan options" aria-haspopup="true">⋯</button>
+        <div id="mgr-ovf-menu" class="mgr-ovf-menu" hidden role="menu">
+          <button role="menuitem" onclick="mgrOvf('templates')">📐 Browse templates</button>
+          <button role="menuitem" onclick="mgrOvf('library')">📚 Browse exercise library</button>
+          <button role="menuitem" onclick="mgrOvf('addday')">➕ Add a day</button>
+          <button role="menuitem" onclick="mgrOvf('sync')">☁️ Cloud sync &amp; backup</button>
+        </div>
+      </div>
+    </div>
     <div class="mgr-notice">
       <strong>Add</strong>, <strong>Edit</strong>, rename, swap and reorder your plan right here. Renaming <strong>keeps all logged history</strong> (the underlying tracking id never changes). <strong>Remove</strong> takes an exercise off just that day — re-add it anytime from <strong>📚 From library</strong>, and all its history is kept.
     </div>
@@ -4851,9 +4878,7 @@ function renderDayManager(){
       +'</div>';
   });
   html+='</div>';
-  html+='<button class="mgr-add-btn" onclick="_promptAddDay()" style="margin-top:8px">➕ Add day</button>';
-  // v3.32: cloud sync moved to its own ☁️ Sync tab — jump there from here.
-  html+='<button class="mgr-add-btn" onclick="openSync()" style="margin-left:6px">☁️ Cloud sync &amp; backup</button>';
+  // v4.6: "Add a day" + "Cloud sync & backup" moved into the Plan header ⋯ overflow.
   wrap.innerHTML=html;
 }
 // v3.32: removed (archived) days are pinned to the BOTTOM of the Plan screen.
@@ -4938,36 +4963,71 @@ function executeRemoveDay(){
 }
 
 // v3.25 (Phase D): render the read-only "Plan balance" card at the top of Manage.
+// v4.6: Plan balance leads with a compact status pill; tap expands the full card.
+var _balExpanded=false;
+function toggleBalanceCard(){ _balExpanded=!_balExpanded; renderPlanBalance(); }
 function renderPlanBalance(){
   var wrap=document.getElementById('mgr-balance-wrap'); if(!wrap) return;
   var a; try{ a=analyzePlanBalance(); }catch(e){ wrap.innerHTML=''; return; }
-  if(!a || !a.total){ wrap.innerHTML=''; return; }   // empty plan → no card
+  if(!a || !a.total){ wrap.innerHTML=''; return; }   // empty plan → nothing
   var labelOf={}; try{ (MUSCLE_GROUPS||[]).forEach(function(b){ (b.items||[]).forEach(function(it){ if(it&&it.key) labelOf[it.key]=it.label; }); }); }catch(e){}
-  function bar(la,x,y,lb){
-    var t=x+y, px=t?Math.round(100*x/t):50;
-    return '<div class="bal-row"><div class="bal-lbls"><span>'+la+' <b>'+x+'</b></span><span><b>'+y+'</b> '+lb+'</span></div>'
-      +'<div class="bal-track"><div class="bal-fill" style="width:'+px+'%"></div></div></div>';
+  var flagged=a.flags.length>0;
+  // compact pill summary
+  var summary='OK';
+  if(flagged){
+    var f0=a.flags[0];
+    if(f0.kind==='untrained') summary=a.untrained.length+' muscle'+(a.untrained.length>1?'s':'')+' untrained';
+    else if(f0.kind==='imbalance') summary='push/pull skewed';
+    else summary='needs attention';
   }
-  var html='<div class="bal-card"><div class="bal-title">📊 Plan balance <span class="bal-sub">this week</span></div>';
-  html+=bar('Push',a.push,a.pull,'Pull');
-  html+=bar('Upper',a.upper,a.lower,'Lower');
-  if(a.core) html+='<div class="bal-core">Core / rotation: <b>'+a.core+'</b></div>';
-  if(a.flags.length){
-    html+='<div class="bal-flags">';
-    a.flags.forEach(function(f){
-      if(f.kind==='untrained'){
-        var names=a.untrained.map(function(k){ return labelOf[k]||k; });
-        html+='<div class="bal-flag bal-flag-untrained">• Not trained: '+_esc(names.join(', '))+'</div>';
-      } else {
-        html+='<div class="bal-flag">• '+_esc(f.text)+'</div>';
-      }
-    });
-    html+='</div>';
-  } else {
-    html+='<div class="bal-ok">• Balanced across push / pull / lower and all major muscle groups ✓</div>';
+  var pill='<button type="button" class="bal-pill'+(flagged?' warn':'')+(_balExpanded?' open':'')+'" onclick="toggleBalanceCard()" aria-expanded="'+_balExpanded+'">'
+    +'<span class="bal-pill-dot"></span><span class="bal-pill-txt">Balance · '+_esc(summary)+'</span>'
+    +'<span class="bal-pill-caret">'+(_balExpanded?'▾':'▸')+'</span></button>';
+  var card='';
+  if(_balExpanded){
+    function bar(la,x,y,lb){
+      var t=x+y, px=t?Math.round(100*x/t):50;
+      return '<div class="bal-row"><div class="bal-lbls"><span>'+la+' <b>'+x+'</b></span><span><b>'+y+'</b> '+lb+'</span></div>'
+        +'<div class="bal-track"><div class="bal-fill" style="width:'+px+'%"></div></div></div>';
+    }
+    card='<div class="bal-card"><div class="bal-title">📊 Plan balance <span class="bal-sub">this week</span></div>';
+    card+=bar('Push',a.push,a.pull,'Pull');
+    card+=bar('Upper',a.upper,a.lower,'Lower');
+    if(a.core) card+='<div class="bal-core">Core / rotation: <b>'+a.core+'</b></div>';
+    if(flagged){
+      card+='<div class="bal-flags">';
+      a.flags.forEach(function(f){
+        if(f.kind==='untrained'){
+          var names=a.untrained.map(function(k){ return labelOf[k]||k; });
+          card+='<div class="bal-flag bal-flag-untrained">• Not trained: '+_esc(names.join(', '))+'</div>';
+        } else { card+='<div class="bal-flag">• '+_esc(f.text)+'</div>'; }
+      });
+      card+='</div>';
+    } else {
+      card+='<div class="bal-ok">• Balanced across push / pull / lower and all major muscle groups ✓</div>';
+    }
+    card+='</div>';
   }
-  html+='</div>';
-  wrap.innerHTML=html;
+  wrap.innerHTML=pill+card;
+}
+// v4.6: Plan header ⋯ overflow — secondary actions live here so the day list leads.
+function toggleMgrOverflow(ev){
+  if(ev&&ev.stopPropagation) ev.stopPropagation();
+  var m=document.getElementById('mgr-ovf-menu'); if(!m) return;
+  if(m.hasAttribute('hidden')){
+    m.removeAttribute('hidden');
+    setTimeout(function(){
+      var off=function(e){ if(!m.contains(e.target) && !(e.target.closest&&e.target.closest('.mgr-ovf-btn'))){ m.setAttribute('hidden',''); document.removeEventListener('click',off,true); } };
+      document.addEventListener('click',off,true);
+    },0);
+  } else { m.setAttribute('hidden',''); }
+}
+function mgrOvf(action){
+  var m=document.getElementById('mgr-ovf-menu'); if(m) m.setAttribute('hidden','');
+  if(action==='templates') openTemplates();
+  else if(action==='library') openLibrary();
+  else if(action==='addday') _promptAddDay();
+  else if(action==='sync') openSync();
 }
 function renderManager(){
   // v4.0: the intro notice teaches on first use, then gets out of the way.
@@ -4988,9 +5048,9 @@ function renderManager(){
   var plan=getEffectivePlan();
   var catColors={'Warm-up':'#F59E0B','Upper body':'#7F77DD','Lower body':'#10B981','Core':'#EF4444','Cardio':'#3B82F6','Cool-down':'#8B5CF6'};
 
-  var activeHTML='<button class="mgr-add-btn" onclick="openBuilder(null)">➕ Add exercise</button>'
-    +'<button class="mgr-add-btn" onclick="openLibrary()" style="margin-left:6px">📚 From library</button>'
-    +'<button class="mgr-add-btn" onclick="openTemplates()" style="margin-left:6px">📐 Templates</button>';
+  // v4.6: ➕ Add exercise stays as the visible primary action; From-library +
+  // Templates moved to the Plan header ⋯ overflow.
+  var activeHTML='<button class="mgr-add-btn" onclick="openBuilder(null)">➕ Add exercise</button>';
   getDays().forEach(function(day){
     var ids=(plan.order[day]||[]).filter(function(id){
       var r=plan.ex[id]; if(!r) return false;
