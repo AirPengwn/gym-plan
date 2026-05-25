@@ -301,6 +301,19 @@ body.dark .v2-nudge.down{color:#E0A800}
 .muscle-map-wrap{padding:10px 14px 4px;border-top:0.5px solid #F1EFE8}
 .muscle-map-title{font-size:10px;font-weight:700;color:#888780;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
 .muscle-map-svg{width:100%;max-width:320px;display:block;margin:0 auto}
+/* v3.37 — interactive muscle chips (tap → drill-in) below the heat map */
+.mm-chips{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 2px}
+.mm-chip{border:1px solid var(--border-soft);border-radius:14px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;background:#fff;color:#2C2C2A;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
+body.dark .mm-chip{background:#1A1A2E;color:#E8E6F8;border-color:#3C3A5C}
+.mm-chip.on{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
+.mm-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--border)}
+.mm-dot.low{background:#BFBADD}.mm-dot.moderate{background:#7F77DD}.mm-dot.high{background:#E0A800}.mm-dot.overworked{background:#9B2222}.mm-dot.none{background:var(--border)}
+body.dark .mm-dot.low{background:#3C3A6E}body.dark .mm-dot.moderate{background:#9F97E0}body.dark .mm-dot.overworked{background:#FF6464}
+.mm-drill{margin-top:8px;padding:11px 12px;border:1px solid var(--primary);border-radius:10px;background:var(--primary-tint)}
+.mm-drill-h{font-size:13px;font-weight:800;color:var(--text)}
+.mm-drill-load{font-size:11px;font-weight:700;margin:3px 0 7px}
+.mm-drill-row{font-size:11.5px;color:var(--text);margin-top:3px;line-height:1.45}
+.mm-drill-row b{color:var(--muted);font-weight:700}
 .prog-session-date{font-size:11px;font-weight:700;color:#5B4EA8;margin-bottom:6px}
 .prog-session-item{font-size:12px;color:#444;margin-bottom:3px;line-height:1.5}
 .prog-session-item b{color:#2C2C2A}
@@ -785,7 +798,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.36</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.37</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -6174,6 +6187,73 @@ function buildMuscleHeatMapSVG(loads){
   );
 }
 
+// ── v3.37: interactive muscle map — tappable chips + read-only drill-in. ──
+// The heat-map SVG is untouched (its byte-output is gated); this is a sibling
+// layer. _muscleExercises(key) → which plan exercises train a muscle + when it
+// was last trained (from logged history).
+var _MM_LOAD_LABEL={none:'Not trained this week',low:'Low load',moderate:'Moderate load',high:'High load',overworked:'Overworked'};
+function _daysAgoLabel(ts){ if(!ts) return null; var d=Math.floor((Date.now()-ts)/86400000); return d<=0?'today':(d===1?'yesterday':(d+' days ago')); }
+function _muscleExercises(key){
+  var out={ planEx:[], lastTs:0, lastEx:null };
+  try{
+    var plan=getEffectivePlan(), seen={};
+    getDays().forEach(function(d){
+      (plan.order[d]||[]).forEach(function(id){
+        var r=plan.ex[id]; if(!r) return;
+        if((getExerciseMuscles(id)||[]).indexOf(key)===-1) return;
+        var nm=r.name||r.histEx; var nk=normalizeEx(nm||'');
+        if(nm && !seen[nk]){ seen[nk]=1; out.planEx.push(nm); }
+      });
+    });
+  }catch(e){}
+  try{
+    getAllDayKeys().forEach(function(d){
+      getSaved(d).forEach(function(s){
+        var ts=sessTs(s); if(!ts) return;
+        (s.entries||[]).forEach(function(e){
+          if(!e||!e.ex||!e.note||e.note.indexOf('Set ')!==0) return;
+          if(/-(rpe|pain|pr)$/.test(e.ex)) return;
+          if((_musclesForHist(e.ex)||[]).indexOf(key)===-1) return;
+          if(ts>out.lastTs){ out.lastTs=ts; out.lastEx=prettyExName(normalizeEx(e.ex))||e.ex; }
+        });
+      });
+    });
+  }catch(e){}
+  return out;
+}
+function _muscleLoadChipsHTML(loads){
+  loads=loads||{};
+  var groups; try{ groups=MUSCLE_GROUPS; }catch(e){ groups=[]; }
+  var html='<div class="mm-chips">';
+  (groups||[]).forEach(function(b){
+    (b.items||[]).forEach(function(it){
+      if(!it||!it.key) return;
+      var lvl=loads[it.key]||'none';
+      html+='<button type="button" class="mm-chip" id="mm-chip-'+it.key+'" onclick="muscleDrill(\''+it.key+'\')"><span class="mm-dot '+lvl+'"></span>'+_esc(it.label||it.key)+'</button>';
+    });
+  });
+  html+='</div><div id="mm-drill"></div>';
+  return html;
+}
+var _mmOpen=null;
+function muscleDrill(key){
+  var box=document.getElementById('mm-drill'); if(!box) return;
+  // toggle off if tapping the open one
+  if(_mmOpen===key){ _mmOpen=null; box.innerHTML=''; var c0=document.getElementById('mm-chip-'+key); if(c0) c0.classList.remove('on'); return; }
+  _mmOpen=key;
+  document.querySelectorAll('.mm-chip').forEach(function(c){ c.classList.remove('on'); });
+  var chip=document.getElementById('mm-chip-'+key); if(chip) chip.classList.add('on');
+  var lvl='none'; try{ lvl=computeWeeklyMuscleLoad()[key]||'none'; }catch(e){}
+  var info=_muscleExercises(key);
+  var last=info.lastTs?(_daysAgoLabel(info.lastTs)+(info.lastEx?(' · '+_esc(info.lastEx)):'')):'no logged sessions yet';
+  var planList=info.planEx.length?info.planEx.map(_esc).join(', '):'<i>nothing in your current plan hits this</i>';
+  box.innerHTML='<div class="mm-drill">'
+    +'<div class="mm-drill-h">'+_esc(_muscleLabel(key))+'</div>'
+    +'<div class="mm-drill-load mm-dot-text-'+lvl+'" style="color:'+(lvl==='overworked'?'#9B2222':(lvl==='high'?'#B45309':(lvl==='none'?'var(--muted)':'var(--primary)')))+'">'+(_MM_LOAD_LABEL[lvl]||lvl)+'</div>'
+    +'<div class="mm-drill-row"><b>Last trained:</b> '+last+'</div>'
+    +'<div class="mm-drill-row"><b>In your plan:</b> '+planList+'</div>'
+    +'</div>';
+}
 // Muscles for a logged exercise name (data-ex/histEx). Prefers a model
 // record's user-set muscles, else the DEFAULT_MUSCLES seed.
 function _musclesForHist(exName){
@@ -7446,7 +7526,8 @@ function renderStats(){
         +buildMuscleHeatMapSVG(_loads)+'</svg></div>'
         +'<div style="font-size:11px;color:#888780;line-height:1.5;margin-top:4px">'
         +'Your most recent training week’s volume per muscle vs your own prior weeks. '
-        +'Amber/red = heavy load — watch fatigue.</div>'
+        +'Amber/red = heavy load — watch fatigue. <b>Tap a muscle below</b> to see what trains it and when you last did.</div>'
+        +_muscleLoadChipsHTML(_loads)
         +'</div>';
     }
   }catch(e){}
