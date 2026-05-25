@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.8 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
+**App version:** v4.9 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -12,17 +12,85 @@ logged history.
   https://github.com/AirPengwn/gym-plan). The old `…\OneDrive\Desktop\gym-plan-main` copy is
   **stale** — work here.
 - **Per shipped version (auto, no prompt):** branch `release/vX.Y` → commit → tag `vX.Y` →
-  merge `--no-ff` into `main` → push `main` + branch + tag. **Pages deploys from `main`.**
-  Tag + branch per version = rollback (`git checkout vX.Y`).
+  merge `--no-ff` into `main` → push `main` + branch + tag. Each version also bumps the badge
+  in `index.html`, the `tests/README.md` "PASS at vX.Y" line, and this file's App version.
+  Tag + branch per version = rollback (`git checkout vX.Y`). **Pages auto-deploys via
+  `.github/workflows/pages.yml`** (see "Confirming a deploy lands" below).
 - Auth: GCM cached as **AirPengwn** (repo owner). Local git `user.name` is still
   "AirPenguin23" (separate account) → commits authored as that unless changed. Never force-push.
 - History was at v2.73 on `main` until 2026-05-24 (user had deployed via Pages *source
   settings*); main is now the source of truth.
-- ⚠️ **Pages source must be set to `main` / root** in repo Settings → Pages (user action).
+- ✅ **Pages Source = "GitHub Actions"** (set) — deploys via `.github/workflows/pages.yml`,
+  not the old branch-deploy. See "Confirming a deploy lands (Pages)" below.
 
 > **Deploy note:** as of v3.7 the app is **two files** — commit BOTH `index.html` and
 > `sw.js` (at the repo root, same directory). If `sw.js` isn't deployed, the SW just
 > fails to register (harmless — no offline), but you lose the offline/update benefits.
+
+---
+
+## ▶ PICK UP HERE — v4 visual overhaul ("Build Plan")
+
+Working through a **5-step Claude design review** (`C:\Users\airpe\Downloads\MyFit Build
+Plan.html`). **Each step ships as its own version**, then **PAUSE for the user's on-device
+verify before the next step**. Current badge **v4.9, shipped — PENDING owner on-device verify**.
+
+**Done so far:**
+- **Step 1 → v4.3** — bottom tab bar reduced 5 → **4 tabs** (🏋️ Workout / 📊 Progress /
+  📋 Plan / ⋯ More). New `#p-more` panel + `openMore()`; Sync & Settings moved under More
+  (`openSync()`/`openSettings()`/`_syncNav()`). `syncDayPanels()` now also skips `p-more`.
+- **Step 2 → v4.5** — Progress **Body** sub-tab (`#prog-panel-body`); 4 sub-tabs total.
+- **Step 3 → v4.6** — Plan-screen **balance pill** (`renderPlanBalance` collapsed by default,
+  `_balExpanded`/`toggleBalanceCard`); Plan header **⋯ overflow** (`toggleMgrOverflow`/`mgrOvf`,
+  `#mgr-ovf-menu`). **Pre-step tweak (done):** removed "Anytime Fitness Guilford" from the
+  title bar. Balance is **whole-week plan** scope — labeled clearer per user.
+- **v4.4** (fix) — rest-timer bar peeking behind tab bar → hidden transform now
+  `translateY(calc(100% + 74px + env(safe-area-inset-bottom)))`.
+- **Step 4.1 → v4.7** — 44×44 checkbox via `::before`; cardio input/button sizing.
+- **v4.8** (fix) — Step-4.1 button sizing **missed cardio cards** (used `.cardio-input` /
+  `.cardio-machine-btn`, not `.rep-input`); fixed both.
+- **Step 4 part A → v4.9** — (4.3) **Reset** moved into a per-day **⋯ overflow** in each
+  day panel's `.btn-row` (`.day-ovf-btn`/`#dayovf-<key>`/`toggleDayOverflow`/`closeDayOverflow`/
+  `_dayOvfReset`); the menu item keeps `class="reset-btn"` so `renderDayItems` still syncs its
+  count, and `confirmReset()` is unchanged. (4.6) **Per-day balance hint** (`.day-bal-hint`/
+  `#daybal-<key>`) rendered above each day's `#items-<key>` — `analyzeDayBalance(day)` scans
+  that day's last-7d `gymlog_*` sessions (read-only) and `renderDayBalanceHint(day)` paints the
+  logged push/pull/lower/core mix; hidden when no resistance work in 7d. `_musclesByName(name)`
+  resolves muscles for history entries (by name, not domId). Hooked into `renderDayItems` +
+  `sw()`. Distinct from the whole-week plan balance pill (`renderPlanBalance`).
+
+**Remaining (version mapping):**
+- **v4.10 — Step 4 part B (bottom-chrome bundle):** (4.2) floating **Complete** bar at ≥80%
+  of sets done; (4.4) timer/Complete stacking order; (4.5) keyboard-aware via `visualViewport`
+  → `--kb-offset`, `scrollIntoView` ONLY inside the input-focus handler. **NO sticky day chips.**
+- **v4.11+ — Step 5 (system cleanup):** (5.1) header/day-chip compression + `_balancedCols`
+  7→4+3; (5.2) weight tokens + font global-replace; (5.3) color/radius/shadow tokens
+  **[verify.js re-baseline]**, skip the muscle-map palette + `EXERCISE_DATA` inline hex;
+  (5.4) emoji→SVG in cards/sub-tabs **[verify.js re-baseline]**; (5.5) `.btn` vocab consolidation.
+
+**verify.js re-baseline policy:** steps that change rendered card markup (5.3, 5.4) will break
+the byte-identity gate. When intended, regenerate `index.html.bak` from the freshly-rendered
+`#items-a..e`, eyeball the diff, and note the re-baseline in the commit. Do NOT re-baseline to
+paper over an *unintended* render change.
+
+**Parked decisions (confirm when reached):** Step 3 overflow 4-item vs full-8; single vs
+per-day "Add exercise"; promote Primary/Reader inline; day-label maxlength 6 vs 8.
+
+## Confirming a deploy lands (Pages)
+
+After push, the live site lags ~1–3 min behind `main`. Two checks:
+
+```
+# 1. Live badge (cache-busted). Bash grep is fine here — no bullet/emoji in the version span.
+curl -s "https://airpengwn.github.io/gym-plan/?cb=$(date +%s)" | grep -o '>v[0-9.]*</span>' | head -1
+
+# 2. CI / Pages workflow runs (name, status, conclusion, sha)
+curl -s "https://api.github.com/repos/AirPengwn/gym-plan/actions/runs?per_page=5" \
+  | python -c "import sys,json;d=json.load(sys.stdin);[print(x['name'],x['status'],x['conclusion'],x['head_sha'][:7]) for x in d['workflow_runs'][:5]]"
+```
+Expected: badge `>vX.Y</span>` matches the just-shipped version; the **pages** workflow shows
+`completed / success` at the new sha. If the badge lags but CI is green, give it a minute
+(`pages.yml` queues, never drops); an empty-commit nudge is the last-resort fix.
 
 ---
 
