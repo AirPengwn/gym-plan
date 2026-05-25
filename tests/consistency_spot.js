@@ -18,8 +18,10 @@ function app(st){
 }
 let fail=0; const ok=(c,l)=>{console.log((c?'  PASS ':'  FAIL ')+l); if(!c) fail++; };
 
-// noon-anchored timestamp n days ago (avoids midnight boundary flakiness)
-function dayTs(n){ var d=new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate()-n); return d.getTime(); }
+// timestamp n days ago. n=0 → "just now" (always today + in the past, so
+// daysSinceLast===0 regardless of the runner's clock/timezone); n>=1 → noon n
+// days ago (a stable, clearly-past calendar day for streak math).
+function dayTs(n){ if(n===0) return Date.now()-60000; var d=new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate()-n); return d.getTime(); }
 function s(n){ return {label:'D',date:'x',ts:dayTs(n),entries:[{ex:'Chest press',note:'Set 1: 100 lbs x8reps'}]}; }
 
 // ── empty state ──
