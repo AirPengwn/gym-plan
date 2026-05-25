@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.9.2 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
+**App version:** v4.10 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -33,7 +33,7 @@ logged history.
 
 Working through a **5-step Claude design review** (`C:\Users\airpe\Downloads\MyFit Build
 Plan.html`). **Each step ships as its own version**, then **PAUSE for the user's on-device
-verify before the next step**. Current badge **v4.9.2, shipped — PENDING owner on-device verify**.
+verify before the next step**. Current badge **v4.10, shipped — PENDING owner on-device verify** (esp. the keyboard-aware piece, which can't be tested on desktop).
 
 **Done so far:**
 - **Step 1 → v4.3** — bottom tab bar reduced 5 → **4 tabs** (🏋️ Workout / 📊 Progress /
@@ -76,10 +76,19 @@ verify before the next step**. Current badge **v4.9.2, shipped — PENDING owner
   Identical for `<div>` and `<button>`, checked + unchecked. `funcsmoke` updated: assert
   ::before 38px ring + ::after 32px disk.
 
+- **Step 4 part B → v4.10** (bottom-chrome bundle): (4.2) floating **Complete & Save** pill
+  (`#complete-bar`/`.complete-bar`) docked above the tab bar, shown when the SHOWN workout day
+  is **≥80%** checked (`updateCompleteBar`/`hideCompleteBar`/`triggerCompleteFromBar`, day held
+  in `_completeBarDay`); wired into `tog`/`sw`/`rst`/`completeDay` + hidden off-Workout via
+  `_setDaySelectorVisible(false)`. Routes through existing `completeDay()` — no data change.
+  (4.4) stacking: pill `z-index:1002` > timer `1001`; `body.timer-active .complete-bar` lifts it
+  to `+118px` so the two pills stack, never overlap; `body.complete-ready`/`.timer-active`
+  combine for day-panel bottom padding. (4.5) keyboard-aware: a `visualViewport` listener sets
+  `--kb-offset` (both pills' `bottom` calc includes it, so they ride above the keyboard); a
+  `focusin` handler `scrollIntoView`s a focused `.rep/.cardio/.notes/.reps-actual-input`
+  (scroll happens ONLY there, not on resize). **No sticky day chips.** `funcsmoke` covers it.
+
 **Remaining (version mapping):**
-- **v4.10 — Step 4 part B (bottom-chrome bundle):** (4.2) floating **Complete** bar at ≥80%
-  of sets done; (4.4) timer/Complete stacking order; (4.5) keyboard-aware via `visualViewport`
-  → `--kb-offset`, `scrollIntoView` ONLY inside the input-focus handler. **NO sticky day chips.**
 - **v4.11+ — Step 5 (system cleanup):** (5.1) header/day-chip compression + `_balancedCols`
   7→4+3; (5.2) weight tokens + font global-replace; (5.3) color/radius/shadow tokens
   **[verify.js re-baseline]**, skip the muscle-map palette + `EXERCISE_DATA` inline hex;

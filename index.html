@@ -111,13 +111,23 @@ button.checkbox{background:transparent;border:0;-webkit-appearance:none;appearan
 /* v4.2: a slim floating pill docked ABOVE the bottom tab bar (z-index 1001 > the
    bar's 1000, lifted ~66px so it's never clipped) — the iOS "mini-bar above tabs"
    pattern, replacing the old full-width bottom bar that slid under the tab bar. */
-.rest-timer-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px);transform:translateX(-50%) translateY(calc(100% + 74px + env(safe-area-inset-bottom)));max-width:calc(100% - 20px);background:rgba(60,52,137,0.96);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 14px;font-size:14px;font-weight:600;z-index:1001;border-radius:14px;box-shadow:0 6px 22px rgba(31,29,56,0.3);transition:transform 0.25s}
+.rest-timer-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px + var(--kb-offset,0px));transform:translateX(-50%) translateY(calc(100% + 74px + env(safe-area-inset-bottom)));max-width:calc(100% - 20px);background:rgba(60,52,137,0.96);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 14px;font-size:14px;font-weight:600;z-index:1001;border-radius:14px;box-shadow:0 6px 22px rgba(31,29,56,0.3);transition:transform 0.25s,bottom 0.2s}
+/* v4.10 (Step 4B): floating Complete pill — docked above the tab bar like the timer.
+   Shows at >=80% of the day's exercises done; stacks ABOVE the timer when both show.
+   Both bars ride above the on-screen keyboard via --kb-offset (set from visualViewport). */
+.complete-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px + var(--kb-offset,0px));transform:translateX(-50%) translateY(calc(100% + 130px + env(safe-area-inset-bottom)));z-index:1002;transition:transform 0.25s,bottom 0.2s}
+.complete-bar.show{transform:translateX(-50%) translateY(0)}
+body.timer-active .complete-bar{bottom:calc(env(safe-area-inset-bottom) + 118px + var(--kb-offset,0px))}
+.complete-bar button{display:flex;align-items:center;gap:8px;background:#5B4EA8;color:#fff;border:0;border-radius:14px;padding:13px 26px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 6px 22px rgba(91,78,168,0.45)}
 .ps-date{border-bottom:1px dotted var(--primary-2);cursor:pointer;-webkit-tap-highlight-color:rgba(91,78,168,.15)}
 .ps-cv{font-size:9px;opacity:.7;margin-left:1px}
 .rest-timer-bar.show{transform:translateX(-50%) translateY(0)}
 .rest-timer-bar button{background:#ffffff33;border:none;color:#fff;font-size:13px;font-weight:600;padding:4px 10px;border-radius:8px;cursor:pointer}
-/* Push page content up when rest timer is visible so btn-row isn't obscured */
+/* Push page content up when the rest timer / Complete pill is visible so the
+   day content isn't obscured. Both visible → clear both stacked pills. */
 body.timer-active .day-panel.show{padding-bottom:72px}
+body.complete-ready .day-panel.show{padding-bottom:80px}
+body.timer-active.complete-ready .day-panel.show{padding-bottom:140px}
 #share-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1100;display:none;align-items:flex-end;justify-content:center}
 #share-modal-overlay.show{display:flex}
 #share-modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:20px;max-height:80vh;overflow-y:auto}
@@ -852,7 +862,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.9.2</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.10</span></div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
     <button onclick="toggleDarkMode()" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
@@ -3301,6 +3311,7 @@ function tog(id,day,total){
   var d=p.querySelectorAll('.item.done').length;
   document.getElementById('cnt-'+day).textContent=d+' / '+total;
   document.getElementById('bar-'+day).style.width=Math.round(d/total*100)+'%';
+  try{ updateCompleteBar(day); }catch(e){}   // v4.10: float Complete at >=80%
   haptic('light');
   // Save draft every time an exercise is checked/unchecked
   saveDraft(day);
@@ -3390,6 +3401,7 @@ function rst(day,total){
   });
   document.getElementById('cnt-'+day).textContent='0 / '+total;
   document.getElementById('bar-'+day).style.width='0%';
+  try{ updateCompleteBar(day); }catch(e){}   // v4.10: clears the float (done now 0)
   // Clear draft now that session is permanently saved
   localStorage.removeItem('gymlog_draft_'+day);
   setTimeout(function(){ loadLastTimes(); }, 50);
@@ -3451,6 +3463,7 @@ function sw(day,btn){
   var _pl=document.getElementById('hdr-plan-btn'); if(_pl && day!=='prog') _pl.classList.remove('active');
   _target.classList.add('show');
   if(day!=='prog'){ try{ renderDayBalanceHint(day); }catch(e){} }   // v4.9: fresh last-7d mix on view
+  if(day!=='prog'){ try{ updateCompleteBar(day); }catch(e){} }      // v4.10: float Complete on the shown day
   if(btn) btn.classList.add('active');
   if(day!=='prog') _lastWorkoutDay=day;   // v3.30: remember for the Workout tab
   try{ _setDaySelectorVisible(day!=='prog'); }catch(e){}   // v3.32: chips only on Workout
@@ -3505,6 +3518,7 @@ function openSync(){ openMore(); _scrollToMoreGroup('more-sync'); }
 // v3.32: day-selector (D1…Dn chips) belongs only on the Workout screen.
 function _setDaySelectorVisible(show){
   var d=document.getElementById('day-selector'); if(d) d.style.display = show ? 'flex' : 'none';
+  if(!show){ try{ hideCompleteBar(); }catch(e){} }   // v4.10: Complete pill is Workout-only
   try{ updateSwipeHints(); }catch(e){}   // v3.32: keep swipe hints in lockstep (hidden off-Workout)
 }
 function renderSettings(){
@@ -7537,6 +7551,7 @@ function completeDay(day,label){
       durEl.style.display='none';
     }
   }
+  try{ hideCompleteBar(); }catch(e){}   // v4.10: don't float behind the save modal
   document.getElementById('date-modal-overlay').classList.add('show');
 }
 
@@ -8378,6 +8393,52 @@ function stopRestTimer(){
   document.body.classList.remove('timer-active');
 }
 
+// v4.10 (Step 4B): floating Complete pill. Appears once the SHOWN workout day is
+// >=80% checked so you can finish without scrolling to the btn-row. Routes through
+// the existing completeDay(); never changes data. _completeBarDay = the day it's for.
+var _completeBarDay=null;
+function updateCompleteBar(day){
+  var bar=document.getElementById('complete-bar'); if(!bar) return;
+  var p=day&&document.getElementById('p-'+day);
+  if(!p || !p.classList.contains('show')){ hideCompleteBar(); return; }
+  var total=counts[day]||0;
+  var done=p.querySelectorAll('.item.done').length;
+  if(total>0 && done/total>=0.8){
+    _completeBarDay=day;
+    bar.classList.add('show');
+    document.body.classList.add('complete-ready');
+  } else { hideCompleteBar(); }
+}
+function hideCompleteBar(){
+  var bar=document.getElementById('complete-bar'); if(bar) bar.classList.remove('show');
+  document.body.classList.remove('complete-ready');
+}
+function triggerCompleteFromBar(){
+  var d=_completeBarDay; hideCompleteBar();
+  if(d) completeDay(d);
+}
+
+// v4.10 (Step 4B): keyboard-aware floating chrome. visualViewport reports how much
+// the on-screen keyboard covers; expose it as --kb-offset so the timer + Complete
+// pills ride above the keyboard. A focused input scrolls itself into view — done
+// ONLY here (on focus), never on every viewport resize (that causes scroll jank).
+(function(){
+  var vv=window.visualViewport; if(!vv) return;
+  function syncKb(){
+    var kb=Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    document.documentElement.style.setProperty('--kb-offset', kb+'px');
+  }
+  vv.addEventListener('resize', syncKb);
+  vv.addEventListener('scroll', syncKb);
+  syncKb();
+  document.addEventListener('focusin', function(e){
+    var t=e.target;
+    if(t && t.matches && t.matches('.rep-input,.cardio-input,.notes-input,.reps-actual-input')){
+      setTimeout(function(){ try{ t.scrollIntoView({block:'center',behavior:'smooth'}); }catch(_){} }, 250);
+    }
+  });
+})();
+
 // ── Personal Record detection ────────────────────────────────────────────────────────────────
 function checkForPRs(day, entries){
   var prs=[];
@@ -8477,6 +8538,11 @@ function showPRToast(prs){
     </div>
   </div>
   <button onclick="stopRestTimer()" style="font-size:16px;padding:4px 8px">✕</button>
+</div>
+
+<!-- v4.10 (Step 4B): floating Complete pill, shown at >=80% done -->
+<div class="complete-bar" id="complete-bar">
+  <button type="button" onclick="triggerCompleteFromBar()">✓ Complete &amp; Save</button>
 </div>
 
 <!-- Plate Calculator Modal -->

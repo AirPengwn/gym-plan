@@ -304,7 +304,7 @@ function domIdByDataEx(doc, day, ex){
   // bar's 1000, lifted ~66px so it's never clipped) — fully rounded, not a bottom bar.
   var src=w.document.documentElement.innerHTML;
   ok(/\.rest-timer-bar\{[^}]*z-index:1001/.test(src),'rest-timer sits above the tab bar (z-index 1001)');
-  ok(/\.rest-timer-bar\{[^}]*bottom:calc\(env\(safe-area-inset-bottom\) \+ 66px\)/.test(src),'rest-timer lifted above the tab bar (not clipped)');
+  ok(/\.rest-timer-bar\{[^}]*bottom:calc\(env\(safe-area-inset-bottom\) \+ 66px \+ var\(--kb-offset,0px\)\)/.test(src),'rest-timer lifted above the tab bar (not clipped)');
   ok(/\.rest-timer-bar\{[^}]*border-radius:14px/.test(src),'rest-timer is a fully-rounded floating pill');
   // v4.4: hidden state must fully clear the viewport — anchored 66px up, so a small
   // translate (the old 220%) left it peeking behind the tab bar.
@@ -315,6 +315,26 @@ function domIdByDataEx(doc, day, ex){
   ok(/\.checkbox::before\{[^}]*width:38px;height:38px[^}]*border-radius:50%/.test(src),'v4.9.2 · 38px groove ring drawn as ::before');
   ok(/\.checkbox::after\{[^}]*width:32px;height:32px[^}]*border-radius:50%/.test(src),'v4.9.2 · 32px disk drawn as ::after');
   ok(w.document.querySelectorAll('#items-a .checkbox').length>0,'v4.1 · checkbox markup intact (still .checkbox in cards)');
+  // v4.10 (Step 4B): floating Complete pill + keyboard-aware floating chrome
+  ok(!!w.document.getElementById('complete-bar'),'v4.10 · complete-bar element present');
+  ok(/\.complete-bar\{[^}]*z-index:1002/.test(src),'v4.10 · complete-bar stacks above the timer (z-index 1002 > 1001)');
+  ok(/\.complete-bar\.show\{transform:translateX\(-50%\) translateY\(0\)\}/.test(src),'v4.10 · complete-bar reveals via .show');
+  ok(/body\.timer-active \.complete-bar\{[^}]*118px/.test(src),'v4.10 · complete-bar lifts above the timer when both show');
+  ok(/\.rest-timer-bar\{[^}]*var\(--kb-offset,0px\)/.test(src) && /\.complete-bar\{[^}]*var\(--kb-offset,0px\)/.test(src),'v4.10 · both floating bars ride above the keyboard via --kb-offset');
+  ok(typeof w.updateCompleteBar==='function' && typeof w.hideCompleteBar==='function' && typeof w.triggerCompleteFromBar==='function','v4.10 · complete-bar JS present');
+  // >=80% of a day done → pill shows; reset/under-threshold → hidden
+  (function(){
+    var pa=w.document.getElementById('p-a');
+    pa.classList.add('show');
+    pa.querySelectorAll('.item.done').forEach(function(it){ it.classList.remove('done'); });
+    var items=pa.querySelectorAll('.item'), need=Math.ceil(items.length*0.8), n=0;
+    items.forEach(function(it){ if(n<need){ it.classList.add('done'); n++; } });
+    w.counts.a=items.length; w.updateCompleteBar('a');
+    ok(w.document.getElementById('complete-bar').classList.contains('show'),'v4.10 · pill shows at >=80% done');
+    pa.querySelectorAll('.item.done').forEach(function(it){ it.classList.remove('done'); });
+    w.updateCompleteBar('a');
+    ok(!w.document.getElementById('complete-bar').classList.contains('show'),'v4.10 · pill hidden when under threshold');
+  })();
   // v4.8: cardio cards got the same field/button sizing as strength cards
   ok(/\.cardio-input\{[^}]*height:40px/.test(src),'v4.8 · cardio inputs match the 40px field height');
   ok(/\.cardio-machine-btn\{[^}]*min-height:38px/.test(src),'v4.8 · cardio machine toggle buttons have a real tap height');
