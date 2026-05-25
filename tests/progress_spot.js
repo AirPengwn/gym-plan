@@ -22,16 +22,22 @@ let w=app(ST); let D=w.document;
 ok(!!D.getElementById('hdr-plan-btn'),'Step 1 · 📋 Plan button in header');
 ok(typeof w.openManage==='function','Step 1 · openManage() defined');
 
-// Step 2 — Three tabs visible, labels Sessions / Lifts / Trends
+// v4.5 — FOUR sub-tabs: Sessions / Lifts / Trends / Body
 var tabs=Array.from(D.querySelectorAll('.prog-tab-btn'));
-ok(tabs.length===3,'Step 2 · prog-tab-row has 3 tabs ('+tabs.length+')');
-ok(/Sessions/.test(tabs[0].textContent)&&/Lifts/.test(tabs[1].textContent)&&/Trends/.test(tabs[2].textContent),'Step 2 · tabs labelled Sessions · Lifts · Trends');
-// Measurements panel ID gone but switchProgTab('measurements') aliases to stats
+ok(tabs.length===4,'v4.5 · prog-tab-row has 4 tabs ('+tabs.length+')');
+ok(/Sessions/.test(tabs[0].textContent)&&/Lifts/.test(tabs[1].textContent)&&/Trends/.test(tabs[2].textContent)&&/Body/.test(tabs[3].textContent),'v4.5 · tabs labelled Sessions · Lifts · Trends · Body');
 ok(!D.getElementById('prog-panel-measurements'),'Step 2 · prog-panel-measurements removed');
-ok(!!D.getElementById('meas-wrap-host'),'Step 2 · meas-wrap-host present (inside Trends)');
-// switchProgTab('measurements') doesn't crash and lands on stats
+// Body Measurements lives in its own #prog-panel-body now (out of Trends)
+ok(!!D.getElementById('prog-panel-body'),'v4.5 · #prog-panel-body exists');
+ok(!!D.getElementById('meas-wrap-host') && D.getElementById('meas-wrap-host').closest('#prog-panel-body')===D.getElementById('prog-panel-body'),'v4.5 · meas-wrap-host lives inside #prog-panel-body (not Trends)');
+// switchProgTab('measurements') aliases to the Body sub-tab; 'body' shows the panel
 var threw=false; try{ w.switchProgTab('measurements', null); }catch(e){ threw=true; }
-ok(!threw && D.getElementById('prog-panel-stats').classList.contains('show'),'Step 2 · switchProgTab("measurements") aliases to Trends/stats panel');
+ok(!threw && D.getElementById('prog-panel-body').classList.contains('show'),'v4.5 · switchProgTab("measurements") aliases to the Body sub-tab');
+w.switchProgTab('body', null);
+ok(D.getElementById('prog-panel-body').classList.contains('show') && !D.getElementById('prog-panel-stats').classList.contains('show'),'v4.5 · Body sub-tab shows its panel; Trends hidden');
+// Trends still renders its own content (muscle load / volume), no longer the body forms
+w.switchProgTab('stats', null);
+ok(D.getElementById('prog-panel-stats').classList.contains('show'),'v4.5 · Trends sub-tab still works');
 
 // Step 3 + Step 4 — Deload card + zones
 ok(typeof w.isDeloadSuppressed==='function','Step 3 · isDeloadSuppressed() defined');
@@ -61,10 +67,10 @@ var statsHTML=(D.getElementById('prog-stats')||{}).innerHTML||'';
 ok(/stats-zone-title">Now</.test(statsHTML),'Step 4 · Now zone title present (Patch 3 Step 2: now .stats-section-title.stats-zone-title)');
 ok(/stats-zone-title">Trends</.test(statsHTML),'Step 4 · Trends zone title present');
 ok(/stats-zone-title">Awards</.test(statsHTML),'Step 4 · Awards zone title present');
-// Body Measurements moved into Trends zone
-var measHost=D.getElementById('meas-wrap-host');
-var anchor=D.getElementById('trends-zone-meas-anchor');
-ok(measHost && anchor && anchor.contains(measHost),'Step 4 · meas-wrap-host moved into Trends zone anchor');
+// v4.5: Body Measurements is NOT in Trends anymore (it has its own Body sub-tab);
+// the old shuffle + anchor are gone.
+ok(!D.getElementById('trends-zone-meas-anchor'),'v4.5 · old Trends meas anchor removed');
+ok(!/meas-wrap-host/.test(statsHTML),'v4.5 · Trends no longer hosts the body measurements block');
 
 // Step 5 — Sessions feed
 w.renderProgress();
