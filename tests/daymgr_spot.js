@@ -22,6 +22,22 @@ const w=app(ST); const D=w.document;
 // ── default 5 days ──
 ok(w.getDays().length===5,'init · 5 active days by default');
 
+// ── v4.6: Plan header ⋯ overflow holds the secondary actions; day list leads ──
+w.renderManager();
+var ovf=D.getElementById('mgr-ovf-menu');
+ok(!!ovf && !!D.querySelector('.mgr-ovf-btn'),'v4.6 · Plan header has a ⋯ overflow trigger + menu');
+['templates','library','addday','sync'].forEach(function(act){
+  ok(!!ovf.querySelector('[onclick="mgrOvf(\''+act+'\')"]'),'v4.6 · overflow has the "'+act+'" action');
+});
+ok(typeof w.openTemplates==='function' && typeof w.openLibrary==='function' && typeof w.openSync==='function','v4.6 · overflow targets resolve');
+// the moved buttons are no longer inline
+var aw=(D.getElementById('mgr-active-wrap')||{}).innerHTML||'';
+ok(/openBuilder\(null\)/.test(aw),'v4.6 · ➕ Add exercise stays inline (primary action)');
+ok(!/openLibrary\(\)/.test(aw) && !/openTemplates\(\)/.test(aw),'v4.6 · From-library + Templates moved out of the inline row');
+ok(!/onclick="openSync\(\)"/.test((D.getElementById('mgr-days-wrap')||{}).innerHTML||''),'v4.6 · the cloud-sync jump button removed from the day manager');
+// balance leads with a pill (collapsed card)
+ok(!!D.querySelector('#mgr-balance-wrap .bal-pill'),'v4.6 · balance renders as a status pill');
+
 // ── ADD a 6th day ──
 var k=w.addDay('Day 6 — Arms');
 ok(k==='f','add · minted next key "f"');

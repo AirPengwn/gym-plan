@@ -63,12 +63,18 @@ ok(Array.isArray(a.flags),'flags is an array');
 // the warm-up day exists but cardio type is skipped.)
 // imbalance flag fires when push hugely outweighs pull (synthetic check via group fn)
 
-// ── renderPlanBalance paints a card ──
+// ── v4.6: renderPlanBalance leads with a status pill; tap expands the full card ──
 w.renderPlanBalance();
+var pill=D.querySelector('#mgr-balance-wrap .bal-pill');
+ok(!!pill,'renderPlanBalance paints a status pill by default');
+ok(/Balance ·/.test((pill&&pill.textContent)||''),'pill shows a "Balance · …" summary');
+ok(!D.querySelector('#mgr-balance-wrap .bal-card'),'full bar-chart card is collapsed by default (pill only)');
+// expand → full card with title + both ratio bars
+w.toggleBalanceCard();
 var card=D.querySelector('#mgr-balance-wrap .bal-card');
-ok(!!card,'renderPlanBalance injects a .bal-card into Manage');
-ok(/Plan balance/.test((card&&card.textContent)||''),'card shows the "Plan balance" title');
-ok(D.querySelectorAll('#mgr-balance-wrap .bal-track').length>=2,'card shows push:pull AND upper:lower bars');
+ok(!!card && /Plan balance/.test(card.textContent),'tapping the pill expands the full card with the title');
+ok(D.querySelectorAll('#mgr-balance-wrap .bal-track').length>=2,'expanded card shows push:pull AND upper:lower bars');
+w.toggleBalanceCard(); // collapse back for the read-only check below
 
 // ── read-only: analysis must not mutate plan_v2 ──
 var before=ST.getItem('plan_v2');
