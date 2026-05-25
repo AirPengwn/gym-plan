@@ -306,6 +306,9 @@ function domIdByDataEx(doc, day, ex){
   ok(/\.rest-timer-bar\{[^}]*z-index:1001/.test(src),'rest-timer sits above the tab bar (z-index 1001)');
   ok(/\.rest-timer-bar\{[^}]*bottom:calc\(env\(safe-area-inset-bottom\) \+ 66px\)/.test(src),'rest-timer lifted above the tab bar (not clipped)');
   ok(/\.rest-timer-bar\{[^}]*border-radius:14px/.test(src),'rest-timer is a fully-rounded floating pill');
+  // v4.4: hidden state must fully clear the viewport — anchored 66px up, so a small
+  // translate (the old 220%) left it peeking behind the tab bar.
+  ok(/\.rest-timer-bar\{[^}]*translateY\(calc\(100% \+ 74px \+ env\(safe-area-inset-bottom\)\)\)/.test(src),'rest-timer hidden state fully off-screen (no peek behind the tab bar)');
   // start/stop toggles the .show class
   if(typeof w.startRestTimer==='function'){
     w.startRestTimer(90);
