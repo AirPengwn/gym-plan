@@ -798,7 +798,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.38</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.39</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -3267,11 +3267,15 @@ function closeResetModal(){ document.getElementById('reset-overlay').classList.r
 function executeReset(){ if(_pendingResetDay) rst(_pendingResetDay.day,_pendingResetDay.total); closeResetModal(); }
 
 function sw(day,btn){
+  // v3.38 (hardening): bail BEFORE clearing if the target panel is gone (stale day
+  // chip / removed day) — otherwise we'd clear every panel and strand a blank screen.
+  var _target=document.getElementById('p-'+day);
+  if(!_target) return;
   document.querySelectorAll('.day-panel').forEach(function(p){p.classList.remove('show');});
   document.querySelectorAll('.day-btn').forEach(function(b){b.classList.remove('active');});
   // v3.2: leaving for a workout day clears the header 📋 Manage highlight.
   var _pl=document.getElementById('hdr-plan-btn'); if(_pl && day!=='prog') _pl.classList.remove('active');
-  document.getElementById('p-'+day).classList.add('show');
+  _target.classList.add('show');
   if(btn) btn.classList.add('active');
   if(day!=='prog') _lastWorkoutDay=day;   // v3.30: remember for the Workout tab
   try{ _setDaySelectorVisible(day!=='prog'); }catch(e){}   // v3.32: chips only on Workout
