@@ -107,7 +107,8 @@ ok(cb.getAttribute('aria-pressed')==='true','Step 3 · aria-pressed also stays i
 cb.click();
 ok(cb.getAttribute('aria-checked')==='false','Step 3 · aria-checked flips back to "false"');
 // CSS reset present.
-ok(/button\.checkbox\{background:transparent;padding:0;font:inherit;line-height:0\}/.test(css),'Step 3 · button.checkbox UA-reset CSS present');
+var _bcb=(css.match(/button\.checkbox\{[^}]*\}/)||[''])[0];
+ok(/background:transparent/.test(_bcb)&&/appearance:none/.test(_bcb)&&/border:0/.test(_bcb)&&/line-height:0/.test(_bcb),'Step 3 · button.checkbox UA-reset CSS present');
 // applyA11y must NOT clobber role="checkbox" with role="button" on the new <button> form.
 ok(cb.getAttribute('role')==='checkbox','Step 3 · applyA11y did not overwrite role="checkbox"');
 // And native button is keyboard-focusable (we don't add tabindex=0 since it's intrinsic).

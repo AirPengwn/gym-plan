@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.9 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
+**App version:** v4.9.1 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -33,7 +33,7 @@ logged history.
 
 Working through a **5-step Claude design review** (`C:\Users\airpe\Downloads\MyFit Build
 Plan.html`). **Each step ships as its own version**, then **PAUSE for the user's on-device
-verify before the next step**. Current badge **v4.9, shipped — PENDING owner on-device verify**.
+verify before the next step**. Current badge **v4.9.1, shipped — PENDING owner on-device verify**.
 
 **Done so far:**
 - **Step 1 → v4.3** — bottom tab bar reduced 5 → **4 tabs** (🏋️ Workout / 📊 Progress /
@@ -58,6 +58,12 @@ verify before the next step**. Current badge **v4.9, shipped — PENDING owner o
   logged push/pull/lower/core mix; hidden when no resistance work in 7d. `_musclesByName(name)`
   resolves muscles for history entries (by name, not domId). Hooked into `renderDayItems` +
   `sw()`. Distinct from the whole-week plan balance pill (`renderPlanBalance`).
+- **v4.9.1** (fix, owner verify) — (a) per-day balance hint window widened **7d → 21d**
+  (`analyzeDayBalance` cutoff + label) so a weekly-split day reliably falls inside it; (b)
+  **checkbox parity:** `button.checkbox` (v2 strength cards) only reset bg/padding/font, so it
+  picked up native UA button chrome (extra border/ring) vs the `<div class="checkbox">` on
+  cardio cards — added `border:0;-webkit-appearance:none;appearance:none;color:inherit` so both
+  render the identical 28px ring. `patch3_spot` assertion loosened to property-checks.
 
 **Remaining (version mapping):**
 - **v4.10 — Step 4 part B (bottom-chrome bundle):** (4.2) floating **Complete** bar at ≥80%
