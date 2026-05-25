@@ -19,8 +19,18 @@ let fail=0; const ok=(c,l)=>{console.log((c?'  PASS ':'  FAIL ')+l); if(!c) fail
 const ST=store(); ST.setItem('gym_primary_device','1');
 const w=app(ST); const D=w.document;
 
+// ── v4.0: Plan intro notice shows on a fresh stock plan, hides once customized ──
+ok(w._planIsCustomized()===false,'fresh stock plan: not customized');
+w.renderManager();
+var introEl=D.querySelector('#prog-panel-manage .mgr-notice');
+ok(introEl && introEl.style.display!=='none','intro notice shown on a fresh plan');
+
 // ── addDay accepts a custom button label ──
 var k=w.addDay('Arm Day','ARMS');
+// adding a day customizes the plan → intro notice should auto-hide
+ok(w._planIsCustomized()===true,'after addDay: plan is customized');
+w.renderManager();
+ok(introEl.style.display==='none','intro notice auto-hidden once the plan is customized');
 ok(!!k,'addDay returns a key');
 ok(w.getDayShort(k)==='ARMS','addDay stores the custom short label');
 ok(w.getDayName(k)==='Arm Day','addDay stores the name');

@@ -411,7 +411,8 @@ canvas.prog-chart{display:block;border-radius:8px}
 .cardio-input::placeholder{color:var(--muted);font-size:11px;opacity:1}
 .edit-date-btn{background:none;border:none;cursor:pointer;padding:2px 4px;font-size:13px;vertical-align:middle;line-height:1}
 .edit-date-input{font-size:11px;padding:3px 6px;border:1px solid #7F77DD;border-radius:5px;color:#2C2C2A;background:#fff;font-family:inherit;outline:none}
-.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:1rem}
+body.dark .modal-overlay{background:rgba(0,0,0,0.4)}
 .modal-overlay.show{display:flex}
 .modal{background:#fff;border-radius:14px;padding:1.25rem;width:100%;max-width:380px;max-height:80vh;overflow-y:auto}
 .modal-title{font-size:16px;font-weight:700;color:#2C2C2A;margin-bottom:0.5rem}
@@ -552,7 +553,7 @@ body.dark .rpe-slider::-webkit-slider-thumb{border-color:#252540}
 .vol-chart-inner{padding:14px}
 .vol-chart-title{font-size:11px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
 /* ── Dark mode additions ── */
-body.dark .quick-fill-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
+body.dark .quick-fill-btn{background:#252540;border-color:#6562A0;color:#B4B2E0}
 body.dark .pain-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
 body.dark .pain-btn.active-ok{background:#0F3A2E;border-color:#0F6E56;color:#5DD8A0}
 body.dark .pain-btn.active-flag{background:#3A1A1A;border-color:#C53030;color:#FF8080}
@@ -607,8 +608,8 @@ body.dark .bal-card{background:#252540;border-color:#3C3A5C}
 .bal-row{margin-bottom:9px}
 .bal-lbls{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:3px}
 .bal-lbls b{color:var(--text);font-weight:700}
-.bal-track{height:7px;border-radius:5px;background:#E879A6;overflow:hidden}
-body.dark .bal-track{background:#7d3b56}
+.bal-track{height:7px;border-radius:5px;background:var(--border-soft);overflow:hidden}
+body.dark .bal-track{background:#3C3A5C}
 .bal-fill{height:100%;background:#7F77DD;border-radius:5px 0 0 5px}
 .bal-core{font-size:11px;color:var(--muted);margin:6px 0 2px}
 .bal-core b{color:var(--text)}
@@ -764,7 +765,7 @@ body.dark .delta-down{background:#3A1A1A;color:#FF8080}
 body.dark .delta-flat{background:#1F1D38;color:#9896C8}
 body.dark .delta-pb{background:#3A2E00;color:#FFD740}
 /* v2.41 dark-mode finish — focus states, refactored chip/tab classes */
-body.dark .rep-input:focus,body.dark .reps-actual-input:focus,body.dark .notes-input:focus,body.dark .cardio-input:focus{background:#1F1D38}
+body.dark .rep-input:focus,body.dark .reps-actual-input:focus,body.dark .notes-input:focus,body.dark .cardio-input:focus{background:#26244D}
 body.dark .edit-date-input{background:#1A1A2E;color:#E8E6F8;border-color:#3C3A5C}
 /* Measurement entry inputs (refactored from inline) */
 .meas-in{flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:#fff;font-family:inherit;outline:none}
@@ -798,7 +799,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.42</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.0</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -1542,6 +1543,18 @@ function buildExerciseModel(){
 // default model is used and nothing is persisted until an edit (Phase 2b).
 function getPlanOverrides(){
   try{ return JSON.parse(localStorage.getItem('plan_v2'))||null; }catch(e){ return null; }
+}
+// v4.0: has the user customized the stock plan at all? Drives whether the Plan
+// screen's intro notice still shows (auto-hides once they've actually edited).
+function _planIsCustomized(){
+  try{
+    if(localStorage.getItem('days_config_v1')) return true;                 // day add/rename/reorder/remove
+    var ov=getPlanOverrides(); if(ov && ov.ex && Object.keys(ov.ex).length) return true; // exercise add/edit
+    if(typeof getActiveUserLibrary==='function' && getActiveUserLibrary().length) return true;   // saved exercise
+    if(typeof getArchivedExercises==='function' && getArchivedExercises().length) return true;   // removed/archived
+    if(typeof getActiveCustomTemplates==='function' && getActiveCustomTemplates().length) return true; // saved template
+  }catch(e){}
+  return false;
 }
 function getEffectivePlan(){
   var base=buildExerciseModel();
@@ -4961,6 +4974,9 @@ function renderPlanBalance(){
   wrap.innerHTML=html;
 }
 function renderManager(){
+  // v4.0: the intro notice teaches on first use, then gets out of the way.
+  var _nt=document.querySelector('#prog-panel-manage .mgr-notice');
+  if(_nt) _nt.style.display=_planIsCustomized()?'none':'';
   renderDayManager();
   renderPlanBalance();
   renderRemovedDays();
