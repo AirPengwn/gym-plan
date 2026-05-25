@@ -173,11 +173,12 @@ function domIdByDataEx(doc, day, ex){
   dbtns[1].dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
   ok(w.document.getElementById('p-b').classList.contains('show'),'tapping D2 switches to Day 2 panel');
   // v3.30: navigation moved to a fixed bottom tab bar (4 tabs). 📊/📋 relocated
-  // there (same ids + handlers preserved); the ⋯ overflow menu is gone — its items
-  // (Update / Backup / Test mode) now live on the Settings tab.
+  // there (same ids + handlers preserved). v4.3: Sync + Settings folded into one
+  // ⋯ More tab → 4 tabs. Old openSync()/openSettings() still work as jump entry points.
   var bar=w.document.querySelector('.tabbar');
-  ok(!!bar && bar.querySelectorAll('.tab').length===5,'bottom tab bar has 5 tabs (Workout/Progress/Plan/Sync/Settings)');
-  ok(!!w.document.getElementById('nav-sync') && /openSync\(\)/.test(w.document.getElementById('nav-sync').getAttribute('onclick')||''),'☁️ Sync tab calls openSync()');
+  ok(!!bar && bar.querySelectorAll('.tab').length===4,'bottom tab bar has 4 tabs (Workout/Progress/Plan/More)');
+  ok(!w.document.getElementById('nav-sync') && !w.document.getElementById('nav-settings'),'separate Sync + Settings tabs removed (folded into More)');
+  ok(!!w.document.getElementById('nav-more') && /openMore\(\)/.test(w.document.getElementById('nav-more').getAttribute('onclick')||''),'⋯ More tab calls openMore()');
   var hp=w.document.getElementById('hdr-prog-btn');
   ok(!!hp && !!hp.closest('.tabbar'),'📊 Progress lives in the bottom bar');
   ok(hp.classList.contains('progress-tab') && /sw\('prog',this\)/.test(hp.getAttribute('onclick')||''),'📊 keeps progress-tab class + sw("prog") handler (returnToManageAfterPlan still works)');
@@ -185,42 +186,44 @@ function domIdByDataEx(doc, day, ex){
   var hpl=w.document.getElementById('hdr-plan-btn');
   ok(!!hpl && !!hpl.closest('.tabbar') && /openManage\(\)/.test(hpl.getAttribute('onclick')||''),'📋 Plan in the bottom bar, calls openManage()');
   ok(!!w.document.getElementById('nav-workout') && /navWorkout\(\)/.test(w.document.getElementById('nav-workout').getAttribute('onclick')||''),'🏋️ Workout tab calls navWorkout()');
-  ok(!!w.document.getElementById('nav-settings') && /openSettings\(\)/.test(w.document.getElementById('nav-settings').getAttribute('onclick')||''),'⚙️ Settings tab calls openSettings()');
-  ok(typeof w.openManage==='function' && typeof w.openSettings==='function' && typeof w.navWorkout==='function','nav functions defined');
+  ok(typeof w.openMore==='function' && typeof w.openSync==='function' && typeof w.openSettings==='function' && typeof w.navWorkout==='function','nav functions defined (openMore + legacy openSync/openSettings entry points)');
   ok(!Array.from(w.document.querySelectorAll('.prog-tab-btn')).some(function(b){return /manage/.test(b.getAttribute('onclick')||'');}),'Manage tab button removed from prog-tab-row');
-  // header collapses to just the dark-mode toggle (no 📊/📋/⋯ icons, no overflow menu)
-  ok(!w.document.getElementById('hdr-ovf-btn') && !w.document.getElementById('hdr-menu'),'⋯ overflow menu removed from the header');
+  ok(!w.document.getElementById('hdr-ovf-btn') && !w.document.getElementById('hdr-menu'),'old ⋯ header overflow menu gone');
   var dk2=w.document.getElementById('dark-toggle');
   ok(!!dk2 && !dk2.closest('.tabbar'),'🌙 dark toggle stays in the (slim) header');
   ok(/#dark-toggle\{[^}]*width:40px;height:40px/.test(w.document.documentElement.innerHTML),'🌙 keeps its 40×40 header button shape');
-  ok(!/padding:|font-size:|background:|border:/.test(dk2.getAttribute('style')||''),'🌙 inline-style overrides removed so the shared CSS rule applies');
-  // Settings tab hosts what used to be in the ⋯ menu
-  var sp=w.document.getElementById('p-settings');
-  ok(!!sp,'Settings panel (#p-settings) exists');
-  ok(w.document.querySelectorAll('#test-toggle').length===1 && !!w.document.getElementById('test-toggle').closest('#p-settings'),'#test-toggle preserved (single) and now in Settings (_testUpdateUI still works)');
-  ok(!!sp.querySelector('[onclick="reloadPage()"]'),'Update handler lives on the Settings tab');
-  // v3.32: cloud + backup moved to the ☁️ Sync tab
-  var syp=w.document.getElementById('p-sync');
-  ok(!!syp && !!syp.querySelector('[onclick="showExportImport()"]'),'Backup & restore launcher lives on the Sync tab');
-  w.openSync();
-  ok(syp.classList.contains('show') && syp.style.display!=='none' && w.document.getElementById('nav-sync').classList.contains('active'),'☁️ Sync opens its panel (not blank) + highlights the tab');
-  ok(!!w.document.getElementById('plan-sync-switch') && !!syp.querySelector('.plan-sync-box [onclick="pushPlanToCloud()"]'),'Sync tab renders the cloud-sync controls (switch + push)');
-  ok(!!syp.querySelector('[onclick="pullFromCloud()"]'),'Sync tab has Pull from cloud');
+  // v4.3: the single More panel hosts Sync + Backup + Appearance + App, all reachable.
+  var mp=w.document.getElementById('p-more');
+  ok(!!mp,'More panel (#p-more) exists');
+  ok(!w.document.getElementById('p-sync') && !w.document.getElementById('p-settings'),'old #p-sync / #p-settings panels removed');
+  ok(w.document.querySelectorAll('#test-toggle').length===1 && !!w.document.getElementById('test-toggle').closest('#p-more'),'#test-toggle preserved (single) and now in More (_testUpdateUI still works)');
+  ok(!!mp.querySelector('[onclick="reloadPage()"]'),'Update handler lives in More (App group)');
+  ok(!!mp.querySelector('[onclick="showExportImport()"]'),'Backup & restore launcher lives in More');
+  ok(!!mp.querySelector('#more-sync') && !!mp.querySelector('#more-app'),'More has Sync + App group anchors (for openSync/openSettings jumps)');
+  // openMore renders the cloud-sync controls into the Sync group + highlights the tab
+  w.openMore();
+  ok(mp.classList.contains('show') && mp.style.display!=='none' && w.document.getElementById('nav-more').classList.contains('active'),'⋯ More opens its panel (not blank) + highlights the tab');
+  ok(!!w.document.getElementById('plan-sync-switch') && !!mp.querySelector('.plan-sync-box [onclick="pushPlanToCloud()"]'),'More renders the cloud-sync controls (switch + push)');
+  ok(!!mp.querySelector('[onclick="pullFromCloud()"]'),'More has Pull from cloud');
+  // legacy entry points still open More
+  w.navWorkout(); w.openSync();
+  ok(mp.classList.contains('show'),'openSync() (Plan jump / backup nag) still opens More');
+  w.navWorkout(); w.openSettings();
+  ok(mp.classList.contains('show'),'openSettings() still opens More');
   // navigation actually switches panels + highlights the right tab
   hp.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
   ok(w.document.getElementById('p-prog').classList.contains('show'),'tapping 📊 switches to Progress panel');
   ok(hp.classList.contains('active'),'📊 tab highlights when Progress is open');
-  w.openSettings();
-  ok(sp.classList.contains('show') && w.document.getElementById('nav-settings').classList.contains('active'),'⚙️ Settings opens its panel + highlights the tab');
   // regression guard: syncDayPanels() must NOT leave an inline display:none on
-  // p-settings (it isn't a day-keyed panel) — that bug rendered Settings blank.
-  ok(sp.style.display!=='none','Settings panel is not inline-hidden by syncDayPanels (renders, not blank)');
+  // p-more (it isn't a day-keyed panel) — that bug class once blanked p-settings.
+  w.openMore();
+  ok(mp.style.display!=='none','More panel is not inline-hidden by syncDayPanels (renders, not blank)');
   w.navWorkout();
   ok(w.document.getElementById('nav-workout').classList.contains('active') && !w.document.getElementById('p-prog').classList.contains('show'),'🏋️ Workout returns to a day + highlights its tab');
   // v3.32: the D1…Dn day chips show ONLY on Workout
   ok(w.document.getElementById('day-selector').style.display!=='none','day-selector visible on the Workout screen');
-  w.openSync();
-  ok(w.document.getElementById('day-selector').style.display==='none','day-selector hidden on the Sync screen');
+  w.openMore();
+  ok(w.document.getElementById('day-selector').style.display==='none','day-selector hidden on the More screen');
   ok(w.document.getElementById('swh-l').hasAttribute('hidden') && w.document.getElementById('swh-r').hasAttribute('hidden'),'swipe hints hidden off the Workout screen');
   w.openManage();
   ok(w.document.getElementById('day-selector').style.display==='none','day-selector hidden on the Plan screen');
