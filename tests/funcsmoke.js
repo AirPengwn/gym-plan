@@ -313,6 +313,9 @@ function domIdByDataEx(doc, day, ex){
   ok(/\.checkbox\{[^}]*width:44px;height:44px/.test(src),'v4.1 · checkbox is a 44×44 tap target');
   ok(/\.checkbox::before\{[^}]*width:28px;height:28px[^}]*border-radius:50%/.test(src),'v4.1 · 28px visual circle drawn as ::before');
   ok(w.document.querySelectorAll('#items-a .checkbox').length>0,'v4.1 · checkbox markup intact (still .checkbox in cards)');
+  // v4.8: cardio cards got the same field/button sizing as strength cards
+  ok(/\.cardio-input\{[^}]*height:40px/.test(src),'v4.8 · cardio inputs match the 40px field height');
+  ok(/\.cardio-machine-btn\{[^}]*min-height:38px/.test(src),'v4.8 · cardio machine toggle buttons have a real tap height');
   // start/stop toggles the .show class
   if(typeof w.startRestTimer==='function'){
     w.startRestTimer(90);
