@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.12 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
+**App version:** v4.13 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -33,7 +33,7 @@ logged history.
 
 Working through a **5-step Claude design review** (`C:\Users\airpe\Downloads\MyFit Build
 Plan.html`). **Each step ships as its own version**, then **PAUSE for the user's on-device
-verify before the next step**. Current badge **v4.12, shipped — PENDING owner on-device verify**.
+verify before the next step**. Current badge **v4.13, shipped — PENDING owner on-device verify**.
 
 **Done so far:**
 - **Step 1 → v4.3** — bottom tab bar reduced 5 → **4 tabs** (🏋️ Workout / 📊 Progress /
@@ -109,12 +109,21 @@ verify before the next step**. Current badge **v4.12, shipped — PENDING owner 
   sub-tabs** (📅/💪/📈/⚖️ → `<use href>`). Icons inherit the active/inactive button color.
   None of this touches `EXERCISE_DATA`, so **no verify.js re-baseline**.
 
+- **Step 5.4 cont. → v4.13** — owner greenlit the monoline style; rolled it across the
+  **Plan/Manage** + **More** screens. New sprite symbols: balance/add/templates/library/cloud/
+  archive/backup/appearance(contrast circle)/app(gear)/test(unused)/refresh/plan(clipboard).
+  Swapped: Plan title (📋→clipboard), Days-in-cycle (📆→calendar), mgr ⋯ overflow (templates/
+  library/add/cloud), balance card title (📊), Add-exercise (➕), Removed + Archived titles (📦);
+  More section headers (☁️/💾/🎨/⚙️) + Update (🔄). `.ic-sm` (15px) for header-size icons;
+  `.set-gh` now flex. **Kept as emoji** (JS-driven `textContent`): 🧪 Test mode + 🌙/☀️ Dark
+  mode label. None touch `EXERCISE_DATA` — no re-baseline.
+
 **Remaining (version mapping):**
-- **v4.13+ — Step 5.4 cont.:** roll the same sprite pattern into Plan buttons (📊 Balance ·
-  📐 Templates · 📚 Library · 🗑 Removed · ➕ Add) and Workout card actions (⏱ Rest is already
-  SVG; ↺ Reset in the day ⋯; 🏋 Plate calc), plus the More section headers (☁️/💾/🎨/⚙️) if
-  wanted. Per-card content emoji in `EXERCISE_DATA` (e.g. 📍 ex-loc) stays — changing it would
-  need a verify.js re-baseline; only do that deliberately.
+- **v4.14+ — Step 5.4 finish (optional):** Workout card actions — ⏱ Rest is already an SVG;
+  🏋 Plate calc button; ↺ Reset (day ⋯, static + dynamic `buildDayPanelHTML`); session ⋯
+  🗑 Delete / 🗑 Clear-all-history; Templates modal (📐/💾); builder 📚 From/Save library;
+  measurement sub-tabs (📐 Waist etc.). Per-card content emoji in `EXERCISE_DATA` (📍 ex-loc)
+  stays unless a deliberate verify.js re-baseline. Banners (🧪/💾/☁️) optional.
 - **Deferred:** (5.2) type tokens; (5.3) color/radius/shadow tokens **[verify.js re-baseline]**;
   (5.5) `.btn` vocab consolidation. Pick up if/when CSS maintainability matters.
 
