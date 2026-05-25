@@ -154,13 +154,13 @@ body.timer-active.complete-ready .day-panel.show{padding-bottom:140px}
 .rep-label{font-size:11px;color:#888780;white-space:nowrap;min-width:38px}
 .rep-single{display:flex;align-items:center;gap:6px}
 .rep-single .rep-label{min-width:42px}
-.rep-input{flex:1;font-size:13px;padding:0 10px;height:40px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;box-sizing:border-box}
+.rep-input{flex:1;font-size:16px;padding:0 10px;height:40px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;box-sizing:border-box}
 .rep-input:focus{border-color:#7F77DD;background:#fff}
 .rep-input::placeholder{color:var(--muted);font-size:11px;opacity:1}
 /* Actual reps — same height as weight input, label sits above as a header row */
 .reps-col{display:flex;flex-direction:column;align-items:center;gap:0;flex-shrink:0;width:50px}
 .reps-col-label{font-size:9px;color:#B4B2A9;text-align:center;letter-spacing:0.02em;margin-bottom:2px;line-height:1}
-.reps-actual-input{width:50px;font-size:13px;padding:0 4px;height:40px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;text-align:center;box-sizing:border-box}
+.reps-actual-input{width:50px;font-size:16px;padding:0 4px;height:40px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;text-align:center;box-sizing:border-box}
 .reps-actual-input:focus{border-color:#7F77DD;background:#fff}
 .reps-actual-input::-webkit-inner-spin-button,.reps-actual-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .reps-actual-input[type=number]{-moz-appearance:textfield}
@@ -169,7 +169,7 @@ body.timer-active.complete-ready .day-panel.show{padding-bottom:140px}
 .item-timer-btn:active{background:#D8D4F0}
 body.dark .item-timer-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
 .notes-row{display:flex;gap:6px;align-items:center}
-.notes-input{flex:1;font-size:12px;padding:5px 8px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
+.notes-input{flex:1;font-size:16px;padding:5px 8px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
 .last-time{font-size:11px;color:#7F77DD;background:#EEEDFE;border-radius:6px;padding:5px 8px;margin-bottom:2px;line-height:1.5;display:none}
 .last-time.has-data{display:block}
 .last-time-label{font-weight:600;margin-right:4px}
@@ -452,7 +452,7 @@ canvas.prog-chart{display:block;border-radius:8px}
 .cardio-machine-panel.show{display:flex}
 .cardio-row{display:flex;gap:6px;align-items:center}
 .cardio-label{font-size:11px;color:#888780;white-space:nowrap;min-width:62px}
-.cardio-input{flex:1;font-size:13px;height:40px;padding:0 10px;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
+.cardio-input{flex:1;font-size:16px;height:40px;padding:0 10px;box-sizing:border-box;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
 .cardio-input:focus{border-color:#7F77DD;background:#fff}
 .cardio-input::placeholder{color:var(--muted);font-size:11px;opacity:1}
 .edit-date-btn{background:none;border:none;cursor:pointer;padding:2px 4px;font-size:13px;vertical-align:middle;line-height:1}
@@ -576,7 +576,7 @@ body.dark .rpe-ends{color:#3C3A5C}
 body.dark .rpe-slider{background:linear-gradient(to right,#7F77DD 0%,#7F77DD var(--rpe-pct,0%),#3C3A5C var(--rpe-pct,0%),#3C3A5C 100%)}
 body.dark .rpe-slider::-webkit-slider-thumb{border-color:#252540}
 /* ── Reps actual input ── */
-.reps-actual-input{width:44px;font-size:12px;padding:5px 6px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;text-align:center}
+.reps-actual-input{width:44px;font-size:16px;padding:5px 6px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;text-align:center}
 .reps-actual-input:focus{border-color:#7F77DD;background:#fff}
 .reps-label{font-size:10px;color:#888780;text-align:center;margin-top:1px}
 /* ── Pain/soreness flag ── */
@@ -862,7 +862,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.10</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.10.1</span></div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
     <button onclick="toggleDarkMode()" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
