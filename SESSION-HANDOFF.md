@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.10 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
+**App version:** v4.10.1 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -33,7 +33,7 @@ logged history.
 
 Working through a **5-step Claude design review** (`C:\Users\airpe\Downloads\MyFit Build
 Plan.html`). **Each step ships as its own version**, then **PAUSE for the user's on-device
-verify before the next step**. Current badge **v4.10, shipped — PENDING owner on-device verify** (esp. the keyboard-aware piece, which can't be tested on desktop).
+verify before the next step**. Current badge **v4.10.1, shipped — PENDING owner on-device verify**.
 
 **Done so far:**
 - **Step 1 → v4.3** — bottom tab bar reduced 5 → **4 tabs** (🏋️ Workout / 📊 Progress /
@@ -87,6 +87,11 @@ verify before the next step**. Current badge **v4.10, shipped — PENDING owner 
   `--kb-offset` (both pills' `bottom` calc includes it, so they ride above the keyboard); a
   `focusin` handler `scrollIntoView`s a focused `.rep/.cardio/.notes/.reps-actual-input`
   (scroll happens ONLY there, not on resize). **No sticky day chips.** `funcsmoke` covers it.
+- **v4.10.1** (fix, owner verify) — **iOS zoom-on-focus.** Workout entry inputs were 12–13px,
+  so iOS Safari auto-zoomed on focus and never zoomed back out. Bumped `.rep-input` /
+  `.reps-actual-input` (both rules) / `.notes-input` / `.cardio-input` to **16px** (the iOS
+  no-zoom threshold). Fields are 40px tall so 16px fits cleanly. Did NOT touch the viewport
+  meta (keeps pinch-zoom / accessibility).
 
 **Remaining (version mapping):**
 - **v4.11+ — Step 5 (system cleanup):** (5.1) header/day-chip compression + `_balancedCols`
