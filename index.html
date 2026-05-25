@@ -84,11 +84,14 @@ body.dark .day-summary-total span{color:#5C5A80}
 .item.done .ex-name{color:#B4B2A9;text-decoration:line-through}
 .item.done .ex-sub,.item.done .ex-loc{color:#B4B2A9}
 .item.done .ex-link{opacity:0.4;pointer-events:none}
-.checkbox{width:28px;height:28px;min-width:28px;border-radius:50%;border:2px solid #D3D1C7;display:flex;align-items:center;justify-content:center;transition:all 0.15s;margin-top:1px;flex-shrink:0;cursor:pointer;-webkit-tap-highlight-color:rgba(91,78,168,0.15)}
-/* Patch 3 Step 3 — when .checkbox is rendered as a real <button> (v2 card), neutralise UA button defaults so the visual remains byte-identical to the legacy <div> form. */
+/* v4.1: 44×44 tap target (HIG floor) with the 28px visual circle drawn as ::before.
+   CSS-only — the .checkbox markup (gated by verify.js) is unchanged. */
+.checkbox{position:relative;width:44px;height:44px;min-width:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;-webkit-tap-highlight-color:rgba(91,78,168,0.15)}
+.checkbox::before{content:"";position:absolute;width:28px;height:28px;border-radius:50%;border:2px solid #D3D1C7;box-sizing:border-box;transition:all 0.15s}
+/* Patch 3 Step 3 — when .checkbox is rendered as a real <button> (v2 card), neutralise UA button defaults. */
 button.checkbox{background:transparent;padding:0;font:inherit;line-height:0}
-.item.done .checkbox{background:#7F77DD;border-color:#7F77DD}
-.checkmark{width:10px;height:7px;display:none}
+.item.done .checkbox::before{background:#7F77DD;border-color:#7F77DD}
+.checkmark{width:10px;height:7px;display:none;position:relative;z-index:1}
 .item.done .checkmark{display:block}
 .prog-badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;vertical-align:middle}
 .prog-up{background:#D4F0E2;color:#0A6640}
@@ -130,13 +133,13 @@ body.timer-active .day-panel.show{padding-bottom:72px}
 .rep-label{font-size:11px;color:#888780;white-space:nowrap;min-width:38px}
 .rep-single{display:flex;align-items:center;gap:6px}
 .rep-single .rep-label{min-width:42px}
-.rep-input{flex:1;font-size:12px;padding:0 10px;height:32px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;box-sizing:border-box}
+.rep-input{flex:1;font-size:13px;padding:0 10px;height:40px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;box-sizing:border-box}
 .rep-input:focus{border-color:#7F77DD;background:#fff}
 .rep-input::placeholder{color:var(--muted);font-size:11px;opacity:1}
 /* Actual reps — same height as weight input, label sits above as a header row */
 .reps-col{display:flex;flex-direction:column;align-items:center;gap:0;flex-shrink:0;width:50px}
 .reps-col-label{font-size:9px;color:#B4B2A9;text-align:center;letter-spacing:0.02em;margin-bottom:2px;line-height:1}
-.reps-actual-input{width:50px;font-size:12px;padding:0 4px;height:32px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;text-align:center;box-sizing:border-box}
+.reps-actual-input{width:50px;font-size:13px;padding:0 4px;height:40px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit;text-align:center;box-sizing:border-box}
 .reps-actual-input:focus{border-color:#7F77DD;background:#fff}
 .reps-actual-input::-webkit-inner-spin-button,.reps-actual-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .reps-actual-input[type=number]{-moz-appearance:textfield}
@@ -179,14 +182,14 @@ body.dark .tray-ic.red{background:#3A1A1A} body.dark .tray-ic.warn{background:#3
 .v2-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .v2-ovf-btn{background:none;border:1.5px solid var(--border);border-radius:8px;width:32px;height:32px;font-size:16px;line-height:1;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center}
 .v2-sets{margin:8px 12px 0;border-top:.5px solid var(--border-soft)}
-.v2-sets-head,.rep-single.v2-set{display:grid;grid-template-columns:28px 1fr 56px;gap:8px;align-items:center}
+.v2-sets-head,.rep-single.v2-set{display:grid;grid-template-columns:28px 1fr 64px;gap:8px;align-items:center}
 .v2-sets-head{padding:6px 0 4px;font-size:var(--fs-xs);font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .v2-sets-head .l{padding-left:2px}
 .rep-single.v2-set{padding:5px 0}
 .rep-single.v2-set .rep-label{font-size:var(--fs-sm);color:var(--muted);font-variant-numeric:tabular-nums;min-width:0}
 .rep-single.v2-set .rep-input{width:100%}
 .v2-wl{display:flex;align-items:center;gap:6px;min-width:0}
-.rep-single.v2-set .reps-actual-input{width:54px;text-align:center}
+.rep-single.v2-set .reps-actual-input{width:64px;text-align:center}
 .v2-foot-toggle{display:flex;align-items:center;gap:6px;width:100%;background:none;border:0;border-top:.5px solid var(--border-soft);margin-top:8px;padding:9px 12px;font-size:var(--fs-sm);font-weight:600;color:var(--primary);cursor:pointer}
 .v2-foot-toggle .cv{transition:transform .15s}
 .v2-foot-toggle[aria-expanded="true"] .cv{transform:rotate(180deg)}
@@ -823,7 +826,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.6</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.7</span></div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
     <button onclick="toggleDarkMode()" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
@@ -4981,7 +4984,7 @@ function renderPlanBalance(){
     else summary='needs attention';
   }
   var pill='<button type="button" class="bal-pill'+(flagged?' warn':'')+(_balExpanded?' open':'')+'" onclick="toggleBalanceCard()" aria-expanded="'+_balExpanded+'">'
-    +'<span class="bal-pill-dot"></span><span class="bal-pill-txt">Balance · '+_esc(summary)+'</span>'
+    +'<span class="bal-pill-dot"></span><span class="bal-pill-txt">Weekly plan balance · '+_esc(summary)+'</span>'
     +'<span class="bal-pill-caret">'+(_balExpanded?'▾':'▸')+'</span></button>';
   var card='';
   if(_balExpanded){
@@ -4990,7 +4993,7 @@ function renderPlanBalance(){
       return '<div class="bal-row"><div class="bal-lbls"><span>'+la+' <b>'+x+'</b></span><span><b>'+y+'</b> '+lb+'</span></div>'
         +'<div class="bal-track"><div class="bal-fill" style="width:'+px+'%"></div></div></div>';
     }
-    card='<div class="bal-card"><div class="bal-title">📊 Plan balance <span class="bal-sub">this week</span></div>';
+    card='<div class="bal-card"><div class="bal-title">📊 Weekly plan balance <span class="bal-sub">across all days</span></div>';
     card+=bar('Push',a.push,a.pull,'Pull');
     card+=bar('Upper',a.upper,a.lower,'Lower');
     if(a.core) card+='<div class="bal-core">Core / rotation: <b>'+a.core+'</b></div>';
