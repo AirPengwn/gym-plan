@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.11 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
+**App version:** v4.12 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -33,7 +33,7 @@ logged history.
 
 Working through a **5-step Claude design review** (`C:\Users\airpe\Downloads\MyFit Build
 Plan.html`). **Each step ships as its own version**, then **PAUSE for the user's on-device
-verify before the next step**. Current badge **v4.11, shipped — PENDING owner on-device verify**.
+verify before the next step**. Current badge **v4.12, shipped — PENDING owner on-device verify**.
 
 **Done so far:**
 - **Step 1 → v4.3** — bottom tab bar reduced 5 → **4 tabs** (🏋️ Workout / 📊 Progress /
@@ -101,11 +101,22 @@ verify before the next step**. Current badge **v4.11, shipped — PENDING owner 
   `_syncDarkToggleUI`); old `#dark-toggle` header-icon CSS removed. `funcsmoke` updated
   (toggle now in `#more-appearance`, On/Off state check).
 
+- **Step 5.4 (started) → v4.12** — emoji→monoline SVG icons. **Owner DEFERRED 5.2 + 5.3**
+  (type/color/radius/shadow token sweeps): low user-visible payoff + app-wide visual-shift
+  risk; revisit only if actively maintaining the CSS. Added an inline `<svg><defs><symbol>`
+  sprite at the top of `<body>` (`#ic-sessions`/`#ic-lifts`/`#ic-trends`/`#ic-body`) + a `.ic`
+  class (`fill:none;stroke:currentColor;stroke-width:1.8`, 18px). Swapped the **Progress
+  sub-tabs** (📅/💪/📈/⚖️ → `<use href>`). Icons inherit the active/inactive button color.
+  None of this touches `EXERCISE_DATA`, so **no verify.js re-baseline**.
+
 **Remaining (version mapping):**
-- **v4.12+ — Step 5 cont. (system cleanup):** (5.2) weight tokens + font global-replace;
-  (5.3) color/radius/shadow tokens **[verify.js re-baseline]**, skip the muscle-map palette +
-  `EXERCISE_DATA` inline hex; (5.4) emoji→SVG in cards/sub-tabs **[verify.js re-baseline]**;
-  (5.5) `.btn` vocab consolidation.
+- **v4.13+ — Step 5.4 cont.:** roll the same sprite pattern into Plan buttons (📊 Balance ·
+  📐 Templates · 📚 Library · 🗑 Removed · ➕ Add) and Workout card actions (⏱ Rest is already
+  SVG; ↺ Reset in the day ⋯; 🏋 Plate calc), plus the More section headers (☁️/💾/🎨/⚙️) if
+  wanted. Per-card content emoji in `EXERCISE_DATA` (e.g. 📍 ex-loc) stays — changing it would
+  need a verify.js re-baseline; only do that deliberately.
+- **Deferred:** (5.2) type tokens; (5.3) color/radius/shadow tokens **[verify.js re-baseline]**;
+  (5.5) `.btn` vocab consolidation. Pick up if/when CSS maintainability matters.
 
 **verify.js re-baseline policy:** steps that change rendered card markup (5.3, 5.4) will break
 the byte-identity gate. When intended, regenerate `index.html.bak` from the freshly-rendered

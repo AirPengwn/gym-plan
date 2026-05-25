@@ -366,6 +366,8 @@ body.dark .mm-dot.low{background:#3C3A6E}body.dark .mm-dot.moderate{background:#
 .prog-clear-btn{display:block;width:calc(100% - 28px);margin:0 14px 12px;padding:8px;font-size:12px;border-radius:6px;border:0.5px solid #FFBDBD;background:#FFF5F5;color:#C53030;cursor:pointer;text-align:center;font-weight:600}
 .prog-clear-btn:hover{background:#FED7D7}
 .prog-tab-row{display:flex;gap:6px;margin-bottom:1rem}
+/* v4.12 (Step 5.4): monoline icon — inherits currentColor; swap in via <use>. */
+.ic{width:18px;height:18px;display:inline-block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;vertical-align:middle}
 .prog-tab-btn{flex:1;padding:10px 6px;font-size:11px;font-weight:600;border-radius:8px;border:1.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1.2}
 .prog-tab-btn.active{background:#5B4EA8;border-color:#5B4EA8;color:#fff}
 .prog-panel{display:none}
@@ -858,9 +860,19 @@ body.dark #pc-result{color:#E8E6F8}
 </head>
 <body>
 
+<!-- v4.12 (Step 5.4): monoline icon sprite. Emoji inside cards/sub-tabs/section
+     headers route through <use href="#ic-…"/>; they inherit currentColor + the .ic
+     stroke. Bottom tab bar keeps its emoji. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <symbol id="ic-sessions" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></symbol>
+  <symbol id="ic-lifts" viewBox="0 0 24 24"><path d="M6.5 8.5v7M3.5 10v4M17.5 8.5v7M20.5 10v4M6.5 12h11"/></symbol>
+  <symbol id="ic-trends" viewBox="0 0 24 24"><path d="M3 16l5-5 3.5 3 6.5-7"/><path d="M15 7h5v5"/></symbol>
+  <symbol id="ic-body" viewBox="0 0 24 24"><path d="M12 3.5v17M6 7h12M8 21h8M6 7l-2.5 6.5M6 7l2.5 6.5M18 7l-2.5 6.5M18 7l2.5 6.5"/><path d="M3.5 13.5a2.5 2.5 0 0 0 5 0M15.5 13.5a2.5 2.5 0 0 0 5 0"/></symbol>
+</defs></svg>
+
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.11</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.12</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -907,10 +919,10 @@ body.dark #pc-result{color:#E8E6F8}
   -->
   <!-- Sessions / Lifts / Trends tabs (Manage moved to header 📋 Plan button) -->
   <div class="prog-tab-row">
-    <button class="prog-tab-btn active" onclick="switchProgTab('days',this)"><span style="font-size:18px">📅</span>Sessions</button>
-    <button class="prog-tab-btn" onclick="switchProgTab('exercises',this)"><span style="font-size:18px">💪</span>Lifts</button>
-    <button class="prog-tab-btn" onclick="switchProgTab('stats',this)"><span style="font-size:18px">📈</span>Trends</button>
-    <button class="prog-tab-btn" onclick="switchProgTab('body',this)"><span style="font-size:18px">⚖️</span>Body</button>
+    <button class="prog-tab-btn active" onclick="switchProgTab('days',this)"><svg class="ic" aria-hidden="true"><use href="#ic-sessions"/></svg>Sessions</button>
+    <button class="prog-tab-btn" onclick="switchProgTab('exercises',this)"><svg class="ic" aria-hidden="true"><use href="#ic-lifts"/></svg>Lifts</button>
+    <button class="prog-tab-btn" onclick="switchProgTab('stats',this)"><svg class="ic" aria-hidden="true"><use href="#ic-trends"/></svg>Trends</button>
+    <button class="prog-tab-btn" onclick="switchProgTab('body',this)"><svg class="ic" aria-hidden="true"><use href="#ic-body"/></svg>Body</button>
   </div>
 
   <!-- SESSIONS PANEL (Step 5 — cross-day chronological feed) -->
