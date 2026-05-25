@@ -190,8 +190,11 @@ function domIdByDataEx(doc, day, ex){
   ok(!Array.from(w.document.querySelectorAll('.prog-tab-btn')).some(function(b){return /manage/.test(b.getAttribute('onclick')||'');}),'Manage tab button removed from prog-tab-row');
   ok(!w.document.getElementById('hdr-ovf-btn') && !w.document.getElementById('hdr-menu'),'old ⋯ header overflow menu gone');
   var dk2=w.document.getElementById('dark-toggle');
-  ok(!!dk2 && !dk2.closest('.tabbar'),'🌙 dark toggle stays in the (slim) header');
-  ok(/#dark-toggle\{[^}]*width:40px;height:40px/.test(w.document.documentElement.innerHTML),'🌙 keeps its 40×40 header button shape');
+  ok(!!dk2 && !dk2.closest('.tabbar'),'🌙 dark toggle present, not in the tab bar');
+  ok(!!dk2 && !!dk2.closest('#more-appearance'),'v4.11 · dark toggle moved to More → Appearance');
+  w.toggleDarkMode(); var _st=w.document.getElementById('dark-mode-state');
+  ok(_st && _st.textContent==='On','v4.11 · dark toggle reflects On state'); w.toggleDarkMode();
+  ok(_st && _st.textContent==='Off','v4.11 · dark toggle reflects Off state');
   // v4.3: the single More panel hosts Sync + Backup + Appearance + App, all reachable.
   var mp=w.document.getElementById('p-more');
   ok(!!mp,'More panel (#p-more) exists');

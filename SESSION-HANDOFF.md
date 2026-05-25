@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.10.1 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
+**App version:** v4.11 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -33,7 +33,7 @@ logged history.
 
 Working through a **5-step Claude design review** (`C:\Users\airpe\Downloads\MyFit Build
 Plan.html`). **Each step ships as its own version**, then **PAUSE for the user's on-device
-verify before the next step**. Current badge **v4.10.1, shipped — PENDING owner on-device verify**.
+verify before the next step**. Current badge **v4.11, shipped — PENDING owner on-device verify**.
 
 **Done so far:**
 - **Step 1 → v4.3** — bottom tab bar reduced 5 → **4 tabs** (🏋️ Workout / 📊 Progress /
@@ -92,12 +92,20 @@ verify before the next step**. Current badge **v4.10.1, shipped — PENDING owne
   `.reps-actual-input` (both rules) / `.notes-input` / `.cardio-input` to **16px** (the iOS
   no-zoom threshold). Fields are 40px tall so 16px fits cleanly. Did NOT touch the viewport
   meta (keeps pinch-zoom / accessibility).
+- **Step 5.1 → v4.11** — header/day-chip compression. Header slimmed (title 23→20px, margin
+  1rem→0.5rem). Day chips lighter (`.day-btn` font 12→11px, padding 8/6→6/8, +ellipsis); kept
+  the **full-width balanced grid** (owner's choice, NOT the doc's 72px narrow chips) — note
+  `_balancedCols(7)` already returns 4 (→4+3), so no math change. Button-label cap stays **6**
+  (owner kept it; doc suggested 8). **Dark toggle MOVED** from the header into **More →
+  Appearance** as a `#dark-toggle` `.set-item` row (`#dark-mode-label`/`#dark-mode-state`,
+  `_syncDarkToggleUI`); old `#dark-toggle` header-icon CSS removed. `funcsmoke` updated
+  (toggle now in `#more-appearance`, On/Off state check).
 
 **Remaining (version mapping):**
-- **v4.11+ — Step 5 (system cleanup):** (5.1) header/day-chip compression + `_balancedCols`
-  7→4+3; (5.2) weight tokens + font global-replace; (5.3) color/radius/shadow tokens
-  **[verify.js re-baseline]**, skip the muscle-map palette + `EXERCISE_DATA` inline hex;
-  (5.4) emoji→SVG in cards/sub-tabs **[verify.js re-baseline]**; (5.5) `.btn` vocab consolidation.
+- **v4.12+ — Step 5 cont. (system cleanup):** (5.2) weight tokens + font global-replace;
+  (5.3) color/radius/shadow tokens **[verify.js re-baseline]**, skip the muscle-map palette +
+  `EXERCISE_DATA` inline hex; (5.4) emoji→SVG in cards/sub-tabs **[verify.js re-baseline]**;
+  (5.5) `.btn` vocab consolidation.
 
 **verify.js re-baseline policy:** steps that change rendered card markup (5.3, 5.4) will break
 the byte-identity gate. When intended, regenerate `index.html.bak` from the freshly-rendered

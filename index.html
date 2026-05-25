@@ -54,7 +54,7 @@ body.dark{
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:420px;margin:0 auto}
 .day-selector{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem}
-.day-btn{flex:1;min-width:44px;min-height:44px;padding:8px 6px;border:1px solid var(--border-soft);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;text-align:center;background:#fff;color:var(--text);transition:all 0.15s;line-height:1.2;white-space:nowrap}
+.day-btn{flex:1;min-width:44px;min-height:44px;padding:6px 8px;border:1px solid var(--border-soft);border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;text-align:center;background:#fff;color:var(--text);transition:all 0.15s;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .day-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 2px 8px rgba(91,78,168,.25)}
 .day-btn.progress-tab{font-size:12px;padding:12px 6px}
 .day-panel{display:none}
@@ -220,8 +220,6 @@ body.dark .tray-ic.red{background:#3A1A1A} body.dark .tray-ic.warn{background:#3
 .v2-ovf .ex-loc,.v2-ovf .ex-link,.v2-ovf .ex-link-stretch{position:static;font-size:var(--fs-sm)}
 .v2-card.item.done .v2-head .ex-name{color:var(--muted);text-decoration:line-through}
 /* Header icon cluster: 🌙 📊 ⋯ — all three identical 40×40, centered, same shape */
-#dark-toggle{flex:0 0 auto;width:40px;height:40px;min-width:40px;min-height:40px;padding:0;display:flex;align-items:center;justify-content:center;background:#F5F5F2;border:1px solid #D3D1C7;border-radius:9px;font-size:17px;line-height:1;cursor:pointer;color:inherit;vertical-align:middle}
-body.dark #dark-toggle{background:#252540;border-color:#3C3A5C;color:#E8E6F8}
 /* v3.30 — bottom tab bar (primary navigation) */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:flex;max-width:600px;margin:0 auto;background:var(--surface,#fff);border-top:1px solid var(--border,#E6E4DD);padding:6px 4px;padding-bottom:calc(6px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(31,29,56,.06)}
 body.dark .tabbar{background:#1C1B30;border-top-color:#3C3A5C}
@@ -860,12 +858,9 @@ body.dark #pc-result{color:#E8E6F8}
 </head>
 <body>
 
-<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.10.1</span></div>
-  </div>
-  <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
-    <button onclick="toggleDarkMode()" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.11</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -1044,7 +1039,7 @@ body.dark #pc-result{color:#E8E6F8}
   </div>
   <div class="set-group" id="more-appearance">
     <div class="set-gh">🎨 Appearance</div>
-    <div class="set-note">Tap the 🌙 button in the top-right to switch light / dark.</div>
+    <button class="set-item" id="dark-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode"><span id="dark-mode-label">🌙 Dark mode</span><span class="set-caret" id="dark-mode-state">Off</span></button>
   </div>
   <div class="set-group" id="more-app">
     <div class="set-gh">⚙️ App</div>
@@ -8325,17 +8320,20 @@ function drawMeasChartGeneric(data, canvas, wrap){
 function toggleDarkMode(){
   var isDark=document.body.classList.toggle('dark');
   localStorage.setItem('darkMode',isDark?'1':'0');
-  document.getElementById('dark-toggle').innerHTML='<span aria-hidden="true">'+(isDark?'☀️':'🌙')+'</span>';
+  _syncDarkToggleUI(isDark);
   // Muscle-map / heat SVGs bake the palette in at render time — repaint them.
   try{ if(typeof renderProgress==='function') renderProgress(); }catch(e){}
   try{ if(typeof renderStats==='function') renderStats(); }catch(e){}
 }
+// v4.11: dark toggle moved to More → Appearance as a labeled row (was a header icon).
+function _syncDarkToggleUI(isDark){
+  var lb=document.getElementById('dark-mode-label'); if(lb) lb.textContent=(isDark?'☀️ ':'🌙 ')+'Dark mode';
+  var st=document.getElementById('dark-mode-state'); if(st) st.textContent=isDark?'On':'Off';
+}
 (function initDarkMode(){
-  if(localStorage.getItem('darkMode')==='1'){
-    document.body.classList.add('dark');
-    var btn=document.getElementById('dark-toggle');
-    if(btn) btn.innerHTML='<span aria-hidden="true">☀️</span>';
-  }
+  var isDark=localStorage.getItem('darkMode')==='1';
+  if(isDark) document.body.classList.add('dark');
+  _syncDarkToggleUI(isDark);
 })();
 
 // ── Haptic feedback ───────────────────────────────────────────────────────────────────
