@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v3.35 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
+**App version:** v3.36 · **Updated:** 2026-05-24 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -28,7 +28,7 @@ logged history.
 
 ## Current state (all green)
 
-- **35 test suites pass** via `cd tests && npm test` (`run-all.js`). Primary gate =
+- **37 test suites pass** via `cd tests && npm test` (`run-all.js`). Primary gate =
   `verify.js` (byte-identity of the unedited stock plan vs `index.html.bak`). **CI runs
   the whole suite on every push/PR to `main`** (`.github/workflows/test.yml`).
 - **Exercise library = 191 catalog entries + 28 built-ins.** Grown in dup-scanned batches
