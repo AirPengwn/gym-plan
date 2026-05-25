@@ -97,7 +97,7 @@ button.checkbox{background:transparent;padding:0;font:inherit;line-height:0}
 /* v4.2: a slim floating pill docked ABOVE the bottom tab bar (z-index 1001 > the
    bar's 1000, lifted ~66px so it's never clipped) — the iOS "mini-bar above tabs"
    pattern, replacing the old full-width bottom bar that slid under the tab bar. */
-.rest-timer-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px);transform:translateX(-50%) translateY(220%);max-width:calc(100% - 20px);background:rgba(60,52,137,0.96);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 14px;font-size:14px;font-weight:600;z-index:1001;border-radius:14px;box-shadow:0 6px 22px rgba(31,29,56,0.3);transition:transform 0.25s}
+.rest-timer-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px);transform:translateX(-50%) translateY(calc(100% + 74px + env(safe-area-inset-bottom)));max-width:calc(100% - 20px);background:rgba(60,52,137,0.96);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 14px;font-size:14px;font-weight:600;z-index:1001;border-radius:14px;box-shadow:0 6px 22px rgba(31,29,56,0.3);transition:transform 0.25s}
 .ps-date{border-bottom:1px dotted var(--primary-2);cursor:pointer;-webkit-tap-highlight-color:rgba(91,78,168,.15)}
 .ps-cv{font-size:9px;opacity:.7;margin-left:1px}
 .rest-timer-bar.show{transform:translateX(-50%) translateY(0)}
@@ -806,7 +806,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.3</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.4</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
