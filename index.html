@@ -284,12 +284,13 @@ body.dark .primary-toggle-hint.pt-primary{color:#5DD8A0}
 body.dark .primary-toggle-hint.pt-reader{color:#FFD740}
 #hdr-menu[hidden]{display:none}
 /* Follow-up 4: AA contrast for the expanded card footer (both themes) */
-.v2-foot .last-time{color:var(--text)}
-.v2-foot .last-time .last-time-label,.v2-foot .last-time .last-time-vals{color:var(--text)}
-.v2-foot .rpe-top-label,.v2-foot .rpe-ends,.v2-foot .rpe-top-val{color:var(--muted)}
+/* v4.16 (nit 9): last-time is now always-on (above the sets), not in .v2-foot. */
+.v2-card .last-time{color:var(--text)}
+.v2-card .last-time .last-time-label,.v2-card .last-time .last-time-vals{color:var(--text)}
+.v2-foot .rpe-top-val{color:var(--muted)}
 .v2-foot .notes-input{color:var(--text)}
 .v2-foot .notes-input::placeholder{color:var(--muted);opacity:1}
-body.dark .v2-foot .last-time{background:#2A2850}
+body.dark .v2-card .last-time{background:#2A2850}
 body.dark .v2-foot .rpe-ends{color:#9E9CC4}
 /* Patch-2 Step 1: inline progress badge on the card head */
 .v2-nudge{display:none;margin-top:4px}
@@ -571,6 +572,11 @@ body.dark .overload-nudge{background:#0F3A2E;color:#5DD8A0}
 .rpe-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#5B4EA8;cursor:pointer;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
 .rpe-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#5B4EA8;cursor:pointer;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
 .rpe-ends{display:flex;justify-content:space-between;font-size:9px;color:#B4B2A9;padding:0 1px;margin-top:1px}
+/* v4.16 (nit 7): RPE as one inline pill + slider, not three tiny labels. */
+.rpe-compact{flex-direction:row;flex-wrap:wrap;align-items:center;gap:9px;padding:6px 0}
+.rpe-pill{flex-shrink:0;font-size:12px;font-weight:700;color:#5B4EA8;background:#EEEDFE;border-radius:999px;padding:3px 11px;white-space:nowrap}
+body.dark .rpe-pill{background:#2A2850;color:#C7C4EE}
+.rpe-compact .rpe-slider{flex:1;min-width:150px}
 .rpe-label{display:none}
 .rpe-val{display:none}
 .rpe-desc{display:none}
@@ -890,7 +896,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.15</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.16</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -1803,19 +1809,18 @@ function buildCardHTML_v2(rec){
       +'<input class="reps-actual-input" type="number" inputmode="decimal" min="1" max="99" data-ex-reps="'+_esc(hist)+'" placeholder="—"/>'
       +'</div>';
   }
-  var rpe='<div class="rpe-row"><div class="rpe-top"><span class="rpe-top-label">How hard was it?</span><span class="rpe-top-val" id="rpe-val-'+hist.replace(/[^a-z0-9]/gi,'-')+'"></span></div>'
-    +'<div class="rpe-track"><input class="rpe-slider" type="range" min="0" max="10" value="0" data-ex="'+_esc(hist)+'" oninput="this.style.setProperty(\'--rpe-pct\',(this.value*10)+\'%\');var vEl=this.closest(\'.rpe-row\').querySelector(\'.rpe-top-val\');if(vEl){var descs=[\'—\',\'Very light\',\'Light\',\'Moderate\',\'Moderate\',\'Hard\',\'Hard\',\'Very hard\',\'Very hard\',\'Maximal\',\'Max effort\'];vEl.textContent=(this.value>0?this.value+\' · \'+descs[parseInt(this.value)]:\'\');}"></div>'
-    +'<div class="rpe-ends"><span>1 easy</span><span>10 max</span></div></div>';
+  var rpe='<div class="rpe-row rpe-compact"><span class="rpe-top-val rpe-pill" id="rpe-val-'+hist.replace(/[^a-z0-9]/gi,'-')+'">RPE —</span>'
+    +'<input class="rpe-slider" type="range" min="0" max="10" value="0" data-ex="'+_esc(hist)+'" aria-label="RPE — how hard was it" oninput="this.style.setProperty(\'--rpe-pct\',(this.value*10)+\'%\');var vEl=this.closest(\'.rpe-row\').querySelector(\'.rpe-top-val\');if(vEl){var descs=[\'—\',\'Very light\',\'Light\',\'Moderate\',\'Moderate\',\'Hard\',\'Hard\',\'Very hard\',\'Very hard\',\'Maximal\',\'Max effort\'];vEl.textContent=(this.value>0?\'RPE \'+this.value+\' · \'+descs[parseInt(this.value)]:\'RPE —\');}"></div>';
   var pain='<div class="pain-row"><span class="pain-label">Feeling:</span>'
     +'<button class="pain-btn active-ok" data-ex="'+_esc(hist)+'" onclick="setPain(this,\'ok\')">✓ Good</button>'
     +'<button class="pain-btn" data-ex="'+_esc(hist)+'" onclick="setPain(this,\'flag\')">⚠️ Discomfort</button></div>';
   return head
    +'    <div class="fields-wrap">\n'
    +'      <div class="v2-ovf" hidden>'+loc+demo+stretch+pain+'</div>\n'
+   +'      <div class="last-time" id="lt-'+_dash(hist)+'"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>\n'
    +'      <div class="v2-sets"><div class="v2-sets-head"><div></div><div class="l">Weight</div><div>Reps</div></div><div class="rep-row">'+rows+'</div></div>\n'
-   +'      <button type="button" class="v2-foot-toggle" aria-expanded="false" onclick="cardToggle(this,\'foot\')">Last time, RPE &amp; notes <span class="cv" aria-hidden="true">▾</span></button>\n'
+   +'      <button type="button" class="v2-foot-toggle" aria-expanded="false" onclick="cardToggle(this,\'foot\')">RPE &amp; notes <span class="cv" aria-hidden="true">▾</span></button>\n'
    +'      <div class="v2-foot" hidden>\n'
-   +'        <div class="last-time" id="lt-'+_dash(hist)+'"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>\n'
    +'        '+rpe+'\n'
    +'        <div class="notes-row" style="margin-top:8px"><span class="weight-label" style="font-size:11px;color:var(--muted);white-space:nowrap">Notes:</span><input class="notes-input" data-ex="'+_esc(hist)+'-notes" type="text" placeholder="'+_esc(rec.notesPlaceholder||'e.g. notes')+'"/></div>\n'
    +'      </div>\n'

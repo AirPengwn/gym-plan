@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.15 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
+**App version:** v4.16 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -33,7 +33,7 @@ logged history.
 
 Working through a **5-step Claude design review** (`C:\Users\airpe\Downloads\MyFit Build
 Plan.html`). **Each step ships as its own version**, then **PAUSE for the user's on-device
-verify before the next step**. Current badge **v4.15, shipped — PENDING owner on-device verify**.
+verify before the next step**. Current badge **v4.16, shipped — PENDING owner on-device verify**.
 
 ### Design "1-line nits" pass (post-overhaul) — owner picked nits 4–20,22 (skipping 1/2/21 done, 3 day-colors)
 Grouped into v4.15–v4.20, one batch per version, pause for verify each.
@@ -43,7 +43,14 @@ Grouped into v4.15–v4.20, one batch per version, pause for verify each.
   #A7A2CE dark) — `funcsmoke` token assert updated; (8) `.item.done .ex-sub/.ex-loc` contrast
   lifted (#78766D light / #9A95C4 dark), title still struck; (6) check-in bar gated — only
   injected if no check-in in the last 7d (`gymlog_checkin_ts`, local-only, set in `setCheckin`).
-- **Queued:** v4.16 card footer (9 promote last-time + 7 RPE pill); v4.17 Progress (10 hide
+- **v4.16 (card footer):** (9) `.last-time` moved OUT of the collapsed `.v2-foot` to always-on
+  (direct child of `.fields-wrap`, above the sets; self-hides via `.has-data`); footer toggle
+  relabeled "RPE & notes". Dark style generalized `.v2-foot .last-time`→`.v2-card .last-time`.
+  (7) RPE collapsed from 3 labels to one inline **pill** ("RPE 7 · Hard") beside the slider
+  (`.rpe-compact`/`.rpe-pill`); kept the `.rpe-top-val` class so the inline `oninput` is
+  unchanged (now prefixes "RPE "). Only the v2 (strength) card changed; the injected non-v2
+  RPE path (cardio/legacy) is untouched. `funcsmoke` footer asserts updated.
+- **Queued:** ~~v4.16 card footer~~; v4.17 Progress (10 hide
   empty sub-tabs, 11 13→12wk, 12 heat-map title); v4.18 Plan (14 removed container, 15 templates
   →screen push, 13 reorder control); v4.19 Sync/Settings (16 toggle switch, 18 Test-mode group,
   17 snapshot 2-step); v4.20 Modals/Toast (19 radius, 20 backup hint, 22 toast reposition).
