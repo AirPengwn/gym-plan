@@ -297,7 +297,19 @@ function domIdByDataEx(doc, day, ex){
   ok(pd && pd.querySelector('.ps-cv'),'chevron present on the date');
   try{ w.editSessionDate('a',0); }catch(e){}
   ok(w.document.querySelector('#pdate-a-0 .edit-date-input, #pdate-a-0.edit-date-input') || /edit-date-input/.test((w.document.getElementById('pdate-a-0')||{}).innerHTML||''),'editSessionDate now opens the datetime input (latent bug fixed)');
-  ok(/border-radius:12px 12px 0 0/.test(w.document.documentElement.innerHTML),'rest-timer bar has rounded top corners');
+  // v4.2: rest timer is now a floating pill ABOVE the tab bar (z-index 1001 > the
+  // bar's 1000, lifted ~66px so it's never clipped) — fully rounded, not a bottom bar.
+  var src=w.document.documentElement.innerHTML;
+  ok(/\.rest-timer-bar\{[^}]*z-index:1001/.test(src),'rest-timer sits above the tab bar (z-index 1001)');
+  ok(/\.rest-timer-bar\{[^}]*bottom:calc\(env\(safe-area-inset-bottom\) \+ 66px\)/.test(src),'rest-timer lifted above the tab bar (not clipped)');
+  ok(/\.rest-timer-bar\{[^}]*border-radius:14px/.test(src),'rest-timer is a fully-rounded floating pill');
+  // start/stop toggles the .show class
+  if(typeof w.startRestTimer==='function'){
+    w.startRestTimer(90);
+    ok(w.document.getElementById('rest-timer-bar').classList.contains('show'),'startRestTimer shows the pill');
+    w.stopRestTimer();
+    ok(!w.document.getElementById('rest-timer-bar').classList.contains('show'),'stopRestTimer hides the pill');
+  }
   w.close();
 })();
 

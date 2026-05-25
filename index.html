@@ -94,10 +94,13 @@ button.checkbox{background:transparent;padding:0;font:inherit;line-height:0}
 .prog-up{background:#D4F0E2;color:#0A6640}
 .prog-down{background:#FFE5E5;color:#C0392B}
 .prog-same{background:#F0F0F0;color:#888780}
-.rest-timer-bar{position:fixed;bottom:calc(env(safe-area-inset-bottom) + 6px);left:0;right:0;background:rgba(60,52,137,0.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;font-size:15px;font-weight:600;z-index:999;border-radius:12px 12px 0 0;transform:translateY(120%);transition:transform 0.25s}
+/* v4.2: a slim floating pill docked ABOVE the bottom tab bar (z-index 1001 > the
+   bar's 1000, lifted ~66px so it's never clipped) — the iOS "mini-bar above tabs"
+   pattern, replacing the old full-width bottom bar that slid under the tab bar. */
+.rest-timer-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px);transform:translateX(-50%) translateY(220%);max-width:calc(100% - 20px);background:rgba(60,52,137,0.96);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 14px;font-size:14px;font-weight:600;z-index:1001;border-radius:14px;box-shadow:0 6px 22px rgba(31,29,56,0.3);transition:transform 0.25s}
 .ps-date{border-bottom:1px dotted var(--primary-2);cursor:pointer;-webkit-tap-highlight-color:rgba(91,78,168,.15)}
 .ps-cv{font-size:9px;opacity:.7;margin-left:1px}
-.rest-timer-bar.show{transform:translateY(0)}
+.rest-timer-bar.show{transform:translateX(-50%) translateY(0)}
 .rest-timer-bar button{background:#ffffff33;border:none;color:#fff;font-size:13px;font-weight:600;padding:4px 10px;border-radius:8px;cursor:pointer}
 /* Push page content up when rest timer is visible so btn-row isn't obscured */
 body.timer-active .day-panel.show{padding-bottom:72px}
@@ -803,7 +806,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.1</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.2</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
