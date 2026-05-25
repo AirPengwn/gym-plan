@@ -53,6 +53,12 @@ ok(w.getDayShort(k).length<=6,'label capped to 6 chars ('+w.getDayShort(k)+')');
 // ── the modal: openDayEdit prefills (rename) vs defaults (add) ──
 w.openDayEdit(k);
 ok(D.getElementById('day-edit-overlay').classList.contains('show'),'openDayEdit shows the modal');
+// v3.41 contrast guard: inputs must use a theme-aware bg (var(--surface)), NOT the
+// undefined var(--card) which fell back to white → invisible light text in dark mode.
+['day-edit-name','day-edit-short'].forEach(function(id){
+  var stl=D.getElementById(id).getAttribute('style')||'';
+  ok(/var\(--surface\)/.test(stl) && !/var\(--card/.test(stl),id+' uses theme-aware var(--surface) bg (readable in dark mode)');
+});
 ok(D.getElementById('day-edit-name').value==='Upper Pull' && D.getElementById('day-edit-short').value===w.getDayShort(k),'rename mode prefills name + label');
 w.closeDayEdit();
 w.openDayEdit(null);
