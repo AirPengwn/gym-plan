@@ -25,7 +25,7 @@
   --primary:        #5B4EA8;
   --primary-2:      #7F77DD;
   --primary-tint:   #EEEDFE;
-  --ghost:          #5B4EA8;   /* italic last-session/draft text, light theme */
+  --ghost:          #6E6C66;   /* italic prefill: italic is the cue, color stays legible (nit 5) */
   --surface:        #FAFAF8;
   --surface-dark:   #1A1A2E;
   --text:           #1F1D38;
@@ -49,7 +49,7 @@ body.dark{
   --border:         #3C3A5C;
   --border-soft:    #3C3A5C;
   --primary-tint:   #2A2850;
-  --ghost:          #7F77DD;   /* italic ghost text, dark theme (primary-2) */
+  --ghost:          #A7A2CE;   /* italic prefill, dark theme — legible, italic is the cue (nit 5) */
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:420px;margin:0 auto}
@@ -60,8 +60,11 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .day-panel{display:none}
 .day-panel.show{display:block}
 .progress-wrap{margin-bottom:1rem}
-.progress-track{height:6px;background:#F1EFE8;border-radius:3px;overflow:hidden;margin-top:4px}
-.progress-fill{height:100%;background:#7F77DD;border-radius:3px;transition:width 0.3s}
+.progress-track{height:8px;background:#F1EFE8;border-radius:4px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;background:#7F77DD;border-radius:4px;transition:width 0.3s,background 0.3s}
+.progress-fill.full{background:#10B981}
+@keyframes barpulse{0%{filter:brightness(1.7)}100%{filter:brightness(1)}}
+.progress-fill.pulse{animation:barpulse .45s ease-out}
 .progress-label{display:flex;justify-content:space-between;font-size:12px;color:#888780}
 .section-hdr{font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:0.07em;margin:0.5rem 0 0.4rem;padding-bottom:4px;border-bottom:0.5px solid var(--border-soft)}
 .ex-cat{display:inline-block;font-size:9px;font-weight:700;color:#534AB7;background:#EEEDFE;border-radius:4px;padding:1px 5px;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em}
@@ -82,7 +85,7 @@ body.dark .day-summary-total span{color:#5C5A80}
 .item.done{background:#F5F5F2}
 .item-top{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer}
 .item.done .ex-name{color:#B4B2A9;text-decoration:line-through}
-.item.done .ex-sub,.item.done .ex-loc{color:#B4B2A9}
+.item.done .ex-sub,.item.done .ex-loc{color:#78766D}
 .item.done .ex-link{opacity:0.4;pointer-events:none}
 /* v4.1: 44×44 tap target (HIG floor) with the 28px visual circle drawn as ::before.
    CSS-only — the .checkbox markup (gated by verify.js) is unchanged. */
@@ -479,7 +482,7 @@ body.dark .ex-name{color:#E8E6F8}
 body.dark .ex-sub{color:#9896C8}
 body.dark .ex-loc{color:#7F77DD}
 body.dark .item.done .ex-name{color:#5C5A80;text-decoration:line-through}
-body.dark .item.done .ex-sub,body.dark .item.done .ex-loc{color:#5C5A80}
+body.dark .item.done .ex-sub,body.dark .item.done .ex-loc{color:#9A95C4}
 body.dark .day-selector{background:transparent;border:0}
 body.dark .day-btn{background:#1A1A2E;border-color:#3C3A5C;color:#C7C4EE}
 body.dark .day-btn.active{background:#5B4EA8;color:#fff;border-color:#5B4EA8}
@@ -887,7 +890,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.14</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.15</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -3332,7 +3335,11 @@ function tog(id,day,total){
   var p=document.getElementById('p-'+day);
   var d=p.querySelectorAll('.item.done').length;
   document.getElementById('cnt-'+day).textContent=d+' / '+total;
-  document.getElementById('bar-'+day).style.width=Math.round(d/total*100)+'%';
+  var _fill=document.getElementById('bar-'+day);
+  _fill.style.width=Math.round(d/total*100)+'%';
+  // v4.15 (nit 4): celebrate progress — green at 100%, a quick pulse on each tick.
+  _fill.classList.toggle('full', total>0 && d>=total);
+  _fill.classList.remove('pulse'); void _fill.offsetWidth; _fill.classList.add('pulse');
   try{ updateCompleteBar(day); }catch(e){}   // v4.10: float Complete at >=80%
   haptic('light');
   // Save draft every time an exercise is checked/unchecked
@@ -3422,7 +3429,8 @@ function rst(day,total){
     el.classList.remove('has-data');
   });
   document.getElementById('cnt-'+day).textContent='0 / '+total;
-  document.getElementById('bar-'+day).style.width='0%';
+  var _rb=document.getElementById('bar-'+day);
+  _rb.style.width='0%'; _rb.classList.remove('full','pulse');
   try{ updateCompleteBar(day); }catch(e){}   // v4.10: clears the float (done now 0)
   // Clear draft now that session is permanently saved
   localStorage.removeItem('gymlog_draft_'+day);
@@ -3667,6 +3675,7 @@ function checkinBtnHTML(day){
 
 function setCheckin(day, feeling){
   checkinState[day]=feeling;
+  try{ localStorage.setItem('gymlog_checkin_ts', String(Date.now())); }catch(e){}  // v4.15 (nit 6): cadence stamp
   var bar=document.getElementById('checkin-bar-'+day);
   if(!bar) return;
   var emoji={great:'💪',okay:'😐',tired:'😴'};
@@ -3690,6 +3699,11 @@ function setCheckin(day, feeling){
 })();
 
 (function injectCheckinBars(){
+  // v4.15 (nit 6): only prompt if no check-in was logged in the last 7 days —
+  // otherwise it becomes furniture. (Local UI cadence; not part of the synced payload.)
+  var recent=false;
+  try{ var ts=parseInt(localStorage.getItem('gymlog_checkin_ts')||'0',10); recent = ts>0 && (Date.now()-ts < 7*86400000); }catch(e){}
+  if(recent) return;
   getDays().forEach(function(day){
     var p=document.getElementById('p-'+day);
     if(!p) return;
