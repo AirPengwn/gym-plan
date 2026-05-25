@@ -7,7 +7,7 @@ const path = require('path');
 
 const SUITES = [
   'verify', 'funcsmoke', 'verif_s1', 'buildcard', 'heatcheck', 'msvgcheck',
-  'progress_spot', 'dayconfig_spot', 'daymgr_spot', 'dayedit_spot', 'plansync_spot', 'newday_add_spot',
+  'progress_spot', 'dayconfig_spot', 'daymgr_spot', 'dayedit_spot', 'consistency_spot', 'plansync_spot', 'newday_add_spot',
   'balanced_rows_spot', 'remove_perday_spot', 'library_spot', 'durability_spot',
   'sw_spot', 'cloudarchive_spot', 'finalize_spot', 'sessgroup_spot', 'metadata_spot', 'balance_spot', 'toast_spot', 'templates_spot', 'progression_spot', 'dupscan',
   'patch3_spot', 'patch4_spot', 'patch5_spot', 'patch5_lossless', 'patch5_health',

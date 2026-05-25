@@ -798,7 +798,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.37</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v3.38</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -7352,7 +7352,13 @@ function computeStats(){
     if(uniqueDays[key]){ streak++; } else if(i>0){ break; }
     check.setDate(check.getDate()-1);
   }
-  var allDayKeys=Object.keys(uniqueDays).sort();
+  // v3.38: sort day-keys CHRONOLOGICALLY, not lexically — "2026-5-9" sorts after
+  // "2026-5-10" as a string, which under-counted streaks straddling single→double
+  // digit dates. Parse to a real date for the comparison.
+  var allDayKeys=Object.keys(uniqueDays).sort(function(a,b){
+    var pa=a.split('-'), pb=b.split('-');
+    return new Date(+pa[0],+pa[1],+pa[2]) - new Date(+pb[0],+pb[1],+pb[2]);
+  });
   var longestStreak=0,curStr=0,prevDate=null;
   allDayKeys.forEach(function(k){
     var p=k.split('-');
