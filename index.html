@@ -284,6 +284,10 @@ body.dark .v2-nudge.down{color:#E0A800}
 .stat-box{flex:1 1 54px;min-width:54px;max-width:96px;background:#fff;border:0.5px solid #E8E8E4;border-radius:10px;padding:8px 4px;text-align:center}
 .stat-num{font-size:20px;font-weight:700;color:#5B4EA8}
 .stat-label{font-size:10px;color:#888780;margin-top:2px;line-height:1.3}
+/* v4.1 — single hero metric line (replaces the per-day stat-box grid) */
+.prog-hero{width:100%;text-align:center;font-size:13px;font-weight:600;color:var(--muted);padding:2px 0}
+.prog-hero b{color:var(--text);font-weight:800;font-size:15px}
+.prog-hero-sep{margin:0 9px;color:var(--border);font-weight:400}
 .prog-day-card{background:#fff;border:0.5px solid #E8E8E4;border-radius:12px;margin-bottom:1rem;overflow:hidden}
 .prog-day-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
 .prog-day-header:hover{background:#FAFAF8}
@@ -438,7 +442,7 @@ body.dark .day-btn{background:#1A1A2E;border-color:#3C3A5C;color:#C7C4EE}
 body.dark .day-btn.active{background:#5B4EA8;color:#fff;border-color:#5B4EA8}
 body.dark .prog-tab-btn{background:#252540;border-color:#3C3A5C;color:#9896C8}
 body.dark .prog-tab-btn.active{background:#5B4EA8;color:#fff}
-body.dark .prog-stats{background:#252540}
+body.dark .prog-stats{background:transparent}
 body.dark .stat-box{background:#1A1A2E}
 body.dark .stat-num{color:#B4B2D8}
 body.dark .prog-day-card{background:#252540;border-color:#3C3A5C}
@@ -799,7 +803,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:1rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.0</span></div>
+    <div style="font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:10px;font-weight:400;color:var(--muted);margin-left:10px;letter-spacing:0;vertical-align:baseline;">v4.1</span></div>
     <div style="font-size:12px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Anytime Fitness Guilford</div>
   </div>
   <div style="display:flex;gap:5px;flex-shrink:0;position:relative;align-items:center;">
@@ -835,10 +839,10 @@ body.dark #pc-result{color:#E8E6F8}
 
 <!-- ═══ PROGRESS ═══ -->
 <div class="day-panel" id="p-prog">
-  <!-- Stats row -->
-  <!-- v2.76 (Phase A.2): Total box static; per-day boxes injected by renderProgressDayWidgets() from DAYS_CONFIG. -->
+  <!-- v4.1: a single compact hero metric line (sessions · PRs · streak) replaces the
+       old per-day stat-box grid; per-day counts still live on the filter-chip pills. -->
   <div class="prog-stats" id="prog-stats-row">
-    <div class="stat-box"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total</div></div>
+    <div id="prog-hero" class="prog-hero"></div>
   </div>
 
   <!--
@@ -3054,18 +3058,8 @@ function renderDaySelector(){
 // existing id="prog-count-<key>" convention.
 function renderProgressDayWidgets(){
   var cfg=getDaysConfig();
-  var statRow=document.getElementById('prog-stats-row');
-  if(statRow){
-    statRow.querySelectorAll('.stat-box[data-day]').forEach(function(b){ b.parentNode.removeChild(b); });
-    cfg.forEach(function(d,i){
-      var box=document.createElement('div');
-      box.className='stat-box';
-      box.setAttribute('data-day', d.key);
-      box.innerHTML='<div class="stat-num" id="stat-day-'+d.key+'">0</div><div class="stat-label">Day '+(i+1)+'</div>';
-      statRow.appendChild(box);
-    });
-    _applyBalancedRows(statRow, 5);
-  }
+  // v4.1: per-day stat boxes retired in favor of the hero line; per-day counts
+  // remain on the filter-chip pills below.
   var chipRow=document.getElementById('sess-filter-row');
   if(chipRow){
     chipRow.querySelectorAll('.sess-filter[data-d]').forEach(function(c){ if(c.getAttribute('data-d')!=='all') c.parentNode.removeChild(c); });
@@ -6519,20 +6513,30 @@ function _sessionRowsHTML(exEntries){
   }).join('');
 }
 function renderProgress(){
-  var total=0, allItems=[];
+  var total=0, allItems=[], prTotal=0;
   getDays().forEach(function(day){
     var saved=getSaved(day);
     total+=saved.length;
     var n=saved.length;
-    // Keep the filter-chip count + day stat box updating (functionality contract).
-    // v2.76: ids derived directly from the day key (prog-count-<key>, stat-day-<key>).
+    // Keep the filter-chip per-day count updating (functionality contract).
     var cEl=document.getElementById('prog-count-'+day); if(cEl) cEl.textContent=n;
-    var sEl=document.getElementById('stat-day-'+day); if(sEl) sEl.textContent=n;
     saved.forEach(function(s, idx){
       allItems.push({day:day, idx:idx, sess:s, ts:sessTs(s)});
+      try{ prTotal += _sessionPRCount(day, sessTs(s), s); }catch(e){}
     });
   });
-  document.getElementById('stat-total').textContent=total;
+  // v4.1: hero metric line (sessions · PRs · streak) — replaces the stat-box grid.
+  var heroEl=document.getElementById('prog-hero');
+  if(heroEl){
+    var streak=0; try{ var st=computeStats(); if(st) streak=st.streak||0; }catch(e){}
+    if(!total){ heroEl.textContent='No sessions logged yet'; }
+    else {
+      var parts=[total+' session'+(total===1?'':'s')];
+      if(prTotal>0) parts.push(prTotal+' PR'+(prTotal===1?'':'s'));
+      if(streak>0) parts.push(streak+'d streak');
+      heroEl.innerHTML=parts.map(function(p){ return '<b>'+_esc(p.split(' ')[0])+'</b> '+_esc(p.split(' ').slice(1).join(' ')); }).join('<span class="prog-hero-sep">·</span>');
+    }
+  }
 
   var filter=_sessFilterDay;
   var actionsEl=document.getElementById('sess-filter-actions');
