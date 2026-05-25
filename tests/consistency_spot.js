@@ -41,9 +41,9 @@ ok(st.longestStreak===4,'longest streak = 4 (the older block) — got '+st.longe
 ok(st.daysSinceLast===0,'days since last = 0 (trained today)');
 ok(typeof st.avgDaysBetween==='number' && st.avgDaysBetween>0,'avg days between sessions computed');
 
-// ── the activity calendar renders the last 13 weeks with a legend + day cells ──
+// ── the activity calendar renders the last 12 weeks with a legend + day cells ──
 var heat=w.renderActivityHeatmap();
-ok(/last 13 weeks/.test(heat),'activity heatmap titled "last 13 weeks"');
+ok(/last 12 weeks/.test(heat),'activity heatmap titled "last 12 weeks"');
 ok(/Less/.test(heat) && /More/.test(heat),'activity heatmap has the Less→More legend');
 ok(/session/.test(heat),'activity heatmap cells carry session-count tooltips');
 

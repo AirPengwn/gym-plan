@@ -347,7 +347,8 @@ body.dark .day-bal-hint{background:#252540}
 .sess-nav-btn:disabled{opacity:0.35;cursor:default}
 .sess-nav-label{font-size:12px;color:#888780;font-weight:600}
 .muscle-map-wrap{padding:10px 14px 4px;border-top:0.5px solid #F1EFE8}
-.muscle-map-title{font-size:10px;font-weight:700;color:#888780;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+/* v4.17 (nit 12): the muscle-load heading reads as a real header, not small-caps. */
+.stats-section-title.muscle-map-title{font-size:14px;font-weight:700;color:var(--text);letter-spacing:0;text-transform:none;margin-bottom:8px}
 .muscle-map-svg{width:100%;max-width:320px;display:block;margin:0 auto}
 /* v3.37 — interactive muscle chips (tap → drill-in) below the heat map */
 .mm-chips{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 2px}
@@ -896,7 +897,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.16</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.17</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -6761,7 +6762,18 @@ function _sessionRowsHTML(exEntries){
     return '<details class="sess-cardio"><summary><span class="sess-lift-name">'+_esc(_humanizeCardioBase(grp.base))+'</span><span class="sess-cardio-sum">'+_esc(sum)+'</span></summary>'+lines+'</details>';
   }).join('');
 }
+// v4.17 (nit 10): hide the Lifts + Trends sub-tabs until there's at least one
+// logged session, so a brand-new user isn't met with empty charts. Sessions
+// (the empty-state lives there) and Body (where measurements are entered) always show.
+function _syncProgTabsVisible(){
+  var has=false; try{ has=_totalSessions()>0; }catch(e){ has=true; }
+  document.querySelectorAll('.prog-tab-row .prog-tab-btn').forEach(function(b){
+    var oc=b.getAttribute('onclick')||'';
+    if(/'(exercises|stats)'/.test(oc)) b.style.display = has ? '' : 'none';
+  });
+}
 function renderProgress(){
+  try{ _syncProgTabsVisible(); }catch(e){}
   var total=0, allItems=[], prTotal=0;
   getDays().forEach(function(day){
     var saved=getSaved(day);
@@ -7803,7 +7815,7 @@ function renderStats(){
     var _loads=computeWeeklyMuscleLoad();
     var _hasLoad=_loads && Object.keys(_loads).some(function(k){ return _loads[k] && _loads[k]!=='none'; });
     if(_hasLoad){
-      html+='<div class="stats-section"><div class="stats-section-title">Weekly Muscle Load</div>'
+      html+='<div class="stats-section"><div class="stats-section-title muscle-map-title">Weekly muscle load</div>'
         +'<div class="muscle-map-wrap" style="border-top:none;padding:0">'
         +'<svg class="muscle-map-svg" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg">'
         +buildMuscleHeatMapSVG(_loads)+'</svg></div>'
@@ -7975,7 +7987,7 @@ function renderWeeklyConsistency(){
   return html;
 }
 
-// ── Activity heatmap (GitHub-style, last 13 weeks) ───────────────────
+// ── Activity heatmap (GitHub-style, last 12 weeks) ───────────────────
 function renderActivityHeatmap(){
   var cnt={};
   getDays().forEach(function(d){
@@ -7987,7 +7999,7 @@ function renderActivityHeatmap(){
     });
   });
   if(!Object.keys(cnt).length) return '';
-  var WEEKS=13;
+  var WEEKS=12;   // v4.17 (nit 11): a clean quarter, not an off-by-one 13
   var today=new Date(); today.setHours(0,0,0,0);
   var start=new Date(today);
   var dow=(start.getDay()===0?6:start.getDay()-1); // Mon=0
@@ -8006,7 +8018,7 @@ function renderActivityHeatmap(){
     }
     cols+='</div>';
   }
-  return '<div class="stats-section"><div class="stats-section-title">Activity &mdash; last 13 weeks</div>'
+  return '<div class="stats-section"><div class="stats-section-title">Activity &mdash; last 12 weeks</div>'
     +'<div style="display:flex;gap:3px;overflow-x:auto;padding-bottom:4px">'+cols+'</div>'
     +'<div style="display:flex;align-items:center;gap:5px;margin-top:6px;font-size:10px;color:#888780">Less'
     +'<span style="width:11px;height:11px;border-radius:3px;background:#EAE9F3;display:inline-block"></span>'

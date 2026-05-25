@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.16 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
+**App version:** v4.17 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -33,7 +33,7 @@ logged history.
 
 Working through a **5-step Claude design review** (`C:\Users\airpe\Downloads\MyFit Build
 Plan.html`). **Each step ships as its own version**, then **PAUSE for the user's on-device
-verify before the next step**. Current badge **v4.16, shipped — PENDING owner on-device verify**.
+verify before the next step**. Current badge **v4.17, shipped — PENDING owner on-device verify**.
 
 ### Design "1-line nits" pass (post-overhaul) — owner picked nits 4–20,22 (skipping 1/2/21 done, 3 day-colors)
 Grouped into v4.15–v4.20, one batch per version, pause for verify each.
@@ -50,10 +50,16 @@ Grouped into v4.15–v4.20, one batch per version, pause for verify each.
   (`.rpe-compact`/`.rpe-pill`); kept the `.rpe-top-val` class so the inline `oninput` is
   unchanged (now prefixes "RPE "). Only the v2 (strength) card changed; the injected non-v2
   RPE path (cardio/legacy) is untouched. `funcsmoke` footer asserts updated.
-- **Queued:** ~~v4.16 card footer~~; v4.17 Progress (10 hide
-  empty sub-tabs, 11 13→12wk, 12 heat-map title); v4.18 Plan (14 removed container, 15 templates
-  →screen push, 13 reorder control); v4.19 Sync/Settings (16 toggle switch, 18 Test-mode group,
-  17 snapshot 2-step); v4.20 Modals/Toast (19 radius, 20 backup hint, 22 toast reposition).
+- **v4.17 (Progress):** (10) `_syncProgTabsVisible()` hides the **Lifts + Trends** sub-tab
+  buttons until `_totalSessions()>0` (Sessions + Body always show — Body is how measurements
+  are entered; each tab already has its own empty-state). Called from `renderProgress`.
+  (11) activity heatmap `WEEKS` 13→12 + caption "last 12 weeks". (12) "Weekly Muscle Load"
+  heat-map heading → sentence-case "Weekly muscle load" via repurposed `.stats-section-title
+  .muscle-map-title` (14px, no uppercase, --text). Tests updated (heatcheck text, consistency
+  caption). Note #21 (notice tray above day chips) confirmed already-working in preview.
+- **Queued:** v4.18 Plan (14 removed container, 15 templates→screen push, 13 reorder control);
+  v4.19 Sync/Settings (16 toggle switch, 18 Test-mode group, 17 snapshot 2-step);
+  v4.20 Modals/Toast (19 radius, 20 backup hint, 22 toast reposition).
 
 **Done so far:**
 - **Step 1 → v4.3** — bottom tab bar reduced 5 → **4 tabs** (🏋️ Workout / 📊 Progress /
