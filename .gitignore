@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+
+# workout-data backups — keep out of the public repo (preserved in the private
+# backup repo + cloud bin). The Pages deploy also excludes them.
+backups/

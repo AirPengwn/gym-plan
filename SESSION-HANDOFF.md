@@ -159,6 +159,20 @@ logged history.
   `index.html`, writes a dated JSON snapshot to the **private** `AirPengwn/gym-plan-backups`
   repo using `secrets.BACKUP_TOKEN`. No-ops if the token is absent. (Private repo chosen
   deliberately — workout + body-measurement data should not be public.)
+- **`.github/workflows/pages.yml`** (v3.40, the deploy fix) — explicit GitHub Pages deploy on
+  every push to `main`, `concurrency: cancel-in-progress:false` so builds **queue, not drop**.
+  Replaced the implicit "deploy from a branch" trigger, which **debounced rapid pushes** and
+  silently skipped deploys (v3.37–v3.40 lagged on the live site until an empty-commit nudge).
+  **Requires repo Settings → Pages → Source = "GitHub Actions"** (done). It publishes ONLY the
+  app's public files — `index.html`, `sw.js`, icons — so `tests/`, `backups/`, and `*.bak`
+  are **no longer served** on the Pages URL (the old whole-root branch deploy had exposed them,
+  HTTP 200). If the live badge ever lags `main` again, the empty-commit nudge still works, but
+  it shouldn't be needed now.
+- **Privacy cleanup (v3.40):** `backups/` (held a `jsonbin-cloud-backup.json` workout-data
+  snapshot) was `git rm`'d from `main` and added to `.gitignore` — it's preserved in the
+  private backup repo + cloud bin. (It remains in git *history*; not worth a history rewrite.)
+  `index.html.bak` stays in the repo — `verify.js` needs it as the byte-identity baseline —
+  but is excluded from the public deploy by `pages.yml`.
 
 ## Running the tests
 
