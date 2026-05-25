@@ -31,7 +31,7 @@ for t in verify funcsmoke verif_s1 buildcard heatcheck msvgcheck \
 done
 ```
 
-All should print PASS at v3.36. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
+All should print PASS at v3.37. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
 `metadata_spot.js` (v3.14) checks the richer exercise metadata: catalog entries carry
 equipment/pattern/difficulty/alternatives, fields persist onto plan records + the user
 library, and `exerciseMeta()` resolves them.
@@ -57,7 +57,7 @@ via `run-all.js` (exits non-zero on any failure). A GitHub Action
 - `funcsmoke.js` — 151 functional checks (cards, dark mode, header cluster, ghost values, RPE, etc.).
 - `verif_s1.js` — VERIFICATION.md §1 universal regression, 10 manual steps automated.
 - `buildcard.js` — `buildCardHTML_v2` strength/notes rendering.
-- `heatcheck.js` / `msvgcheck.js` — muscle map + weekly heat map (Do-Not-Touch surface).
+- `heatcheck.js` / `msvgcheck.js` — muscle map + weekly heat map (Do-Not-Touch surface). v3.37: also gates the **interactive muscle chips** below the heat map — `_muscleLoadChipsHTML` renders tappable per-muscle chips (colored by load), and `muscleDrill(key)` shows a read-only drill-in (current load, last-trained date + exercise, plan exercises that hit it). The heat-map SVG itself is unchanged; `_muscleExercises()` is read-only.
 
 **Feature spot-checks:**
 - `templates_spot.js` — v3.28 plan templates: built-in programs (PPL/Upper-Lower/Full-Body/Bro) + user-saved custom templates (`plan_templates_v1`). Every template exercise resolves to a pattern + muscles; `applyTemplate('append')` adds days alongside, `applyTemplate('replace')` archives current days (logged history preserved) and installs the program; custom save/delete (soft tombstone) + LWW merge; rides the sync payload; modal renders.

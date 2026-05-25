@@ -49,6 +49,24 @@ const statsHtml=(w.document.getElementById('prog-stats')||{}).innerHTML||'';
 ok(statsHtml.indexOf('Weekly Muscle Load')>=0,'renderStats injects Weekly Muscle Load section');
 ok(statsHtml.indexOf('Weekly Volume')>=0,'existing Weekly Volume section still present');
 
+// ── v3.37: interactive muscle chips + read-only drill-in (heat-map SVG untouched) ──
+ok(statsHtml.indexOf('mm-chips')>=0 && statsHtml.indexOf('mm-chip-chest')>=0,'muscle chips rendered below the heat map (incl. chest)');
+var mx=w._muscleExercises('chest');
+ok(mx && mx.planEx.some(function(n){ return /chest press/i.test(n); }),'_muscleExercises(chest) lists the plan exercise that trains it ('+(mx?mx.planEx.join(', '):'')+')');
+ok(mx && mx.lastTs>0,'_muscleExercises(chest) finds the last-trained timestamp from history');
+// tapping a chip populates the drill panel (which renderStats injected into the DOM)
+w.muscleDrill('chest');
+var drill=(w.document.getElementById('mm-drill')||{}).innerHTML||'';
+ok(/Last trained/.test(drill) && /In your plan/.test(drill) && /Chest press/.test(drill),'muscleDrill(chest) shows load + last-trained + plan exercises');
+ok(w.document.getElementById('mm-chip-chest').classList.contains('on'),'tapped chip is marked active');
+// tapping again toggles it closed
+w.muscleDrill('chest');
+ok(((w.document.getElementById('mm-drill')||{}).innerHTML||'')==='','tapping the open chip again closes the drill');
+// read-only: drilling never mutates logged history
+var _before=w.localStorage.getItem('gymlog_a');
+w.muscleDrill('chest'); w._muscleExercises('chest');
+ok(w.localStorage.getItem('gymlog_a')===_before,'muscle drill-in is read-only (gymlog untouched)');
+
 // ── Scenario 2: NOTHING logged this calendar week (all sessions stale) ──
 // Must fall back to the most recent week with data and still render.
 const stale=[
