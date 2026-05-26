@@ -243,6 +243,11 @@ body.dark .set-group{background:#252540;border-color:var(--border)}
 .set-gh{font-size:12px;font-weight:800;color:var(--text);padding:11px 0 9px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
 .set-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:13px 0;border:0;border-bottom:1px solid var(--border);background:none;font-size:13px;color:var(--text);font-family:inherit;cursor:pointer}
 .set-item:last-child{border-bottom:0}
+/* F4 (v5.1): Auto|Long|Short rest-timer segmented control */
+.rest-seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;flex-shrink:0}
+.rest-seg button{border:0;background:none;color:var(--muted);font-size:12px;font-weight:600;padding:5px 11px;cursor:pointer;font-family:inherit}
+.rest-seg button+button{border-left:1px solid var(--border)}
+.rest-seg button.on{background:var(--primary);color:#fff}
 .set-caret{color:var(--muted);font-size:15px;flex-shrink:0}
 .set-sub{color:var(--muted);font-size:12px;font-weight:600}
 .set-note{font-size:12px;color:var(--muted);line-height:1.5;padding:11px 0}
@@ -947,7 +952,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.0</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.1</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -1127,6 +1132,14 @@ body.dark #pc-result{color:var(--text)}
   <div class="set-group" id="more-appearance">
     <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-appearance"/></svg>Appearance</div>
     <button class="set-item" id="dark-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode"><span id="dark-mode-label">🌙 Dark mode</span><span class="set-caret" id="dark-mode-state">Off</span></button>
+    <div class="set-item">
+      <span>⏱ Rest timer</span>
+      <span class="rest-seg" id="rest-seg" role="group" aria-label="Rest timer default">
+        <button type="button" data-m="auto" onclick="setRestMode('auto')">Auto</button>
+        <button type="button" data-m="long" onclick="setRestMode('long')">Long</button>
+        <button type="button" data-m="short" onclick="setRestMode('short')">Short</button>
+      </span>
+    </div>
   </div>
   <div class="set-group" id="more-app">
     <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-app"/></svg>App</div>
@@ -1630,6 +1643,7 @@ function pushPlanToCloud(){
     try{ var lb=_mergeLibraries(getUserLibrary(), cloud['exercise_library_v1']); if(lb&&lb.length){ cloud['exercise_library_v1']=lb; saveUserLibrary(lb); } }catch(e){}
     try{ var hl=_mergeLibraries(getHiddenLibrary(), cloud['library_hidden_v1']); if(hl&&hl.length){ cloud['library_hidden_v1']=hl; saveHiddenLibrary(hl); } }catch(e){}
     try{ var ct=_mergeLibraries(getCustomTemplates(), cloud['plan_templates_v1']); if(ct&&ct.length){ cloud['plan_templates_v1']=ct; saveCustomTemplates(ct); } }catch(e){}
+    try{ var ro=_mergeRestOverrides(getRestOverrides(), cloud['rest_overrides_v1']); if(ro&&Object.keys(ro).length){ cloud['rest_overrides_v1']=ro; saveRestOverrides(ro); } }catch(e){}
     if(!cloud.__schema) cloud.__schema=SCHEMA_VERSION;
     return _rawCloudPUT(cloud);
   }).then(function(){
@@ -2500,6 +2514,16 @@ function _mergeLibraries(a, b){
   }); }
   take(a); take(b);
   return Object.keys(out).map(function(k){ return out[k]; });
+}
+
+// F4 (v5.1): union-merge two rest_overrides_v1 objects ({ [key]: seconds, _mode }).
+// 'a' (the local/own side) wins on conflict; union never drops a key the other
+// side has. No timestamps — rest prefs are low-stakes vs logged history.
+function _mergeRestOverrides(a, b){
+  var out={};
+  function take(o){ if(o && typeof o==='object' && !Array.isArray(o)){ Object.keys(o).forEach(function(k){ if(out[k]==null) out[k]=o[k]; }); } }
+  take(a); take(b);
+  return out;
 }
 
 // v3.19: hide ANY library exercise (catalog seed / built-in / history) from the
@@ -3599,6 +3623,7 @@ function openMore(){
   var sp=document.getElementById('p-more'); if(sp){ sp.style.display=''; sp.classList.add('show'); }
   try{ renderSync(); }catch(e){}
   try{ renderSettings(); }catch(e){}
+  try{ _syncRestModeUI(); }catch(e){}
   _setDaySelectorVisible(false);
   try{ window.scrollTo(0,0); }catch(e){}
   _syncNav();
@@ -5928,6 +5953,7 @@ function generateExport(){
   try{ var lb=JSON.parse(localStorage.getItem('exercise_library_v1')); if(lb&&lb.length) data['exercise_library_v1']=lb; }catch(e){}
   try{ var hl=JSON.parse(localStorage.getItem('library_hidden_v1')); if(hl&&hl.length) data['library_hidden_v1']=hl; }catch(e){}
   try{ var ct=JSON.parse(localStorage.getItem('plan_templates_v1')); if(ct&&ct.length) data['plan_templates_v1']=ct; }catch(e){}
+  try{ var ro=getRestOverrides(); if(ro&&Object.keys(ro).length) data['rest_overrides_v1']=ro; }catch(e){}
   // In-progress (unsubmitted) drafts — so a backup also protects a workout
   // you're in the middle of entering.
   getAllDayKeys().forEach(function(day){
@@ -6192,6 +6218,9 @@ function importData(){
     }
     if(Array.isArray(data['plan_templates_v1'])){
       try{ saveCustomTemplates(_mergeLibraries(getCustomTemplates(), data['plan_templates_v1'])); }catch(e){}
+    }
+    if(data['rest_overrides_v1'] && typeof data['rest_overrides_v1']==='object' && !Array.isArray(data['rest_overrides_v1'])){
+      try{ saveRestOverrides(_mergeRestOverrides(getRestOverrides(), data['rest_overrides_v1'])); }catch(e){}
     }
     var hint=document.getElementById('restore-hint');
     hint.innerHTML='✅ Restored '+count+' sessions + measurements + settings! '
@@ -7235,6 +7264,7 @@ function buildBinPayload(){
   try { var lb=JSON.parse(localStorage.getItem('exercise_library_v1')); if(lb) p['exercise_library_v1']=lb; }catch(e){}
   try { var hl=JSON.parse(localStorage.getItem('library_hidden_v1')); if(hl) p['library_hidden_v1']=hl; }catch(e){}
   try { var ct=JSON.parse(localStorage.getItem('plan_templates_v1')); if(ct) p['plan_templates_v1']=ct; }catch(e){}
+  try { var ro=JSON.parse(localStorage.getItem('rest_overrides_v1')); if(ro) p['rest_overrides_v1']=ro; }catch(e){}
   // v3.8: carry the archive bin id so every device discovers the same archive.
   try { var aid=_archiveId(); if(aid) p['__archive_bin']=aid; }catch(e){}
   return p;
@@ -7286,6 +7316,8 @@ function mergeCloudIntoPayload(cloud){
   if(mhid && mhid.length) p['library_hidden_v1']=mhid;
   var mtpl=_mergeLibraries(p['plan_templates_v1'], cloud['plan_templates_v1']);
   if(mtpl && mtpl.length) p['plan_templates_v1']=mtpl;
+  var mro=_mergeRestOverrides(p['rest_overrides_v1'], cloud['rest_overrides_v1']);
+  if(mro && Object.keys(mro).length) p['rest_overrides_v1']=mro;
   // v3.8: learn/keep the archive bin id from whichever side has it.
   if(cloud['__archive_bin'] && !_archiveId()){ try{ _setArchiveId(cloud['__archive_bin']); }catch(e){} }
   var aid2=_archiveId()||cloud['__archive_bin']; if(aid2) p['__archive_bin']=aid2;
@@ -7313,6 +7345,7 @@ function applyPayloadToLocal(p){
   if(Array.isArray(p['exercise_library_v1'])) localStorage.setItem('exercise_library_v1', JSON.stringify(p['exercise_library_v1']));
   if(Array.isArray(p['library_hidden_v1'])) localStorage.setItem('library_hidden_v1', JSON.stringify(p['library_hidden_v1']));
   if(Array.isArray(p['plan_templates_v1'])) localStorage.setItem('plan_templates_v1', JSON.stringify(p['plan_templates_v1']));
+  if(p['rest_overrides_v1'] && typeof p['rest_overrides_v1']==='object' && !Array.isArray(p['rest_overrides_v1'])) localStorage.setItem('rest_overrides_v1', JSON.stringify(p['rest_overrides_v1']));
 }
 
 function refreshAfterSync(){
@@ -7470,7 +7503,7 @@ function clearPendingSync(){ try{ localStorage.removeItem('gymlog_sync_pending')
 // Uses sessionStorage so a mid-test reload stays in test mode, and the
 // snapshot is persisted so it can still be discarded after a reload.
 var TEST_MODE = sessionStorage.getItem('gym_test_mode')==='1';
-var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','gymlog_sync_pending','darkMode'];
+var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','gymlog_sync_pending','darkMode'];
 function _testKeys(){
   var ks=[];
   for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i);
@@ -8492,8 +8525,15 @@ function setRestDuration(s){
 
 function startRestTimer(seconds){
   clearInterval(restInterval);
+  var ctx=_pendingSmartRest; _pendingSmartRest=null;
+  if(ctx){
+    if(ctx.seconds<=0){ try{ showToast('No rest timer for this one'); }catch(e){} return; }  // cardio / no-timer
+    seconds=ctx.seconds;
+    _restCtx={key:ctx.key,name:ctx.name,override:ctx.override,baseSeconds:ctx.seconds};
+  } else { _restCtx=null; }   // manual (bar buttons) — no source label
   restSeconds=seconds||restDefault;
   document.getElementById('rest-timer-count').textContent=restSeconds;
+  _updateRestSrc();
   document.getElementById('rest-timer-bar').classList.add('show');
   document.body.classList.add('timer-active');
   [30,60,90,120].forEach(function(d){
@@ -8518,6 +8558,104 @@ function stopRestTimer(){
   clearInterval(restInterval);
   document.getElementById('rest-timer-bar').classList.remove('show');
   document.body.classList.remove('timer-active');
+}
+
+// ── F4 (v5.1): smart per-exercise rest defaults ───────────────────────────
+// Persisted in rest_overrides_v1 (synced): { [linkId||histEx]: seconds } plus a
+// reserved '_mode' key ('auto'|'long'|'short'). Defaults are computed on render
+// from exerciseMeta.pattern — never persisted. Stock card markup is untouched
+// (no verify.js re-baseline): the per-card Rest button's frozen onclick still
+// calls startRestTimer(restDefault); a capture-phase listener resolves the
+// exercise's smart default just before, so the button arms intelligently.
+var REST_BY_PATTERN={squat:120,hinge:120,carry:120,push:90,pull:90,isolation:60,core:30,mobility:30,cardio:0};
+var _pendingSmartRest=null;   // set by the capture listener on a card Rest tap
+var _restCtx=null;            // {key,name,seconds,override} for the active rest
+function getRestOverrides(){ try{ var o=JSON.parse(localStorage.getItem('rest_overrides_v1')); return (o&&typeof o==='object'&&!Array.isArray(o))?o:{}; }catch(e){ return {}; } }
+function saveRestOverrides(o){ try{ localStorage.setItem('rest_overrides_v1', JSON.stringify(o||{})); }catch(e){} }
+function getRestMode(){ var m=getRestOverrides()._mode; return (m==='long'||m==='short')?m:'auto'; }
+function setRestMode(m){ var o=getRestOverrides(); if(m==='long'||m==='short') o._mode=m; else delete o._mode; saveRestOverrides(o); try{markPendingSync();}catch(e){} try{_syncRestModeUI();}catch(e){} }
+function _isCompoundEquip(meta){ return String((meta&&meta.equipment)||'').toLowerCase()==='barbell'; }
+function smartRestSeconds(meta){
+  var p=(meta&&meta.pattern)||'';
+  if(Object.prototype.hasOwnProperty.call(REST_BY_PATTERN,p)){
+    var base=REST_BY_PATTERN[p];
+    if((p==='push'||p==='pull')&&!_isCompoundEquip(meta)) base=60;  // non-compound push/pull → isolation-like
+    return base;
+  }
+  return 90;  // unknown pattern → conservative default
+}
+function _restModeAdjust(sec){ if(sec<=0) return 0; var m=getRestMode(); if(m==='long') return sec+30; if(m==='short') return Math.max(30,sec-30); return sec; }
+// Resolve {seconds, override} for an override-key + meta.
+function restForKeyMeta(key, meta){
+  var ov=getRestOverrides();
+  if(key && key!=='_mode' && ov[key]!=null){ return {seconds:Math.max(0,parseInt(ov[key],10)||0), override:true}; }
+  return {seconds:_restModeAdjust(smartRestSeconds(meta)), override:false};
+}
+// From a card .item element → {key,name,seconds,override}
+function restForItem(itemEl){
+  if(!itemEl) return null;
+  var dx=itemEl.querySelector('[data-ex]'); var hist=(dx?dx.getAttribute('data-ex'):'')||'';
+  hist=hist.replace(/-notes$/,'');
+  var rec=(typeof plan!=='undefined'&&plan&&plan.ex&&plan.ex[itemEl.id])?plan.ex[itemEl.id]:null;
+  var meta=exerciseMeta(rec||hist);
+  var key=(rec&&rec.linkId)||hist;
+  var r=restForKeyMeta(key,meta); r.key=key; r.name=hist; return r;
+}
+// Capture phase: runs before the card Rest button's inline onclick, so the
+// global startRestTimer call below can pick up the resolved smart default.
+document.addEventListener('click',function(e){
+  var t=e.target; if(!t||!t.closest) return;
+  var btn=t.closest('.item-timer-btn');
+  if(btn){ try{ _pendingSmartRest=restForItem(btn.closest('.item')); }catch(err){ _pendingSmartRest=null; } }
+},true);
+function _updateRestSrc(){
+  var el=document.getElementById('rest-timer-src'); if(!el) return;
+  if(_restCtx && _restCtx.baseSeconds>0){ el.textContent='· '+_restCtx.baseSeconds+'s '+(_restCtx.override?'set':'auto'); }
+  else { el.textContent=''; }
+}
+// Long-press the rest pill → per-exercise override stepper. Event-delegated so
+// it works regardless of element-creation order.
+var _restPressTimer=null, _restOvrVal=90;
+function _restPressStart(e){
+  var t=e.target; if(!t||!t.closest||!t.closest('#rest-timer-pill')) return;
+  clearTimeout(_restPressTimer);
+  _restPressTimer=setTimeout(function(){ _restPressTimer=null; restOvrOpen(); },500);
+}
+function _restPressCancel(){ if(_restPressTimer){ clearTimeout(_restPressTimer); _restPressTimer=null; } }
+document.addEventListener('touchstart',_restPressStart,{passive:true});
+document.addEventListener('mousedown',_restPressStart);
+['touchend','touchmove','touchcancel','mouseup','mouseleave'].forEach(function(ev){ document.addEventListener(ev,_restPressCancel,{passive:true}); });
+function restOvrOpen(){
+  if(!_restCtx) return;   // pill only carries an exercise while a smart rest is active
+  _restOvrVal=Math.max(15, restSeconds||_restCtx.baseSeconds||90);
+  var tt=document.getElementById('rest-ovr-title'); if(tt) tt.textContent='Rest · '+(_restCtx.name||'exercise');
+  document.getElementById('rest-ovr-val').textContent=_restOvrVal+'s';
+  document.getElementById('rest-ovr-overlay').classList.add('show');
+  try{ haptic('light'); }catch(e){}
+}
+function restOvrAdj(d){ _restOvrVal=Math.max(15,_restOvrVal+d); document.getElementById('rest-ovr-val').textContent=_restOvrVal+'s'; }
+function restOvrSave(){
+  if(_restCtx&&_restCtx.key){
+    var o=getRestOverrides(); o[_restCtx.key]=_restOvrVal; saveRestOverrides(o); try{markPendingSync();}catch(e){}
+    _restCtx.override=true; _restCtx.baseSeconds=_restOvrVal; restSeconds=_restOvrVal;
+    document.getElementById('rest-timer-count').textContent=restSeconds; _updateRestSrc();
+  }
+  restOvrClose();
+}
+function restOvrReset(){
+  if(_restCtx&&_restCtx.key){
+    var o=getRestOverrides(); delete o[_restCtx.key]; saveRestOverrides(o); try{markPendingSync();}catch(e){}
+    var sec=_restModeAdjust(smartRestSeconds(exerciseMeta(_restCtx.name)));
+    _restCtx.override=false; _restCtx.baseSeconds=sec; restSeconds=sec||restDefault;
+    document.getElementById('rest-timer-count').textContent=restSeconds; _updateRestSrc();
+  }
+  restOvrClose();
+}
+function restOvrClose(){ document.getElementById('rest-ovr-overlay').classList.remove('show'); }
+function _syncRestModeUI(){
+  var seg=document.getElementById('rest-seg'); if(!seg) return;
+  var m=getRestMode();
+  seg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-m')===m); });
 }
 
 // v4.10 (Step 4B): floating Complete pill. Appears once the SHOWN workout day is
@@ -8655,9 +8793,10 @@ function showPRToast(prs){
 <div class="swipe-hint r" id="swh-r" aria-hidden="true"></div>
 <div class="swipe-tip" id="swipe-tip" role="status">Tip: swipe ← → to change day</div>
 <div class="rest-timer-bar" id="rest-timer-bar">
-  <div style="display:flex;align-items:center;gap:10px">
-    <span>⏱ <span id="rest-timer-count">90</span>s</span>
-    <div style="display:flex;gap:4px">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span id="rest-timer-pill" title="Long-press to set a custom rest for this exercise">⏱ <span id="rest-timer-count">90</span>s</span>
+    <span id="rest-timer-src" style="font-size:10px;opacity:.7;font-weight:500;white-space:nowrap"></span>
+    <div style="display:flex;gap:4px;margin-left:auto">
       <button onclick="setRestDuration(30)" id="rt-30">30</button>
       <button onclick="setRestDuration(60)" id="rt-60">60</button>
       <button onclick="setRestDuration(90)" id="rt-90">90</button>
@@ -8665,6 +8804,23 @@ function showPRToast(prs){
     </div>
   </div>
   <button onclick="stopRestTimer()" style="font-size:16px;padding:4px 8px">✕</button>
+</div>
+<!-- F4 (v5.1): per-exercise rest override (opened by long-pressing the rest pill) -->
+<div class="modal-overlay" id="rest-ovr-overlay">
+  <div class="modal" style="max-width:300px;text-align:center">
+    <div class="modal-title" id="rest-ovr-title" style="margin-bottom:0.35rem">Rest time</div>
+    <div class="modal-sub" id="rest-ovr-sub" style="margin-bottom:1rem">Custom rest for this exercise.</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin:4px 0 16px">
+      <button class="modal-btn-secondary" style="flex:0 0 auto;width:46px;font-size:20px;padding:8px 0" onclick="restOvrAdj(-15)" aria-label="Decrease 15 seconds">−</button>
+      <span id="rest-ovr-val" style="font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;min-width:70px">90s</span>
+      <button class="modal-btn-secondary" style="flex:0 0 auto;width:46px;font-size:20px;padding:8px 0" onclick="restOvrAdj(15)" aria-label="Increase 15 seconds">+</button>
+    </div>
+    <div class="modal-btn-row">
+      <button class="modal-btn-primary" onclick="restOvrSave()">Save</button>
+      <button class="modal-btn-secondary" onclick="restOvrClose()">Cancel</button>
+    </div>
+    <button class="patch5-rerun-btn" style="margin-top:10px" onclick="restOvrReset()">Reset to auto</button>
+  </div>
 </div>
 
 <!-- v4.10 (Step 4B): floating Complete pill, shown at >=80% done -->
