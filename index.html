@@ -248,6 +248,10 @@ body.dark .set-group{background:#252540;border-color:var(--border)}
 .rest-seg button{border:0;background:none;color:var(--muted);font-size:12px;font-weight:600;padding:5px 11px;cursor:pointer;font-family:inherit}
 .rest-seg button+button{border-left:1px solid var(--border)}
 .rest-seg button.on{background:var(--primary);color:#fff}
+/* F3 (v5.1): plate availability chips in Settings → Barbell & plates */
+.eq-plates{display:flex;flex-wrap:wrap;gap:6px}
+.eq-plate-chip{font-size:12px;font-weight:700;padding:6px 11px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--muted);cursor:pointer;font-family:inherit}
+.eq-plate-chip.on{background:var(--primary);border-color:var(--primary);color:#fff}
 .set-caret{color:var(--muted);font-size:15px;flex-shrink:0}
 .set-sub{color:var(--muted);font-size:12px;font-weight:600}
 .set-note{font-size:12px;color:var(--muted);line-height:1.5;padding:11px 0}
@@ -619,6 +623,13 @@ body.dark .prog-hold{color:#E0A800}
 .v2-set.pr::after{content:'PR';position:absolute;top:-7px;right:4px;font-size:8px;font-weight:800;color:#7A5A00;background:#FFE49B;border-radius:3px;padding:0 4px;letter-spacing:.04em;z-index:2;pointer-events:none}
 body.dark .v2-set.pr .rep-input,body.dark .v2-set.pr .reps-actual-input{background:#3A2E00;border-color:#7A5A00;color:#FFE49B}
 body.dark .v2-set.pr::after{background:#7A5A00;color:#FFE49B}
+/* F3 (v5.1): inline plate strip (barbell lifts only) */
+.plate-strip{display:flex;align-items:center;flex-wrap:wrap;gap:3px;width:100%;margin-top:8px;padding:6px 8px;background:#F7F6F0;border:1px dashed var(--border);border-radius:var(--r-sm);cursor:pointer;font-family:inherit;text-align:left}
+body.dark .plate-strip{background:var(--primary-tint);border-color:var(--border)}
+.plate-chip{display:inline-block;border-radius:2px;font-size:8px;font-weight:700;color:#fff;padding:2px 4px;line-height:1}
+.plate-chip.bar{background:#6E6C66;font-size:7px;padding:3px 4px}
+.plate-tail{margin-left:auto;font-size:10px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.plate-short{font-size:9px;font-weight:700;color:var(--bad);margin-left:6px}
 .session-timer-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#3C3489;background:#EEEDFE;border-radius:20px;padding:4px 10px;margin-bottom:0.75rem}
 /* ── Quick-fill button ── */
 .quick-fill-btn{display:flex;align-items:center;gap:5px;width:100%;padding:8px 12px;background:#F5F5F2;border:1px dashed var(--border-soft);border-radius:8px;color:#7F77DD;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:0.5rem;justify-content:center}
@@ -1152,6 +1163,20 @@ body.dark #pc-result{color:var(--text)}
       </span>
     </div>
   </div>
+  <div class="set-group" id="more-equipment">
+    <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-lifts"/></svg>Barbell &amp; plates</div>
+    <div class="set-item" style="cursor:default">
+      <span>Bar weight</span>
+      <span style="display:inline-flex;align-items:center;gap:6px">
+        <input id="eq-bar" type="number" inputmode="decimal" min="0" step="2.5" aria-label="Barbell weight" onchange="setBarWeight(this.value)" style="width:64px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px;text-align:center"/>
+        <span style="font-size:11px;color:var(--muted)">lb</span>
+      </span>
+    </div>
+    <div class="set-item" style="cursor:default;display:block">
+      <div style="margin-bottom:7px">Plates available <span style="font-size:11px;color:var(--muted)">· tap to toggle (per side)</span></div>
+      <div id="eq-plates" class="eq-plates"></div>
+    </div>
+  </div>
   <div class="set-group" id="more-app">
     <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-app"/></svg>App</div>
     <button class="set-item" onclick="reloadPage()"><span><svg class="ic ic-sm" style="margin-right:7px" aria-hidden="true"><use href="#ic-refresh"/></svg>Update to latest</span><span class="set-caret">›</span></button>
@@ -1655,6 +1680,7 @@ function pushPlanToCloud(){
     try{ var hl=_mergeLibraries(getHiddenLibrary(), cloud['library_hidden_v1']); if(hl&&hl.length){ cloud['library_hidden_v1']=hl; saveHiddenLibrary(hl); } }catch(e){}
     try{ var ct=_mergeLibraries(getCustomTemplates(), cloud['plan_templates_v1']); if(ct&&ct.length){ cloud['plan_templates_v1']=ct; saveCustomTemplates(ct); } }catch(e){}
     try{ var ro=_mergeRestOverrides(getRestOverrides(), cloud['rest_overrides_v1']); if(ro&&Object.keys(ro).length){ cloud['rest_overrides_v1']=ro; saveRestOverrides(ro); } }catch(e){}
+    try{ var ps=JSON.parse(localStorage.getItem('plate_setup_v1')); if(ps) cloud['plate_setup_v1']=ps; }catch(e){}
     if(!cloud.__schema) cloud.__schema=SCHEMA_VERSION;
     return _rawCloudPUT(cloud);
   }).then(function(){
@@ -3635,6 +3661,7 @@ function openMore(){
   try{ renderSync(); }catch(e){}
   try{ renderSettings(); }catch(e){}
   try{ _syncRestModeUI(); }catch(e){}
+  try{ _syncEquipUI(); }catch(e){}
   _setDaySelectorVisible(false);
   try{ window.scrollTo(0,0); }catch(e){}
   _syncNav();
@@ -4476,8 +4503,18 @@ function loadLastTimes(){
     try{ _applyProgressionNudges(panel); }catch(e){}
     // F2 (v5.1): re-derive PR halos from history for any set with typed values
     try{ panel.querySelectorAll('.v2-set').forEach(_checkSetPR); }catch(e){}
+    // F3 (v5.1): inline plate strip under barbell working weight
+    try{ _refreshPlateStrips(panel); }catch(e){}
   });
 }
+// F3: live-update the plate strip as the Set-1 weight changes.
+document.addEventListener('input',function(e){
+  var inp=e.target;
+  if(inp && inp.classList && inp.classList.contains('rep-input') && inp.getAttribute('data-set')==='1'){
+    var panel=inp.closest('.day-panel');
+    if(panel){ try{ _refreshPlateStrips(panel); }catch(err){} }
+  }
+});
 
 var pendingDay=null;
 var pendingLabel=null;
@@ -6089,6 +6126,7 @@ function generateExport(){
   try{ var hl=JSON.parse(localStorage.getItem('library_hidden_v1')); if(hl&&hl.length) data['library_hidden_v1']=hl; }catch(e){}
   try{ var ct=JSON.parse(localStorage.getItem('plan_templates_v1')); if(ct&&ct.length) data['plan_templates_v1']=ct; }catch(e){}
   try{ var ro=getRestOverrides(); if(ro&&Object.keys(ro).length) data['rest_overrides_v1']=ro; }catch(e){}
+  try{ var ps=JSON.parse(localStorage.getItem('plate_setup_v1')); if(ps) data['plate_setup_v1']=ps; }catch(e){}
   // In-progress (unsubmitted) drafts — so a backup also protects a workout
   // you're in the middle of entering.
   getAllDayKeys().forEach(function(day){
@@ -6263,13 +6301,85 @@ function pcUnit(u,btn){
   document.getElementById('pc-bar').value=(u==='kg'?20:45);
   document.getElementById('pc-bar-unit').textContent=u;
 }
-function openPlateCalc(){
+function openPlateCalc(preWeight){
   document.getElementById('pc-result').innerHTML='';
+  // F3 (v5.1): preload the tapped working weight + the user's bar so the modal
+  // opens already answering "what's on the bar right now?"
+  if(preWeight!=null && preWeight>0){
+    var tEl=document.getElementById('pc-target'); if(tEl) tEl.value=preWeight;
+    try{ var bEl=document.getElementById('pc-bar'); if(bEl) bEl.value=getPlateSetup().barWeight; }catch(e){}
+    document.getElementById('plate-modal-overlay').classList.add('show');
+    try{ computePlates(); }catch(e){}
+    return;
+  }
   document.getElementById('plate-modal-overlay').classList.add('show');
 }
 function closePlateCalc(){
   document.getElementById('plate-modal-overlay').classList.remove('show');
 }
+
+// ── F3 (v5.1): inline plate math under barbell weights ─────────────────────
+// plate_setup_v1 (synced): { barWeight:number, plates:number[] }. Defaults =
+// 45 lb bar + standard plate set. Strip is computed on render; never persisted.
+function getPlateSetup(){
+  try{ var o=JSON.parse(localStorage.getItem('plate_setup_v1'));
+    if(o && typeof o==='object' && typeof o.barWeight==='number' && Array.isArray(o.plates)) return {barWeight:o.barWeight, plates:o.plates.slice()};
+  }catch(e){}
+  return {barWeight:45, plates:[45,25,10,5,2.5]};
+}
+function savePlateSetup(o){ try{ localStorage.setItem('plate_setup_v1', JSON.stringify({barWeight:o.barWeight, plates:o.plates})); }catch(e){} }
+var PLATE_COLORS={45:'#1E5BAF',25:'#0F6E56',10:'#7A5A00',5:'#5B4EA8',2.5:'#9896C8',35:'#3A3A3A',1.25:'#777'};
+// Greedy plate breakdown per side for a target weight using the user's setup.
+function platesPerSide(target){
+  var s=getPlateSetup(), bar=s.barWeight||45;
+  var plates=(s.plates||[]).slice().sort(function(a,b){return b-a;});
+  if(!(target>0) || target<bar) return null;
+  var per=Math.round(((target-bar)/2)*100)/100, rem=per, list=[];
+  plates.forEach(function(p){ while(rem>=p-1e-9){ list.push(p); rem=Math.round((rem-p)*100)/100; } });
+  return {bar:bar, per:per, list:list, short:(rem>0.01?Math.round(rem*100)/100:0)};
+}
+function _plateStripHTML(target){
+  var pp=platesPerSide(target); if(!pp) return '';
+  var chips='<span class="plate-chip bar">bar '+pp.bar+'</span>';
+  pp.list.forEach(function(p){ chips+='<span class="plate-chip" style="background:'+(PLATE_COLORS[p]||'#666')+'">'+p+'</span>'; });
+  var tail = pp.list.length ? ('×'+pp.list.length+' per side') : 'just the bar';
+  chips+='<span class="plate-tail">'+tail+'</span>';
+  if(pp.short>0) chips+='<span class="plate-short">'+pp.short+' lb short</span>';
+  return chips;
+}
+// Insert/refresh the plate strip on every barbell v2 card in a panel.
+function _refreshPlateStrips(panel){
+  if(!panel) return;
+  panel.querySelectorAll('.item.v2-card').forEach(function(card){
+    var dx=card.querySelector('.rep-input[data-ex]'); if(!dx) return;
+    var hist=dx.getAttribute('data-ex')||'';
+    var isBarbell=false; try{ isBarbell=String(exerciseMeta(hist).equipment||'').toLowerCase()==='barbell'; }catch(e){}
+    var strip=card.querySelector('.plate-strip');
+    if(!isBarbell){ if(strip) strip.parentNode.removeChild(strip); return; }
+    // working weight = Set 1's weight
+    var s1=card.querySelector('.rep-input[data-set="1"]');
+    var w=s1?(parseFloat(String(s1.value).replace(/[^\d.]/g,''))||0):0;
+    var html=_plateStripHTML(w);
+    if(!html){ if(strip) strip.parentNode.removeChild(strip); return; }
+    if(!strip){
+      strip=document.createElement('button'); strip.type='button'; strip.className='plate-strip';
+      strip.setAttribute('aria-label','Plate breakdown — tap for the plate calculator');
+      strip.onclick=function(e){ e.stopPropagation(); var s1b=card.querySelector('.rep-input[data-set="1"]'); var wb=s1b?(parseFloat(String(s1b.value).replace(/[^\d.]/g,''))||0):0; openPlateCalc(wb); };
+      var sets=card.querySelector('.v2-sets'); if(sets) sets.appendChild(strip); else return;
+    }
+    strip.innerHTML=html;
+  });
+}
+// Settings → Barbell & plates editor.
+var EQ_PLATE_OPTIONS=[45,35,25,10,5,2.5,1.25];
+function _syncEquipUI(){
+  var bar=document.getElementById('eq-bar'), box=document.getElementById('eq-plates'); if(!bar||!box) return;
+  var s=getPlateSetup(); bar.value=s.barWeight;
+  box.innerHTML=EQ_PLATE_OPTIONS.map(function(p){ var on=s.plates.indexOf(p)>=0; return '<button type="button" class="eq-plate-chip'+(on?' on':'')+'" onclick="togglePlate('+p+')">'+p+'</button>'; }).join('');
+}
+function setBarWeight(v){ var n=parseFloat(v); if(!(n>=0)) return; var s=getPlateSetup(); s.barWeight=Math.round(n*100)/100; savePlateSetup(s); try{markPendingSync();}catch(e){} _afterEquipChange(); }
+function togglePlate(p){ var s=getPlateSetup(); var i=s.plates.indexOf(p); if(i>=0) s.plates.splice(i,1); else s.plates.push(p); s.plates.sort(function(a,b){return b-a;}); savePlateSetup(s); try{markPendingSync();}catch(e){} _syncEquipUI(); _afterEquipChange(); }
+function _afterEquipChange(){ try{ document.querySelectorAll('.day-panel').forEach(_refreshPlateStrips); }catch(e){} }
 function computePlates(){
   var t=parseFloat(document.getElementById('pc-target').value);
   var bar=parseFloat(document.getElementById('pc-bar').value)||0;
@@ -6356,6 +6466,9 @@ function importData(){
     }
     if(data['rest_overrides_v1'] && typeof data['rest_overrides_v1']==='object' && !Array.isArray(data['rest_overrides_v1'])){
       try{ saveRestOverrides(_mergeRestOverrides(getRestOverrides(), data['rest_overrides_v1'])); }catch(e){}
+    }
+    if(data['plate_setup_v1'] && typeof data['plate_setup_v1']==='object' && !Array.isArray(data['plate_setup_v1'])){
+      try{ localStorage.setItem('plate_setup_v1', JSON.stringify(data['plate_setup_v1'])); }catch(e){}
     }
     var hint=document.getElementById('restore-hint');
     hint.innerHTML='✅ Restored '+count+' sessions + measurements + settings! '
@@ -7400,6 +7513,7 @@ function buildBinPayload(){
   try { var hl=JSON.parse(localStorage.getItem('library_hidden_v1')); if(hl) p['library_hidden_v1']=hl; }catch(e){}
   try { var ct=JSON.parse(localStorage.getItem('plan_templates_v1')); if(ct) p['plan_templates_v1']=ct; }catch(e){}
   try { var ro=JSON.parse(localStorage.getItem('rest_overrides_v1')); if(ro) p['rest_overrides_v1']=ro; }catch(e){}
+  try { var ps=JSON.parse(localStorage.getItem('plate_setup_v1')); if(ps) p['plate_setup_v1']=ps; }catch(e){}
   // v3.8: carry the archive bin id so every device discovers the same archive.
   try { var aid=_archiveId(); if(aid) p['__archive_bin']=aid; }catch(e){}
   return p;
@@ -7453,6 +7567,7 @@ function mergeCloudIntoPayload(cloud){
   if(mtpl && mtpl.length) p['plan_templates_v1']=mtpl;
   var mro=_mergeRestOverrides(p['rest_overrides_v1'], cloud['rest_overrides_v1']);
   if(mro && Object.keys(mro).length) p['rest_overrides_v1']=mro;
+  if(!p['plate_setup_v1'] && cloud['plate_setup_v1']) p['plate_setup_v1']=cloud['plate_setup_v1'];
   // v3.8: learn/keep the archive bin id from whichever side has it.
   if(cloud['__archive_bin'] && !_archiveId()){ try{ _setArchiveId(cloud['__archive_bin']); }catch(e){} }
   var aid2=_archiveId()||cloud['__archive_bin']; if(aid2) p['__archive_bin']=aid2;
@@ -7481,6 +7596,7 @@ function applyPayloadToLocal(p){
   if(Array.isArray(p['library_hidden_v1'])) localStorage.setItem('library_hidden_v1', JSON.stringify(p['library_hidden_v1']));
   if(Array.isArray(p['plan_templates_v1'])) localStorage.setItem('plan_templates_v1', JSON.stringify(p['plan_templates_v1']));
   if(p['rest_overrides_v1'] && typeof p['rest_overrides_v1']==='object' && !Array.isArray(p['rest_overrides_v1'])) localStorage.setItem('rest_overrides_v1', JSON.stringify(p['rest_overrides_v1']));
+  if(p['plate_setup_v1'] && typeof p['plate_setup_v1']==='object' && !Array.isArray(p['plate_setup_v1'])) localStorage.setItem('plate_setup_v1', JSON.stringify(p['plate_setup_v1']));
 }
 
 function refreshAfterSync(){
@@ -7638,7 +7754,7 @@ function clearPendingSync(){ try{ localStorage.removeItem('gymlog_sync_pending')
 // Uses sessionStorage so a mid-test reload stays in test mode, and the
 // snapshot is persisted so it can still be discarded after a reload.
 var TEST_MODE = sessionStorage.getItem('gym_test_mode')==='1';
-var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','gymlog_sync_pending','darkMode'];
+var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','plate_setup_v1','gymlog_sync_pending','darkMode'];
 function _testKeys(){
   var ks=[];
   for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i);
