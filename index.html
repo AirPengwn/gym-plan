@@ -332,7 +332,18 @@ body.dark .v2-nudge.down{color:#E0A800}
 .swipe-tip{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translateX(-50%) translateY(10px);background:var(--text);color:var(--surface);font-size:12px;font-weight:600;padding:9px 15px;border-radius:20px;z-index:1200;box-shadow:0 4px 16px rgba(0,0,0,.28);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap}
 .swipe-tip.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .btn-row{display:flex;gap:8px;margin-top:0.75rem}
-.complete-btn{flex:2;padding:11px;font-size:13px;font-weight:600;border-radius:8px;border:none;background:#5B4EA8;color:#fff;cursor:pointer}
+/* ── .btn vocabulary (S2, v5.0). Canonical button classes built on existing
+   tokens. The two byte-identical primaries (.complete-btn / .modal-btn-primary)
+   are aliased onto the vocab here — same computed style as v4.20, no markup/JS
+   change. The distinctly-shaped legacy buttons (.mgr-add-btn / .tray-act /
+   .deload-plan-btn / .patch5-rerun-btn) are aliased in the later rename pass. ── */
+.btn,.complete-btn,.modal-btn-primary{padding:11px;font-size:13px;font-weight:600;border-radius:var(--r-sm);border:none;cursor:pointer}
+.btn-primary,.complete-btn,.modal-btn-primary{background:var(--primary);color:#fff}
+.complete-btn,.modal-btn-primary{flex:2}
+.btn-ghost{background:transparent;border:1px solid var(--primary);color:var(--primary)}
+.btn-danger{background:var(--bad);color:#fff}
+.btn-sm{padding:7px 12px;font-size:11px}
+.btn-block{width:100%}
 .reset-btn{flex:1;padding:11px;font-size:13px;border-radius:8px;border:0.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer}
 /* v4.9 — day-panel ⋯ overflow (Reset lives here) */
 .day-ovf-wrap{position:relative;flex:0 0 auto;display:flex}
@@ -507,7 +518,7 @@ body.dark .modal-overlay{background:rgba(0,0,0,0.4)}
 .modal-textarea{width:100%;height:140px;font-size:16px;line-height:1.4;padding:8px;border:1px solid var(--border-soft);border-radius:8px;font-family:monospace;color:#2C2C2A;resize:none;outline:none;background:#FAFAF8}
 .modal-textarea:focus{border-color:#7F77DD}
 .modal-btn-row{display:flex;gap:8px;margin-top:0.75rem}
-.modal-btn-primary{flex:2;padding:11px;font-size:13px;font-weight:600;border-radius:8px;border:none;background:#5B4EA8;color:#fff;cursor:pointer}
+/* .modal-btn-primary aliased onto the .btn vocab above (S2, v5.0) */
 .modal-btn-secondary{flex:1;padding:11px;font-size:13px;border-radius:8px;border:0.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer}
 .modal-divider{border:none;border-top:1px solid #F1EFE8;margin:1rem 0}
 
@@ -936,7 +947,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.20</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.0</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
