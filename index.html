@@ -465,6 +465,11 @@ canvas.prog-chart{display:block;border-radius:8px}
 .edit-date-input{font-size:11px;padding:3px 6px;border:1px solid #7F77DD;border-radius:5px;color:#2C2C2A;background:#fff;font-family:inherit;outline:none}
 .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:1rem}
 body.dark .modal-overlay{background:rgba(0,0,0,0.4)}
+/* v4.18 (nit 15): templates open as a full-screen sheet (a "screen" push), not an 84vh float */
+.tpl-sheet.show{display:flex}
+.tpl-sheet{align-items:stretch;justify-content:center;padding:0}
+.tpl-sheet .modal{position:relative;max-width:600px;width:100%;height:100%;max-height:100%;border-radius:0;overflow-y:auto;margin:0;padding:calc(1.1rem + env(safe-area-inset-top)) 1.15rem calc(1.25rem + env(safe-area-inset-bottom))}
+.tpl-sheet-close{position:absolute;top:calc(8px + env(safe-area-inset-top));right:10px;width:40px;height:40px;border:0;background:none;font-size:20px;color:var(--muted);cursor:pointer;line-height:1}
 .modal-overlay.show{display:flex}
 .modal{background:#fff;border-radius:14px;padding:1.25rem;width:100%;max-width:380px;max-height:80vh;overflow-y:auto}
 .modal-title{font-size:16px;font-weight:700;color:#2C2C2A;margin-bottom:0.5rem}
@@ -711,6 +716,12 @@ body.dark .bal-pill{background:#252540;border-color:#3C3A5C}
 .mgr-day-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border:1px solid var(--border);border-radius:10px}
 body.dark .mgr-day-row{background:#252540;border-color:#3C3A5C}
 .mgr-day-reorder{display:flex;gap:2px}
+/* v4.18 (nit 14): removed/archived days sit in a quiet dashed container, set apart from live rows */
+.mgr-removed-box{margin-top:1.25rem;border:1px dashed var(--border);border-radius:12px;padding:10px 12px;background:rgba(110,108,102,0.05)}
+body.dark .mgr-removed-box{border-color:#3C3A5C;background:rgba(255,255,255,0.03)}
+.mgr-removed-box .mgr-archived-title{margin-bottom:8px}
+.mgr-removed-box .mgr-day-row-archived{background:transparent;border-style:dashed}
+body.dark .mgr-removed-box .mgr-day-row-archived{background:transparent}
 .mgr-day-name{flex:1;font-size:13px;font-weight:600;color:var(--text)}
 body.dark .mgr-day-name{color:#E8E6F8}
 .mgr-day-name-archived{color:var(--muted);font-weight:500}
@@ -897,7 +908,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.17</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.18</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -1146,8 +1157,9 @@ body.dark #pc-result{color:#E8E6F8}
 </div>
 
 <!-- v3.28: plan templates browser/apply + save-current -->
-<div class="modal-overlay" id="tpl-overlay" onclick="if(event.target===this)closeTemplates()">
-  <div class="modal" style="max-width:380px;max-height:84vh;overflow-y:auto;text-align:left;">
+<div class="modal-overlay tpl-sheet" id="tpl-overlay" onclick="if(event.target===this)closeTemplates()">
+  <div class="modal" style="text-align:left;">
+    <button type="button" class="tpl-sheet-close" aria-label="Close templates" onclick="closeTemplates()">✕</button>
     <div class="modal-title" style="color:#5B4EA8;"><svg class="ic" style="margin-right:7px" aria-hidden="true"><use href="#ic-templates"/></svg>Plan templates</div>
     <div class="modal-sub" style="margin:0.4rem 0 0.9rem;">Apply a ready-made program, or save your current plan to reuse later. Applying always saves a backup snapshot first, and <b>Replace</b> archives your current days (history kept &amp; restorable).</div>
     <div id="tpl-save-row" style="margin-bottom:1rem;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--primary-tint);">
@@ -5074,14 +5086,16 @@ function renderRemovedDays(){
   var wrap=document.getElementById('mgr-removed-wrap'); if(!wrap) return;
   var archived=getArchivedDaysConfig();
   if(!archived.length){ wrap.innerHTML=''; return; }
-  var html='<div class="mgr-archived-title" style="margin-top:1.25rem"><svg class="ic ic-sm" style="margin-right:6px" aria-hidden="true"><use href="#ic-archive"/></svg>Removed days (history kept)</div>';
+  // v4.18 (nit 14): wrap removed days in a quiet, visually-distinct container so
+  // archived rows don't read like live ones.
+  var html='<div class="mgr-archived-title"><svg class="ic ic-sm" style="margin-right:6px" aria-hidden="true"><use href="#ic-archive"/></svg>Removed days (history kept)</div>';
   archived.forEach(function(d){
-    html+='<div class="mgr-day-row">'
+    html+='<div class="mgr-day-row mgr-day-row-archived">'
       +'<span class="mgr-day-name mgr-day-name-archived">'+_esc(d.name)+'</span>'
       +'<button class="mgr-restore-btn" onclick="restoreDay(\''+d.key+'\')">Restore</button>'
       +'</div>';
   });
-  wrap.innerHTML=html;
+  wrap.innerHTML='<div class="mgr-removed-box">'+html+'</div>';
 }
 // v3.32: the ☁️ Sync tab — all cloud sync controls live here now.
 function renderSync(){
