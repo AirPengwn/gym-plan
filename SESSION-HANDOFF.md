@@ -1,7 +1,30 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.20 · **Updated:** 2026-05-26 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.0 · **Updated:** 2026-05-26 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
+
+## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
+
+Eleven items across four phases, one version per phase (owner renumbered from the prompt's
+v4.21+ to **start at v5.0**): **Phase A → v5.0**, Phase B → v5.1, Phase C → v5.2, Phase D →
+v5.3+ (one per gate). One commit per item; ship the full git ritual once a phase's items all
+land; pause for owner on-device verify before the next phase. Cut by owner: **F5** (Sunday
+retro), **L2** (Apple Health), **5.2** type-token sweep.
+
+- **Phase A → v5.0 (DONE, pending owner verify):**
+  - **S2** `.btn` vocab consolidation — added canonical `.btn`/`.btn-primary`/`.btn-ghost`/
+    `.btn-danger`/`.btn-sm`/`.btn-block` on existing tokens; folded the two byte-identical
+    primaries (`.complete-btn`, `.modal-btn-primary`) onto the vocab via lossless selector
+    grouping (pixel-neutral). The four distinctly-shaped legacy buttons (`.mgr-add-btn`,
+    `.tray-act`, `.deload-plan-btn`, `.patch5-rerun-btn`) are aliased in a **later rename pass**.
+  - **S1** dark-mode gray cleanup — **lossless-only**: in `body.dark` rules, tokenized the 5
+    hexes that exactly equal a dark token (`#E8E6F8`→`--text`, `#3C3A5C`→`--border`,
+    `#1A1A2E`→`--surface`, `#2A2850`→`--primary-tint`, `#8B89B0`→`--muted`). The doc's named
+    grays (`#888780`/`#B4B2A9`/`#C8C6BD`/`#2C2C2A`) are light-mode only — not in dark rules. The
+    off-token cluster (`#9896C8`/`#5C5A80`/`#9E9CC4`/`#B4B2D8`) was left as-is (snapping shifts
+    color). Zero visual change.
+- **Phases B/C/D:** NOT started. New synced keys to add (mirror in all 7 payload spots):
+  `rest_overrides_v1` (F4), `units_v1` (C2), `plate_setup_v1` (F3). No others, no migrations.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
 logged history.
