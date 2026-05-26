@@ -82,5 +82,17 @@ try{ wL.loadLastTimes(); }catch(e){}
 var nudge=[].slice.call(wL.document.querySelectorAll('.overload-nudge')).map(function(n){return n.textContent;}).join(' | ');
 ok(/try 105 lbs|Hit|Build to|Ready to try|hold/.test(nudge),'loadLastTimes injects an .overload-nudge on the workout card ('+(nudge||'none')+')');
 
+// ── F1 (v5.1) · progressionNudge: stalled+easy → bump, stalled+hard → hold ──
+var wP1=withHist([ sess(2000,'Set 1: 100 lbs x'+R+'reps'), sess(1000,'Set 1: 100 lbs x'+R+'reps') ]);
+var n1=wP1.progressionNudge(K, wP1.exerciseMeta(K));
+ok(n1 && n1.kind==='bump' && n1.target>100,'F1 · flat top weight, easy/no RPE → bump suggestion ('+JSON.stringify(n1)+')');
+
+var wP2=withHist([ sess(2000,'Set 1: 100 lbs x'+R+'reps',9), sess(1000,'Set 1: 100 lbs x'+R+'reps',8) ]);
+var n2=wP2.progressionNudge(K, wP2.exerciseMeta(K));
+ok(n2 && n2.kind==='hold','F1 · flat top weight, hard RPE (avg ≥8) → hold ('+JSON.stringify(n2)+')');
+
+var wP3=app(store({gym_primary_device:'1'}));
+ok(wP3.progressionNudge(K, wP3.exerciseMeta(K))===null,'F1 · no history → null (no nudge)');
+
 console.log('\n'+(fail?('PROGRESSION SPOT-CHECK: '+fail+' FAILED'):'PROGRESSION SPOT-CHECK: ALL PASS'));
 process.exit(fail?1:0);

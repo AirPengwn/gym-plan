@@ -608,6 +608,11 @@ body.dark .checkin-btn.selected-okay span{color:#FFD740}
 body.dark .checkin-btn.selected-tired{background:#3A1A1A;border-color:#C53030}
 body.dark .checkin-btn.selected-tired span{color:#FF8080}
 body.dark .overload-nudge{background:#0F3A2E;color:#5DD8A0}
+/* F1 (v5.1): auto-progression pill + hold caption (inserted above the set rows) */
+.prog-pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:#fff;background:var(--good);border:0;border-radius:var(--r-pill);padding:3px 10px;margin:0 0 6px;cursor:pointer;font-family:inherit;letter-spacing:.02em}
+.prog-pill:active{filter:brightness(.92)}
+.prog-hold{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#8A6A00;background:rgba(224,168,0,.15);border-radius:8px;padding:2px 8px;margin:0 0 6px}
+body.dark .prog-hold{color:#E0A800}
 .session-timer-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#3C3489;background:#EEEDFE;border-radius:20px;padding:4px 10px;margin-bottom:0.75rem}
 /* ── Quick-fill button ── */
 .quick-fill-btn{display:flex;align-items:center;gap:5px;width:100%;padding:8px 12px;background:#F5F5F2;border:1px dashed var(--border-soft);border-radius:8px;color:#7F77DD;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:0.5rem;justify-content:center}
@@ -4254,6 +4259,70 @@ function getOverloadSuggestion(exKey){
   return null;
 }
 
+// F1 (v5.1): auto-progression surface. Reuses the stall detection (last 2 vs
+// prev 2 sessions ≤ +0.5 lb, or identical top across 2–3 sessions) split by
+// recent RPE: stalled + easy (RPE ≤ 7 or none) → suggest a bump; stalled + hard
+// (RPE ≥ 8) → hold. Computed on render from history; never persisted.
+function progressionNudge(exKey, meta){
+  var h=getExerciseProgress(exKey);
+  if(h.length<2) return null;
+  var W=h[0].top; if(!(W>0)) return null;
+  var metric=h.map(function(s){ return s.est>0?s.est:s.top; });
+  var stalled;
+  if(h.length>=4){
+    stalled = Math.max(metric[0],metric[1]) <= Math.max(metric[2],metric[3]) + 0.5;
+  } else {
+    stalled=true; for(var i=1;i<h.length;i++){ if(h[i].top!==W){ stalled=false; break; } }
+  }
+  if(!stalled) return null;
+  var rpes=h.slice(0,2).map(function(s){return s.rpe;}).filter(function(v){return v!=null;});
+  var avgRpe=rpes.length?(rpes.reduce(function(a,b){return a+b;},0)/rpes.length):null;
+  if(avgRpe!=null && avgRpe>=8) return {kind:'hold', weight:W};
+  var compound=(meta && (meta.pattern==='push'||meta.pattern==='pull') && String(meta.equipment||'').toLowerCase()==='barbell');
+  var step=compound?5:2.5;
+  var target=Math.round(W/step)*step + step;   // snap to the equipment increment, then +1 step
+  return {kind:'bump', weight:W, step:step, target:target};
+}
+// Paint the F1 pill / hold caption onto each v2 strength card in a panel.
+function _applyProgressionNudges(panel){
+  if(!panel) return;
+  panel.querySelectorAll('.item.v2-card').forEach(function(card){
+    var old=card.querySelector('.prog-pill,.prog-hold'); if(old) old.parentNode.removeChild(old);
+    var dx=card.querySelector('.rep-input[data-ex]'); if(!dx) return;
+    var hist=dx.getAttribute('data-ex')||''; if(!hist) return;
+    var n;
+    try{ n=progressionNudge(normalizeEx(hist), exerciseMeta(hist)); }catch(e){ n=null; }
+    if(!n) return;
+    var sets=card.querySelector('.v2-sets'); if(!sets) return;
+    if(n.kind==='hold'){
+      var hold=document.createElement('div'); hold.className='prog-hold';
+      hold.textContent='● Stalled at '+n.weight+' — hold & sharpen form';
+      sets.insertBefore(hold, sets.firstChild);
+    } else if(n.kind==='bump'){
+      var pill=document.createElement('button'); pill.type='button'; pill.className='prog-pill';
+      pill.textContent='↑ +'+n.step+' lb → '+n.target;
+      pill.setAttribute('aria-label','Suggested next weight '+n.target+'. Tap to fill the sets.');
+      pill.onclick=function(e){ e.stopPropagation(); _acceptProgression(card, n.target); };
+      sets.insertBefore(pill, sets.firstChild);
+    }
+  });
+}
+function _acceptProgression(card, target){
+  card.querySelectorAll('.rep-input[data-set]').forEach(function(inp){
+    inp.value=String(target); inp.style.color=''; inp.style.fontStyle='';
+  });
+  var pill=card.querySelector('.prog-pill'); if(pill) pill.parentNode.removeChild(pill);
+  try{ haptic('light'); }catch(e){}
+}
+// Typing your own weight dismisses the suggestion pill on that card.
+document.addEventListener('input',function(e){
+  var inp=e.target;
+  if(inp && inp.classList && inp.classList.contains('rep-input')){
+    var card=inp.closest('.item.v2-card');
+    if(card){ var p=card.querySelector('.prog-pill'); if(p) p.parentNode.removeChild(p); }
+  }
+});
+
 // Deload advice: exercises stalling/regressing while effort (RPE) is high.
 function getDeloadAdvice(){
   var targets=getExerciseTargets();
@@ -4394,6 +4463,8 @@ function loadLastTimes(){
 
     // Render progression badges
     renderProgressBadges(day);
+    // F1 (v5.1): auto-progression pill / hold caption on stalled lifts
+    try{ _applyProgressionNudges(panel); }catch(e){}
   });
 }
 
