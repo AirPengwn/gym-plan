@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.18 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
+**App version:** v4.19 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -33,7 +33,7 @@ logged history.
 
 Working through a **5-step Claude design review** (`C:\Users\airpe\Downloads\MyFit Build
 Plan.html`). **Each step ships as its own version**, then **PAUSE for the user's on-device
-verify before the next step**. Current badge **v4.18, shipped — PENDING owner on-device verify**.
+verify before the next step**. Current badge **v4.19, shipped — PENDING owner on-device verify**.
 
 ### Design "1-line nits" pass (post-overhaul) — owner picked nits 4–20,22 (skipping 1/2/21 done, 3 day-colors)
 Grouped into v4.15–v4.20, one batch per version, pause for verify each.
@@ -63,8 +63,15 @@ Grouped into v4.15–v4.20, one batch per version, pause for verify each.
   ✕). No router in this app, so a full-screen sheet is the practical "screen push". (13) **already
   addressed** — the reorder arrows are horizontal (74×36, row height 54px), not the stacked 72px
   the design review saw; left the familiar ↑/↓ rather than a speculative drag-handle/menu rework.
-- **Queued:** v4.19 Sync/Settings (16 toggle switch, 18 Test-mode group, 17 snapshot 2-step);
-  v4.20 Modals/Toast (19 radius, 20 backup hint, 22 toast reposition).
+- **v4.19 (Sync/Settings):** (16) primary-device checkbox → labeled **toggle switch** (`.tgl`/
+  `.tgl-track`/`.tgl-thumb`) with the plain-language label "This phone uploads workouts to the
+  cloud". (18) **Test mode** moved out of More→App into a collapsed `<details id="more-dev">`
+  **Developer** group (`.set-dev-summary`), so it's not a stray destructive-adjacent tap.
+  (17) On-device snapshot rows no longer lead with a Restore button — `.snap-head` button
+  expands (`_toggleSnap`) to show a **diff** ("this device now: N → snapshot: M") + a Restore
+  button (which still routes through the existing confirm modal). `#test-toggle` id kept so its
+  JS label still works.
+- **Queued:** v4.20 Modals/Toast (19 radius, 20 backup hint, 22 toast reposition) — LAST batch.
 
 **Done so far:**
 - **Step 1 → v4.3** — bottom tab bar reduced 5 → **4 tabs** (🏋️ Workout / 📊 Progress /

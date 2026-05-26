@@ -272,6 +272,27 @@ body.dark .patch5-rerun-btn:hover{background:#2A2850}
 .multi-device-label{font-size:12px;font-weight:600;color:var(--text);line-height:1.5;margin-bottom:6px}
 .snap-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--border-soft);text-align:left}
 .snap-row:first-child{border-top:0}
+/* v4.19 (nit 16): labeled toggle switch */
+.tgl{display:flex;align-items:center;gap:10px;cursor:pointer}
+.tgl input{position:absolute;opacity:0;width:0;height:0}
+.tgl-track{flex:0 0 auto;width:42px;height:24px;border-radius:999px;background:#D3D1C7;position:relative;transition:background .15s}
+body.dark .tgl-track{background:#3C3A5C}
+.tgl-thumb{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}
+.tgl input:checked + .tgl-track{background:#5B4EA8}
+.tgl input:checked + .tgl-track .tgl-thumb{transform:translateX(18px)}
+.tgl input:focus-visible + .tgl-track{outline:2px solid var(--primary);outline-offset:2px}
+.tgl-text{font-size:13px;color:var(--text);line-height:1.35}
+/* v4.19 (nit 17): snapshot rows expand to details + diff before a Restore button */
+.snap-head{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;background:none;border:0;border-top:1px solid var(--border-soft);padding:9px 0;text-align:left;cursor:pointer;font-family:inherit;color:var(--text)}
+.snap-item:first-child .snap-head{border-top:0}
+.snap-cv{color:var(--muted);font-size:12px;transition:transform .15s}
+.snap-item.open .snap-cv{transform:rotate(90deg)}
+.snap-detail{padding:2px 0 10px}
+.snap-diff{font-size:11px;color:var(--muted);margin-bottom:2px}
+.snap-diff b{color:var(--text)}
+/* v4.19 (nit 18): Developer group collapsed by default so Test mode isn't a stray tap */
+.set-dev-summary{font-size:12px;font-weight:800;color:var(--muted);padding:11px 0 9px;border-bottom:1px solid var(--border);cursor:pointer}
+body.dark .set-dev-summary{color:#8B89B0}
 .snap-meta{font-size:11px;color:var(--muted);font-weight:600}
 .snap-empty{font-size:11px;color:var(--muted);padding:6px 0}
 /* v2.71 — Primary/Reader device toggle */
@@ -908,7 +929,7 @@ body.dark #pc-result{color:#E8E6F8}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.18</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v4.19</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -1091,9 +1112,12 @@ body.dark #pc-result{color:#E8E6F8}
   </div>
   <div class="set-group" id="more-app">
     <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-app"/></svg>App</div>
-    <button class="set-item" id="test-toggle" onclick="toggleTestMode()">🧪 Test mode</button>
     <button class="set-item" onclick="reloadPage()"><span><svg class="ic ic-sm" style="margin-right:7px" aria-hidden="true"><use href="#ic-refresh"/></svg>Update to latest</span><span class="set-caret">›</span></button>
   </div>
+  <details class="set-group" id="more-dev">
+    <summary class="set-dev-summary"><svg class="ic ic-sm" style="margin-right:7px" aria-hidden="true"><use href="#ic-test"/></svg>Developer</summary>
+    <button class="set-item" id="test-toggle" onclick="toggleTestMode()">🧪 Test mode</button>
+  </details>
   <div class="set-about">MyFit <span id="set-ver"></span> · Anytime Fitness Guilford</div>
 </div>
 
@@ -1376,9 +1400,10 @@ body.dark #pc-result{color:#E8E6F8}
            writes; Pull from cloud is a read-only escape hatch. -->
       <div class="multi-device-row">
         <div class="multi-device-label">Multi-device setup</div>
-        <label class="primary-toggle-label" for="primary-device-toggle">
+        <label class="tgl">
           <input type="checkbox" id="primary-device-toggle" onchange="togglePrimaryDevice(this.checked)">
-          <span>This is my <b>primary</b> device (writes to cloud)</span>
+          <span class="tgl-track"><span class="tgl-thumb"></span></span>
+          <span class="tgl-text">This phone <b>uploads</b> workouts to the cloud</span>
         </label>
         <div class="primary-toggle-hint" id="primary-toggle-hint"></div>
         <button type="button" class="patch5-rerun-btn" onclick="pullFromCloud()">Pull from cloud</button>
@@ -7075,11 +7100,25 @@ function renderSnapshots(){
   var wrap=document.getElementById('snapshots-wrap'); if(!wrap) return;
   var snaps=getSnapshots();
   if(!snaps.length){ wrap.innerHTML='<div class="snap-empty">No snapshots yet — one is saved automatically after each completed session.</div>'; return; }
+  // v4.19 (nit 17): restore is destructive, so a row no longer leads with a Restore
+  // button — tap it to see details + a diff vs this device, then Restore from there.
+  var cur=_totalSessions();
   wrap.innerHTML=snaps.map(function(s,i){
     var when=new Date(s.ts).toLocaleString();
-    return '<div class="snap-row"><span class="snap-meta"><b>'+(s.n||0)+'</b> sessions · '+_esc(when)+'</span>'
-      +'<button class="patch5-rerun-btn" style="margin:0;padding:5px 10px" onclick="confirmRestoreSnapshot('+i+')">Restore</button></div>';
+    return '<div class="snap-item" id="snap-item-'+i+'">'
+      +'<button type="button" class="snap-head" onclick="_toggleSnap('+i+')" aria-expanded="false"><span class="snap-meta"><b>'+(s.n||0)+'</b> sessions · '+_esc(when)+'</span><span class="snap-cv" aria-hidden="true">▸</span></button>'
+      +'<div class="snap-detail" id="snap-det-'+i+'" hidden>'
+        +'<div class="snap-diff">This device now: <b>'+cur+'</b> session'+(cur===1?'':'s')+' → this snapshot: <b>'+(s.n||0)+'</b></div>'
+        +'<button class="patch5-rerun-btn" style="margin:6px 0 0;padding:6px 12px" onclick="confirmRestoreSnapshot('+i+')">Restore this snapshot</button>'
+      +'</div></div>';
   }).join('');
+}
+function _toggleSnap(i){
+  var item=document.getElementById('snap-item-'+i), det=document.getElementById('snap-det-'+i);
+  if(!item||!det) return;
+  var open=det.hasAttribute('hidden');
+  if(open){ det.removeAttribute('hidden'); item.classList.add('open'); } else { det.setAttribute('hidden',''); item.classList.remove('open'); }
+  var h=item.querySelector('.snap-head'); if(h) h.setAttribute('aria-expanded', open?'true':'false');
 }
 // Shared restore confirm — used by both on-device snapshots and cloud archive.
 function _openRestoreConfirm(data, ts, n){
