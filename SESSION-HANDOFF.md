@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.17 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
+**App version:** v4.18 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -33,7 +33,7 @@ logged history.
 
 Working through a **5-step Claude design review** (`C:\Users\airpe\Downloads\MyFit Build
 Plan.html`). **Each step ships as its own version**, then **PAUSE for the user's on-device
-verify before the next step**. Current badge **v4.17, shipped — PENDING owner on-device verify**.
+verify before the next step**. Current badge **v4.18, shipped — PENDING owner on-device verify**.
 
 ### Design "1-line nits" pass (post-overhaul) — owner picked nits 4–20,22 (skipping 1/2/21 done, 3 day-colors)
 Grouped into v4.15–v4.20, one batch per version, pause for verify each.
@@ -57,8 +57,13 @@ Grouped into v4.15–v4.20, one batch per version, pause for verify each.
   heat-map heading → sentence-case "Weekly muscle load" via repurposed `.stats-section-title
   .muscle-map-title` (14px, no uppercase, --text). Tests updated (heatcheck text, consistency
   caption). Note #21 (notice tray above day chips) confirmed already-working in preview.
-- **Queued:** v4.18 Plan (14 removed container, 15 templates→screen push, 13 reorder control);
-  v4.19 Sync/Settings (16 toggle switch, 18 Test-mode group, 17 snapshot 2-step);
+- **v4.18 (Plan):** (14) removed/archived days now sit in a quiet **dashed container**
+  (`.mgr-removed-box`, `.mgr-day-row-archived`) set apart from live rows. (15) Plan **templates**
+  modal → **full-screen sheet** (`.tpl-sheet` on the overlay: full height, flat corners, top-right
+  ✕). No router in this app, so a full-screen sheet is the practical "screen push". (13) **already
+  addressed** — the reorder arrows are horizontal (74×36, row height 54px), not the stacked 72px
+  the design review saw; left the familiar ↑/↓ rather than a speculative drag-handle/menu rework.
+- **Queued:** v4.19 Sync/Settings (16 toggle switch, 18 Test-mode group, 17 snapshot 2-step);
   v4.20 Modals/Toast (19 radius, 20 backup hint, 22 toast reposition).
 
 **Done so far:**
