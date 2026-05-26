@@ -253,7 +253,8 @@ function domIdByDataEx(doc, day, ex){
   // last-time promoted to always-on (above the sets), dark override on .v2-card.
   var sheets=w.document.documentElement.innerHTML;
   ok(/\.v2-foot \.rpe-top-val\{color:var\(--muted\)\}/.test(sheets),'footer RPE-pill contrast rule present');
-  ok(/body\.dark \.v2-card \.last-time\{background:#2A2850\}/.test(sheets),'dark always-on last-time bg override present');
+  // S1 (v5.0): #2A2850 in body.dark rules tokenized to var(--primary-tint) (identical value)
+  ok(/body\.dark \.v2-card \.last-time\{background:var\(--primary-tint\)\}/.test(sheets),'dark always-on last-time bg override present');
   // v4.16: footer toggle no longer leads with "Last time"; last-time is outside .v2-foot
   ok(!/Last time, RPE &amp; notes/.test(sheets),'nit 9 · footer toggle relabeled (no "Last time, …")');
   var _v2c=w.document.querySelector('.v2-card .fields-wrap > .last-time');
