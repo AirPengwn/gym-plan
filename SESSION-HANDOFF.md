@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v4.19 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
+**App version:** v4.20 · **Updated:** 2026-05-25 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
@@ -33,7 +33,7 @@ logged history.
 
 Working through a **5-step Claude design review** (`C:\Users\airpe\Downloads\MyFit Build
 Plan.html`). **Each step ships as its own version**, then **PAUSE for the user's on-device
-verify before the next step**. Current badge **v4.19, shipped — PENDING owner on-device verify**.
+verify before the next step**. Current badge **v4.20, shipped — PENDING owner on-device verify**.
 
 ### Design "1-line nits" pass (post-overhaul) — owner picked nits 4–20,22 (skipping 1/2/21 done, 3 day-colors)
 Grouped into v4.15–v4.20, one batch per version, pause for verify each.
@@ -71,7 +71,16 @@ Grouped into v4.15–v4.20, one batch per version, pause for verify each.
   expands (`_toggleSnap`) to show a **diff** ("this device now: N → snapshot: M") + a Restore
   button (which still routes through the existing confirm modal). `#test-toggle` id kept so its
   JS label still works.
-- **Queued:** v4.20 Modals/Toast (19 radius, 20 backup hint, 22 toast reposition) — LAST batch.
+- **v4.20 (Modals/Toast — FINAL nit batch):** (19) added the radius scale tokens
+  (`--r-sm/--r/--r-lg/--r-pill`, the useful slice of the deferred 5.3) and set `.modal`
+  radius → `var(--r-lg)` (16px). (20) backup-code intro hint reordered to lead with the
+  primary path ("Generate … then tap **Copy code** …") and demote long-press→Select-All to a
+  parenthetical fallback. (22) toast moved from `bottom:1.5rem` (collided with the tab bar +
+  the floating timer/Complete pills) to **top-center** (`top:safe+14px`, slides down,
+  z-index 1003 above the pills).
+- **DONE: all design-appendix nits the owner picked (4–20, 22).** Skipped/already-done: 1, 2,
+  21 (done pre-nit-pass), 3 (day-color system — not selected). Remaining deferred work is only
+  the optional CSS-token sweeps 5.2 (type) / 5.3 (full color sweep) / 5.5 (.btn consolidation).
 
 **Done so far:**
 - **Step 1 → v4.3** — bottom tab bar reduced 5 → **4 tabs** (🏋️ Workout / 📊 Progress /
