@@ -613,6 +613,12 @@ body.dark .overload-nudge{background:#0F3A2E;color:#5DD8A0}
 .prog-pill:active{filter:brightness(.92)}
 .prog-hold{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#8A6A00;background:rgba(224,168,0,.15);border-radius:8px;padding:2px 8px;margin:0 0 6px}
 body.dark .prog-hold{color:#E0A800}
+/* F2 (v5.1): PR moment — halo + tag on a set whose est. 1RM beats history */
+.v2-set{position:relative}
+.v2-set.pr .rep-input,.v2-set.pr .reps-actual-input{background:#FFF8E1;border-color:#F4D38A}
+.v2-set.pr::after{content:'PR';position:absolute;top:-7px;right:4px;font-size:8px;font-weight:800;color:#7A5A00;background:#FFE49B;border-radius:3px;padding:0 4px;letter-spacing:.04em;z-index:2;pointer-events:none}
+body.dark .v2-set.pr .rep-input,body.dark .v2-set.pr .reps-actual-input{background:#3A2E00;border-color:#7A5A00;color:#FFE49B}
+body.dark .v2-set.pr::after{background:#7A5A00;color:#FFE49B}
 .session-timer-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#3C3489;background:#EEEDFE;border-radius:20px;padding:4px 10px;margin-bottom:0.75rem}
 /* ── Quick-fill button ── */
 .quick-fill-btn{display:flex;align-items:center;gap:5px;width:100%;padding:8px 12px;background:#F5F5F2;border:1px dashed var(--border-soft);border-radius:8px;color:#7F77DD;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:0.5rem;justify-content:center}
@@ -3999,8 +4005,10 @@ function confirmSave(){
   localStorage.setItem('gymlog_'+day,JSON.stringify(saved));
   try{ takeLocalSnapshot('session'); }catch(e){}  // v3.6: on-device safety net
   document.getElementById('date-modal-overlay').classList.remove('show');
-  showToast('Session saved! ✓');
   var savedEntries=saved[0].entries; var savedLabel=label; var savedDay=day;
+  // F2 (v5.1): report new est-1RM PRs in the save toast (singular "new PR").
+  var _estPRs=0; try{ _estPRs=countNewEstPRs(day, savedEntries); }catch(e){}
+  showToast(_estPRs===0 ? 'Session saved! ✓' : _estPRs===1 ? 'Session saved · new PR' : 'Session saved · '+_estPRs+' new PRs');
   var prs=checkForPRs(day, savedEntries);
   rst(day,counts[day]);
   clearSessionStart(day);
@@ -4378,6 +4386,7 @@ function prettyExName(exKey){
 
 function loadLastTimes(){
   var globalMap=buildGlobalRepMap();
+  _histEstCache={};   // F2: fresh per-render memo of historical best est. 1RM
   getDays().forEach(function(day){
     var panel=document.getElementById('p-'+day);
     if(!panel) return;
@@ -4465,6 +4474,8 @@ function loadLastTimes(){
     renderProgressBadges(day);
     // F1 (v5.1): auto-progression pill / hold caption on stalled lifts
     try{ _applyProgressionNudges(panel); }catch(e){}
+    // F2 (v5.1): re-derive PR halos from history for any set with typed values
+    try{ panel.querySelectorAll('.v2-set').forEach(_checkSetPR); }catch(e){}
   });
 }
 
@@ -4847,6 +4858,59 @@ function bestEst1RM(noteStr){
   var best=0;
   parseSetWR(noteStr).forEach(function(p){ var e=est1RM(p.w,p.r); if(e>best) best=e; });
   return best;
+}
+
+// ── F2 (v5.1): PR moment. A set whose est. 1RM beats the exercise's best from
+// prior COMPLETED sessions gets a halo + "PR" tag while logging; the save toast
+// reports the count. Reuses est1RM (no new formula); nothing persisted — halos
+// re-derive from history on every render. ──
+var _histEstCache=null;   // {exKey: bestEst} for the current render pass; reset by loadLastTimes
+function historicalBestEst(exKey){
+  if(_histEstCache && Object.prototype.hasOwnProperty.call(_histEstCache,exKey)) return _histEstCache[exKey];
+  var best=0;
+  try{ getExerciseProgress(exKey).forEach(function(s){ if(s.est>best) best=s.est; }); }catch(e){}
+  if(_histEstCache) _histEstCache[exKey]=best;
+  return best;
+}
+function _checkSetPR(setEl){
+  if(!setEl||!setEl.classList||!setEl.classList.contains('v2-set')) return;
+  var wInp=setEl.querySelector('.rep-input'), rInp=setEl.querySelector('.reps-actual-input');
+  if(!wInp||!rInp){ return; }
+  var w=parseFloat(String(wInp.value).replace(/[^\d.]/g,''))||0;
+  var r=parseInt(rInp.value,10)||0;
+  var exKey=normalizeEx(wInp.getAttribute('data-ex')||'');
+  var est=est1RM(w,r);
+  setEl.classList.toggle('pr', est>0 && est > historicalBestEst(exKey)+1e-4);
+}
+// focusout bubbles (blur doesn't) — recompute the PR halo when a set's weight or
+// reps loses focus.
+document.addEventListener('focusout',function(e){
+  var t=e.target;
+  if(t && t.classList && (t.classList.contains('rep-input')||t.classList.contains('reps-actual-input'))){
+    var setEl=t.closest && t.closest('.v2-set'); if(setEl) _checkSetPR(setEl);
+  }
+});
+// Count exercises that set a NEW est-1RM PR in a just-saved session (the saved
+// session is index 0 of its day and is excluded from the historical baseline).
+function countNewEstPRs(day, entries){
+  var n=0;
+  (entries||[]).forEach(function(e){
+    if(!e.note || e.note.indexOf('Set ')!==0) return;
+    var cur=bestEst1RM(e.note); if(!(cur>0)) return;
+    var prevBest=0;
+    getDays().forEach(function(d){
+      var saved=getSaved(d), start=(d===day)?1:0;
+      for(var i=start;i<saved.length;i++){
+        saved[i].entries.forEach(function(en){
+          if(en.ex===e.ex && en.note && en.note.indexOf('Set ')===0){
+            var est=bestEst1RM(en.note); if(est>prevBest) prevBest=est;
+          }
+        });
+      }
+    });
+    if(cur > prevBest + 1e-4) n++;
+  });
+  return n;
 }
 
 function fmtChartDate(d){
