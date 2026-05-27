@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.1 · **Updated:** 2026-05-26 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.1.1 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -40,7 +40,13 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
     Settings → "Barbell & plates" editor. New synced key `plate_setup_v1` ({barWeight,plates}).
   - **L3** cycle auto-advance — Workout open / app start lands on `_nextCycleDay()` (next active
     day after `_lastLoggedDay()`, wraps) with an "Up next" caption; opts out on a manual chip
-    tap or any in-progress draft. No new key.
+    tap. No new key. **v5.1.1 fix:** removed the original in-progress-draft guard (a stale
+    `gymlog_draft_*` was suppressing advance — owner saw day 1 instead of day 3); auto-target
+    already tracks the last *logged* day so it never strands. Added `_sessWhen()` (manual parse
+    of the "Wkd, Mon DD, YYYY at HH:MM AM/PM" date) because legacy sessions have no `ts` and
+    iOS Safari's `Date.parse` can NaN on that format.
+  - **v5.1.1 also:** rest pill now shows the active mode (`auto`/`long`/`short`, or `set` for an
+    override) instead of always "auto".
   - **Sync:** `rest_overrides_v1` + `plate_setup_v1` mirrored in all 7 payload spots
     (`_mergeRestOverrides` union for the object map; single-object semantics for plate setup).
     All CSS/JS/runtime-DOM — stock card markup untouched, so **no verify.js re-baseline**.
