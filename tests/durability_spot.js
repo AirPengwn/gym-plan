@@ -88,10 +88,16 @@ ok(wL3b._nextCycleDay()===days[2],'L3 · next cycle day = the day after the last
 const STw=store({}); STw.setItem('gymlog_'+days[days.length-1], JSON.stringify([{label:'x',date:'x',ts:Date.now(),entries:[{ex:'Bench',note:'Set 1: 100 lbs x5reps'}]}]));
 const wL3c=app(STw);
 ok(wL3c._nextCycleDay()===days[0],'L3 · cycle wraps from the last day back to Day 1');
-// draft guard: an in-progress draft opts out of auto-advance
-const STd=store({}); STd.setItem('gymlog_draft_'+days[2], JSON.stringify({checked:['x'],fields:{}}));
+// v5.1.1: a stale draft must NOT block auto-advance (the old draft guard stranded
+// the user on a day they'd long abandoned). Auto-target tracks the last LOGGED day.
+const STd=store({});
+STd.setItem('gymlog_'+days[1], JSON.stringify([{label:'x',date:'x',ts:Date.now(),entries:[{ex:'Bench',note:'Set 1: 100 lbs x5reps'}]}]));
+STd.setItem('gymlog_draft_'+days[0], JSON.stringify({checked:['x'],fields:{}}));  // stale draft on a different day
 const wL3d=app(STd);
-ok(wL3d._hasAnyDraft()===true && wL3d._workoutTargetDay().auto===false,'L3 · in-progress draft → no auto-advance');
+ok(wL3d._workoutTargetDay().auto===true && wL3d._workoutTargetDay().day===days[2],'L3 · a stale draft no longer blocks auto-advance (lands on next-after-logged)');
+// v5.1.1: _sessWhen ranks ts-less legacy sessions by their date string (Safari-safe)
+const wSW=app(store({}));
+ok(wSW._sessWhen({date:'Sat, May 16, 2026 at 12:00 AM'}) > wSW._sessWhen({date:'Tue, May 12, 2026 at 11:40 PM'}),'L3 · _sessWhen parses ts-less date strings for recency ranking');
 
 console.log('\n'+(fail?('DURABILITY SPOT-CHECK: '+fail+' FAILED'):'DURABILITY SPOT-CHECK: ALL PASS'));
 process.exit(fail?1:0);

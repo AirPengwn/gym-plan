@@ -976,7 +976,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.1</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.1.1</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -3651,13 +3651,31 @@ function _dayBtnFor(d){
 // ── L3 (v5.1): cycle auto-advance ───────────────────────────────────────────
 // On Workout open (and app start), if the user hasn't manually picked a day this
 // page-load, land on the next day in the cycle after the most-recently-logged
-// day. Derived from history — no new persisted keys. A manual chip tap (or an
-// in-progress draft) opts out so we never yank you off unsaved work.
+// day. Derived from history — no new persisted keys. A manual chip tap opts out
+// of auto-advance for the rest of the page-load.
 var _manualDaySelect=false;
+// Robust session time: sessTs first (ts, then Date.parse). Legacy sessions carry
+// only a date string with no ts, and iOS Safari's Date.parse can return NaN for
+// the "Wkd, Mon DD, YYYY at HH:MM AM/PM" format — so fall back to a manual parse
+// so day-recency ranking still works on the phone.
+function _sessWhen(s){
+  var t=sessTs(s); if(t>0) return t;
+  var m=String((s&&s.date)||'').match(/([A-Za-z]{3,})\s+(\d{1,2}),\s*(\d{4})(?:.*?(\d{1,2}):(\d{2})\s*(AM|PM))?/i);
+  if(m){
+    var MO={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+    var mo=MO[m[1].slice(0,3).toLowerCase()];
+    if(mo!=null){
+      var hh=m[4]?parseInt(m[4],10):0, mm=m[5]?parseInt(m[5],10):0, ap=(m[6]||'').toUpperCase();
+      if(ap==='PM'&&hh<12) hh+=12; if(ap==='AM'&&hh===12) hh=0;
+      return new Date(parseInt(m[3],10),mo,parseInt(m[2],10),hh,mm).getTime();
+    }
+  }
+  return 0;
+}
 function _lastLoggedDay(){
   var best=null, bestTs=-1;
   getDays().forEach(function(d){
-    getSaved(d).forEach(function(s){ var ts=sessTs(s); if(ts>bestTs){ bestTs=ts; best=d; } });
+    getSaved(d).forEach(function(s){ var ts=_sessWhen(s); if(ts>bestTs){ bestTs=ts; best=d; } });
   });
   return best;
 }
@@ -3667,9 +3685,6 @@ function _nextCycleDay(){
   if(!last) return days[0];               // never logged → start at Day 1
   var i=days.indexOf(last);
   return (i<0) ? days[0] : days[(i+1)%days.length];
-}
-function _hasAnyDraft(){
-  return getDays().some(function(d){ return !!localStorage.getItem('gymlog_draft_'+d); });
 }
 function _showUpNext(day){
   var cap=document.getElementById('upnext-cap'); if(!cap) return;
@@ -3686,7 +3701,7 @@ document.addEventListener('click',function(e){
 // Returns the day to show + whether it was auto-advanced.
 function _workoutTargetDay(){
   var days=getDays();
-  if(!_manualDaySelect && !_hasAnyDraft()){
+  if(!_manualDaySelect){
     var nx=_nextCycleDay();
     if(nx && days.indexOf(nx)>=0) return {day:nx, auto:true};
   }
@@ -8912,8 +8927,10 @@ document.addEventListener('click',function(e){
 },true);
 function _updateRestSrc(){
   var el=document.getElementById('rest-timer-src'); if(!el) return;
-  if(_restCtx && _restCtx.baseSeconds>0){ el.textContent='· '+_restCtx.baseSeconds+'s '+(_restCtx.override?'set':'auto'); }
-  else { el.textContent=''; }
+  if(_restCtx && _restCtx.baseSeconds>0){
+    var src=_restCtx.override ? 'set' : getRestMode();   // 'auto' | 'long' | 'short' | 'set'
+    el.textContent='· '+_restCtx.baseSeconds+'s '+src;
+  } else { el.textContent=''; }
 }
 // Long-press the rest pill → per-exercise override stepper. Event-delegated so
 // it works regardless of element-creation order.
