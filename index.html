@@ -388,6 +388,11 @@ body.dark .day-bal-hint{background:#252540}
 .prog-recap-row{display:flex;flex-wrap:wrap;gap:6px}
 .prog-recap-s{font-size:12px;font-weight:600;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:3px 10px}
 .prog-recap-s b{color:var(--text);font-weight:800}
+.vol-title{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.vol-seg{display:inline-flex;margin-left:auto;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.vol-seg-btn{padding:3px 10px;font-size:10.5px;font-weight:700;border:none;background:transparent;color:var(--muted);cursor:pointer;letter-spacing:.02em}
+.vol-seg-btn+.vol-seg-btn{border-left:1px solid var(--border)}
+.vol-seg-btn.active{background:var(--primary);color:#fff}
 .prog-day-card{background:#fff;border:0.5px solid #E8E8E4;border-radius:12px;margin-bottom:1rem;overflow:hidden}
 .prog-day-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
 .prog-day-header:hover{background:#FAFAF8}
@@ -1029,7 +1034,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.11</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.12</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -8533,18 +8538,27 @@ function _streakPill(current, longest){
   if(current>=longest*0.5) return '<span class="delta-pill delta-flat">vs PB '+longest+'d</span>';
   return '';
 }
+// v5.12: weekly-volume metric mode — 'weight' (sum of top-set weights, legacy
+// "lbs moved") or 'tonnage' (Σ weight×reps, matches the v5.11 monthly recap).
+// Persisted locally only; not a synced setting.
+function _volMode(){ try{ return localStorage.getItem('vol_chart_mode')==='tonnage'?'tonnage':'weight'; }catch(e){ return 'weight'; } }
+function setVolMode(m){ try{ localStorage.setItem('vol_chart_mode', m==='tonnage'?'tonnage':'weight'); }catch(e){} try{ renderStats(); }catch(e){} }
+function _sessionVolume(session, mode){
+  var vol=0;
+  (session.entries||[]).forEach(function(e){
+    if(!(e.note && e.note.indexOf('Set ')===0)) return;
+    if(mode==='tonnage'){ try{ parseSetWR(e.note).forEach(function(p){ if(p.w>0 && p.r>0) vol+=p.w*p.r; }); }catch(_e){} }
+    else { parseSetWeights(e.note).forEach(function(w){ vol+=w; }); }
+  });
+  return vol;
+}
 function _weeklyVolumeNow(){
-  var now=Date.now(), now7=now-7*86400*1000, now14=now-14*86400*1000;
+  var now=Date.now(), now7=now-7*86400*1000, now14=now-14*86400*1000, mode=_volMode();
   var thisW=0, prevW=0;
   getDays().forEach(function(d){
     getSaved(d).forEach(function(s){
       var ts=sessTs(s); if(!ts) return;
-      var vol=0;
-      (s.entries||[]).forEach(function(e){
-        if(e.note && e.note.indexOf('Set ')===0){
-          parseSetWeights(e.note).forEach(function(w){ vol+=w; });
-        }
-      });
+      var vol=_sessionVolume(s, mode);
       if(ts>=now7) thisW+=vol;
       else if(ts>=now14) prevW+=vol;
     });
@@ -8595,7 +8609,13 @@ function renderStats(){
   // Step 9: weekly volume delta pill (this 7d vs prev 7d).
   var _wv=_weeklyVolumeNow();
   var _wvPill=(_wv.curr>0||_wv.prev>0)?deltaPill(_wv.curr, _wv.prev, {threshold:0.5}):'';
-  html+='<div class="stats-section"><div class="stats-section-title">Weekly Volume (lbs moved) '+_wvPill+'</div>'
+  var _vm=_volMode();
+  var _vmLabel=_vm==='tonnage'?'Weekly Volume (lbs · weight×reps)':'Weekly Volume (lbs moved)';
+  var _vmToggle='<span class="vol-seg" role="group" aria-label="Volume metric">'
+    +'<button type="button" class="vol-seg-btn'+(_vm==='weight'?' active':'')+'" onclick="setVolMode(\'weight\')" aria-pressed="'+(_vm==='weight')+'">Weight</button>'
+    +'<button type="button" class="vol-seg-btn'+(_vm==='tonnage'?' active':'')+'" onclick="setVolMode(\'tonnage\')" aria-pressed="'+(_vm==='tonnage')+'">Tonnage</button>'
+    +'</span>';
+  html+='<div class="stats-section"><div class="stats-section-title vol-title">'+_vmLabel+' '+_wvPill+_vmToggle+'</div>'
     +'<div class="vol-chart-wrap"><div class="vol-chart-inner"><canvas id="vol-chart-canvas"></canvas></div></div>'
     +'</div>';
   try{
@@ -8878,7 +8898,7 @@ function snoozeDeload(){
 function drawVolumeChart(){
   var canvas=document.getElementById('vol-chart-canvas');
   if(!canvas) return;
-  var weekMap={}, weekOrder=[];
+  var weekMap={}, weekOrder=[], mode=_volMode();
   getDays().forEach(function(d){
     getSaved(d).forEach(function(session){
       var ts=sessTs(session); if(!ts) return;
@@ -8886,11 +8906,7 @@ function drawVolumeChart(){
       var mon=new Date(dt); mon.setDate(dt.getDate()-(day===0?6:day-1)); mon.setHours(0,0,0,0);
       var wk=mon.getFullYear()+'-'+String(mon.getMonth()+1).padStart(2,'0')+'-'+String(mon.getDate()).padStart(2,'0');
       if(!weekMap[wk]){ weekMap[wk]=0; weekOrder.push(wk); }
-      (session.entries||[]).forEach(function(e){
-        if(e.note && e.note.indexOf('Set ')===0){
-          parseSetWeights(e.note).forEach(function(w){ weekMap[wk]+=w; });
-        }
-      });
+      weekMap[wk]+=_sessionVolume(session, mode);
     });
   });
   weekOrder=weekOrder.filter(function(w,i,a){return a.indexOf(w)===i;}).sort();
