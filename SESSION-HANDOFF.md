@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.7 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.8 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -93,7 +93,12 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
   beep (Web Audio, unlocked on the Rest tap) / toast / haptic. **No background notification** —
   an iOS client-side timer is suspended while backgrounded, so a true background alert needs push
   infra (out of scope); the win is accuracy + an alert the instant you return. Still queued (one
-  version each, pause for verify): v5.8 cloud read-modify-write hardening (plan-mode).
+  **Post-Round-2 batch COMPLETE** (v5.3–v5.8).
+  - **v5.8 (DONE):** cloud writes from THIS device serialize via `_serializeCloudWrite` (an
+    in-flight promise chain) so two read-modify-write ops can't overlap + clobber each other
+    (the realistic self-race). Wrapped: `syncToJbin` (both paths), `pushPlanToCloud`,
+    `pushMeasurementsToCloud`. Cross-device writes remain possible (JSONbin has no atomic CAS)
+    but are near-zero for one user and the union-merge self-heals most data; owner accepted that.
   - **v5.7 (DONE):** "🔄 Swap exercise" in the v2 card ⋯ overflow → `openSwapPicker` modal of
     metadata-matched alternatives (`_swapCandidates`: same `pattern` hard filter, ranked by
     shared muscles + same equipment, curated `alternatives[]` seeded first). `swapExercise`
