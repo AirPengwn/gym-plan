@@ -622,6 +622,19 @@ body.dark .overload-nudge{background:#0F3A2E;color:#5DD8A0}
 .prog-pill:active{filter:brightness(.92)}
 .prog-hold{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#8A6A00;background:rgba(224,168,0,.15);border-radius:8px;padding:2px 8px;margin:0 0 6px}
 body.dark .prog-hold{color:#E0A800}
+/* v5.5: inline exercise history + 1RM sparkline (tap the exercise name) */
+.ex-name[role="button"]{cursor:pointer}
+.ex-name-hist{font-size:10px;opacity:.5;margin-left:5px;vertical-align:1px}
+.ex-hist-panel{margin:2px 12px 10px;padding:9px 11px;background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--r-sm)}
+body.dark .ex-hist-panel{background:var(--primary-tint);border-color:var(--border)}
+.exh-empty{font-size:12px;color:var(--muted);font-style:italic}
+.exh-spark{display:flex;align-items:center;gap:9px;color:var(--primary-2);margin-bottom:8px}
+.exh-spark-cap{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap}
+.exh-spark-svg{flex:1;height:30px;min-width:0}
+.exh-rows{display:flex;flex-direction:column;gap:3px}
+.exh-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;font-size:11.5px;color:var(--text);font-variant-numeric:tabular-nums}
+.exh-row .exh-d{color:var(--muted);font-weight:600}
+.exh-row .exh-e{color:var(--primary-2);font-weight:700}
 /* F2 (v5.1): PR moment — halo + tag on a set whose est. 1RM beats history */
 .v2-set{position:relative}
 .v2-set.pr .rep-input,.v2-set.pr .reps-actual-input{background:#FFF8E1;border-color:#F4D38A}
@@ -985,7 +998,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.4</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.5</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -1916,9 +1929,12 @@ function buildCardHTML_v2(rec){
     .map(function(l){return '<a class="ex-link-stretch" href="'+_esc(l.href)+'" target="_blank" onclick="event.stopPropagation()">'+_esc(l.label)+'</a>';}).join('');
   // Patch-2 Step 1: inline progress badge (filled at runtime from history)
   var nudge=(rec.type==='strength')?('<div class="v2-nudge" data-hist="'+_esc(hist)+'"></div>'):'';
+  // v5.5: on strength cards the name is tappable → inline history + 1RM trend.
+  var nameTap=(rec.type==='strength')?' role="button" tabindex="0" onclick="toggleExHistory(this)"':'';
+  var histGlyph=(rec.type==='strength')?'<span class="ex-name-hist" aria-hidden="true">📈</span>':'';
   var head='  <div class="item v2-card" id="'+id+'" data-cardv2="1">\n'
    +'    <div class="item-top"><button type="button" class="checkbox" role="checkbox" aria-checked="false" aria-label="Mark exercise complete" onclick="tog(\''+id+'\',\''+d+'\',9)"><svg class="checkmark" viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
-   +'<div class="v2-head"><div class="ex-name">'+_esc(rec.name)+badge+'</div><div class="ex-sub">'+_esc(rec.sub||'')+'</div>'+nudge+'</div>'
+   +'<div class="v2-head"><div class="ex-name"'+nameTap+'>'+_esc(rec.name)+badge+histGlyph+'</div><div class="ex-sub">'+_esc(rec.sub||'')+'</div>'+nudge+'</div>'
    +'<div class="v2-actions">'
      +'<button type="button" class="item-timer-btn" title="Start rest timer" aria-label="Start rest timer" onclick="event.stopPropagation();startRestTimer(restDefault);haptic(\'light\')"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="flex-shrink:0" aria-hidden="true"><circle cx="6" cy="6" r="5" stroke="#5B4EA8" stroke-width="1.5"/><path d="M6 3.5V6l1.5 1.5" stroke="#5B4EA8" stroke-width="1.5" stroke-linecap="round"/></svg>Rest</button>'
      +'<button type="button" class="v2-ovf-btn" aria-label="More options" onclick="cardToggle(this,\'ovf\')"><span aria-hidden="true">⋯</span></button>'
@@ -3436,7 +3452,7 @@ document.addEventListener('click',function(e){
   if(!e.target.closest) return;
   var top=e.target.closest('.item-top');
   if(!top) return;
-  if(e.target.closest('.checkbox, a, button, input, select, textarea, label, .item-timer-btn, .unit-toggle')) return;
+  if(e.target.closest('.checkbox, a, button, input, select, textarea, label, .item-timer-btn, .unit-toggle, .ex-name[role="button"]')) return;
   var cb=top.querySelector('.checkbox');
   if(cb) cb.click();
 },false);
@@ -4451,6 +4467,48 @@ document.addEventListener('input',function(e){
     if(card){ var p=card.querySelector('.prog-pill'); if(p) p.parentNode.removeChild(p); }
   }
 });
+
+// ── v5.5: inline exercise history + est-1RM sparkline (tap the exercise name) ──
+function _exSparkline(vals, w, h){
+  vals=(vals||[]).filter(function(v){return v>0;});
+  if(vals.length<2) return '';
+  var min=Math.min.apply(null,vals), max=Math.max.apply(null,vals), rng=(max-min)||1, n=vals.length;
+  var pts=vals.map(function(v,i){
+    var x=(i/(n-1))*(w-4)+2, y=h-2-((v-min)/rng)*(h-4);
+    return (Math.round(x*10)/10)+','+(Math.round(y*10)/10);
+  }).join(' ');
+  var lx=w-2, ly=h-2-((vals[n-1]-min)/rng)*(h-4);
+  return '<svg class="exh-spark-svg" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" aria-hidden="true">'
+    +'<polyline points="'+pts+'" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>'
+    +'<circle cx="'+(Math.round(lx*10)/10)+'" cy="'+(Math.round(ly*10)/10)+'" r="2" fill="currentColor"/></svg>';
+}
+function toggleExHistory(nameEl){
+  var card=nameEl.closest('.item'); if(!card) return;
+  var open=card.querySelector('.ex-hist-panel');
+  if(open){ open.parentNode.removeChild(open); nameEl.setAttribute('aria-expanded','false'); return; }
+  var dx=card.querySelector('[data-ex]'); var hist=((dx&&dx.getAttribute('data-ex'))||'').replace(/-notes$/,'');
+  var hsts=[]; try{ hsts=getExerciseProgress(normalizeEx(hist)); }catch(e){}   // newest first
+  var panel=document.createElement('div'); panel.className='ex-hist-panel';
+  if(!hsts.length){
+    panel.innerHTML='<div class="exh-empty">No logged history yet — log a set and it shows up here.</div>';
+  } else {
+    var recent=hsts.slice(0,6);
+    var spark=_exSparkline(hsts.slice().reverse().map(function(s){return s.est||0;}), 132, 30);
+    var best=Math.max.apply(null,hsts.map(function(s){return s.est||0;}));
+    var rows=recent.map(function(s){
+      var d=new Date(s.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      var wr=s.top+((s.haveReps && s.repsAtTop!=null && isFinite(s.repsAtTop))?(' × '+s.repsAtTop):'');
+      var e=(s.est>0)?('e1RM '+Math.round(s.est)):'';
+      return '<div class="exh-row"><span class="exh-d">'+_esc(d)+'</span><span class="exh-v">'+_esc(wr)+'</span><span class="exh-e">'+_esc(e)+'</span></div>';
+    }).join('');
+    panel.innerHTML=(spark?('<div class="exh-spark"><span class="exh-spark-cap">est. 1RM · best '+Math.round(best)+'</span>'+spark+'</div>'):'')
+      +'<div class="exh-rows">'+rows+'</div>';
+  }
+  var top=card.querySelector('.item-top');
+  if(top) top.insertAdjacentElement('afterend', panel); else card.insertBefore(panel, card.firstChild);
+  nameEl.setAttribute('aria-expanded','true');
+  try{ haptic('light'); }catch(e){}
+}
 
 // Deload advice: exercises stalling/regressing while effort (RPE) is high.
 function getDeloadAdvice(){

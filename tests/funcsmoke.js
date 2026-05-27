@@ -500,6 +500,32 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.5 · tap exercise name → inline history + 1RM sparkline ──
+(function(){
+  const store=makeStore({ 'gymlog_a': JSON.stringify([
+    {label:'D1',date:'Mon, May 25, 2026 at 6:00 PM',ts:3,entries:[{ex:'Chest press',note:'Set 1: 145 lbs x8reps'}]},
+    {label:'D1',date:'Fri, May 22, 2026 at 6:00 PM',ts:2,entries:[{ex:'Chest press',note:'Set 1: 140 lbs x8reps'}]},
+    {label:'D1',date:'Tue, May 19, 2026 at 6:00 PM',ts:1,entries:[{ex:'Chest press',note:'Set 1: 135 lbs x8reps'}]}
+  ]) });
+  const w=loadApp(store);
+  const id=domIdByDataEx(w.document,'a','Chest press');
+  const card=w.document.getElementById(id);
+  const name=card && card.querySelector('.ex-name[role="button"]');
+  ok(!!name,'v5.5 · strength card name is a tappable history affordance');
+  if(name){
+    name.click();   // inline onclick=toggleExHistory + the document toggle handler both fire
+    ok(!!card.querySelector('.ex-hist-panel'),'v5.5 · name tap opens the inline history panel');
+    ok(!card.classList.contains('done'),'v5.5 · name tap does NOT toggle the checkbox (excluded)');
+    ok(card.querySelectorAll('.ex-hist-panel .exh-row').length>=3,'v5.5 · history rows render');
+    ok(!!card.querySelector('.exh-spark-svg'),'v5.5 · est-1RM sparkline renders (>=2 sessions)');
+    name.click();
+    ok(!card.querySelector('.ex-hist-panel'),'v5.5 · re-tap closes the panel');
+  }
+  ok(w._exSparkline([1,2,3],100,20).indexOf('<polyline')>=0,'v5.5 · _exSparkline emits a polyline');
+  ok(w._exSparkline([5],100,20)==='','v5.5 · _exSparkline is empty for <2 points');
+  w.close();
+})();
+
 // ── v5.4 · rest timer is timestamp-based (stays accurate across backgrounding) ──
 (function(){
   const w = loadApp(makeStore({}));
