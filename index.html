@@ -985,7 +985,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.3</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.4</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -8949,10 +8949,39 @@ function haptic(style){
   }
 }
 
-// ── Rest timer with duration presets ────────────────────────────────────────────────────
+// ── Rest timer (v5.4: timestamp-based — stays accurate across phone-lock /
+// backgrounding, where JS timers are suspended. We track the absolute END time
+// and recompute remaining each tick + the instant the app returns to foreground;
+// on completion we beep (audio unlocked on the Rest tap) + toast + haptic.) ──
 var restInterval=null;
-var restSeconds=0;
+var restSeconds=0;        // remaining seconds, derived from restEndTs (kept for compat)
 var restDefault=90;
+var restEndTs=0;          // absolute end time (ms); 0 = idle
+var _restDone=true;       // completion fires exactly once
+var _audioCtx=null;
+
+function _unlockAudio(){   // call on a user gesture so a later completion beep can play
+  try{
+    var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+    if(!_audioCtx) _audioCtx=new AC();
+    if(_audioCtx.state==='suspended') _audioCtx.resume();
+  }catch(e){}
+}
+function _restBeep(){      // two short tones; no-op if audio unavailable/suspended
+  try{
+    if(!_audioCtx) return;
+    if(_audioCtx.state==='suspended') _audioCtx.resume();
+    var t=_audioCtx.currentTime;
+    [0,0.18].forEach(function(off){
+      var o=_audioCtx.createOscillator(), g=_audioCtx.createGain();
+      o.type='sine'; o.frequency.value=880; o.connect(g); g.connect(_audioCtx.destination);
+      g.gain.setValueAtTime(0.0001, t+off);
+      g.gain.exponentialRampToValueAtTime(0.22, t+off+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+off+0.14);
+      o.start(t+off); o.stop(t+off+0.15);
+    });
+  }catch(e){}
+}
 
 function setRestDuration(s){
   restDefault=s;
@@ -8971,34 +9000,54 @@ function startRestTimer(seconds){
     seconds=s;
     _restCtx={key:ctx.key,name:ctx.name,override:ctx.override,baseSeconds:s};
   } else { _restCtx=null; }   // manual (bar buttons) — no source label
-  restSeconds=seconds||restDefault;
-  document.getElementById('rest-timer-count').textContent=restSeconds;
+  var secs=seconds||restDefault;
+  restEndTs=Date.now()+secs*1000; _restDone=false; restSeconds=secs;
+  document.getElementById('rest-timer-count').textContent=secs;
   _updateRestSrc();
   document.getElementById('rest-timer-bar').classList.add('show');
   document.body.classList.add('timer-active');
   [30,60,90,120].forEach(function(d){
     var btn=document.getElementById('rt-'+d);
-    if(btn) btn.style.background=d===restSeconds?'rgba(255,255,255,0.4)':'';
+    if(btn) btn.style.background=d===secs?'rgba(255,255,255,0.4)':'';
   });
-  restInterval=setInterval(function(){
-    restSeconds--;
-    document.getElementById('rest-timer-count').textContent=restSeconds;
-    if(restSeconds<=0){
-      clearInterval(restInterval);
-      document.getElementById('rest-timer-bar').classList.remove('show');
-      document.body.classList.remove('timer-active');
-      showToast('Rest done — next set! 💪');
-      haptic('success');
-    }
-  },1000);
+  _unlockAudio();   // the Rest tap is our gesture to enable the completion beep
+  restInterval=setInterval(_restTick,250);
+  _restTick();
 }
-
-function addRestTime(s){ restSeconds+=s; document.getElementById('rest-timer-count').textContent=restSeconds; }
+function _restTick(){
+  if(_restDone) return;
+  var remaining=Math.max(0, Math.ceil((restEndTs-Date.now())/1000));
+  restSeconds=remaining;
+  var el=document.getElementById('rest-timer-count'); if(el) el.textContent=remaining;
+  if(remaining<=0) _restComplete();
+}
+function _restComplete(){
+  if(_restDone) return; _restDone=true;
+  clearInterval(restInterval); restInterval=null; restEndTs=0;
+  var bar=document.getElementById('rest-timer-bar'); if(bar) bar.classList.remove('show');
+  document.body.classList.remove('timer-active');
+  showToast('Rest done — next set! 💪');
+  haptic('success');
+  _restBeep();
+}
+function addRestTime(s){
+  if(_restDone) return;
+  restEndTs+=s*1000;
+  _restTick();
+}
 function stopRestTimer(){
-  clearInterval(restInterval);
+  _restDone=true; restEndTs=0;
+  clearInterval(restInterval); restInterval=null;
   document.getElementById('rest-timer-bar').classList.remove('show');
   document.body.classList.remove('timer-active');
 }
+// v5.4: recompute the moment the app returns to the foreground — a timer that
+// elapsed while the phone was locked then shows 0 and fires its alert on return.
+['visibilitychange','focus','pageshow'].forEach(function(ev){
+  (ev==='visibilitychange'?document:window).addEventListener(ev, function(){
+    if(restEndTs>0 && !_restDone && !document.hidden) _restTick();
+  });
+});
 
 // ── F4 (v5.1): smart per-exercise rest defaults ───────────────────────────
 // Persisted in rest_overrides_v1 (synced): { [linkId||histEx]: seconds } plus a
