@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.0 · **Updated:** 2026-05-26 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.1 · **Updated:** 2026-05-26 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -23,8 +23,34 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
     grays (`#888780`/`#B4B2A9`/`#C8C6BD`/`#2C2C2A`) are light-mode only — not in dark rules. The
     off-token cluster (`#9896C8`/`#5C5A80`/`#9E9CC4`/`#B4B2D8`) was left as-is (snapping shifts
     color). Zero visual change.
-- **Phases B/C/D:** NOT started. New synced keys to add (mirror in all 7 payload spots):
-  `rest_overrides_v1` (F4), `units_v1` (C2), `plate_setup_v1` (F3). No others, no migrations.
+- **Phase B → v5.1 (DONE, pending owner verify):** the user-visible feature batch.
+  - **F4** smart rest defaults — `REST_BY_PATTERN` lookup by `exerciseMeta.pattern`; global
+    Auto·Long·Short mode in `rest_overrides_v1._mode`; per-exercise override
+    (`rest_overrides_v1[linkId‖histEx]`, long-press the rest pill → stepper); pill shows
+    `· Ns auto/set`. Smart default resolved at the Rest button via a capture listener (stock
+    markup untouched). New synced key `rest_overrides_v1`.
+  - **F1** auto-progression — `progressionNudge()` (stall split by RPE): bump → tappable
+    `+X lb → target` pill above the sets (tap fills sets; type dismisses); hold → caption.
+    Suggestion-only — NOT logged unless accepted (Set 1 keeps its last-weight prefill).
+  - **F2** PR moment — set tile gets a halo + "PR" tag on `focusout` when its est-1RM
+    (`est1RM` Epley, reused) beats prior completed sessions; save toast `· N new PRs`. Never
+    persisted (re-derived on render). Existing weight-based `checkForPRs`/share card untouched.
+  - **F3** inline plate math — `platesPerSide()` strip under barbell working weight (renders
+    only for `equipment==='Barbell'`, recalcs on Set-1 input, tap → preloaded `openPlateCalc`).
+    Settings → "Barbell & plates" editor. New synced key `plate_setup_v1` ({barWeight,plates}).
+  - **L3** cycle auto-advance — Workout open / app start lands on `_nextCycleDay()` (next active
+    day after `_lastLoggedDay()`, wraps) with an "Up next" caption; opts out on a manual chip
+    tap or any in-progress draft. No new key.
+  - **Sync:** `rest_overrides_v1` + `plate_setup_v1` mirrored in all 7 payload spots
+    (`_mergeRestOverrides` union for the object map; single-object semantics for plate setup).
+    All CSS/JS/runtime-DOM — stock card markup untouched, so **no verify.js re-baseline**.
+- **Phases C/D:** NOT started.
+  - **Phase C → v5.2:** C2 Settings→Units (new synced key `units_v1`, replaces per-set lbs/kg
+    toggle), C1 card-density collapse (fold location+demo into RPE/notes footer), M1 More-tab
+    regroup (3 `<h3 class="more-group">` + 2 consolidations), L1 notes search (Sessions sub-tab).
+  - **Phase D → v5.3+:** R1 retirement (legacy non-v2 RPE + `plansync_spot`/`patch5`/`patchN`
+    gate blocks) — ⚠ one gate per commit, verify.js baseline inline, "do this CAREFULLY".
+  - Remaining new synced key: `units_v1` (C2). No others, no migrations.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
 logged history.
