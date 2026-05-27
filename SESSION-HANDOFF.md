@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.2 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.3 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -396,11 +396,19 @@ Expected: badge `>vX.Y</span>` matches the just-shipped version; the **pages** w
   (`cloudPUT` reader-gated). Union merge never shrinks the cloud.
 - **Plan / days / library**: push from **any device** via "Push plan now"
   (`pushPlanToCloud`, ungated `_rawCloudPUT`). Library merges last-write-wins.
+- **Body measurements (v5.3): sync from ANY device** (owner's call — only day-to-day workout
+  data stays phone-only). `saveMeasurements` → `pushMeasurementsToCloud` (ungated, surgical:
+  pulls cloud, reconciles ONLY `body_measurements`, writes back — never touches sessions).
+  **Invariant: at most one entry per (date,type).** Each write carries a `ts`; the background
+  merge (`_mergeMeasurements`, used in `mergeCloudIntoPayload`) is **newest-write-wins**; a
+  same date+type value conflict at save time **prompts** "replace or keep cloud's".
 - **Cloud archive**: primary-only, ~daily, separate bin.
 - The "Cloud enabled" switch + "Push plan now" button live in the Plan screen.
 - **Synced payload keys** (mirror in all 7 spots — pushPlanToCloud, generateExport, import,
   buildBinPayload, mergeCloudIntoPayload, applyPayloadToLocal, TEST_EXTRA_KEYS): `gymlog_*`,
-  `plan_v2`, `days_config_v1`, `exercise_library_v1`, `library_hidden_v1`, `plan_templates_v1`.
+  `plan_v2`, `days_config_v1`, `exercise_library_v1`, `library_hidden_v1`, `plan_templates_v1`,
+  `rest_overrides_v1`, `plate_setup_v1`, `units_v1`, `body_measurements`, `archived_exercises`,
+  `earned_milestones`, `exercise_order`.
 
 ## Plan templates (v3.28)
 

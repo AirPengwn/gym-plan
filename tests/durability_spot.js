@@ -115,5 +115,35 @@ ok(/<mark>strong<\/mark>/i.test(wL1._hl(wL1._esc('felt strong today'))),'L1 · _
 wL1._sessSearch='';
 ok(wL1._sessMatchesSearch(sessMiss)===true && wL1._hl('plain')==='plain','L1 · empty search matches everything and does not highlight');
 
+// ── v5.3 · body measurements: one entry per (date,type), newest-write-wins ──
+const wMM=app(store({}));
+// same date+type, different value → ONE entry, newest ts wins
+var mm1=wMM._mergeMeasurements(
+  [{type:'weight',date:'2026-05-25',value:180,unit:'lbs',ts:1}],
+  [{type:'weight',date:'2026-05-25',value:182,unit:'lbs',ts:2}]);
+ok(mm1.length===1 && mm1[0].value===182,'measurements · same date+type → one entry, newest ts wins');
+// different dates / types → all kept
+var mm2=wMM._mergeMeasurements(
+  [{type:'weight',date:'2026-05-25',value:180,ts:1}],
+  [{type:'weight',date:'2026-05-26',value:181,ts:1},{type:'waist',date:'2026-05-25',value:34,ts:1}]);
+ok(mm2.length===3,'measurements · distinct (date,type) entries all kept (no false dedupe)');
+// legacy entries with no ts: never produce a duplicate (collapse to one)
+var mm3=wMM._mergeMeasurements(
+  [{type:'weight',date:'2026-05-25',value:180}],
+  [{type:'weight',date:'2026-05-25',value:182}]);
+ok(mm3.length===1,'measurements · ts-less conflict still collapses to one per day');
+// integration: background merge dedupes measurements but never shrinks sessions
+const STmm=store({gym_primary_device:'1'});
+STmm.setItem('gymlog_a', JSON.stringify([{label:'D',date:'x',ts:9,entries:[{ex:'Bench',note:'Set 1: 100 lbs'}]}]));
+STmm.setItem('body_measurements', JSON.stringify([{type:'weight',date:'2026-05-25',value:182,unit:'lbs',ts:2}]));
+const wMM2=app(STmm);
+var mp=wMM2.mergeCloudIntoPayload({
+  gymlog_a:[{label:'D2',date:'y',ts:5,entries:[{ex:'Squat',note:'Set 1: 200 lbs'}]}],
+  body_measurements:[{type:'weight',date:'2026-05-25',value:180,unit:'lbs',ts:1}]
+});
+var wMeas=mp['body_measurements'].filter(function(m){return m.type==='weight'&&m.date==='2026-05-25';});
+ok(wMeas.length===1 && wMeas[0].value===182,'background merge · one weight for the date, local (newer ts) wins');
+ok((mp['gymlog_a']||[]).length===2,'background merge · sessions still union (history never shrinks)');
+
 console.log('\n'+(fail?('DURABILITY SPOT-CHECK: '+fail+' FAILED'):'DURABILITY SPOT-CHECK: ALL PASS'));
 process.exit(fail?1:0);
