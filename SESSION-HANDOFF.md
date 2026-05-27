@@ -71,10 +71,22 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
     `renderItemHTML`/`USE_NEW_CARD`). So editing `buildCardHTML_v2` changes ALL cards (stock +
     dynamic) **without a verify.js re-baseline** — C1 needed none. Only `funcsmoke` (which asserts
     on the live v2 layout) needed updating.
-- **Phase D → v5.3+:** NOT started. R1 retirement (legacy non-v2 RPE + `plansync_spot`/`patch5`/
-  `patchN` gate blocks) — ⚠ one gate per commit, verify.js baseline inline, "do this CAREFULLY".
-  **All Round-2 synced keys now shipped** (`rest_overrides_v1`, `plate_setup_v1`, `units_v1`); no
-  new keys remain. No migrations.
+- **Phase D · R1 — INVESTIGATED & DECLINED (owner's call, 2026-05-27).** On careful inspection the
+  named targets are NOT safe dead code, so retirement was skipped:
+  - **patch3/4/5** are flag-gated **data migrations** (`migrateSessionsToStructured_v1` etc.) that
+    parse the **do-not-touch `.note` format** → structured `sets[]`. They're **perpetual idempotent
+    guards** (must still run for any old/imported un-migrated data), have **9+ dedicated tests**
+    (`patch5_*`, `patch3_spot`, `patch4_spot`) and a user-facing repair UI (`#patch5-status`). They
+    fail the gating bar "(b) no test exercises the FALSE branch."
+  - **plansync** (`plansync_spot`) guards the **live** plan/day cloud-sync feature — not dead markup.
+  - **Legacy non-v2 RPE injection**: only the non-v2 *strength* RPE/reps/pain enhancement is dead
+    (nothing renders non-v2 strength since `USE_NEW_CARD=true`), but it's interleaved with the
+    **live cardio rest-button** injection in the same loop (~`loadLastTimes`/the `.item:not([data-cardv2])`
+    pass). Low payoff to excise.
+  → **Do NOT re-attempt R1** without a new explicit decision; these are safety/feature code, not gates.
+- **Round 2 (design_handoff_v420_r2) is COMPLETE:** all 11 functional items shipped — Phase A (S2,S1)
+  v5.0 · Phase B (F4,F1,F2,F3,L3) v5.1 (+v5.1.1/.2 fixes) · Phase C (C2,C1,M1,L1) v5.2. Cut by owner:
+  F5, L2, 5.2. Synced keys added: `rest_overrides_v1`, `plate_setup_v1`, `units_v1`.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
 logged history.
