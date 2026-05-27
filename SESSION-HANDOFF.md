@@ -47,6 +47,9 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
     iOS Safari's `Date.parse` can NaN on that format.
   - **v5.1.1 also:** rest pill now shows the active mode (`auto`/`long`/`short`, or `set` for an
     override) instead of always "auto".
+  - **v5.1.2:** cardio Rest button now **works** (owner's call) instead of showing a "no timer"
+    message — `REST_BY_PATTERN.cardio` 0→60 (so it mode-adjusts: 60 auto / 90 long / 30 short),
+    and the `<=0` early-return in `startRestTimer` is gone. Every Rest button arms a timer now.
   - **Sync:** `rest_overrides_v1` + `plate_setup_v1` mirrored in all 7 payload spots
     (`_mergeRestOverrides` union for the object map; single-object semantics for plate setup).
     All CSS/JS/runtime-DOM — stock card markup untouched, so **no verify.js re-baseline**.
