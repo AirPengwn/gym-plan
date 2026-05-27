@@ -241,6 +241,9 @@ body.dark .tabbar .tab.active{color:#B4ADF0}
 body{padding-bottom:calc(70px + env(safe-area-inset-bottom)) !important}
 /* v3.30 — Settings screen */
 .set-group{background:var(--card,#fff);border:1px solid var(--border);border-radius:14px;padding:4px 14px;margin-bottom:12px}
+/* M1 (v5.2): More-tab section headers grouping the set-groups */
+.more-group{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:18px 2px 8px}
+.more-group:first-of-type{margin-top:4px}
 body.dark .set-group{background:#252540;border-color:var(--border)}
 .set-gh{font-size:12px;font-weight:800;color:var(--text);padding:11px 0 9px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
 .set-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:13px 0;border:0;border-bottom:1px solid var(--border);background:none;font-size:13px;color:var(--text);font-family:inherit;cursor:pointer}
@@ -1146,14 +1149,16 @@ body.dark #pc-result{color:var(--text)}
 <!-- ═══ MORE (v4.3) — Sync + Backup + Appearance + App, folded from the former Sync/Settings tabs ═══ -->
 <div class="day-panel" id="p-more">
   <div style="font-size:18px;font-weight:800;color:var(--text);margin:2px 0 14px;">More</div>
+  <h3 class="more-group">Data &amp; sync</h3>
   <div class="set-group" id="more-sync">
-    <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-cloud"/></svg>Sync</div>
+    <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-cloud"/></svg>Cloud sync</div>
     <div id="sync-body"></div>
   </div>
   <div class="set-group" id="more-backup">
     <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-backup"/></svg>Backup &amp; restore</div>
     <button class="set-item" onclick="showExportImport()"><span>Backup code · on-device snapshots · cloud archive · import / export · this device (Primary / Reader)</span><span class="set-caret">›</span></button>
   </div>
+  <h3 class="more-group">Customize</h3>
   <div class="set-group" id="more-appearance">
     <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-appearance"/></svg>Appearance</div>
     <button class="set-item" id="dark-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode"><span id="dark-mode-label">🌙 Dark mode</span><span class="set-caret" id="dark-mode-state">Off</span></button>
@@ -1187,6 +1192,7 @@ body.dark #pc-result{color:var(--text)}
       <div id="eq-plates" class="eq-plates"></div>
     </div>
   </div>
+  <h3 class="more-group">About &amp; advanced</h3>
   <div class="set-group" id="more-app">
     <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-app"/></svg>App</div>
     <button class="set-item" onclick="reloadPage()"><span><svg class="ic ic-sm" style="margin-right:7px" aria-hidden="true"><use href="#ic-refresh"/></svg>Update to latest</span><span class="set-caret">›</span></button>
@@ -5427,6 +5433,8 @@ function renderSync(){
     +'<div class="plan-sync-row">'
     +'<label class="plan-sync-toggle"><input type="checkbox" id="plan-sync-switch" '+(syncOn?'checked':'')+' onchange="setPlanSyncEnabled(this.checked);renderSync()"><span>Cloud sync for plan, days &amp; library '+(syncOn?'<b>(Cloud enabled)</b>':'<b>(Local only)</b>')+'</span></label>'
     +'</div>'
+    // M1 (v5.2): surface this device's role as a secondary line (set in Backup & restore)
+    +'<div class="plan-sync-hint" style="margin-top:2px">'+(isPrimaryDevice()?'⬆ <b>This phone uploads</b> workout history to the cloud.':'📖 <b>Reader</b> — this phone won\'t push history (change in Backup &amp; restore).')+'</div>'
     +'<div class="plan-sync-hint">Plan, day &amp; library edits stay on this device until you push — and you can push from <b>any</b> device. '+(syncOn?'Tap below to write them to the cloud (your workout history is left untouched).':'Switch on to enable the push button.')+'</div>'
     +'<button class="patch5-rerun-btn" '+(syncOn?'':'disabled')+' onclick="pushPlanToCloud()">⬆ Push plan to cloud now</button>'
     +'<div class="plan-sync-last">'+lpTxt+'</div>'
