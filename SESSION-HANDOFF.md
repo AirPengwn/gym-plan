@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.3 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.4 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -87,6 +87,15 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
 - **Round 2 (design_handoff_v420_r2) is COMPLETE:** all 11 functional items shipped — Phase A (S2,S1)
   v5.0 · Phase B (F4,F1,F2,F3,L3) v5.1 (+v5.1.1/.2 fixes) · Phase C (C2,C1,M1,L1) v5.2. Cut by owner:
   F5, L2, 5.2. Synced keys added: `rest_overrides_v1`, `plate_setup_v1`, `units_v1`.
+- **Post-Round-2 owner-requested batch (in progress):** v5.3 measurements-sync-from-any-device (DONE,
+  see Sync model). v5.4 **rest timer is timestamp-based** (`restEndTs`; recompute on
+  `visibilitychange`/focus/pageshow) so it stays accurate across phone-lock, + completion
+  beep (Web Audio, unlocked on the Rest tap) / toast / haptic. **No background notification** —
+  an iOS client-side timer is suspended while backgrounded, so a true background alert needs push
+  infra (out of scope); the win is accuracy + an alert the instant you return. Still queued (one
+  version each, pause for verify): v5.5 tap exercise name → inline history+1RM, v5.6 warm-up set
+  calc, v5.7 metadata-matched exercise swap (plan-mode), v5.8 cloud read-modify-write hardening
+  (plan-mode).
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
 logged history.

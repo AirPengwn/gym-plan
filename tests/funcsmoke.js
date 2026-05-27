@@ -500,6 +500,19 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.4 · rest timer is timestamp-based (stays accurate across backgrounding) ──
+(function(){
+  const w = loadApp(makeStore({}));
+  w.startRestTimer(90);
+  ok(Math.abs(w.restEndTs - (Date.now()+90000)) < 2000, 'v5.4 · rest timer tracks an absolute end ~90s out');
+  ok(w.document.getElementById('rest-timer-count').textContent==='90','v5.4 · rest count shows 90 at start');
+  // simulate the timer elapsing while the phone was locked (JS suspended), then the next tick on return:
+  w.restEndTs = Date.now()-500; w._restTick();
+  ok(w._restDone===true,'v5.4 · an elapsed timer completes on the next tick (not stuck mid-count)');
+  ok(!w.document.getElementById('rest-timer-bar').classList.contains('show'),'v5.4 · bar hides on completion');
+  w.stopRestTimer(); w.close();
+})();
+
 console.log('\n'+(failures? ('FUNC SMOKE FAIL — '+failures+' failed, '+passes+' passed')
                             : ('FUNC SMOKE PASS — '+passes+' checks')));
 process.exit(failures?1:0);
