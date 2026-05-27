@@ -976,7 +976,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.1.1</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.1.2</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -8844,9 +8844,9 @@ function startRestTimer(seconds){
   clearInterval(restInterval);
   var ctx=_pendingSmartRest; _pendingSmartRest=null;
   if(ctx){
-    if(ctx.seconds<=0){ try{ showToast('No rest timer for this one'); }catch(e){} return; }  // cardio / no-timer
-    seconds=ctx.seconds;
-    _restCtx={key:ctx.key,name:ctx.name,override:ctx.override,baseSeconds:ctx.seconds};
+    var s=ctx.seconds>0 ? ctx.seconds : 60;   // v5.1.1: every Rest button works; cardio/0 → 60s
+    seconds=s;
+    _restCtx={key:ctx.key,name:ctx.name,override:ctx.override,baseSeconds:s};
   } else { _restCtx=null; }   // manual (bar buttons) — no source label
   restSeconds=seconds||restDefault;
   document.getElementById('rest-timer-count').textContent=restSeconds;
@@ -8884,7 +8884,7 @@ function stopRestTimer(){
 // (no verify.js re-baseline): the per-card Rest button's frozen onclick still
 // calls startRestTimer(restDefault); a capture-phase listener resolves the
 // exercise's smart default just before, so the button arms intelligently.
-var REST_BY_PATTERN={squat:120,hinge:120,carry:120,push:90,pull:90,isolation:60,core:30,mobility:30,cardio:0};
+var REST_BY_PATTERN={squat:120,hinge:120,carry:120,push:90,pull:90,isolation:60,core:30,mobility:30,cardio:60};
 var _pendingSmartRest=null;   // set by the capture listener on a card Rest tap
 var _restCtx=null;            // {key,name,seconds,override} for the active rest
 function getRestOverrides(){ try{ var o=JSON.parse(localStorage.getItem('rest_overrides_v1')); return (o&&typeof o==='object'&&!Array.isArray(o))?o:{}; }catch(e){ return {}; } }
