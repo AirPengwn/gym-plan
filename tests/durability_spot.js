@@ -100,8 +100,8 @@ STd.setItem('gymlog_draft_'+days[0], JSON.stringify({checked:['x'],fields:{}}));
 const wL3d=app(STd);
 ok(wL3d._workoutTargetDay().auto===true && wL3d._workoutTargetDay().day===days[2],'L3 · a stale draft no longer blocks auto-advance (lands on next-after-logged)');
 // v5.1.1: _sessWhen ranks ts-less legacy sessions by their date string (Safari-safe)
-const wSW=app(store({}));
-ok(wSW._sessWhen({date:'Sat, May 16, 2026 at 12:00 AM'}) > wSW._sessWhen({date:'Tue, May 12, 2026 at 11:40 PM'}),'L3 · _sessWhen parses ts-less date strings for recency ranking');
+const wSwp=app(store({}));
+ok(wSwp._sessWhen({date:'Sat, May 16, 2026 at 12:00 AM'}) > wSwp._sessWhen({date:'Tue, May 12, 2026 at 11:40 PM'}),'L3 · _sessWhen parses ts-less date strings for recency ranking');
 
 // ── L1 (v5.2) · notes search matches per-exercise + session notes; highlights safely ──
 const wL1=app(store({}));
@@ -152,6 +152,21 @@ ok(wu.length===4 && wu[0].w===45 && wu[wu.length-1].w<225,'warmup ramp · steps 
 ok(wu.every(function(s){return s.w<225;}),'warmup ramp · every warm-up set is below the work weight');
 ok(wWU._warmupRamp(40,45,[45,35,25,10,5,2.5]).length===0,'warmup ramp · working ≤ bar → no ramp');
 ok(wWU._warmupRamp(95,45,[45,35,25,10,5,2.5]).every(function(s){return s.w<95;}),'warmup ramp · light working weight still ramps below it');
+
+// ── v5.7 · swap to a metadata-matched alternative ──
+const wSwap=app(store({}));
+var sc=wSwap._swapCandidates('Chest press','a');
+ok(sc.length>0 && sc.every(function(c){return c.pattern==='push'||c.curated;}),'swap · candidates share the movement pattern (push)');
+ok(sc.every(function(c){return wSwap.normalizeEx(c.name)!=='chest press';}),'swap · candidates exclude the exercise itself');
+wSwap._planCommit=function(){};   // suppress the reload for the test
+var bSW=wSwap.getEffectivePlan();
+var swDom=bSW.order['a'].filter(function(id){return wSwap.normalizeEx((bSW.ex[id]||{}).histEx||(bSW.ex[id]||{}).name)==='chest press';})[0];
+var len0=bSW.order['a'].length;
+wSwap.swapExercise(swDom,'a','Barbell bench press');
+var aSW=wSwap.getEffectivePlan();
+ok(aSW.order['a'].length===len0,'swap · replaces (not adds) — day length unchanged');
+ok(aSW.order['a'].indexOf(swDom)<0,'swap · original instance removed from the day');
+ok(aSW.order['a'].some(function(id){return wSwap.normalizeEx((aSW.ex[id]||{}).histEx||(aSW.ex[id]||{}).name)==='barbell bench press';}),'swap · the alternative is now on the day');
 
 console.log('\n'+(fail?('DURABILITY SPOT-CHECK: '+fail+' FAILED'):'DURABILITY SPOT-CHECK: ALL PASS'));
 process.exit(fail?1:0);
