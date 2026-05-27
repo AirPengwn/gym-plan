@@ -59,6 +59,8 @@ body.dark{
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:420px;margin:0 auto}
 .day-selector{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem}
+/* L3 (v5.1): "Up next" caption above the day chips when auto-advanced */
+.upnext-cap{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin:0 2px 5px}
 .day-btn{flex:1;min-width:44px;min-height:44px;padding:6px 8px;border:1px solid var(--border-soft);border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;text-align:center;background:#fff;color:var(--text);transition:all 0.15s;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .day-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 2px 8px rgba(91,78,168,.25)}
 .day-btn.progress-tab{font-size:12px;padding:12px 6px}
@@ -1002,6 +1004,7 @@ body.dark #pc-result{color:var(--text)}
 
 <!-- v2.76 (Phase A.2): day selector rendered from DAYS_CONFIG via renderDaySelector().
      First day active by default to match the boot panel (#p-a has 'show'). -->
+<div class="upnext-cap" id="upnext-cap" hidden></div>
 <div class="day-selector" id="day-selector" role="tablist" aria-label="Day selector"></div>
 
 <!-- ═══ PROGRESS ═══ -->
@@ -3645,11 +3648,59 @@ function _dayBtnFor(d){
   });
   return found;
 }
-function navWorkout(){
-  var d=_lastWorkoutDay; var days=getDays();
+// ── L3 (v5.1): cycle auto-advance ───────────────────────────────────────────
+// On Workout open (and app start), if the user hasn't manually picked a day this
+// page-load, land on the next day in the cycle after the most-recently-logged
+// day. Derived from history — no new persisted keys. A manual chip tap (or an
+// in-progress draft) opts out so we never yank you off unsaved work.
+var _manualDaySelect=false;
+function _lastLoggedDay(){
+  var best=null, bestTs=-1;
+  getDays().forEach(function(d){
+    getSaved(d).forEach(function(s){ var ts=sessTs(s); if(ts>bestTs){ bestTs=ts; best=d; } });
+  });
+  return best;
+}
+function _nextCycleDay(){
+  var days=getDays(); if(!days.length) return null;
+  var last=_lastLoggedDay();
+  if(!last) return days[0];               // never logged → start at Day 1
+  var i=days.indexOf(last);
+  return (i<0) ? days[0] : days[(i+1)%days.length];
+}
+function _hasAnyDraft(){
+  return getDays().some(function(d){ return !!localStorage.getItem('gymlog_draft_'+d); });
+}
+function _showUpNext(day){
+  var cap=document.getElementById('upnext-cap'); if(!cap) return;
+  var nm=''; getDaysConfig().forEach(function(d){ if(d.key===day) nm=d.name||d.short||''; });
+  cap.textContent='Up next · '+nm;
+  cap.hidden=false;
+}
+function _hideUpNext(){ var cap=document.getElementById('upnext-cap'); if(cap) cap.hidden=true; }
+// A real day-chip tap opts out of auto-advance for the rest of the page-load.
+document.addEventListener('click',function(e){
+  var t=e.target;
+  if(t && t.closest && t.closest('#day-selector .day-btn')){ _manualDaySelect=true; _hideUpNext(); }
+},true);
+// Returns the day to show + whether it was auto-advanced.
+function _workoutTargetDay(){
+  var days=getDays();
+  if(!_manualDaySelect && !_hasAnyDraft()){
+    var nx=_nextCycleDay();
+    if(nx && days.indexOf(nx)>=0) return {day:nx, auto:true};
+  }
+  var d=_lastWorkoutDay;
   if(days.indexOf(d)===-1) d=days[0]||'a';
+  return {day:d, auto:false};
+}
+function navWorkout(){
+  var days=getDays();
+  var pick=_workoutTargetDay();
+  var d=pick.day;
   var btn=_dayBtnFor(d);
   if(btn) sw(d, btn); else if(document.getElementById('p-'+d)) sw(d, _dayBtnFor(days[0])||btn);
+  if(pick.auto && !_manualDaySelect) _showUpNext(d); else _hideUpNext();
 }
 // v4.3: Sync + Settings folded into one ⋯ More tab. openMore() shows the panel;
 // openSync()/openSettings() stay as entry points (Plan jump button, backup nag) —
@@ -9035,6 +9086,18 @@ function showPRToast(prs){
     })
     .catch(function(err){ console.warn('Cloud restore failed:', err); })
     .then(function(){ flushPendingSync(); setTimeout(maybeShowBackupReminder, 4000); setTimeout(maybeShowDeloadBanner, 4500); });
+})();
+
+// ── L3 (v5.1): on app start, land on the next day in the cycle. Local-history
+// based + synchronous so there's no post-load day-jump; opts out if a draft is
+// in progress or once the user taps a chip. ──
+(function _l3BootAdvance(){
+  try{
+    var onWorkout=!['p-prog','p-more'].some(function(id){ var e=document.getElementById(id); return e && e.classList.contains('show'); });
+    if(!onWorkout) return;
+    var pick=_workoutTargetDay();
+    if(pick.auto){ var btn=_dayBtnFor(pick.day); if(btn){ sw(pick.day, btn); _showUpNext(pick.day); } }
+  }catch(e){}
 })();
 
 </script>

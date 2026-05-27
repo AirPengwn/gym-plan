@@ -76,5 +76,22 @@ const pp2=wM.platesPerSide(96);
 ok(pp2 && pp2.short>0,'platesPerSide(96) → flags the unachievable remainder');
 ok(wM.platesPerSide(30)===null,'platesPerSide(below bar) → null');
 
+// ── L3 (v5.1) · cycle auto-advance picks the next day after the last logged ──
+const wL3=app(store({}));
+ok(wL3._nextCycleDay()===wL3.getDays()[0],'L3 · no history → next cycle day = Day 1');
+const days=wL3.getDays();   // a,b,c,d,e
+const STl=store({}); STl.setItem('gymlog_'+days[1], JSON.stringify([{label:'x',date:'x',ts:Date.now(),entries:[{ex:'Bench',note:'Set 1: 100 lbs x5reps'}]}]));
+const wL3b=app(STl);
+ok(wL3b._lastLoggedDay()===days[1],'L3 · lastLoggedDay = the most-recently-logged day');
+ok(wL3b._nextCycleDay()===days[2],'L3 · next cycle day = the day after the last logged');
+// wrap-around: logging the last day → next is Day 1
+const STw=store({}); STw.setItem('gymlog_'+days[days.length-1], JSON.stringify([{label:'x',date:'x',ts:Date.now(),entries:[{ex:'Bench',note:'Set 1: 100 lbs x5reps'}]}]));
+const wL3c=app(STw);
+ok(wL3c._nextCycleDay()===days[0],'L3 · cycle wraps from the last day back to Day 1');
+// draft guard: an in-progress draft opts out of auto-advance
+const STd=store({}); STd.setItem('gymlog_draft_'+days[2], JSON.stringify({checked:['x'],fields:{}}));
+const wL3d=app(STd);
+ok(wL3d._hasAnyDraft()===true && wL3d._workoutTargetDay().auto===false,'L3 · in-progress draft → no auto-advance');
+
 console.log('\n'+(fail?('DURABILITY SPOT-CHECK: '+fail+' FAILED'):'DURABILITY SPOT-CHECK: ALL PASS'));
 process.exit(fail?1:0);
