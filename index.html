@@ -648,6 +648,16 @@ body.dark .plate-strip{background:var(--primary-tint);border-color:var(--border)
 .plate-chip.bar{background:#6E6C66;font-size:7px;padding:3px 4px}
 .plate-tail{margin-left:auto;font-size:10px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 .plate-short{font-size:9px;font-weight:700;color:var(--bad);margin-left:6px}
+/* v5.6: warm-up ramp in the plate calculator */
+.pc-warmup{margin-top:12px;border-top:1px solid var(--border-soft);padding-top:10px}
+.pc-warmup-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.pc-warmup-row{display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+.pc-wset{display:inline-flex;flex-direction:column;align-items:center;background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--r-sm);padding:4px 9px;font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;line-height:1.1}
+body.dark .pc-wset{background:var(--surface);border-color:var(--border)}
+.pc-wset .pc-wreps{font-size:9px;font-weight:600;color:var(--muted);margin-top:1px}
+.pc-wset.pc-wwork{background:var(--primary);border-color:var(--primary);color:#fff}
+.pc-wset.pc-wwork .pc-wreps{color:#E8E6F8}
+.pc-warrow{color:var(--muted);font-size:12px}
 .session-timer-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#3C3489;background:#EEEDFE;border-radius:20px;padding:4px 10px;margin-bottom:0.75rem}
 /* ── Quick-fill button ── */
 .quick-fill-btn{display:flex;align-items:center;gap:5px;width:100%;padding:8px 12px;background:#F5F5F2;border:1px dashed var(--border-soft);border-radius:8px;color:#7F77DD;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:0.5rem;justify-content:center}
@@ -998,7 +1008,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.5</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.6</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -6549,6 +6559,21 @@ function _syncEquipUI(){
 function setBarWeight(v){ var n=parseFloat(v); if(!(n>=0)) return; var s=getPlateSetup(); s.barWeight=Math.round(n*100)/100; savePlateSetup(s); try{markPendingSync();}catch(e){} _afterEquipChange(); }
 function togglePlate(p){ var s=getPlateSetup(); var i=s.plates.indexOf(p); if(i>=0) s.plates.splice(i,1); else s.plates.push(p); s.plates.sort(function(a,b){return b-a;}); savePlateSetup(s); try{markPendingSync();}catch(e){} _syncEquipUI(); _afterEquipChange(); }
 function _afterEquipChange(){ try{ document.querySelectorAll('.day-panel').forEach(_refreshPlateStrips); }catch(e){} }
+// v5.6: warm-up ramp to a working weight, rounded to the smallest achievable
+// total increment (2 × smallest plate). Returns [{w,reps}] excluding the work set.
+function _warmupRamp(working, bar, plates){
+  if(!(working>bar)) return [];
+  var minP=plates[plates.length-1]||2.5, step=2*minP;
+  var scheme=[[0,8],[0.5,5],[0.7,3],[0.85,2]];   // [fraction of working, reps]; 0 = empty bar
+  var out=[], seen={};
+  scheme.forEach(function(s){
+    var raw=(s[0]===0)?bar:working*s[0];
+    var w=(s[0]===0)?bar:Math.max(bar, bar+Math.round((raw-bar)/step)*step);
+    if(w>=working || seen[w]) return;
+    seen[w]=1; out.push({w:w, reps:s[1]});
+  });
+  return out;
+}
 function computePlates(){
   var t=parseFloat(document.getElementById('pc-target').value);
   var bar=parseFloat(document.getElementById('pc-bar').value)||0;
@@ -6563,6 +6588,13 @@ function computePlates(){
   var html='<b>'+per+' '+_pcUnit+'</b> per side: ';
   html+=keys.length?keys.map(function(p){return grp[p]+' × '+p;}).join('  +  '):'just the bar';
   if(rem>0.01) html+='<br><span style="color:#C0392B">Closest with standard plates — '+rem+' '+_pcUnit+' short.</span>';
+  // v5.6: warm-up ramp to the working weight
+  var warm=_warmupRamp(t, bar, plates);
+  if(warm.length){
+    html+='<div class="pc-warmup"><div class="pc-warmup-h">Warm-up ramp</div><div class="pc-warmup-row">'
+      +warm.map(function(s){ return '<span class="pc-wset">'+(s.w===bar?'bar':s.w)+'<span class="pc-wreps">×'+s.reps+'</span></span>'; }).join('<span class="pc-warrow">→</span>')
+      +'<span class="pc-warrow">→</span><span class="pc-wset pc-wwork">'+t+'<span class="pc-wreps">work</span></span></div></div>';
+  }
   res.innerHTML=html;
 }
 
