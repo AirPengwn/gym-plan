@@ -145,5 +145,13 @@ var wMeas=mp['body_measurements'].filter(function(m){return m.type==='weight'&&m
 ok(wMeas.length===1 && wMeas[0].value===182,'background merge · one weight for the date, local (newer ts) wins');
 ok((mp['gymlog_a']||[]).length===2,'background merge · sessions still union (history never shrinks)');
 
+// ── v5.6 · warm-up ramp ──
+const wWU=app(store({}));
+var wu=wWU._warmupRamp(225,45,[45,35,25,10,5,2.5]);
+ok(wu.length===4 && wu[0].w===45 && wu[wu.length-1].w<225,'warmup ramp · steps up to (but not past) the working weight');
+ok(wu.every(function(s){return s.w<225;}),'warmup ramp · every warm-up set is below the work weight');
+ok(wWU._warmupRamp(40,45,[45,35,25,10,5,2.5]).length===0,'warmup ramp · working ≤ bar → no ramp');
+ok(wWU._warmupRamp(95,45,[45,35,25,10,5,2.5]).every(function(s){return s.w<95;}),'warmup ramp · light working weight still ramps below it');
+
 console.log('\n'+(fail?('DURABILITY SPOT-CHECK: '+fail+' FAILED'):'DURABILITY SPOT-CHECK: ALL PASS'));
 process.exit(fail?1:0);

@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.5 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.6 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -93,8 +93,11 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
   beep (Web Audio, unlocked on the Rest tap) / toast / haptic. **No background notification** —
   an iOS client-side timer is suspended while backgrounded, so a true background alert needs push
   infra (out of scope); the win is accuracy + an alert the instant you return. Still queued (one
-  version each, pause for verify): v5.6 warm-up set calc, v5.7 metadata-matched exercise swap
-  (plan-mode), v5.8 cloud read-modify-write hardening (plan-mode).
+  version each, pause for verify): v5.7 metadata-matched exercise swap (plan-mode), v5.8 cloud
+  read-modify-write hardening (plan-mode).
+  - **v5.6 (DONE):** warm-up ramp in the plate calculator. `_warmupRamp(working,bar,plates)`
+    suggests bar×8 → 50/70/85% sets (rounded to 2×smallest-plate), shown in `computePlates`
+    output; opens preloaded when you tap a barbell card's plate strip.
   - **v5.5 (DONE):** tap a strength card's **exercise name** → inline history panel
     (`toggleExHistory`) with the last ~6 sessions + an est-1RM sparkline (`_exSparkline`), from
     `getExerciseProgress`. The name is excluded from the card's tap-to-check handler (added
