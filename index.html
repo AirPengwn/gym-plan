@@ -1916,15 +1916,14 @@ function buildCardHTML_v2(rec){
      +'      <div class="notes-row" style="padding:8px 12px 10px"><input class="notes-input" data-ex="'+_esc(hist)+'" type="text" placeholder="'+_esc(rec.notesPlaceholder||'e.g. notes')+'"/></div>\n'
      +'    </div>\n  </div>\n';
   }
-  var unitPh=(typeof getUnits==='function'&&getUnits()==='kg')?'kg':'lbs';   // C2: global unit
+  // C2/C1: global unit drives the placeholder + column header; per-set toggle retired.
+  var unitPh=(typeof getUnits==='function'&&getUnits()==='kg')?'kg':'lbs';
+  var unitLbl=(typeof getUnits==='function'&&getUnits()==='kg')?'kg':'lb';
   var n=Math.max(1,parseInt(rec.sets,10)||3), rows='';
   for(var i=1;i<=n;i++){
-    var uid='unit-'+_dash(hist)+'-s'+i;
     rows+='<div class="rep-single v2-set">'
       +'<span class="rep-label">'+i+'</span>'
-      +'<div class="v2-wl"><input class="rep-input" oninput="this.style.color=\'\';this.style.fontStyle=\'\';" data-ex="'+_esc(hist)+'" data-set="'+i+'" type="text" placeholder="'+unitPh+'"/>'
-        +'<div class="unit-toggle"><button class="unit-btn active" type="button" onclick="setUnit(this,\''+uid+'\')">lbs</button><button class="unit-btn" type="button" onclick="setUnit(this,\''+uid+'\')">kg</button></div>'
-        +'<input type="hidden" id="'+uid+'" value="lbs"/></div>'
+      +'<div class="v2-wl"><input class="rep-input" oninput="this.style.color=\'\';this.style.fontStyle=\'\';" data-ex="'+_esc(hist)+'" data-set="'+i+'" type="text" placeholder="'+unitPh+'"/></div>'
       +'<input class="reps-actual-input" type="number" inputmode="decimal" min="1" max="99" data-ex-reps="'+_esc(hist)+'" placeholder="—"/>'
       +'</div>';
   }
@@ -1933,15 +1932,20 @@ function buildCardHTML_v2(rec){
   var pain='<div class="pain-row"><span class="pain-label">Feeling:</span>'
     +'<button class="pain-btn active-ok" data-ex="'+_esc(hist)+'" onclick="setPain(this,\'ok\')">✓ Good</button>'
     +'<button class="pain-btn" data-ex="'+_esc(hist)+'" onclick="setPain(this,\'flag\')">⚠️ Discomfort</button></div>';
+  // C1 (v5.2): location + demo fold into the RPE/notes footer disclosure (not the
+  // ⋯ overflow). ⋯ keeps the secondary feedback (Feeling + stretch links). Footer
+  // chevron names what's inside.
+  var footLabel='RPE · notes'+(loc?' · location':'')+(demo?' · ▶ demo':'');
   return head
    +'    <div class="fields-wrap">\n'
-   +'      <div class="v2-ovf" hidden>'+loc+demo+stretch+pain+'</div>\n'
+   +((stretch||pain)?('      <div class="v2-ovf" hidden>'+stretch+pain+'</div>\n'):'')
    +'      <div class="last-time" id="lt-'+_dash(hist)+'"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>\n'
-   +'      <div class="v2-sets"><div class="v2-sets-head"><div></div><div class="l">Weight</div><div>Reps</div></div><div class="rep-row">'+rows+'</div></div>\n'
-   +'      <button type="button" class="v2-foot-toggle" aria-expanded="false" onclick="cardToggle(this,\'foot\')">RPE &amp; notes <span class="cv" aria-hidden="true">▾</span></button>\n'
+   +'      <div class="v2-sets"><div class="v2-sets-head"><div></div><div class="l">Weight · '+unitLbl+'</div><div>Reps</div></div><div class="rep-row">'+rows+'</div></div>\n'
+   +'      <button type="button" class="v2-foot-toggle" aria-expanded="false" onclick="cardToggle(this,\'foot\')">'+footLabel+' <span class="cv" aria-hidden="true">▾</span></button>\n'
    +'      <div class="v2-foot" hidden>\n'
    +'        '+rpe+'\n'
    +'        <div class="notes-row" style="margin-top:8px"><span class="weight-label" style="font-size:11px;color:var(--muted);white-space:nowrap">Notes:</span><input class="notes-input" data-ex="'+_esc(hist)+'-notes" type="text" placeholder="'+_esc(rec.notesPlaceholder||'e.g. notes')+'"/></div>\n'
+   +((loc||demo)?('        <div class="v2-foot-extra" style="margin-top:8px;display:flex;flex-direction:column;gap:5px">'+loc+demo+'</div>\n'):'')
    +'      </div>\n'
    +'    </div>\n  </div>\n';
 }

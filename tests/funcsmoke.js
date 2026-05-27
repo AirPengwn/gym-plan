@@ -107,7 +107,10 @@ function domIdByDataEx(doc, day, ex){
   var sItem=sid && w.document.getElementById(sid);
   ok(sItem && sItem.getAttribute('data-cardv2')==='1','strength card uses v2 layout (data-cardv2)');
   ok(sItem && sItem.querySelector('.v2-sets .rep-single .rep-input[data-ex="Chest press"][data-set="1"]'),'v2 keeps rep-input data-ex/data-set binding');
-  ok(sItem && sItem.querySelector('.rep-single input[type="hidden"][id^="unit-"]'),'v2 keeps per-set hidden unit input (getUnitForInput)');
+  // C1/C2 (v5.2): per-set unit toggle retired — unit is now the global units_v1.
+  ok(sItem && !sItem.querySelector('.unit-toggle') && w.getUnitForInput(sItem.querySelector('.rep-input'))==='lbs','v2 has no per-set unit toggle; getUnitForInput reads the global unit');
+  ok(/Weight · lb/.test(sItem.querySelector('.v2-sets-head').textContent),'v2 column header shows the unit (Weight · lb)');
+  ok(sItem && sItem.querySelector('.v2-foot .ex-loc') && sItem.querySelector('.v2-foot .ex-link'),'C1 · location + demo folded into the RPE/notes footer');
   ok(sItem && sItem.querySelectorAll('.rpe-slider').length===1 && sItem.querySelector('.rpe-slider').getAttribute('data-ex')==='Chest press','exactly one RPE slider (Option 1) bound to exercise');
   ok(sItem && sItem.querySelectorAll('.pain-btn').length===2,'v2 keeps pain buttons (confirmSave/setPain)');
   ok(sItem && sItem.querySelector('.reps-actual-input[data-ex-reps="Chest press"]'),'v2 keeps reps-actual-input binding');
