@@ -168,6 +168,13 @@ ok(aSW.order['a'].length===len0,'swap · replaces (not adds) — day length unch
 ok(aSW.order['a'].indexOf(swDom)<0,'swap · original instance removed from the day');
 ok(aSW.order['a'].some(function(id){return wSwap.normalizeEx((aSW.ex[id]||{}).histEx||(aSW.ex[id]||{}).name)==='barbell bench press';}),'swap · the alternative is now on the day');
 
+// ── v5.10 · strength standards (canonical barbell lifts only) ──
+const wSTD=app(store({}));
+ok(wSTD.strengthLevel('barbell bench press',300,200) && wSTD.strengthLevel('barbell bench press',300,200).level==='Advanced','standards · 1.5× bench = Advanced');
+ok(wSTD.strengthLevel('barbell bench press',150,200).level==='Novice','standards · 0.75× bench = Novice');
+ok(wSTD.strengthLevel('chest press',300,200)===null,'standards · non-canonical lift → none');
+ok(wSTD.strengthLevel('barbell bench press',300,0)===null,'standards · no bodyweight → none');
+
 // ── v5.8 · cloud read-modify-write ops serialize (no self-overlap) ──
 function _finish(){
   console.log('\n'+(fail?('DURABILITY SPOT-CHECK: '+fail+' FAILED'):'DURABILITY SPOT-CHECK: ALL PASS'));

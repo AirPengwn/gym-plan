@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.9 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.10 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -98,6 +98,12 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
   volume trend (Trends). All derived/read-only (no new synced keys, no re-baseline). **Discuss
   FEATURE-CREEP after v5.12** (owner flagged: the workout card now stacks several coaching cues —
   overload nudge + 🎯 aim caption + F1 pill — a consolidation candidate).
+  - **v5.10 (DONE):** strength-standard chip in the Lifts tab — `strengthLevel(exKey,e1rm,bw)` vs
+    `STRENGTH_STANDARDS` (×bodyweight thresholds, **canonical barbell lifts only** — bench/squat/
+    deadlift/OHP/row; machines/variations don't match), using `_latestBodyweight()`. Shows
+    "1.31× BW · Intermediate" (approx). **Also fixed a pre-existing bug:** the "Est. 1RM" chip in
+    Lifts always showed ~1 lb — `rmSeries` stored "Set 1: 263 lbs" then regex-grabbed the "1" from
+    "Set 1"; now stores the numeric est directly (renderExerciseList).
   - **v5.9 (DONE):** `_applyAimCaptions` adds a muted "🎯 Aim ~W · NN% of e1RM E" line per strength
     card (runtime, in `loadLastTimes`) — `historicalBestEst` × the exercise's target reps (Epley
     inverse, `best/(1+reps/30)`). Guidance only — does NOT change the saved last-weight prefill

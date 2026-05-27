@@ -500,6 +500,20 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.10 · Lifts: Est. 1RM display fix + strength-standard chip ──
+(function(){
+  const store=makeStore({ 'gymlog_a': JSON.stringify([{label:'D1',date:'Mon, May 25, 2026 at 6:00 PM',ts:2,entries:[{ex:'Barbell bench press',note:'Set 1: 225 lbs x5reps'}]}]),
+    'body_measurements': JSON.stringify([{type:'weight',date:'2026-05-25',value:200,unit:'lbs',ts:1}]) });
+  const w=loadApp(store);
+  try{ w.renderExerciseList(); }catch(e){}
+  var btn=[].slice.call(w.document.querySelectorAll('#prog-panel-exercises .ex-list-btn')).filter(function(b){return /barbell bench press/i.test(b.textContent);})[0];
+  if(btn) btn.click();
+  var chips=[].slice.call(w.document.querySelectorAll('#prog-panel-exercises .ex-stat-chip')).map(function(c){return c.textContent;}).join(' | ');
+  ok(/Est\. 1RM: 2\d\d lbs/.test(chips),'v5.10 · Est. 1RM shows the real value (bug fix: was ~1) ('+chips+')');
+  ok(/× BW · (Novice|Intermediate|Advanced|Elite)/.test(chips),'v5.10 · strength-standard chip present for a barbell lift');
+  w.close();
+})();
+
 // ── v5.9 · 1RM-based "aim" caption (best e1RM × target reps) ──
 (function(){
   const store=makeStore({ 'gymlog_a': JSON.stringify([
