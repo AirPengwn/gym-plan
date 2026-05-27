@@ -31,7 +31,7 @@ for t in verify funcsmoke verif_s1 buildcard heatcheck msvgcheck \
 done
 ```
 
-All should print PASS at v5.12. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
+All should print PASS at v5.13. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
 `metadata_spot.js` (v3.14) checks the richer exercise metadata: catalog entries carry
 equipment/pattern/difficulty/alternatives, fields persist onto plan records + the user
 library, and `exerciseMeta()` resolves them.
@@ -62,7 +62,7 @@ via `run-all.js` (exits non-zero on any failure). A GitHub Action
 **Feature spot-checks:**
 - `templates_spot.js` — v3.28 plan templates: built-in programs (PPL/Upper-Lower/Full-Body/Bro) + user-saved custom templates (`plan_templates_v1`). Every template exercise resolves to a pattern + muscles; `applyTemplate('append')` adds days alongside, `applyTemplate('replace')` archives current days (logged history preserved) and installs the program; custom save/delete (soft tombstone) + LWW merge; rides the sync payload; modal renders.
 - `toast_spot.js` — v3.27 `showToast(msg, opts)`: plain auto-dismiss by default, optional longer duration, and a `{sticky:true}` toast that stays until the ✕ is tapped (used for the sync-result messages so "synced ✓" / "sync failed" can't vanish too fast).
-- `progression_spot.js` — v3.36 characterization lock for the auto-progression engine: `getOverloadSuggestion()` (double-progression — hit-target→+5lbs, below-target→build-to, RPE9→hold, no-reps flat-weight→ready) and `getDeloadAdvice()` (stall + high-effort / systemic). Asserts both are **read-only** (never write gymlog) and that `loadLastTimes()` injects the `.overload-nudge` on the workout card.
+- `progression_spot.js` — v3.36 characterization lock for the auto-progression engine: `getOverloadSuggestion()` (double-progression — hit-target→+5lbs, below-target→build-to, RPE9→hold, no-reps flat-weight→ready) and `getDeloadAdvice()` (stall + high-effort / systemic). Asserts both are **read-only** (never write gymlog) and that `loadLastTimes()` injects the consolidated `.coach-line` on the workout card (v5.13 — see below; the old standalone `.overload-nudge`/`.prog-pill`/`.aim-cap` are gone).
 - `consistency_spot.js` — v3.38 characterization lock for the consistency viz: `computeStats()` streak/cadence math (total, current streak, longest streak, days-since-last, avg-between) + `renderActivityHeatmap()` 13-week calendar. Read-only. Also guards the v3.38 fix making `longestStreak` sort day-keys chronologically (lexical sort had under-counted streaks straddling single→double-digit dates).
 - `dayedit_spot.js` — v3.34 editable day button-label: the "D1" chip text is a per-day `short` setting (independent of the name), set on create + editable in the add/rename modal (`openDayEdit`/`saveDayEdit`/`editDayMeta`/`setDayLabel`), shown in the selector chips, capped at 6 chars, persisted in synced `days_config_v1`.
 - `patch3_spot.js` — delta pills + PB variant + zone titles + v2-card checkbox.
