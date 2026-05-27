@@ -976,7 +976,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.1.2</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.2</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -1163,6 +1163,13 @@ body.dark #pc-result{color:var(--text)}
         <button type="button" data-m="auto" onclick="setRestMode('auto')">Auto</button>
         <button type="button" data-m="long" onclick="setRestMode('long')">Long</button>
         <button type="button" data-m="short" onclick="setRestMode('short')">Short</button>
+      </span>
+    </div>
+    <div class="set-item">
+      <span>⚖️ Units</span>
+      <span class="rest-seg" id="units-seg" role="group" aria-label="Weight units">
+        <button type="button" data-u="lbs" onclick="setUnits('lbs')">lbs</button>
+        <button type="button" data-u="kg" onclick="setUnits('kg')">kg</button>
       </span>
     </div>
   </div>
@@ -1684,6 +1691,7 @@ function pushPlanToCloud(){
     try{ var ct=_mergeLibraries(getCustomTemplates(), cloud['plan_templates_v1']); if(ct&&ct.length){ cloud['plan_templates_v1']=ct; saveCustomTemplates(ct); } }catch(e){}
     try{ var ro=_mergeRestOverrides(getRestOverrides(), cloud['rest_overrides_v1']); if(ro&&Object.keys(ro).length){ cloud['rest_overrides_v1']=ro; saveRestOverrides(ro); } }catch(e){}
     try{ var ps=JSON.parse(localStorage.getItem('plate_setup_v1')); if(ps) cloud['plate_setup_v1']=ps; }catch(e){}
+    try{ var un=localStorage.getItem('units_v1'); if(un) cloud['units_v1']=un; }catch(e){}
     if(!cloud.__schema) cloud.__schema=SCHEMA_VERSION;
     return _rawCloudPUT(cloud);
   }).then(function(){
@@ -1908,12 +1916,13 @@ function buildCardHTML_v2(rec){
      +'      <div class="notes-row" style="padding:8px 12px 10px"><input class="notes-input" data-ex="'+_esc(hist)+'" type="text" placeholder="'+_esc(rec.notesPlaceholder||'e.g. notes')+'"/></div>\n'
      +'    </div>\n  </div>\n';
   }
+  var unitPh=(typeof getUnits==='function'&&getUnits()==='kg')?'kg':'lbs';   // C2: global unit
   var n=Math.max(1,parseInt(rec.sets,10)||3), rows='';
   for(var i=1;i<=n;i++){
     var uid='unit-'+_dash(hist)+'-s'+i;
     rows+='<div class="rep-single v2-set">'
       +'<span class="rep-label">'+i+'</span>'
-      +'<div class="v2-wl"><input class="rep-input" oninput="this.style.color=\'\';this.style.fontStyle=\'\';" data-ex="'+_esc(hist)+'" data-set="'+i+'" type="text" placeholder="lbs"/>'
+      +'<div class="v2-wl"><input class="rep-input" oninput="this.style.color=\'\';this.style.fontStyle=\'\';" data-ex="'+_esc(hist)+'" data-set="'+i+'" type="text" placeholder="'+unitPh+'"/>'
         +'<div class="unit-toggle"><button class="unit-btn active" type="button" onclick="setUnit(this,\''+uid+'\')">lbs</button><button class="unit-btn" type="button" onclick="setUnit(this,\''+uid+'\')">kg</button></div>'
         +'<input type="hidden" id="'+uid+'" value="lbs"/></div>'
       +'<input class="reps-actual-input" type="number" inputmode="decimal" min="1" max="99" data-ex-reps="'+_esc(hist)+'" placeholder="—"/>'
@@ -3728,6 +3737,7 @@ function openMore(){
   try{ renderSettings(); }catch(e){}
   try{ _syncRestModeUI(); }catch(e){}
   try{ _syncEquipUI(); }catch(e){}
+  try{ _syncUnitsUI(); }catch(e){}
   _setDaySelectorVisible(false);
   try{ window.scrollTo(0,0); }catch(e){}
   _syncNav();
@@ -5683,12 +5693,26 @@ function setUnit(btn, uid){
   document.getElementById(uid).value=btn.textContent;
 }
 
+// C2 (v5.2): global weight unit (units_v1, synced). Replaces the per-set toggle.
+// Display/entry only — saved session notes keep the unit they were written with
+// (no conversion, no migration).
+function getUnits(){ var u=null; try{ u=localStorage.getItem('units_v1'); }catch(e){} return (u==='kg')?'kg':'lbs'; }
+function setUnits(u){
+  u=(u==='kg')?'kg':'lbs';
+  try{ localStorage.setItem('units_v1', u); }catch(e){}
+  try{ markPendingSync(); }catch(e){}
+  try{ _syncUnitsUI(); }catch(e){}
+  // relabel live inputs + re-render the day so column headers/placeholders update
+  try{ if(typeof renderDayItems==='function'){ renderDayItems(); loadLastTimes(); } }catch(e){}
+}
+function _syncUnitsUI(){
+  var seg=document.getElementById('units-seg'); if(!seg) return;
+  var u=getUnits();
+  seg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-u')===u); });
+}
 function getUnitForInput(repInput){
-  // Find the hidden unit input in the same rep-single div
-  var parent=repInput.closest('.rep-single');
-  if(!parent) return 'lbs';
-  var hidden=parent.querySelector('input[type="hidden"]');
-  return hidden ? hidden.value : 'lbs';
+  // C2: unit is now the single global preference (per-set toggle retired).
+  return getUnits();
 }
 
 function reloadPage(){
@@ -6193,6 +6217,7 @@ function generateExport(){
   try{ var ct=JSON.parse(localStorage.getItem('plan_templates_v1')); if(ct&&ct.length) data['plan_templates_v1']=ct; }catch(e){}
   try{ var ro=getRestOverrides(); if(ro&&Object.keys(ro).length) data['rest_overrides_v1']=ro; }catch(e){}
   try{ var ps=JSON.parse(localStorage.getItem('plate_setup_v1')); if(ps) data['plate_setup_v1']=ps; }catch(e){}
+  try{ var un=localStorage.getItem('units_v1'); if(un) data['units_v1']=un; }catch(e){}
   // In-progress (unsubmitted) drafts — so a backup also protects a workout
   // you're in the middle of entering.
   getAllDayKeys().forEach(function(day){
@@ -6536,6 +6561,7 @@ function importData(){
     if(data['plate_setup_v1'] && typeof data['plate_setup_v1']==='object' && !Array.isArray(data['plate_setup_v1'])){
       try{ localStorage.setItem('plate_setup_v1', JSON.stringify(data['plate_setup_v1'])); }catch(e){}
     }
+    if(data['units_v1']==='lbs' || data['units_v1']==='kg'){ try{ localStorage.setItem('units_v1', data['units_v1']); }catch(e){} }
     var hint=document.getElementById('restore-hint');
     hint.innerHTML='✅ Restored '+count+' sessions + measurements + settings! '
       +'<button onclick="undoImport()" style="margin-left:6px;padding:4px 10px;border:1px solid #C53030;background:#FFF5F5;color:#C53030;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Undo import</button>';
@@ -7580,6 +7606,7 @@ function buildBinPayload(){
   try { var ct=JSON.parse(localStorage.getItem('plan_templates_v1')); if(ct) p['plan_templates_v1']=ct; }catch(e){}
   try { var ro=JSON.parse(localStorage.getItem('rest_overrides_v1')); if(ro) p['rest_overrides_v1']=ro; }catch(e){}
   try { var ps=JSON.parse(localStorage.getItem('plate_setup_v1')); if(ps) p['plate_setup_v1']=ps; }catch(e){}
+  try { var un=localStorage.getItem('units_v1'); if(un) p['units_v1']=un; }catch(e){}
   // v3.8: carry the archive bin id so every device discovers the same archive.
   try { var aid=_archiveId(); if(aid) p['__archive_bin']=aid; }catch(e){}
   return p;
@@ -7634,6 +7661,7 @@ function mergeCloudIntoPayload(cloud){
   var mro=_mergeRestOverrides(p['rest_overrides_v1'], cloud['rest_overrides_v1']);
   if(mro && Object.keys(mro).length) p['rest_overrides_v1']=mro;
   if(!p['plate_setup_v1'] && cloud['plate_setup_v1']) p['plate_setup_v1']=cloud['plate_setup_v1'];
+  if(!p['units_v1'] && cloud['units_v1']) p['units_v1']=cloud['units_v1'];
   // v3.8: learn/keep the archive bin id from whichever side has it.
   if(cloud['__archive_bin'] && !_archiveId()){ try{ _setArchiveId(cloud['__archive_bin']); }catch(e){} }
   var aid2=_archiveId()||cloud['__archive_bin']; if(aid2) p['__archive_bin']=aid2;
@@ -7663,6 +7691,7 @@ function applyPayloadToLocal(p){
   if(Array.isArray(p['plan_templates_v1'])) localStorage.setItem('plan_templates_v1', JSON.stringify(p['plan_templates_v1']));
   if(p['rest_overrides_v1'] && typeof p['rest_overrides_v1']==='object' && !Array.isArray(p['rest_overrides_v1'])) localStorage.setItem('rest_overrides_v1', JSON.stringify(p['rest_overrides_v1']));
   if(p['plate_setup_v1'] && typeof p['plate_setup_v1']==='object' && !Array.isArray(p['plate_setup_v1'])) localStorage.setItem('plate_setup_v1', JSON.stringify(p['plate_setup_v1']));
+  if(p['units_v1']==='lbs' || p['units_v1']==='kg') localStorage.setItem('units_v1', p['units_v1']);
 }
 
 function refreshAfterSync(){
@@ -7820,7 +7849,7 @@ function clearPendingSync(){ try{ localStorage.removeItem('gymlog_sync_pending')
 // Uses sessionStorage so a mid-test reload stays in test mode, and the
 // snapshot is persisted so it can still be discarded after a reload.
 var TEST_MODE = sessionStorage.getItem('gym_test_mode')==='1';
-var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','plate_setup_v1','gymlog_sync_pending','darkMode'];
+var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','plate_setup_v1','units_v1','gymlog_sync_pending','darkMode'];
 function _testKeys(){
   var ks=[];
   for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i);

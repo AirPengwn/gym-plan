@@ -57,14 +57,18 @@ ok(D3.getElementById('sync-banner').style.display==='none','synced → banner hi
 const ST4=store(); ST4.setItem('gym_primary_device','1');
 ST4.setItem('rest_overrides_v1', JSON.stringify({lk123:75,_mode:'long'}));
 ST4.setItem('plate_setup_v1', JSON.stringify({barWeight:35,plates:[45,25,10]}));
+ST4.setItem('units_v1','kg');   // C2 (v5.2)
 const w4=app(ST4,{}); const payload4=w4.buildBinPayload();
 ok(payload4['rest_overrides_v1'] && payload4['rest_overrides_v1'].lk123===75 && payload4['rest_overrides_v1']._mode==='long','rest_overrides_v1 (overrides + _mode) rides the payload');
 ok(payload4['plate_setup_v1'] && payload4['plate_setup_v1'].barWeight===35,'plate_setup_v1 rides the payload');
-// apply into a fresh device → both keys land
+ok(payload4['units_v1']==='kg','units_v1 rides the payload');
+ok(w4.getUnits()==='kg' && w4.getUnitForInput(null)==='kg','C2 · getUnits/getUnitForInput read the global unit');
+// apply into a fresh device → all keys land
 const ST5=store(); const w5=app(ST5,{});
 w5.applyPayloadToLocal(payload4);
 ok(JSON.parse(ST5.getItem('rest_overrides_v1'))._mode==='long','applyPayloadToLocal restores rest_overrides_v1');
 ok(JSON.parse(ST5.getItem('plate_setup_v1')).barWeight===35,'applyPayloadToLocal restores plate_setup_v1');
+ok(ST5.getItem('units_v1')==='kg','applyPayloadToLocal restores units_v1');
 // union-merge keeps both sides' rest overrides (never shrinks)
 const merged=w5._mergeRestOverrides({lkA:60},{lkB:90,_mode:'short'});
 ok(merged.lkA===60 && merged.lkB===90 && merged._mode==='short','_mergeRestOverrides unions both sides');

@@ -31,7 +31,7 @@ for t in verify funcsmoke verif_s1 buildcard heatcheck msvgcheck \
 done
 ```
 
-All should print PASS at v5.1.2. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
+All should print PASS at v5.2. (Note: `sw.js` ships alongside `index.html` from v3.7 — commit both.)
 `metadata_spot.js` (v3.14) checks the richer exercise metadata: catalog entries carry
 equipment/pattern/difficulty/alternatives, fields persist onto plan records + the user
 library, and `exerciseMeta()` resolves them.
