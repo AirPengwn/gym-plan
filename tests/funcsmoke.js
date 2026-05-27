@@ -514,6 +514,29 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.11 · monthly recap card in Progress ──
+(function(){
+  var now=Date.now();
+  var d=new Date(); var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const store=makeStore({ 'gymlog_a': JSON.stringify([
+    {label:'D1',date:'this month',ts:now,entries:[{ex:'Barbell bench press',note:'Set 1: 225 lbs x5reps'}]},
+    {label:'D1',date:'this month',ts:now-86400000,entries:[{ex:'Barbell bench press',note:'Set 1: 200 lbs x5reps'}]}
+  ]),
+    'body_measurements': JSON.stringify([{type:'weight',date:iso,value:201,unit:'lbs',ts:now}]) });
+  const w=loadApp(store);
+  try{ w.renderProgress(); }catch(e){}
+  var recap=w.document.getElementById('prog-recap');
+  ok(recap && !recap.hidden,'v5.11 · monthly recap is visible when there are sessions this month');
+  ok(recap && /This month ·/.test(recap.textContent),'v5.11 · recap header present');
+  ok(recap && /2 sessions/.test(recap.textContent),'v5.11 · recap counts this-month sessions ('+(recap?recap.textContent:'none')+')');
+  ok(recap && /volume/.test(recap.textContent),'v5.11 · recap shows volume');
+  const w2=loadApp(makeStore({}));
+  try{ w2.renderProgress(); }catch(e){}
+  var recap2=w2.document.getElementById('prog-recap');
+  ok(recap2 && recap2.hidden,'v5.11 · recap hidden with no sessions this month');
+  w.close(); w2.close();
+})();
+
 // ── v5.9 · 1RM-based "aim" caption (best e1RM × target reps) ──
 (function(){
   const store=makeStore({ 'gymlog_a': JSON.stringify([
