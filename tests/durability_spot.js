@@ -57,14 +57,18 @@ ok(D3.getElementById('sync-banner').style.display==='none','synced → banner hi
 const ST4=store(); ST4.setItem('gym_primary_device','1');
 ST4.setItem('rest_overrides_v1', JSON.stringify({lk123:75,_mode:'long'}));
 ST4.setItem('plate_setup_v1', JSON.stringify({barWeight:35,plates:[45,25,10]}));
+ST4.setItem('units_v1','kg');   // C2 (v5.2)
 const w4=app(ST4,{}); const payload4=w4.buildBinPayload();
 ok(payload4['rest_overrides_v1'] && payload4['rest_overrides_v1'].lk123===75 && payload4['rest_overrides_v1']._mode==='long','rest_overrides_v1 (overrides + _mode) rides the payload');
 ok(payload4['plate_setup_v1'] && payload4['plate_setup_v1'].barWeight===35,'plate_setup_v1 rides the payload');
-// apply into a fresh device → both keys land
+ok(payload4['units_v1']==='kg','units_v1 rides the payload');
+ok(w4.getUnits()==='kg' && w4.getUnitForInput(null)==='kg','C2 · getUnits/getUnitForInput read the global unit');
+// apply into a fresh device → all keys land
 const ST5=store(); const w5=app(ST5,{});
 w5.applyPayloadToLocal(payload4);
 ok(JSON.parse(ST5.getItem('rest_overrides_v1'))._mode==='long','applyPayloadToLocal restores rest_overrides_v1');
 ok(JSON.parse(ST5.getItem('plate_setup_v1')).barWeight===35,'applyPayloadToLocal restores plate_setup_v1');
+ok(ST5.getItem('units_v1')==='kg','applyPayloadToLocal restores units_v1');
 // union-merge keeps both sides' rest overrides (never shrinks)
 const merged=w5._mergeRestOverrides({lkA:60},{lkB:90,_mode:'short'});
 ok(merged.lkA===60 && merged.lkB===90 && merged._mode==='short','_mergeRestOverrides unions both sides');
@@ -98,6 +102,18 @@ ok(wL3d._workoutTargetDay().auto===true && wL3d._workoutTargetDay().day===days[2
 // v5.1.1: _sessWhen ranks ts-less legacy sessions by their date string (Safari-safe)
 const wSW=app(store({}));
 ok(wSW._sessWhen({date:'Sat, May 16, 2026 at 12:00 AM'}) > wSW._sessWhen({date:'Tue, May 12, 2026 at 11:40 PM'}),'L3 · _sessWhen parses ts-less date strings for recency ranking');
+
+// ── L1 (v5.2) · notes search matches per-exercise + session notes; highlights safely ──
+const wL1=app(store({}));
+var sessHit={notes:'felt strong', entries:[{ex:'Chest press',note:'Set 1: 90 lbs'},{ex:'Chest press-notes',note:'right shoulder twinge'}]};
+var sessMiss={notes:'easy day', entries:[{ex:'Leg press',note:'Set 1: 100 lbs'}]};
+wL1._sessSearch='shoulder';
+ok(wL1._sessMatchesSearch(sessHit)===true && wL1._sessMatchesSearch(sessMiss)===false,'L1 · search matches a per-exercise note, skips non-matches');
+wL1._sessSearch='STRONG';   // case-insensitive, session-level note
+ok(wL1._sessMatchesSearch(sessHit)===true,'L1 · search is case-insensitive over the session note');
+ok(/<mark>strong<\/mark>/i.test(wL1._hl(wL1._esc('felt strong today'))),'L1 · _hl wraps the match in <mark>');
+wL1._sessSearch='';
+ok(wL1._sessMatchesSearch(sessMiss)===true && wL1._hl('plain')==='plain','L1 · empty search matches everything and does not highlight');
 
 console.log('\n'+(fail?('DURABILITY SPOT-CHECK: '+fail+' FAILED'):'DURABILITY SPOT-CHECK: ALL PASS'));
 process.exit(fail?1:0);

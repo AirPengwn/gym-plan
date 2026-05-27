@@ -21,7 +21,7 @@ Fidelity: **medium**. Colors, radii and rough proportions are deliberate (they'r
 
 Twelve items were proposed in the design review. Teammate (John) walked through them and made the call. Final scope is the table below.
 
-**Implementation status:** Phase A (S2 + S1) → **v5.0** · Phase B (F4 + F1 + F2 + F3 + L3) → **v5.1** · Phases C (v5.2) / D (v5.3+) pending. (Owner renumbered from the prompt's v4.21+ to start at v5.0.)
+**Implementation status:** Phase A (S2 + S1) → **v5.0** · Phase B (F4 + F1 + F2 + F3 + L3) → **v5.1** (+ fixes v5.1.1 / v5.1.2) · Phase C (C2 + C1 + M1 + L1) → **v5.2** · Phase D (R1) → v5.3+ pending. (Owner renumbered from the prompt's v4.21+ to start at v5.0.)
 
 | ID | Item | Decision | Notes from John |
 |---|---|---|---|

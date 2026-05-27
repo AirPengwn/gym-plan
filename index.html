@@ -241,6 +241,9 @@ body.dark .tabbar .tab.active{color:#B4ADF0}
 body{padding-bottom:calc(70px + env(safe-area-inset-bottom)) !important}
 /* v3.30 — Settings screen */
 .set-group{background:var(--card,#fff);border:1px solid var(--border);border-radius:14px;padding:4px 14px;margin-bottom:12px}
+/* M1 (v5.2): More-tab section headers grouping the set-groups */
+.more-group{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:18px 2px 8px}
+.more-group:first-of-type{margin-top:4px}
 body.dark .set-group{background:#252540;border-color:var(--border)}
 .set-gh{font-size:12px;font-weight:800;color:var(--text);padding:11px 0 9px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
 .set-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:13px 0;border:0;border-bottom:1px solid var(--border);background:none;font-size:13px;color:var(--text);font-family:inherit;cursor:pointer}
@@ -824,6 +827,12 @@ body.dark .deload-snooze-btn{background:transparent;border-color:#7A2020;color:#
    panel doesn't get an awkward gap before the very first header. */
 .zone-section:first-child>.stats-zone-title{margin-top:0}
 /* Step 5 — Sessions feed (cross-day timeline) */
+/* L1 (v5.2): notes search */
+.sess-search{width:100%;box-sizing:border-box;padding:9px 12px;margin-bottom:0.75rem;border:1px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--text);font-size:14px;font-family:inherit;outline:none}
+.sess-search:focus{border-color:var(--primary)}
+body.dark .sess-search{background:var(--surface);border-color:var(--border)}
+.sess-card mark,.sess-notes mark{background:#FFE49B;color:#7A5A00;border-radius:2px;padding:0 1px}
+body.dark .sess-card mark,body.dark .sess-notes mark{background:#7A5A00;color:#FFE49B}
 .sess-filter-row{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-bottom:0.75rem}
 .sess-filter{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--muted);background:#F5F5F2;border:1px solid var(--border);border-radius:14px;cursor:pointer;white-space:nowrap}
 .sess-filter.on{background:var(--primary);border-color:var(--primary);color:#fff}
@@ -976,7 +985,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.1.2</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.2</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -1032,6 +1041,8 @@ body.dark #pc-result{color:var(--text)}
 
   <!-- SESSIONS PANEL (Step 5 — cross-day chronological feed) -->
   <div class="prog-panel show" id="prog-panel-days">
+    <!-- L1 (v5.2): substring search over session + per-exercise notes -->
+    <input id="sess-search" class="sess-search" type="search" inputmode="search" placeholder="🔍 Search notes…" aria-label="Search session notes" oninput="sessSearch(this.value)"/>
     <!-- v2.76 (Phase A.2): "All" chip static; per-day chips injected by renderProgressDayWidgets() from DAYS_CONFIG. -->
     <div class="sess-filter-row" id="sess-filter-row" role="tablist" aria-label="Filter sessions by day">
       <button class="sess-filter on" data-d="all" onclick="sessFilter('all',this)">All</button>
@@ -1146,14 +1157,16 @@ body.dark #pc-result{color:var(--text)}
 <!-- ═══ MORE (v4.3) — Sync + Backup + Appearance + App, folded from the former Sync/Settings tabs ═══ -->
 <div class="day-panel" id="p-more">
   <div style="font-size:18px;font-weight:800;color:var(--text);margin:2px 0 14px;">More</div>
+  <h3 class="more-group">Data &amp; sync</h3>
   <div class="set-group" id="more-sync">
-    <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-cloud"/></svg>Sync</div>
+    <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-cloud"/></svg>Cloud sync</div>
     <div id="sync-body"></div>
   </div>
   <div class="set-group" id="more-backup">
     <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-backup"/></svg>Backup &amp; restore</div>
     <button class="set-item" onclick="showExportImport()"><span>Backup code · on-device snapshots · cloud archive · import / export · this device (Primary / Reader)</span><span class="set-caret">›</span></button>
   </div>
+  <h3 class="more-group">Customize</h3>
   <div class="set-group" id="more-appearance">
     <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-appearance"/></svg>Appearance</div>
     <button class="set-item" id="dark-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode"><span id="dark-mode-label">🌙 Dark mode</span><span class="set-caret" id="dark-mode-state">Off</span></button>
@@ -1163,6 +1176,13 @@ body.dark #pc-result{color:var(--text)}
         <button type="button" data-m="auto" onclick="setRestMode('auto')">Auto</button>
         <button type="button" data-m="long" onclick="setRestMode('long')">Long</button>
         <button type="button" data-m="short" onclick="setRestMode('short')">Short</button>
+      </span>
+    </div>
+    <div class="set-item">
+      <span>⚖️ Units</span>
+      <span class="rest-seg" id="units-seg" role="group" aria-label="Weight units">
+        <button type="button" data-u="lbs" onclick="setUnits('lbs')">lbs</button>
+        <button type="button" data-u="kg" onclick="setUnits('kg')">kg</button>
       </span>
     </div>
   </div>
@@ -1180,6 +1200,7 @@ body.dark #pc-result{color:var(--text)}
       <div id="eq-plates" class="eq-plates"></div>
     </div>
   </div>
+  <h3 class="more-group">About &amp; advanced</h3>
   <div class="set-group" id="more-app">
     <div class="set-gh"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-app"/></svg>App</div>
     <button class="set-item" onclick="reloadPage()"><span><svg class="ic ic-sm" style="margin-right:7px" aria-hidden="true"><use href="#ic-refresh"/></svg>Update to latest</span><span class="set-caret">›</span></button>
@@ -1684,6 +1705,7 @@ function pushPlanToCloud(){
     try{ var ct=_mergeLibraries(getCustomTemplates(), cloud['plan_templates_v1']); if(ct&&ct.length){ cloud['plan_templates_v1']=ct; saveCustomTemplates(ct); } }catch(e){}
     try{ var ro=_mergeRestOverrides(getRestOverrides(), cloud['rest_overrides_v1']); if(ro&&Object.keys(ro).length){ cloud['rest_overrides_v1']=ro; saveRestOverrides(ro); } }catch(e){}
     try{ var ps=JSON.parse(localStorage.getItem('plate_setup_v1')); if(ps) cloud['plate_setup_v1']=ps; }catch(e){}
+    try{ var un=localStorage.getItem('units_v1'); if(un) cloud['units_v1']=un; }catch(e){}
     if(!cloud.__schema) cloud.__schema=SCHEMA_VERSION;
     return _rawCloudPUT(cloud);
   }).then(function(){
@@ -1908,14 +1930,14 @@ function buildCardHTML_v2(rec){
      +'      <div class="notes-row" style="padding:8px 12px 10px"><input class="notes-input" data-ex="'+_esc(hist)+'" type="text" placeholder="'+_esc(rec.notesPlaceholder||'e.g. notes')+'"/></div>\n'
      +'    </div>\n  </div>\n';
   }
+  // C2/C1: global unit drives the placeholder + column header; per-set toggle retired.
+  var unitPh=(typeof getUnits==='function'&&getUnits()==='kg')?'kg':'lbs';
+  var unitLbl=(typeof getUnits==='function'&&getUnits()==='kg')?'kg':'lb';
   var n=Math.max(1,parseInt(rec.sets,10)||3), rows='';
   for(var i=1;i<=n;i++){
-    var uid='unit-'+_dash(hist)+'-s'+i;
     rows+='<div class="rep-single v2-set">'
       +'<span class="rep-label">'+i+'</span>'
-      +'<div class="v2-wl"><input class="rep-input" oninput="this.style.color=\'\';this.style.fontStyle=\'\';" data-ex="'+_esc(hist)+'" data-set="'+i+'" type="text" placeholder="lbs"/>'
-        +'<div class="unit-toggle"><button class="unit-btn active" type="button" onclick="setUnit(this,\''+uid+'\')">lbs</button><button class="unit-btn" type="button" onclick="setUnit(this,\''+uid+'\')">kg</button></div>'
-        +'<input type="hidden" id="'+uid+'" value="lbs"/></div>'
+      +'<div class="v2-wl"><input class="rep-input" oninput="this.style.color=\'\';this.style.fontStyle=\'\';" data-ex="'+_esc(hist)+'" data-set="'+i+'" type="text" placeholder="'+unitPh+'"/></div>'
       +'<input class="reps-actual-input" type="number" inputmode="decimal" min="1" max="99" data-ex-reps="'+_esc(hist)+'" placeholder="—"/>'
       +'</div>';
   }
@@ -1924,15 +1946,20 @@ function buildCardHTML_v2(rec){
   var pain='<div class="pain-row"><span class="pain-label">Feeling:</span>'
     +'<button class="pain-btn active-ok" data-ex="'+_esc(hist)+'" onclick="setPain(this,\'ok\')">✓ Good</button>'
     +'<button class="pain-btn" data-ex="'+_esc(hist)+'" onclick="setPain(this,\'flag\')">⚠️ Discomfort</button></div>';
+  // C1 (v5.2): location + demo fold into the RPE/notes footer disclosure (not the
+  // ⋯ overflow). ⋯ keeps the secondary feedback (Feeling + stretch links). Footer
+  // chevron names what's inside.
+  var footLabel='RPE · notes'+(loc?' · location':'')+(demo?' · ▶ demo':'');
   return head
    +'    <div class="fields-wrap">\n'
-   +'      <div class="v2-ovf" hidden>'+loc+demo+stretch+pain+'</div>\n'
+   +((stretch||pain)?('      <div class="v2-ovf" hidden>'+stretch+pain+'</div>\n'):'')
    +'      <div class="last-time" id="lt-'+_dash(hist)+'"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>\n'
-   +'      <div class="v2-sets"><div class="v2-sets-head"><div></div><div class="l">Weight</div><div>Reps</div></div><div class="rep-row">'+rows+'</div></div>\n'
-   +'      <button type="button" class="v2-foot-toggle" aria-expanded="false" onclick="cardToggle(this,\'foot\')">RPE &amp; notes <span class="cv" aria-hidden="true">▾</span></button>\n'
+   +'      <div class="v2-sets"><div class="v2-sets-head"><div></div><div class="l">Weight · '+unitLbl+'</div><div>Reps</div></div><div class="rep-row">'+rows+'</div></div>\n'
+   +'      <button type="button" class="v2-foot-toggle" aria-expanded="false" onclick="cardToggle(this,\'foot\')">'+footLabel+' <span class="cv" aria-hidden="true">▾</span></button>\n'
    +'      <div class="v2-foot" hidden>\n'
    +'        '+rpe+'\n'
    +'        <div class="notes-row" style="margin-top:8px"><span class="weight-label" style="font-size:11px;color:var(--muted);white-space:nowrap">Notes:</span><input class="notes-input" data-ex="'+_esc(hist)+'-notes" type="text" placeholder="'+_esc(rec.notesPlaceholder||'e.g. notes')+'"/></div>\n'
+   +((loc||demo)?('        <div class="v2-foot-extra" style="margin-top:8px;display:flex;flex-direction:column;gap:5px">'+loc+demo+'</div>\n'):'')
    +'      </div>\n'
    +'    </div>\n  </div>\n';
 }
@@ -3728,6 +3755,7 @@ function openMore(){
   try{ renderSettings(); }catch(e){}
   try{ _syncRestModeUI(); }catch(e){}
   try{ _syncEquipUI(); }catch(e){}
+  try{ _syncUnitsUI(); }catch(e){}
   _setDaySelectorVisible(false);
   try{ window.scrollTo(0,0); }catch(e){}
   _syncNav();
@@ -5413,6 +5441,8 @@ function renderSync(){
     +'<div class="plan-sync-row">'
     +'<label class="plan-sync-toggle"><input type="checkbox" id="plan-sync-switch" '+(syncOn?'checked':'')+' onchange="setPlanSyncEnabled(this.checked);renderSync()"><span>Cloud sync for plan, days &amp; library '+(syncOn?'<b>(Cloud enabled)</b>':'<b>(Local only)</b>')+'</span></label>'
     +'</div>'
+    // M1 (v5.2): surface this device's role as a secondary line (set in Backup & restore)
+    +'<div class="plan-sync-hint" style="margin-top:2px">'+(isPrimaryDevice()?'⬆ <b>This phone uploads</b> workout history to the cloud.':'📖 <b>Reader</b> — this phone won\'t push history (change in Backup &amp; restore).')+'</div>'
     +'<div class="plan-sync-hint">Plan, day &amp; library edits stay on this device until you push — and you can push from <b>any</b> device. '+(syncOn?'Tap below to write them to the cloud (your workout history is left untouched).':'Switch on to enable the push button.')+'</div>'
     +'<button class="patch5-rerun-btn" '+(syncOn?'':'disabled')+' onclick="pushPlanToCloud()">⬆ Push plan to cloud now</button>'
     +'<div class="plan-sync-last">'+lpTxt+'</div>'
@@ -5683,12 +5713,26 @@ function setUnit(btn, uid){
   document.getElementById(uid).value=btn.textContent;
 }
 
+// C2 (v5.2): global weight unit (units_v1, synced). Replaces the per-set toggle.
+// Display/entry only — saved session notes keep the unit they were written with
+// (no conversion, no migration).
+function getUnits(){ var u=null; try{ u=localStorage.getItem('units_v1'); }catch(e){} return (u==='kg')?'kg':'lbs'; }
+function setUnits(u){
+  u=(u==='kg')?'kg':'lbs';
+  try{ localStorage.setItem('units_v1', u); }catch(e){}
+  try{ markPendingSync(); }catch(e){}
+  try{ _syncUnitsUI(); }catch(e){}
+  // relabel live inputs + re-render the day so column headers/placeholders update
+  try{ if(typeof renderDayItems==='function'){ renderDayItems(); loadLastTimes(); } }catch(e){}
+}
+function _syncUnitsUI(){
+  var seg=document.getElementById('units-seg'); if(!seg) return;
+  var u=getUnits();
+  seg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-u')===u); });
+}
 function getUnitForInput(repInput){
-  // Find the hidden unit input in the same rep-single div
-  var parent=repInput.closest('.rep-single');
-  if(!parent) return 'lbs';
-  var hidden=parent.querySelector('input[type="hidden"]');
-  return hidden ? hidden.value : 'lbs';
+  // C2: unit is now the single global preference (per-set toggle retired).
+  return getUnits();
 }
 
 function reloadPage(){
@@ -6193,6 +6237,7 @@ function generateExport(){
   try{ var ct=JSON.parse(localStorage.getItem('plan_templates_v1')); if(ct&&ct.length) data['plan_templates_v1']=ct; }catch(e){}
   try{ var ro=getRestOverrides(); if(ro&&Object.keys(ro).length) data['rest_overrides_v1']=ro; }catch(e){}
   try{ var ps=JSON.parse(localStorage.getItem('plate_setup_v1')); if(ps) data['plate_setup_v1']=ps; }catch(e){}
+  try{ var un=localStorage.getItem('units_v1'); if(un) data['units_v1']=un; }catch(e){}
   // In-progress (unsubmitted) drafts — so a backup also protects a workout
   // you're in the middle of entering.
   getAllDayKeys().forEach(function(day){
@@ -6536,6 +6581,7 @@ function importData(){
     if(data['plate_setup_v1'] && typeof data['plate_setup_v1']==='object' && !Array.isArray(data['plate_setup_v1'])){
       try{ localStorage.setItem('plate_setup_v1', JSON.stringify(data['plate_setup_v1'])); }catch(e){}
     }
+    if(data['units_v1']==='lbs' || data['units_v1']==='kg'){ try{ localStorage.setItem('units_v1', data['units_v1']); }catch(e){} }
     var hint=document.getElementById('restore-hint');
     hint.innerHTML='✅ Restored '+count+' sessions + measurements + settings! '
       +'<button onclick="undoImport()" style="margin-left:6px;padding:4px 10px;border:1px solid #C53030;background:#FFF5F5;color:#C53030;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Undo import</button>';
@@ -7013,6 +7059,30 @@ function sessFilter(d, btn){
   if(btn) btn.classList.add('on');
   renderProgress();
 }
+// L1 (v5.2): notes search over a session's per-exercise notes + session-level note.
+var _sessSearch='';
+function sessSearch(v){ _sessSearch=(v||'').trim(); renderProgress(); }
+function _sessMatchesSearch(s){
+  if(!_sessSearch) return true;
+  var q=_sessSearch.toLowerCase();
+  if(s && s.notes && String(s.notes).toLowerCase().indexOf(q)>=0) return true;
+  return !!(s && s.entries && s.entries.some(function(e){ return e.note && String(e.note).toLowerCase().indexOf(q)>=0; }));
+}
+// Wrap case-insensitive matches of the (raw) search term in <mark>, operating on
+// ALREADY-ESCAPED text so we never break markup.
+function _hl(escText){
+  if(!_sessSearch) return escText;
+  var needle=_esc(_sessSearch).toLowerCase();
+  if(!needle) return escText;
+  var out='', rest=String(escText);
+  while(true){
+    var j=rest.toLowerCase().indexOf(needle);
+    if(j<0){ out+=rest; break; }
+    out+=rest.slice(0,j)+'<mark>'+rest.slice(j,j+needle.length)+'</mark>';
+    rest=rest.slice(j+needle.length);
+  }
+  return out;
+}
 function _sessionPRCount(day, sTs, sess){
   if(!sess || !sess.entries) return 0;
   var count=0;
@@ -7146,9 +7216,9 @@ function _sessionRowsHTML(exEntries){
       var sets=(e.note||'').split('|').map(function(x){return x.trim();}).filter(Boolean);
       var body = sets.length
         ? '<div class="sess-lift-sets">'+sets.map(function(st){return '<span class="sess-lift-set">'+_esc(st)+'</span>';}).join('')+'</div>'
-        : '<span class="sess-lift-sets">'+_esc(e.note||'')+'</span>';
+        : '<span class="sess-lift-sets">'+_hl(_esc(e.note||''))+'</span>';
       var extra=grp.fields.map(function(f){
-        return '<div class="sess-lift-note">'+(f.field==='notes'?'📝 ':('<b>'+_esc(_titleField(f.field))+':</b> '))+_esc(f.note)+'</div>';
+        return '<div class="sess-lift-note">'+(f.field==='notes'?'📝 ':('<b>'+_esc(_titleField(f.field))+':</b> '))+_hl(_esc(f.note))+'</div>';
       }).join('');
       return '<div class="sess-lift"><span class="sess-lift-name">'+_esc(e.ex)+'</span>'+body+extra+'</div>';
     }
@@ -7157,7 +7227,7 @@ function _sessionRowsHTML(exEntries){
     var sum=[byF.duration,byF.distance].filter(Boolean).join(' · ') || (grp.fields.length+' field'+(grp.fields.length===1?'':'s'));
     var lines=grp.fields.map(function(f){
       var lbl=f.field==='notes'?'📝 Notes':_titleField(f.field);
-      return '<div class="sess-cardio-line"><span class="scf">'+_esc(lbl)+'</span><span>'+_esc(f.note)+'</span></div>';
+      return '<div class="sess-cardio-line"><span class="scf">'+_esc(lbl)+'</span><span>'+_hl(_esc(f.note))+'</span></div>';
     }).join('');
     return '<details class="sess-cardio"><summary><span class="sess-lift-name">'+_esc(_humanizeCardioBase(grp.base))+'</span><span class="sess-cardio-sum">'+_esc(sum)+'</span></summary>'+lines+'</details>';
   }).join('');
@@ -7212,13 +7282,14 @@ function renderProgress(){
   // Apply filter.
   var items=allItems;
   if(filter!=='all') items=items.filter(function(it){ return it.day===filter; });
+  if(_sessSearch) items=items.filter(function(it){ return _sessMatchesSearch(it.sess); });   // L1
   // Sort chronological desc (newest first), entries without ts sort to bottom.
   items.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
 
   var feed=document.getElementById('sess-feed');
   if(!feed) return;
   if(!items.length){
-    feed.innerHTML='<div class="prog-empty" style="padding:1.5rem 0">'+(filter==='all'?'No sessions saved yet.':'No '+dayLbl(filter)+' sessions saved yet.')+'</div>';
+    feed.innerHTML='<div class="prog-empty" style="padding:1.5rem 0">'+(_sessSearch?('No notes match “'+_esc(_sessSearch)+'”.'):(filter==='all'?'No sessions saved yet.':'No '+dayLbl(filter)+' sessions saved yet.'))+'</div>';
     return;
   }
 
@@ -7246,7 +7317,7 @@ function renderProgress(){
       var pr=prCount>0?'<span class="sess-meta-chip sess-pr">🏆 '+prCount+' PR'+(prCount>1?'s':'')+'</span>':'';
       var dpill='<span class="sess-day-pill sess-day-'+day+'">'+dayLbl(day)+'</span>';
       var rowList=_sessionRowsHTML(exEntries);
-      var notes=s.notes?'<div class="sess-notes">📝 '+_esc(s.notes)+'</div>':'';
+      var notes=s.notes?'<div class="sess-notes">📝 '+_hl(_esc(s.notes))+'</div>':'';
       var dateBlk='<span class="ps-date" id="pdate-'+day+'-'+idx+'" role="button" tabindex="0" title="Tap to edit date" onclick="editSessionDate(\''+day+'\','+idx+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();editSessionDate(\''+day+'\','+idx+')}">'+_esc(s.date||'')+' <span class="ps-cv" aria-hidden="true">▾</span></span>';
       html+='<div class="sess-card" data-day="'+day+'" data-idx="'+idx+'">'
         +'<div class="sess-card-head">'
@@ -7580,6 +7651,7 @@ function buildBinPayload(){
   try { var ct=JSON.parse(localStorage.getItem('plan_templates_v1')); if(ct) p['plan_templates_v1']=ct; }catch(e){}
   try { var ro=JSON.parse(localStorage.getItem('rest_overrides_v1')); if(ro) p['rest_overrides_v1']=ro; }catch(e){}
   try { var ps=JSON.parse(localStorage.getItem('plate_setup_v1')); if(ps) p['plate_setup_v1']=ps; }catch(e){}
+  try { var un=localStorage.getItem('units_v1'); if(un) p['units_v1']=un; }catch(e){}
   // v3.8: carry the archive bin id so every device discovers the same archive.
   try { var aid=_archiveId(); if(aid) p['__archive_bin']=aid; }catch(e){}
   return p;
@@ -7634,6 +7706,7 @@ function mergeCloudIntoPayload(cloud){
   var mro=_mergeRestOverrides(p['rest_overrides_v1'], cloud['rest_overrides_v1']);
   if(mro && Object.keys(mro).length) p['rest_overrides_v1']=mro;
   if(!p['plate_setup_v1'] && cloud['plate_setup_v1']) p['plate_setup_v1']=cloud['plate_setup_v1'];
+  if(!p['units_v1'] && cloud['units_v1']) p['units_v1']=cloud['units_v1'];
   // v3.8: learn/keep the archive bin id from whichever side has it.
   if(cloud['__archive_bin'] && !_archiveId()){ try{ _setArchiveId(cloud['__archive_bin']); }catch(e){} }
   var aid2=_archiveId()||cloud['__archive_bin']; if(aid2) p['__archive_bin']=aid2;
@@ -7663,6 +7736,7 @@ function applyPayloadToLocal(p){
   if(Array.isArray(p['plan_templates_v1'])) localStorage.setItem('plan_templates_v1', JSON.stringify(p['plan_templates_v1']));
   if(p['rest_overrides_v1'] && typeof p['rest_overrides_v1']==='object' && !Array.isArray(p['rest_overrides_v1'])) localStorage.setItem('rest_overrides_v1', JSON.stringify(p['rest_overrides_v1']));
   if(p['plate_setup_v1'] && typeof p['plate_setup_v1']==='object' && !Array.isArray(p['plate_setup_v1'])) localStorage.setItem('plate_setup_v1', JSON.stringify(p['plate_setup_v1']));
+  if(p['units_v1']==='lbs' || p['units_v1']==='kg') localStorage.setItem('units_v1', p['units_v1']);
 }
 
 function refreshAfterSync(){
@@ -7820,7 +7894,7 @@ function clearPendingSync(){ try{ localStorage.removeItem('gymlog_sync_pending')
 // Uses sessionStorage so a mid-test reload stays in test mode, and the
 // snapshot is persisted so it can still be discarded after a reload.
 var TEST_MODE = sessionStorage.getItem('gym_test_mode')==='1';
-var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','plate_setup_v1','gymlog_sync_pending','darkMode'];
+var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','plate_setup_v1','units_v1','gymlog_sync_pending','darkMode'];
 function _testKeys(){
   var ks=[];
   for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i);
