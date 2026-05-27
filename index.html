@@ -450,6 +450,7 @@ body.dark .mm-dot.low{background:#3C3A6E}body.dark .mm-dot.moderate{background:#
 .ex-stat-row{display:flex;gap:6px;padding:10px 14px;border-bottom:0.5px solid #F1EFE8;flex-wrap:wrap}
 .ex-stat-chip{background:#F0EFF9;border-radius:6px;padding:3px 8px;font-size:11px;color:#3C3489;font-weight:600}
 .ex-stat-chip.gold{background:#FFF8E1;color:#B8860B}
+.ex-stat-chip.ex-stat-std{background:var(--primary-tint);color:var(--primary)}
 .ex-stat-chip.green{background:#E8F5E9;color:#2E7D32}
 .skip-list{display:flex;flex-direction:column;gap:4px}
 .skip-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#FFF8F8;border-radius:7px;font-size:12px}
@@ -740,6 +741,7 @@ body.dark .ex-history-sets{color:#B4B2D8}
 body.dark .ex-stat-row{border-bottom-color:var(--border)}
 body.dark .ex-stat-chip{background:var(--primary-tint);color:#B4B2D8}
 body.dark .ex-stat-chip.gold{background:#3A2E00;color:#FFD740}
+body.dark .ex-stat-chip.ex-stat-std{background:#2A2850;color:var(--primary-2)}
 body.dark .ex-stat-chip.green{background:#0F3A2E;color:#5DD8A0}
 body.dark .chart-wrap{background:#1E1E38;border-top-color:var(--border)}
 body.dark .chart-title{color:#9896C8}
@@ -1022,7 +1024,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.9</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.10</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -4939,6 +4941,29 @@ function _liftStats(sessions){
   // Stalling proxy: matches the "high RPE + flat weight" pattern from getOverloadSuggestion via the existing helper.
   return { delta:delta, lastTs:lastTs||0, weightSeries:weightSeries, count:sessions.length };
 }
+// v5.10: approximate strength standards (×bodyweight) for the canonical barbell
+// lifts only — applying them to machines/variations would mislead. Thresholds are
+// [Novice, Intermediate, Advanced, Elite]; below Novice = Untrained. Rough, and
+// they vary by bodyweight/sex — labeled "approx" in the UI.
+var STRENGTH_STANDARDS={
+  'barbell bench press':[0.75,1.0,1.5,2.0], 'bench press':[0.75,1.0,1.5,2.0],
+  'barbell back squat':[1.0,1.5,2.0,2.5], 'barbell squat':[1.0,1.5,2.0,2.5], 'back squat':[1.0,1.5,2.0,2.5],
+  'barbell deadlift':[1.25,1.75,2.25,3.0], 'deadlift':[1.25,1.75,2.25,3.0],
+  'barbell overhead press':[0.4,0.6,0.8,1.0], 'overhead press':[0.4,0.6,0.8,1.0],
+  'barbell row':[0.6,0.9,1.2,1.5], 'bent over row':[0.6,0.9,1.2,1.5], 'barbell bent-over row':[0.6,0.9,1.2,1.5]
+};
+function _latestBodyweight(){
+  var w; try{ w=getMeasurements().filter(function(m){return m && m.type==='weight' && m.value>0;}); }catch(e){ return 0; }
+  if(!w.length) return 0;
+  w.sort(function(a,b){ return (a.date<b.date?-1:a.date>b.date?1:0); });
+  return w[w.length-1].value;
+}
+function strengthLevel(exKey, e1rm, bw){
+  var s=STRENGTH_STANDARDS[exKey]; if(!s || !(e1rm>0) || !(bw>0)) return null;
+  var ratio=e1rm/bw, levels=['Untrained','Novice','Intermediate','Advanced','Elite'], idx=0;
+  for(var i=0;i<s.length;i++){ if(ratio>=s[i]) idx=i+1; }
+  return { ratio:ratio, level:levels[idx] };
+}
 function renderExerciseList(){
   var exMap=getAllExercises();
   var allKeys=Object.keys(exMap);
@@ -5029,14 +5054,20 @@ function renderExerciseList(){
       }
       exStatChips+='<span class="ex-stat-chip">Vol: '+Math.round(totalVol)+' lbs total</span>';
       exStatChips+='<span class="ex-stat-chip">'+sessions.length+' session'+(sessions.length===1?'':'s')+'</span>';
-      // Estimated 1RM (Epley) — only from sets that recorded reps
+      // Estimated 1RM (Epley) — only from sets that recorded reps.
+      // v5.10 fix: store the numeric est directly. The old code stored
+      // "Set 1: 263 lbs" then regex-extracted /[\d.]+/, which grabbed the "1"
+      // from "Set 1" — so Est. 1RM always displayed ~1 lb. Now it's correct.
       var rmSeries=[];
       sessions.forEach(function(s){
         var e=bestEst1RM(s.note);
-        if(e>0) rmSeries.push({date:s.date,note:'Set 1: '+Math.round(e)+' lbs'});
+        if(e>0) rmSeries.push(Math.round(e));
       });
-      var best1rm=rmSeries.length?Math.max.apply(null,rmSeries.map(function(x){return parseFloat(x.note.match(/[\d.]+/)[0]);})):null;
+      var best1rm=rmSeries.length?Math.max.apply(null,rmSeries):null;
       if(best1rm!==null) exStatChips+='<span class="ex-stat-chip gold">Est. 1RM: '+best1rm+' lbs</span>';
+      // v5.10: strength standard (canonical barbell lifts only, needs a logged bodyweight)
+      var _sl=null; try{ _sl=strengthLevel(normalizeEx(k), best1rm, _latestBodyweight()); }catch(e){}
+      if(_sl) exStatChips+='<span class="ex-stat-chip ex-stat-std" title="Approximate — varies by bodyweight">'+_sl.ratio.toFixed(2)+'× BW · '+_sl.level+'</span>';
       exStatChips+='</div>';
       // Step 7 — single chart with metric toggle (Weight / Est. 1RM / Volume), stat chips become the chart caption.
       // Step 9 — per-history-row delta pill comparing each session's max weight to the previous session's.
