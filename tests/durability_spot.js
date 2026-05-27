@@ -103,5 +103,17 @@ ok(wL3d._workoutTargetDay().auto===true && wL3d._workoutTargetDay().day===days[2
 const wSW=app(store({}));
 ok(wSW._sessWhen({date:'Sat, May 16, 2026 at 12:00 AM'}) > wSW._sessWhen({date:'Tue, May 12, 2026 at 11:40 PM'}),'L3 · _sessWhen parses ts-less date strings for recency ranking');
 
+// ── L1 (v5.2) · notes search matches per-exercise + session notes; highlights safely ──
+const wL1=app(store({}));
+var sessHit={notes:'felt strong', entries:[{ex:'Chest press',note:'Set 1: 90 lbs'},{ex:'Chest press-notes',note:'right shoulder twinge'}]};
+var sessMiss={notes:'easy day', entries:[{ex:'Leg press',note:'Set 1: 100 lbs'}]};
+wL1._sessSearch='shoulder';
+ok(wL1._sessMatchesSearch(sessHit)===true && wL1._sessMatchesSearch(sessMiss)===false,'L1 · search matches a per-exercise note, skips non-matches');
+wL1._sessSearch='STRONG';   // case-insensitive, session-level note
+ok(wL1._sessMatchesSearch(sessHit)===true,'L1 · search is case-insensitive over the session note');
+ok(/<mark>strong<\/mark>/i.test(wL1._hl(wL1._esc('felt strong today'))),'L1 · _hl wraps the match in <mark>');
+wL1._sessSearch='';
+ok(wL1._sessMatchesSearch(sessMiss)===true && wL1._hl('plain')==='plain','L1 · empty search matches everything and does not highlight');
+
 console.log('\n'+(fail?('DURABILITY SPOT-CHECK: '+fail+' FAILED'):'DURABILITY SPOT-CHECK: ALL PASS'));
 process.exit(fail?1:0);
