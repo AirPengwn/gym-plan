@@ -74,13 +74,17 @@ var ban=wDl.document.getElementById('deload-banner');
 ok(ban && ban.style.display==='flex','maybeShowDeloadBanner shows the banner when advice exists');
 ok(/deload/i.test(wDl.document.getElementById('deload-banner-msg').textContent||''),'banner message mentions a deload');
 
-// ── the card nudge: loadLastTimes injects an .overload-nudge from the suggestion ──
+// ── the card nudge: loadLastTimes injects the v5.13 .coach-line from the suggestion ──
 var st2=store({gym_primary_device:'1'});
 st2.setItem('gymlog_a', JSON.stringify([ sess(1000,'Set 1: 100 lbs x'+R+'reps | Set 2: 100 lbs x'+R+'reps') ]));
 var wL=app(st2);
 try{ wL.loadLastTimes(); }catch(e){}
-var nudge=[].slice.call(wL.document.querySelectorAll('.overload-nudge')).map(function(n){return n.textContent;}).join(' | ');
-ok(/try 105 lbs|Hit|Build to|Ready to try|hold/.test(nudge),'loadLastTimes injects an .overload-nudge on the workout card ('+(nudge||'none')+')');
+var lines=[].slice.call(wL.document.querySelectorAll('.coach-line'));
+var nudge=lines.map(function(n){return n.textContent;}).join(' | ');
+ok(lines.length<=1,'v5.13 · at most one coach line per card (got '+lines.length+')');
+ok(/try \d+|Hit|Build to|Ready|Hold|Aim/.test(nudge),'loadLastTimes injects the consolidated .coach-line on the workout card ('+(nudge||'none')+')');
+// the old stacked cues are gone
+ok(!wL.document.querySelector('.overload-nudge,.prog-pill,.prog-hold,.aim-cap'),'v5.13 · legacy stacked cues no longer rendered');
 
 // ── F1 (v5.1) · progressionNudge: stalled+easy → bump, stalled+hard → hold ──
 var wP1=withHist([ sess(2000,'Set 1: 100 lbs x'+R+'reps'), sess(1000,'Set 1: 100 lbs x'+R+'reps') ]);

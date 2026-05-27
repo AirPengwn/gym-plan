@@ -635,6 +635,22 @@ body.dark .overload-nudge{background:#0F3A2E;color:#5DD8A0}
 body.dark .prog-hold{color:#E0A800}
 /* v5.9: 1RM-based "aim" guidance caption (doesn't change the saved prefill) */
 .aim-cap{font-size:10.5px;font-weight:600;color:var(--muted);margin:0 0 6px;letter-spacing:.01em}
+/* v5.13: single adaptive coaching line — consolidates the v5.1 progression
+   pill/hold, the legacy overload-nudge, and the v5.9 aim caption into ONE row.
+   A priority ladder (ready → hold → build → aim) picks the state that matters;
+   only the actionable "ready" state is loud + tappable. Pure runtime/derived. */
+.coach-line{display:flex;align-items:center;gap:7px;width:100%;box-sizing:border-box;text-align:left;font-family:inherit;border:1px solid transparent;border-radius:10px;padding:6px 10px;margin:0 0 8px;font-size:11.5px;font-weight:700;line-height:1.3}
+.coach-line .coach-ic{font-size:13px;flex:0 0 auto}
+.coach-line .coach-msg{min-width:0}
+.coach-line .coach-msg b{font-weight:800}
+.coach-line .coach-sub{font-weight:600;opacity:.8}
+.coach-ready{background:#E1F5EC;border-color:var(--good);color:#085041;cursor:pointer}
+.coach-ready .coach-act{margin-left:auto;font-weight:800;opacity:.85;flex:0 0 auto}
+.coach-ready:active{filter:brightness(.95)}
+.coach-hold{background:rgba(224,168,0,.15);color:#8A6A00}
+.coach-quiet{color:var(--muted);padding-left:0;padding-right:0}
+body.dark .coach-ready{background:#123a2c;color:#5DD8A0}
+body.dark .coach-hold{color:#E0A800}
 /* v5.5: inline exercise history + 1RM sparkline (tap the exercise name) */
 .ex-name[role="button"]{cursor:pointer}
 .ex-name-hist{font-size:10px;opacity:.5;margin-left:5px;vertical-align:1px}
@@ -1034,7 +1050,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.12</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.13</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -4548,62 +4564,92 @@ function progressionNudge(exKey, meta){
   var target=Math.round(W/step)*step + step;   // snap to the equipment increment, then +1 step
   return {kind:'bump', weight:W, step:step, target:target};
 }
-// Paint the F1 pill / hold caption onto each v2 strength card in a panel.
-function _applyProgressionNudges(panel){
-  if(!panel) return;
-  panel.querySelectorAll('.item.v2-card').forEach(function(card){
-    var old=card.querySelector('.prog-pill,.prog-hold'); if(old) old.parentNode.removeChild(old);
-    var dx=card.querySelector('.rep-input[data-ex]'); if(!dx) return;
-    var hist=dx.getAttribute('data-ex')||''; if(!hist) return;
-    var n;
-    try{ n=progressionNudge(normalizeEx(hist), exerciseMeta(hist)); }catch(e){ n=null; }
-    if(!n) return;
-    var sets=card.querySelector('.v2-sets'); if(!sets) return;
-    if(n.kind==='hold'){
-      var hold=document.createElement('div'); hold.className='prog-hold';
-      hold.textContent='● Stalled at '+n.weight+' — hold & sharpen form';
-      sets.insertBefore(hold, sets.firstChild);
-    } else if(n.kind==='bump'){
-      var pill=document.createElement('button'); pill.type='button'; pill.className='prog-pill';
-      pill.textContent='↑ +'+n.step+' lb → '+n.target;
-      pill.setAttribute('aria-label','Suggested next weight '+n.target+'. Tap to fill the sets.');
-      pill.onclick=function(e){ e.stopPropagation(); _acceptProgression(card, n.target); };
-      sets.insertBefore(pill, sets.firstChild);
+// v5.13: one adaptive coaching state per strength card. A priority ladder folds
+// the v5.1 stall pill/hold, the legacy overload-nudge, and the v5.9 aim caption
+// into a SINGLE message — picking the most relevant one — so the card never
+// stacks three cues that say overlapping things. Read-only / derived; no writes.
+//   ready  → tappable, fills the sets (was the .prog-pill / "try +N" nudge)
+//   hold   → stalled + hard effort (was .prog-hold / "💪 hold" nudge)
+//   build  → below target reps (was the "🎯 Build to …" nudge)
+//   aim    → steady, no signal (was the v5.9 .aim-cap)
+function coachState(exKey, meta){
+  var t=null; try{ t=getExerciseTargets()[exKey]; }catch(e){}
+  var h=[]; try{ h=getExerciseProgress(exKey); }catch(e){}
+  if(!h || !h.length) return null;
+  var last=h[0], W=last.top; if(!(W>0)) return null;
+  var best=0; try{ best=historicalBestEst(exKey); }catch(e){}
+  function pctOf(x){ return best>0? Math.round(x/best*100):null; }
+  // A/B — multi-session stall (RPE-aware, snapped to equipment increment). Top priority.
+  var n=null; try{ n=progressionNudge(exKey, meta); }catch(e){}
+  if(n && n.kind==='hold') return {kind:'hold', W:W};
+  if(n && n.kind==='bump') return {kind:'ready', target:n.target, step:n.step, pct:pctOf(n.target)};
+  // C — single-session target logic (mirrors getOverloadSuggestion, structured).
+  if(t && last.haveReps && last.minReps!=null){
+    if(last.minReps>=t.reps){
+      if(last.rpe!=null && last.rpe>=9) return {kind:'hold', W:W};
+      return {kind:'ready', target:W+5, step:5, pct:pctOf(W+5)};
     }
-  });
+    return {kind:'build', sets:t.sets, reps:t.reps, W:W, lastReps:last.minReps};
+  } else {
+    // no reps logged → same top across last 2–3 sessions ⇒ ready to add weight
+    var checkN=Math.min(h.length,3), same=true;
+    for(var i=1;i<checkN;i++){ if(h[i].top!==W){ same=false; break; } }
+    if(checkN>=2 && same) return {kind:'ready', target:W+5, step:5, pct:pctOf(W+5)};
+  }
+  // D — quiet aim fallback (best e1RM × target reps, Epley inverse).
+  if(best>0 && t && t.reps){
+    var aim=Math.round((best/(1+t.reps/30))/5)*5, pct=Math.round(100/(1+t.reps/30));
+    return {kind:'aim', aim:aim, pct:pct, best:Math.round(best)};
+  }
+  return null;
 }
-// v5.9: a small "aim" caption from best est-1RM × the exercise's target reps —
-// guidance only (doesn't touch the saved prefill). Hidden until there's history.
-function _applyAimCaptions(panel){
+// Paint the single coach line onto each v2 strength card in a panel.
+function _applyCoachLine(panel){
   if(!panel) return;
   panel.querySelectorAll('.item.v2-card').forEach(function(card){
-    var old=card.querySelector('.aim-cap'); if(old) old.parentNode.removeChild(old);
+    // clear the consolidated line + any legacy cues from prior renders
+    ['.coach-line','.overload-nudge','.prog-pill','.prog-hold','.aim-cap'].forEach(function(sel){
+      var e=card.querySelector(sel); while(e){ e.parentNode.removeChild(e); e=card.querySelector(sel); }
+    });
     var dx=card.querySelector('.rep-input[data-ex]'); if(!dx) return;   // strength cards only
-    var exKey=normalizeEx(dx.getAttribute('data-ex')||''); if(!exKey) return;
-    var best=0; try{ best=historicalBestEst(exKey); }catch(e){}
-    var t=null; try{ t=getExerciseTargets()[exKey]; }catch(e){}
-    var reps=t&&t.reps;
-    if(!(best>0) || !reps) return;
-    var aim=Math.round((best/(1+reps/30))/5)*5;        // Epley inverse → working weight for target reps
-    var pct=Math.round(100/(1+reps/30));
-    var cap=document.createElement('div'); cap.className='aim-cap';
-    cap.textContent='🎯 Aim ~'+aim+' · '+pct+'% of e1RM '+Math.round(best);
-    var sets=card.querySelector('.v2-sets'); if(sets) sets.insertBefore(cap, sets.firstChild);
+    var raw=dx.getAttribute('data-ex')||''; var exKey=normalizeEx(raw); if(!exKey) return;
+    var st; try{ st=coachState(exKey, exerciseMeta(raw)); }catch(e){ st=null; }
+    if(!st) return;
+    var sets=card.querySelector('.v2-sets'); if(!sets) return;
+    var el=null;
+    if(st.kind==='ready'){
+      el=document.createElement('button'); el.type='button'; el.className='coach-line coach-ready';
+      var sub=(st.pct!=null)?' <span class="coach-sub">('+(st.step?'+'+st.step+' · ':'')+st.pct+'% e1RM)</span>':(st.step?' <span class="coach-sub">(+'+st.step+')</span>':'');
+      el.innerHTML='<span class="coach-ic">⬆️</span><span class="coach-msg">Ready — try <b>'+st.target+'</b>'+sub+'</span><span class="coach-act">Fill →</span>';
+      el.setAttribute('aria-label','Ready to progress — suggested '+st.target+'. Tap to fill the sets.');
+      el.onclick=function(e){ e.stopPropagation(); _acceptProgression(card, st.target); };
+    } else if(st.kind==='hold'){
+      el=document.createElement('div'); el.className='coach-line coach-hold';
+      el.innerHTML='<span class="coach-ic">●</span><span class="coach-msg">Hold <b>'+st.W+'</b> — stalled, sharpen form</span>';
+    } else if(st.kind==='build'){
+      el=document.createElement('div'); el.className='coach-line coach-quiet';
+      el.innerHTML='<span class="coach-ic">🎯</span><span class="coach-msg">Build to <b>'+st.sets+'×'+st.reps+' @ '+st.W+'</b> <span class="coach-sub">· last top set '+st.lastReps+' reps</span></span>';
+    } else if(st.kind==='aim'){
+      el=document.createElement('div'); el.className='coach-line coach-quiet';
+      el.innerHTML='<span class="coach-ic">🎯</span><span class="coach-msg">Aim <b>~'+st.aim+'</b> <span class="coach-sub">· '+st.pct+'% of e1RM '+st.best+'</span></span>';
+    }
+    if(el) sets.insertBefore(el, sets.firstChild);
   });
 }
 function _acceptProgression(card, target){
   card.querySelectorAll('.rep-input[data-set]').forEach(function(inp){
     inp.value=String(target); inp.style.color=''; inp.style.fontStyle='';
   });
-  var pill=card.querySelector('.prog-pill'); if(pill) pill.parentNode.removeChild(pill);
+  // v5.13: the actionable "Ready" line is now the consolidated coach line.
+  var line=card.querySelector('.coach-ready'); if(line) line.parentNode.removeChild(line);
   try{ haptic('light'); }catch(e){}
 }
-// Typing your own weight dismisses the suggestion pill on that card.
+// Typing your own weight dismisses the actionable "Ready" coach line on that card.
 document.addEventListener('input',function(e){
   var inp=e.target;
   if(inp && inp.classList && inp.classList.contains('rep-input')){
     var card=inp.closest('.item.v2-card');
-    if(card){ var p=card.querySelector('.prog-pill'); if(p) p.parentNode.removeChild(p); }
+    if(card){ var p=card.querySelector('.coach-ready'); if(p) p.parentNode.removeChild(p); }
   }
 });
 
@@ -4719,14 +4765,8 @@ function loadLastTimes(){
       if(match){
         el.querySelector('.last-time-vals').textContent=match.note+' ('+match.date+')';
         el.classList.add('has-data');
-        // Progressive overload nudge
-        var sugg=getOverloadSuggestion(key);
-        if(sugg && sugg.text){
-          var nudge=document.createElement('div');
-          nudge.className='overload-nudge';
-          nudge.innerHTML=sugg.text;
-          el.parentNode.insertBefore(nudge, el.nextSibling);
-        }
+        // v5.13: the progressive-overload cue now lives in the consolidated
+        // coach line (_applyCoachLine), not a separate nudge under last-time.
       } else {
         el.querySelector('.last-time-vals').textContent='';
         el.classList.remove('has-data');
@@ -4790,14 +4830,13 @@ function loadLastTimes(){
 
     // Render progression badges
     renderProgressBadges(day);
-    // F1 (v5.1): auto-progression pill / hold caption on stalled lifts
-    try{ _applyProgressionNudges(panel); }catch(e){}
+    // v5.13: single adaptive coach line (replaces the v5.1 pill/hold, the legacy
+    // overload-nudge, and the v5.9 aim caption — one row, picks the state).
+    try{ _applyCoachLine(panel); }catch(e){}
     // F2 (v5.1): re-derive PR halos from history for any set with typed values
     try{ panel.querySelectorAll('.v2-set').forEach(_checkSetPR); }catch(e){}
     // F3 (v5.1): inline plate strip under barbell working weight
     try{ _refreshPlateStrips(panel); }catch(e){}
-    // v5.9: 1RM-based "aim" caption per strength card
-    try{ _applyAimCaptions(panel); }catch(e){}
   });
 }
 // F3: live-update the plate strip as the Set-1 weight changes.

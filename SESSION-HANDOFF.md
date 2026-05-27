@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.12 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.13 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -94,9 +94,22 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
   an iOS client-side timer is suspended while backgrounded, so a true background alert needs push
   infra (out of scope); the win is accuracy + an alert the instant you return. Still queued (one
   **Post-Round-2 batch COMPLETE** (v5.3–v5.8). **Second insight batch in progress (v5.9–v5.12):**
-  v5.9–v5.12 ALL DONE. All derived/read-only (no new synced keys, no re-baseline). **Discuss
-  FEATURE-CREEP now** (owner flagged: the workout card now stacks several coaching cues —
-  overload nudge + 🎯 aim caption + F1 pill — a consolidation candidate).
+  v5.9–v5.13 ALL DONE. All derived/read-only (no new synced keys, no re-baseline).
+  **FEATURE-CREEP guardrails adopted (see discussion):** (1) the workout card is scarce hot-path
+  real estate — new insight features default to the Progress screen; (2) one coaching line, not
+  three; (3) one canonical metric per concept (e1RM=Epley, volume=w×r), reused via shared helpers,
+  never recomputed inline; (4) progressive disclosure / default-off for power features; (5) the
+  "no new synced keys / read-only" bar stays the default gate, writes get plan-mode.
+  - **v5.13 (DONE):** **consolidation / subtraction release.** Merged the three stacked workout-card
+    coaching cues (v5.1 progression pill/hold + legacy `.overload-nudge` + v5.9 `.aim-cap`) into a
+    SINGLE adaptive `.coach-line`. `coachState(exKey,meta)` is a priority ladder → `ready`
+    (tappable, fills sets via `_acceptProgression`; green/loud) → `hold` (stalled+hard, amber) →
+    `build` (below target reps, quiet) → `aim` (steady, quiet e1RM line). `_applyCoachLine(panel)`
+    paints exactly one line per card (clears legacy classes first). Replaced the old
+    `_applyProgressionNudges`/`_applyAimCaptions` painters + the inline overload-nudge insertion in
+    `loadLastTimes`. `getOverloadSuggestion`/`progressionNudge` kept (still used by deload + as
+    coachState inputs). Only the actionable `ready` state is loud; rest are calm muted text. Pure
+    runtime/DOM — no `EXERCISE_DATA` change, no synced keys, no re-baseline.
   - **v5.12 (DONE):** the weekly-volume trend chart in the Trends sub-tab already existed
     (`drawVolumeChart`, 12-week line + this-vs-prev-week delta pill). Added a **Weight ↔ Tonnage
     toggle** (`.vol-seg`): "Weight" = legacy sum of top-set weights ("lbs moved"); "Tonnage" =

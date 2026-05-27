@@ -563,22 +563,47 @@ function domIdByDataEx(doc, day, ex){
   w.close(); w2.close();
 })();
 
-// ── v5.9 · 1RM-based "aim" caption (best e1RM × target reps) ──
+// ── v5.13 · single adaptive coach line (consolidates nudge + pill + aim) ──
 (function(){
+  // Ready state: two sessions at the same weight, no reps → "ready to add weight".
   const store=makeStore({ 'gymlog_a': JSON.stringify([
-    {label:'D1',date:'Mon, May 25, 2026 at 6:00 PM',ts:2,entries:[{ex:'Chest press',note:'Set 1: 150 lbs x10reps'}]},
-    {label:'D1',date:'Fri, May 22, 2026 at 6:00 PM',ts:1,entries:[{ex:'Chest press',note:'Set 1: 145 lbs x10reps'}]}
+    {label:'D1',date:'Mon, May 25, 2026 at 6:00 PM',ts:2,entries:[{ex:'Chest press',note:'Set 1: 150 lbs'}]},
+    {label:'D1',date:'Fri, May 22, 2026 at 6:00 PM',ts:1,entries:[{ex:'Chest press',note:'Set 1: 150 lbs'}]}
   ]) });
   const w=loadApp(store);
   try{ w.loadLastTimes(); }catch(e){}
   const card=w.document.getElementById(domIdByDataEx(w.document,'a','Chest press'));
-  var cap=card && card.querySelector('.aim-cap');
-  ok(cap && /Aim ~\d+ .* \d+% of e1RM \d+/.test(cap.textContent),'v5.9 · aim caption = target weight + % of e1RM ('+(cap?cap.textContent:'none')+')');
+  var lines=card?card.querySelectorAll('.coach-line'):[];
+  ok(lines.length===1,'v5.13 · exactly one coach line per card (got '+lines.length+')');
+  var ready=card && card.querySelector('.coach-ready');
+  ok(ready && /Ready — try/.test(ready.textContent),'v5.13 · ready state renders ('+(ready?ready.textContent:'none')+')');
+  ok(ready && /Fill →/.test(ready.textContent),'v5.13 · ready state is tappable (Fill → affordance)');
+  // legacy stacked cues must be gone
+  ok(card && !card.querySelector('.overload-nudge,.prog-pill,.prog-hold,.aim-cap'),'v5.13 · no legacy stacked cues remain');
+  // tapping fills the set inputs
+  if(ready) ready.click();
+  var filled=card?[].slice.call(card.querySelectorAll('.rep-input[data-set]')).every(function(i){return i.value && parseFloat(i.value)>150;}):false;
+  ok(filled,'v5.13 · tapping ready fills the sets with the suggested weight');
+  ok(card && !card.querySelector('.coach-ready'),'v5.13 · ready line clears after accepting the fill');
+  w.close();
+  // Aim (quiet) fallback: last session has no reps but earlier reps give an e1RM.
+  const store2=makeStore({ 'gymlog_a': JSON.stringify([
+    {label:'D1',date:'Mon, May 25, 2026 at 6:00 PM',ts:3,entries:[{ex:'Chest press',note:'Set 1: 200 lbs'}]},
+    {label:'D1',date:'Fri, May 22, 2026 at 6:00 PM',ts:2,entries:[{ex:'Chest press',note:'Set 1: 150 lbs x8reps'}]},
+    {label:'D1',date:'Tue, May 19, 2026 at 6:00 PM',ts:1,entries:[{ex:'Chest press',note:'Set 1: 145 lbs x8reps'}]}
+  ]) });
+  const wa=loadApp(store2);
+  try{ wa.loadLastTimes(); }catch(e){}
+  const cardA=wa.document.getElementById(domIdByDataEx(wa.document,'a','Chest press'));
+  var quiet=cardA && cardA.querySelector('.coach-quiet');
+  ok(quiet && /Aim ~\d+ .* \d+% of e1RM \d+/.test(quiet.textContent),'v5.13 · quiet aim fallback shows e1RM target ('+(quiet?quiet.textContent:'none')+')');
+  wa.close();
+  // No history → no coach line at all.
   const w2=loadApp(makeStore({}));
   try{ w2.loadLastTimes(); }catch(e){}
   const card2=w2.document.getElementById(domIdByDataEx(w2.document,'a','Chest press'));
-  ok(card2 && !card2.querySelector('.aim-cap'),'v5.9 · no aim caption without logged history');
-  w.close(); w2.close();
+  ok(card2 && !card2.querySelector('.coach-line'),'v5.13 · no coach line without logged history');
+  w2.close();
 })();
 
 // ── v5.5 · tap exercise name → inline history + 1RM sparkline ──
