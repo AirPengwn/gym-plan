@@ -500,6 +500,24 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.9 · 1RM-based "aim" caption (best e1RM × target reps) ──
+(function(){
+  const store=makeStore({ 'gymlog_a': JSON.stringify([
+    {label:'D1',date:'Mon, May 25, 2026 at 6:00 PM',ts:2,entries:[{ex:'Chest press',note:'Set 1: 150 lbs x10reps'}]},
+    {label:'D1',date:'Fri, May 22, 2026 at 6:00 PM',ts:1,entries:[{ex:'Chest press',note:'Set 1: 145 lbs x10reps'}]}
+  ]) });
+  const w=loadApp(store);
+  try{ w.loadLastTimes(); }catch(e){}
+  const card=w.document.getElementById(domIdByDataEx(w.document,'a','Chest press'));
+  var cap=card && card.querySelector('.aim-cap');
+  ok(cap && /Aim ~\d+ .* \d+% of e1RM \d+/.test(cap.textContent),'v5.9 · aim caption = target weight + % of e1RM ('+(cap?cap.textContent:'none')+')');
+  const w2=loadApp(makeStore({}));
+  try{ w2.loadLastTimes(); }catch(e){}
+  const card2=w2.document.getElementById(domIdByDataEx(w2.document,'a','Chest press'));
+  ok(card2 && !card2.querySelector('.aim-cap'),'v5.9 · no aim caption without logged history');
+  w.close(); w2.close();
+})();
+
 // ── v5.5 · tap exercise name → inline history + 1RM sparkline ──
 (function(){
   const store=makeStore({ 'gymlog_a': JSON.stringify([

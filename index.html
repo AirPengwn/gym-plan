@@ -622,6 +622,8 @@ body.dark .overload-nudge{background:#0F3A2E;color:#5DD8A0}
 .prog-pill:active{filter:brightness(.92)}
 .prog-hold{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#8A6A00;background:rgba(224,168,0,.15);border-radius:8px;padding:2px 8px;margin:0 0 6px}
 body.dark .prog-hold{color:#E0A800}
+/* v5.9: 1RM-based "aim" guidance caption (doesn't change the saved prefill) */
+.aim-cap{font-size:10.5px;font-weight:600;color:var(--muted);margin:0 0 6px;letter-spacing:.01em}
 /* v5.5: inline exercise history + 1RM sparkline (tap the exercise name) */
 .ex-name[role="button"]{cursor:pointer}
 .ex-name-hist{font-size:10px;opacity:.5;margin-left:5px;vertical-align:1px}
@@ -1020,7 +1022,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.8</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.9</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -4556,6 +4558,25 @@ function _applyProgressionNudges(panel){
     }
   });
 }
+// v5.9: a small "aim" caption from best est-1RM × the exercise's target reps —
+// guidance only (doesn't touch the saved prefill). Hidden until there's history.
+function _applyAimCaptions(panel){
+  if(!panel) return;
+  panel.querySelectorAll('.item.v2-card').forEach(function(card){
+    var old=card.querySelector('.aim-cap'); if(old) old.parentNode.removeChild(old);
+    var dx=card.querySelector('.rep-input[data-ex]'); if(!dx) return;   // strength cards only
+    var exKey=normalizeEx(dx.getAttribute('data-ex')||''); if(!exKey) return;
+    var best=0; try{ best=historicalBestEst(exKey); }catch(e){}
+    var t=null; try{ t=getExerciseTargets()[exKey]; }catch(e){}
+    var reps=t&&t.reps;
+    if(!(best>0) || !reps) return;
+    var aim=Math.round((best/(1+reps/30))/5)*5;        // Epley inverse → working weight for target reps
+    var pct=Math.round(100/(1+reps/30));
+    var cap=document.createElement('div'); cap.className='aim-cap';
+    cap.textContent='🎯 Aim ~'+aim+' · '+pct+'% of e1RM '+Math.round(best);
+    var sets=card.querySelector('.v2-sets'); if(sets) sets.insertBefore(cap, sets.firstChild);
+  });
+}
 function _acceptProgression(card, target){
   card.querySelectorAll('.rep-input[data-set]').forEach(function(inp){
     inp.value=String(target); inp.style.color=''; inp.style.fontStyle='';
@@ -4761,6 +4782,8 @@ function loadLastTimes(){
     try{ panel.querySelectorAll('.v2-set').forEach(_checkSetPR); }catch(e){}
     // F3 (v5.1): inline plate strip under barbell working weight
     try{ _refreshPlateStrips(panel); }catch(e){}
+    // v5.9: 1RM-based "aim" caption per strength card
+    try{ _applyAimCaptions(panel); }catch(e){}
   });
 }
 // F3: live-update the plate strip as the Set-1 weight changes.

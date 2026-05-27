@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.8 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.9 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -93,7 +93,15 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
   beep (Web Audio, unlocked on the Rest tap) / toast / haptic. **No background notification** —
   an iOS client-side timer is suspended while backgrounded, so a true background alert needs push
   infra (out of scope); the win is accuracy + an alert the instant you return. Still queued (one
-  **Post-Round-2 batch COMPLETE** (v5.3–v5.8).
+  **Post-Round-2 batch COMPLETE** (v5.3–v5.8). **Second insight batch in progress (v5.9–v5.12):**
+  v5.9 done; queued v5.10 strength standards (Lifts), v5.11 monthly recap (Progress), v5.12 weekly
+  volume trend (Trends). All derived/read-only (no new synced keys, no re-baseline). **Discuss
+  FEATURE-CREEP after v5.12** (owner flagged: the workout card now stacks several coaching cues —
+  overload nudge + 🎯 aim caption + F1 pill — a consolidation candidate).
+  - **v5.9 (DONE):** `_applyAimCaptions` adds a muted "🎯 Aim ~W · NN% of e1RM E" line per strength
+    card (runtime, in `loadLastTimes`) — `historicalBestEst` × the exercise's target reps (Epley
+    inverse, `best/(1+reps/30)`). Guidance only — does NOT change the saved last-weight prefill
+    (owner picked the info-caption option over replacing the ghost). Hidden until there's history.
   - **v5.8 (DONE):** cloud writes from THIS device serialize via `_serializeCloudWrite` (an
     in-flight promise chain) so two read-modify-write ops can't overlap + clobber each other
     (the realistic self-race). Wrapped: `syncToJbin` (both paths), `pushPlanToCloud`,
