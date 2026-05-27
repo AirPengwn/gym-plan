@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.1.1 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.2 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -53,13 +53,28 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
   - **Sync:** `rest_overrides_v1` + `plate_setup_v1` mirrored in all 7 payload spots
     (`_mergeRestOverrides` union for the object map; single-object semantics for plate setup).
     All CSS/JS/runtime-DOM — stock card markup untouched, so **no verify.js re-baseline**.
-- **Phases C/D:** NOT started.
-  - **Phase C → v5.2:** C2 Settings→Units (new synced key `units_v1`, replaces per-set lbs/kg
-    toggle), C1 card-density collapse (fold location+demo into RPE/notes footer), M1 More-tab
-    regroup (3 `<h3 class="more-group">` + 2 consolidations), L1 notes search (Sessions sub-tab).
-  - **Phase D → v5.3+:** R1 retirement (legacy non-v2 RPE + `plansync_spot`/`patch5`/`patchN`
-    gate blocks) — ⚠ one gate per commit, verify.js baseline inline, "do this CAREFULLY".
-  - Remaining new synced key: `units_v1` (C2). No others, no migrations.
+- **Phase C → v5.2 (DONE, pending owner verify):** card surgery + nav.
+  - **C2** Settings → global **Units** (`units_v1` synced key, default lbs). `getUnits`/`setUnits`;
+    `getUnitForInput` now returns the global unit (per-set toggle retired). Display/entry only —
+    **no conversion, no migration**; saved notes keep their on-disk unit. Synced in all 7 spots
+    (scalar). Units control in More → Appearance.
+  - **C1** card-density collapse (in `buildCardHTML_v2`): removed the per-set unit toggle; set-rows
+    column header shows the unit ("Weight · lb/kg"); folded location + ▶ demo into the RPE/notes
+    footer (chevron "RPE · notes · location · ▶ demo"); ⋯ keeps Feeling + stretch links.
+  - **M1** More-tab regroup: 3 `<h3 class="more-group">` headers (Data & sync · Customize · About
+    & advanced). Cloud-sync row gained a device-role secondary line (primary/reader). Group IDs
+    kept (openSync/openSettings scroll targets).
+  - **L1** notes search: search field atop the Sessions sub-tab; substring + case-insensitive over
+    per-exercise notes + session note; `<mark>` highlight via `_hl` (operates on escaped text).
+  - **KEY ARCHITECTURE NOTE:** `EXERCISE_DATA` is the **v1** card blob (what `verify.js` gates);
+    the live cards are re-rendered from it via **`buildCardHTML_v2`** (see [index.html](index.html)
+    `renderItemHTML`/`USE_NEW_CARD`). So editing `buildCardHTML_v2` changes ALL cards (stock +
+    dynamic) **without a verify.js re-baseline** — C1 needed none. Only `funcsmoke` (which asserts
+    on the live v2 layout) needed updating.
+- **Phase D → v5.3+:** NOT started. R1 retirement (legacy non-v2 RPE + `plansync_spot`/`patch5`/
+  `patchN` gate blocks) — ⚠ one gate per commit, verify.js baseline inline, "do this CAREFULLY".
+  **All Round-2 synced keys now shipped** (`rest_overrides_v1`, `plate_setup_v1`, `units_v1`); no
+  new keys remain. No migrations.
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
 logged history.
