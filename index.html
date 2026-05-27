@@ -383,6 +383,11 @@ body.dark .day-bal-hint{background:#252540}
 .prog-hero{width:100%;text-align:center;font-size:13px;font-weight:600;color:var(--muted);padding:2px 0}
 .prog-hero b{color:var(--text);font-weight:800;font-size:15px}
 .prog-hero-sep{margin:0 9px;color:var(--border);font-weight:400}
+.prog-recap{width:100%;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:2px 0 8px}
+.prog-recap-h{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.prog-recap-row{display:flex;flex-wrap:wrap;gap:6px}
+.prog-recap-s{font-size:12px;font-weight:600;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:3px 10px}
+.prog-recap-s b{color:var(--text);font-weight:800}
 .prog-day-card{background:#fff;border:0.5px solid #E8E8E4;border-radius:12px;margin-bottom:1rem;overflow:hidden}
 .prog-day-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
 .prog-day-header:hover{background:#FAFAF8}
@@ -1024,7 +1029,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.10</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.11</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -1062,6 +1067,8 @@ body.dark #pc-result{color:var(--text)}
   <div class="prog-stats" id="prog-stats-row">
     <div id="prog-hero" class="prog-hero"></div>
   </div>
+  <!-- v5.11: quiet "this month" recap (sessions · PRs · volume · bodyweight Δ) -->
+  <div id="prog-recap" class="prog-recap" hidden></div>
 
   <!--
     Tab labels (Sessions / Lifts / Trends) intentionally diverge from internal
@@ -7483,6 +7490,9 @@ function _syncProgTabsVisible(){
 function renderProgress(){
   try{ _syncProgTabsVisible(); }catch(e){}
   var total=0, allItems=[], prTotal=0;
+  // v5.11: "this month" accumulators
+  var _mNow=new Date(), _monthStart=new Date(_mNow.getFullYear(), _mNow.getMonth(), 1).getTime();
+  var mSess=0, mPR=0, mVol=0;
   getDays().forEach(function(day){
     var saved=getSaved(day);
     total+=saved.length;
@@ -7490,10 +7500,40 @@ function renderProgress(){
     // Keep the filter-chip per-day count updating (functionality contract).
     var cEl=document.getElementById('prog-count-'+day); if(cEl) cEl.textContent=n;
     saved.forEach(function(s, idx){
-      allItems.push({day:day, idx:idx, sess:s, ts:sessTs(s)});
-      try{ prTotal += _sessionPRCount(day, sessTs(s), s); }catch(e){}
+      var ts=sessTs(s);
+      allItems.push({day:day, idx:idx, sess:s, ts:ts});
+      try{ prTotal += _sessionPRCount(day, ts, s); }catch(e){}
+      if(ts>=_monthStart){
+        mSess++;
+        try{ mPR += _sessionPRCount(day, ts, s); }catch(e){}
+        (s.entries||[]).forEach(function(e){
+          if(e && e.note && e.note.indexOf('Set ')===0){ try{ parseSetWR(e.note).forEach(function(p){ if(p.w>0 && p.r>0) mVol+=p.w*p.r; }); }catch(_e){} }
+        });
+      }
     });
   });
+  // v5.11: render the quiet monthly recap
+  try{
+    var recapEl=document.getElementById('prog-recap');
+    if(recapEl){
+      if(!mSess){ recapEl.hidden=true; recapEl.innerHTML=''; }
+      else {
+        var bw=[]; try{ bw=getMeasurements().filter(function(m){return m&&m.type==='weight'&&m.value>0;}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}); }catch(e){}
+        var bwThis=bw.filter(function(m){ return Date.parse(m.date)>=_monthStart; });
+        var bwDelta=null, bwUnit='';
+        if(bwThis.length>=2){ bwDelta=Math.round((bwThis[bwThis.length-1].value-bwThis[0].value)*10)/10; bwUnit=bwThis[0].unit||''; }
+        else if(bwThis.length===1){ var before=bw.filter(function(m){return Date.parse(m.date)<_monthStart;}); if(before.length){ bwDelta=Math.round((bwThis[0].value-before[before.length-1].value)*10)/10; bwUnit=bwThis[0].unit||''; } }
+        var volTxt=mVol>=10000?((Math.round(mVol/100)/10)+'k'):String(Math.round(mVol));
+        var mname=_mNow.toLocaleDateString('en-US',{month:'long'});
+        var bits=['<span class="prog-recap-s"><b>'+mSess+'</b> session'+(mSess===1?'':'s')+'</span>'];
+        if(mPR>0) bits.push('<span class="prog-recap-s"><b>'+mPR+'</b> PR'+(mPR===1?'':'s')+'</span>');
+        bits.push('<span class="prog-recap-s"><b>'+volTxt+'</b> volume</span>');
+        if(bwDelta!=null && bwDelta!==0) bits.push('<span class="prog-recap-s"><b>'+(bwDelta>0?'+':'')+bwDelta+(bwUnit?' '+bwUnit:'')+'</b> bodyweight</span>');
+        recapEl.innerHTML='<div class="prog-recap-h">This month · '+mname+'</div><div class="prog-recap-row">'+bits.join('')+'</div>';
+        recapEl.hidden=false;
+      }
+    }
+  }catch(e){}
   // v4.1: hero metric line (sessions · PRs · streak) — replaces the stat-box grid.
   var heroEl=document.getElementById('prog-hero');
   if(heroEl){

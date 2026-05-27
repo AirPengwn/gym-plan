@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.10 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.11 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -94,10 +94,15 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
   an iOS client-side timer is suspended while backgrounded, so a true background alert needs push
   infra (out of scope); the win is accuracy + an alert the instant you return. Still queued (one
   **Post-Round-2 batch COMPLETE** (v5.3–v5.8). **Second insight batch in progress (v5.9–v5.12):**
-  v5.9 done; queued v5.10 strength standards (Lifts), v5.11 monthly recap (Progress), v5.12 weekly
-  volume trend (Trends). All derived/read-only (no new synced keys, no re-baseline). **Discuss
-  FEATURE-CREEP after v5.12** (owner flagged: the workout card now stacks several coaching cues —
-  overload nudge + 🎯 aim caption + F1 pill — a consolidation candidate).
+  v5.9/5.10/5.11 done; queued v5.12 weekly volume trend (Trends). All derived/read-only (no new
+  synced keys, no re-baseline). **Discuss FEATURE-CREEP after v5.12** (owner flagged: the workout
+  card now stacks several coaching cues — overload nudge + 🎯 aim caption + F1 pill — a
+  consolidation candidate).
+  - **v5.11 (DONE):** quiet monthly recap card at the top of the Progress screen (`#prog-recap`,
+    between `#prog-hero` and the sub-tabs). `renderProgress()` accumulates this-calendar-month
+    sessions/PRs/volume (sessions with `sessTs(s)>=monthStart`; volume from `parseSetWR` w×r) +
+    bodyweight Δ (first→last this-month weight measurement, else vs the last prior reading). Renders
+    "THIS MONTH · {Month}" with pill chips; hidden when no sessions this month. Read-only.
   - **v5.10 (DONE):** strength-standard chip in the Lifts tab — `strengthLevel(exKey,e1rm,bw)` vs
     `STRENGTH_STANDARDS` (×bodyweight thresholds, **canonical barbell lifts only** — bench/squat/
     deadlift/OHP/row; machines/variations don't match), using `_latestBodyweight()`. Shows
