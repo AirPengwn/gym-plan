@@ -635,6 +635,18 @@ body.dark .ex-hist-panel{background:var(--primary-tint);border-color:var(--borde
 .exh-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;font-size:11.5px;color:var(--text);font-variant-numeric:tabular-nums}
 .exh-row .exh-d{color:var(--muted);font-weight:600}
 .exh-row .exh-e{color:var(--primary-2);font-weight:700}
+/* v5.7: swap exercise — ⋯ overflow button + picker modal */
+.v2-swap-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--primary);background:none;border:0;padding:6px 2px;cursor:pointer;font-family:inherit}
+body.dark .v2-swap-btn{color:var(--primary-2)}
+.swap-list{display:flex;flex-direction:column;gap:6px;margin:4px 0 2px;max-height:50vh;overflow:auto}
+.swap-cand{display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;text-align:left;padding:9px 11px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:inherit;cursor:pointer}
+.swap-cand:active{background:var(--primary-tint)}
+body.dark .swap-cand{background:var(--surface);border-color:var(--border)}
+.swap-cand-n{font-size:13px;font-weight:700}
+.swap-cand-tag{font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--good);background:var(--ok-tint,#E1F5EE);border-radius:3px;padding:1px 5px;margin-left:5px;vertical-align:1px}
+body.dark .swap-cand-tag{background:#0F3A2E;color:#5DD8A0}
+.swap-cand-r{font-size:11px;color:var(--muted)}
+.swap-empty{font-size:12.5px;color:var(--muted);font-style:italic;padding:10px 2px}
 /* F2 (v5.1): PR moment — halo + tag on a set whose est. 1RM beats history */
 .v2-set{position:relative}
 .v2-set.pr .rep-input,.v2-set.pr .reps-actual-input{background:#FFF8E1;border-color:#F4D38A}
@@ -1008,7 +1020,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.6</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.7</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -1976,9 +1988,11 @@ function buildCardHTML_v2(rec){
   // ⋯ overflow). ⋯ keeps the secondary feedback (Feeling + stretch links). Footer
   // chevron names what's inside.
   var footLabel='RPE · notes'+(loc?' · location':'')+(demo?' · ▶ demo':'');
+  // v5.7: "Swap exercise" lives in the ⋯ overflow (machine taken / can't do it).
+  var swapBtn='<button type="button" class="v2-swap-btn" onclick="openSwapPicker(\''+id+'\',\''+d+'\')">🔄 Swap exercise</button>';
   return head
    +'    <div class="fields-wrap">\n'
-   +((stretch||pain)?('      <div class="v2-ovf" hidden>'+stretch+pain+'</div>\n'):'')
+   +'      <div class="v2-ovf" hidden>'+stretch+pain+swapBtn+'</div>\n'
    +'      <div class="last-time" id="lt-'+_dash(hist)+'"><span class="last-time-label">Last session:</span><span class="last-time-vals"></span></div>\n'
    +'      <div class="v2-sets"><div class="v2-sets-head"><div></div><div class="l">Weight · '+unitLbl+'</div><div>Reps</div></div><div class="rep-row">'+rows+'</div></div>\n'
    +'      <button type="button" class="v2-foot-toggle" aria-expanded="false" onclick="cardToggle(this,\'foot\')">'+footLabel+' <span class="cv" aria-hidden="true">▾</span></button>\n'
@@ -2964,6 +2978,86 @@ function planRemoveFromDay(domId, day){
   _planCommit('Removed “'+nm+'” from '+getDayName(day));
 }
 
+// ── v5.7: swap an exercise for a metadata-matched alternative ────────────────
+// Permanent + reversible: the original's overlay instance is dropped (history in
+// gymlog_* is untouched; re-add it anytime from the library) and the alternative
+// takes its slot. _planCommit reloads, and the boot restoreDraft brings back the
+// in-progress values for the surviving exercises on the day.
+function _musOf(name){
+  var c=_catalogFind(name)||_libraryFind(name);
+  if(c && Array.isArray(c.muscles) && c.muscles.length) return c.muscles;
+  return _musclesByName(name)||[];
+}
+function _swapCandidates(hist, day){
+  var meta=exerciseMeta(hist), pattern=String(meta.pattern||'').toLowerCase();
+  var baseKey=normalizeEx(hist), baseSet={}; _musOf(hist).forEach(function(m){baseSet[m]=1;});
+  var curated={}; (meta.alternatives||[]).forEach(function(n){ curated[normalizeEx(n)]=1; });
+  var plan=getEffectivePlan(), onDay={};
+  (plan.order[day]||[]).forEach(function(id){ var r=plan.ex[id]; if(r) onDay[normalizeEx(r.histEx||r.name)]=1; });
+  var pool={};
+  function add(name){ var k=normalizeEx(name); if(!k||k===baseKey||onDay[k]||pool[k]) return; pool[k]=name; }
+  try{ EXERCISE_CATALOG.forEach(function(c){ if(c&&c.name) add(c.name); }); }catch(e){}
+  try{ getUserLibrary().forEach(function(c){ if(c&&c.name&&!c.deleted) add(c.name); }); }catch(e){}
+  (meta.alternatives||[]).forEach(add);
+  var out=[];
+  Object.keys(pool).forEach(function(k){
+    var name=pool[k], m=exerciseMeta(name), p=String(m.pattern||'').toLowerCase(), isCur=!!curated[k];
+    if(!isCur){
+      if(pattern && p && p!==pattern) return;       // different movement → not a swap
+      if(pattern && !p) return;                       // unknown pattern, not curated → skip
+    }
+    var mus=_musOf(name), overlap=0; mus.forEach(function(x){ if(baseSet[x]) overlap++; });
+    if(!isCur && overlap===0 && p!==pattern) return;  // nothing in common → drop
+    var sameEquip=(m.equipment && String(m.equipment).toLowerCase()===String(meta.equipment||'').toLowerCase())?1:0;
+    out.push({name:name, score:(isCur?100:0)+overlap*10+sameEquip*2+(p===pattern?5:0), curated:isCur, pattern:p, muscles:mus.slice(0,3)});
+  });
+  out.sort(function(a,b){ return b.score-a.score || (a.name<b.name?-1:1); });
+  return out.slice(0,6);
+}
+var _swapCtx=null, _swapCands=[];
+function openSwapPicker(domId, day){
+  var card=document.getElementById(domId); if(!card) return;
+  var dx=card.querySelector('[data-ex]'); var hist=((dx&&dx.getAttribute('data-ex'))||'').replace(/-notes$/,'');
+  if(!hist){ showToast('Can’t resolve this exercise'); return; }
+  _swapCtx={domId:domId, day:day, hist:hist};
+  _swapCands=_swapCandidates(hist, day);
+  var t=document.getElementById('swap-title'); if(t) t.textContent='Swap “'+(prettyExName(hist)||hist)+'”';
+  var list=document.getElementById('swap-list');
+  if(!_swapCands.length){ list.innerHTML='<div class="swap-empty">No close matches found for this movement.</div>'; }
+  else { list.innerHTML=_swapCands.map(function(c,i){
+    var reason=(c.pattern||'')+((c.muscles&&c.muscles.length)?(' · '+c.muscles.join(', ')):'');
+    return '<button type="button" class="swap-cand" onclick="doSwap('+i+')">'
+      +'<span class="swap-cand-n">'+_esc(c.name)+(c.curated?' <span class="swap-cand-tag">suggested</span>':'')+'</span>'
+      +'<span class="swap-cand-r">'+_esc(reason)+'</span></button>';
+  }).join(''); }
+  document.getElementById('swap-overlay').classList.add('show');
+}
+function doSwap(i){ var c=_swapCtx, cand=_swapCands[i]; closeSwap(); if(c&&cand) swapExercise(c.domId, c.day, cand.name); }
+function closeSwap(){ var o=document.getElementById('swap-overlay'); if(o) o.classList.remove('show'); }
+function swapExercise(domId, day, altName){
+  if(!altName) return;
+  try{ saveDraft(day); }catch(e){}   // capture in-progress work before the reload
+  var plan=getEffectivePlan();
+  var nh=normalizeEx(altName);
+  var srcIds=Object.keys(plan.ex).filter(function(k){var r=plan.ex[k];return normalizeEx(r.histEx||r.name)===nh;});
+  var src=srcIds.length?plan.ex[srcIds[0]]:null;
+  var cat=src?null:(_catalogFind(altName)||_libraryFind(altName));
+  var realHist=src?(src.histEx||altName):altName;
+  var fields=src ? {name:src.name,sub:src.sub,loc:src.loc,video:src.video,badge:src.badge,cat:src.cat,mins:src.mins,muscles:src.muscles,sets:src.sets,type:src.type,equipment:src.equipment,pattern:src.pattern,unilateral:src.unilateral,difficulty:src.difficulty,alternatives:src.alternatives}
+    : cat ? {name:cat.name,sub:cat.sub||'',loc:cat.loc||'',video:cat.video||_ytSearch(cat.name+' proper form how to'),badge:cat.badge||null,cat:cat.cat||'',mins:(cat.mins!=null?cat.mins:null),muscles:(cat.muscles||[]).slice(),sets:cat.sets||3,type:cat.type||'strength',equipment:cat.equipment||'',pattern:cat.pattern||'',unilateral:!!cat.unilateral,difficulty:cat.difficulty||'',alternatives:(cat.alternatives||[]).slice()}
+    : {name:(prettyExName(altName)||altName),sub:'',loc:'',video:_ytSearch((prettyExName(altName)||altName)+' proper form how to'),badge:null,cat:'',mins:null,muscles:[],sets:3,type:'strength'};
+  var rec=_instanceRec(day, null, realHist, (fields.type==='cardio'?'notes':fields.type), fields);
+  var ov=_ovGet();
+  var ord=(ov.order && ov.order[day]) ? ov.order[day].slice() : ((plan.order[day]||[]).slice());
+  var pos=ord.indexOf(domId); if(pos<0) pos=ord.length;
+  ord=ord.filter(function(x){return x!==domId;});
+  ord.splice(Math.min(pos,ord.length), 0, rec.domId);
+  ov.order[day]=ord;
+  if(ov.ex[domId]) delete ov.ex[domId];   // overlay instance dropped; gymlog_* history kept
+  ov.ex[rec.domId]=rec;
+  localStorage.setItem('plan_v2', JSON.stringify(ov));
+  _planCommit('Swapped to “'+fields.name+'”');
+}
 function planReorder(day, domId, dir){
   var ov=_ovGet();
   var ord=_orderArr(ov,day);
@@ -9413,6 +9507,16 @@ function showPRToast(prs){
       <button class="modal-btn-secondary" onclick="restOvrClose()">Cancel</button>
     </div>
     <button class="patch5-rerun-btn" style="margin-top:10px" onclick="restOvrReset()">Reset to auto</button>
+  </div>
+</div>
+
+<!-- v5.7: swap exercise → metadata-matched alternatives -->
+<div class="modal-overlay" id="swap-overlay" onclick="if(event.target===this)closeSwap()">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title" id="swap-title">Swap exercise</div>
+    <div class="modal-sub">Close matches — same movement, similar muscles. Your plan updates; the original's history is kept and you can re-add it anytime from the library.</div>
+    <div id="swap-list" class="swap-list"></div>
+    <div class="modal-btn-row"><button class="modal-btn-secondary" onclick="closeSwap()">Cancel</button></div>
   </div>
 </div>
 
