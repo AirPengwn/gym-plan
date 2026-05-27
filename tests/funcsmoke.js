@@ -514,6 +514,32 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.12 · weekly volume metric toggle (weight ↔ tonnage) ──
+(function(){
+  var now=Date.now();
+  const store=makeStore({ 'gymlog_a': JSON.stringify([
+    {label:'D1',date:'recent',ts:now,entries:[{ex:'Barbell bench press',note:'Set 1: 200 lbs x5reps'}]}
+  ]) });
+  const w=loadApp(store);
+  // default mode = weight (legacy)
+  ok(w._volMode()==='weight','v5.12 · default volume mode is weight');
+  // weight mode sums top-set weights (200); tonnage = 200*5 = 1000
+  var sess=JSON.parse(store.getItem('gymlog_a'))[0];
+  ok(w._sessionVolume(sess,'weight')===200,'v5.12 · weight mode sums set weight ('+w._sessionVolume(sess,'weight')+')');
+  ok(w._sessionVolume(sess,'tonnage')===1000,'v5.12 · tonnage mode = weight×reps ('+w._sessionVolume(sess,'tonnage')+')');
+  // toggling persists and changes _weeklyVolumeNow
+  var wnWeight=w._weeklyVolumeNow().curr;
+  w.setVolMode('tonnage');
+  ok(w._volMode()==='tonnage','v5.12 · setVolMode persists tonnage');
+  var wnTon=w._weeklyVolumeNow().curr;
+  ok(wnTon>wnWeight,'v5.12 · tonnage weekly total exceeds weight-only ('+wnTon+' > '+wnWeight+')');
+  // toggle renders in the Trends tab
+  try{ w.switchProgTab && w.switchProgTab('stats'); w.renderStats(); }catch(e){}
+  var seg=w.document.querySelector('.vol-seg');
+  ok(seg && seg.querySelectorAll('.vol-seg-btn').length===2,'v5.12 · two-button volume toggle renders in Trends');
+  w.close();
+})();
+
 // ── v5.11 · monthly recap card in Progress ──
 (function(){
   var now=Date.now();

@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.11 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.12 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -94,10 +94,15 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
   an iOS client-side timer is suspended while backgrounded, so a true background alert needs push
   infra (out of scope); the win is accuracy + an alert the instant you return. Still queued (one
   **Post-Round-2 batch COMPLETE** (v5.3–v5.8). **Second insight batch in progress (v5.9–v5.12):**
-  v5.9/5.10/5.11 done; queued v5.12 weekly volume trend (Trends). All derived/read-only (no new
-  synced keys, no re-baseline). **Discuss FEATURE-CREEP after v5.12** (owner flagged: the workout
-  card now stacks several coaching cues — overload nudge + 🎯 aim caption + F1 pill — a
-  consolidation candidate).
+  v5.9–v5.12 ALL DONE. All derived/read-only (no new synced keys, no re-baseline). **Discuss
+  FEATURE-CREEP now** (owner flagged: the workout card now stacks several coaching cues —
+  overload nudge + 🎯 aim caption + F1 pill — a consolidation candidate).
+  - **v5.12 (DONE):** the weekly-volume trend chart in the Trends sub-tab already existed
+    (`drawVolumeChart`, 12-week line + this-vs-prev-week delta pill). Added a **Weight ↔ Tonnage
+    toggle** (`.vol-seg`): "Weight" = legacy sum of top-set weights ("lbs moved"); "Tonnage" =
+    Σ weight×reps (matches the v5.11 recap metric). Mode stored locally in `vol_chart_mode`
+    (NOT synced); `_sessionVolume(session,mode)` is the shared volume helper; `_weeklyVolumeNow`
+    + `drawVolumeChart` both honor it. Default stays 'weight' (no change to the prior view).
   - **v5.11 (DONE):** quiet monthly recap card at the top of the Progress screen (`#prog-recap`,
     between `#prog-hero` and the sub-tabs). `renderProgress()` accumulates this-calendar-month
     sessions/PRs/volume (sessions with `sessTs(s)>=monthStart`; volume from `parseSetWR` w×r) +
