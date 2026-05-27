@@ -985,7 +985,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.2</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.3</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -7677,8 +7677,9 @@ function mergeCloudIntoPayload(cloud){
     var lc=p['gymlog_draft_'+day], cc=cloud['gymlog_draft_'+day];
     if(draftWeight(cc)>draftWeight(lc)) p['gymlog_draft_'+day]=cc;
   });
-  // append-only history → union (never loses an entry)
-  p['body_measurements']=unionArr(p['body_measurements'], cloud['body_measurements']);
+  // body measurements: one entry per (date,type), newest write wins (v5.3)
+  p['body_measurements']=_mergeMeasurements(p['body_measurements'], cloud['body_measurements']);
+  // milestones append-only → union (never loses an entry)
   p['earned_milestones']=unionArr(p['earned_milestones'], cloud['earned_milestones']);
   // current-state config (archive/order): local is authoritative so that
   // un-archiving/reordering sticks. Only fall back to cloud on a true wipe
@@ -8729,7 +8730,55 @@ function getMeasurements(){
 
 function saveMeasurements(data){
   localStorage.setItem('body_measurements', JSON.stringify(data));
-  syncToJbin(function(ok){ if(!ok) showToast('Saved locally (cloud sync failed)'); });
+  // v5.3: body measurements sync from ANY device (sessions stay phone-only).
+  pushMeasurementsToCloud();
+}
+// Merge two measurement arrays to AT MOST ONE entry per (date,type).
+// Conflicts (same date+type, different value) resolve newest-write-wins via the
+// per-entry `ts` (missing ts = oldest). Used by the background/boot merge.
+function _mergeMeasurements(a, b){
+  a=Array.isArray(a)?a:[]; b=Array.isArray(b)?b:[];
+  var byKey={};
+  a.concat(b).forEach(function(m){
+    if(!m||!m.date||!m.type) return;
+    var k=m.type+'|'+m.date, cur=byKey[k];
+    if(!cur || (m.ts||0) >= (cur.ts||0)) byKey[k]=m;
+  });
+  return Object.keys(byKey).map(function(k){return byKey[k];})
+    .sort(function(x,y){return x.date<y.date?-1:x.date>y.date?1:0;});
+}
+function _refreshMeasUI(){
+  try{ renderMeasurements(); }catch(e){}
+  ['waist','bodyfat'].forEach(function(t){ try{ renderGenericMeas(t); }catch(e){} });
+}
+// Push body measurements from ANY device. Surgical: pull cloud, reconcile ONLY
+// body_measurements (one per date+type), write back — never touches sessions/
+// plan, so a reader can't clobber history. On a same date+type value conflict
+// with the cloud, ask whether to replace (you're right there after saving).
+function pushMeasurementsToCloud(){
+  if(typeof TEST_MODE!=='undefined' && TEST_MODE) return;
+  cloudGET().then(function(cloud){
+    cloud=(cloud&&typeof cloud==='object')?cloud:{};
+    var cloudMeas=Array.isArray(cloud['body_measurements'])?cloud['body_measurements']:[];
+    var cloudByKey={}; cloudMeas.forEach(function(m){ if(m&&m.date&&m.type) cloudByKey[m.type+'|'+m.date]=m; });
+    var resolved={}; getMeasurements().forEach(function(m){ if(m&&m.date&&m.type) resolved[m.type+'|'+m.date]=m; });
+    Object.keys(resolved).forEach(function(k){
+      var lm=resolved[k], cm=cloudByKey[k];
+      if(cm && (String(cm.value)!==String(lm.value) || (cm.unit||'')!==(lm.unit||''))){
+        var keepMine=confirm('The cloud already has a '+lm.type+' for '+lm.date+' ('+cm.value+(cm.unit?' '+cm.unit:'')+').\n\nReplace it with your value ('+lm.value+(lm.unit?' '+lm.unit:'')+')?');
+        if(keepMine){ lm.ts=Date.now(); } else { resolved[k]=cm; }
+      }
+    });
+    var finalByKey={};
+    cloudMeas.forEach(function(m){ if(m&&m.date&&m.type) finalByKey[m.type+'|'+m.date]=m; });
+    Object.keys(resolved).forEach(function(k){ finalByKey[k]=resolved[k]; });
+    var merged=Object.keys(finalByKey).map(function(k){return finalByKey[k];})
+      .sort(function(x,y){return x.date<y.date?-1:x.date>y.date?1:0;});
+    localStorage.setItem('body_measurements', JSON.stringify(merged));
+    cloud['body_measurements']=merged;
+    if(!cloud.__schema) cloud.__schema=SCHEMA_VERSION;
+    return _rawCloudPUT(cloud).then(function(){ _refreshMeasUI(); });
+  }).catch(function(){ /* best-effort safety net — never disrupt the app */ });
 }
 
 // ── Weight (existing, lbs/kg toggle) ────────────────────────────────
@@ -8745,7 +8794,7 @@ function saveMeasurement(){
     if(!confirm('You already have a weight entry for this date. Replace it?')) return;
     data.splice(dupIdx,1);
   }
-  data.push({type:'weight',date:dateVal,value:val,unit:measUnit});
+  data.push({type:'weight',date:dateVal,value:val,unit:measUnit,ts:Date.now()});
   data.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
   saveMeasurements(data);
   document.getElementById('meas-weight-val').value='';
@@ -8777,7 +8826,7 @@ function saveGenericMeas(type, valId, dateId, unit){
     if(!confirm('You already have an entry for this date. Replace it?')) return;
     data.splice(dupIdx,1);
   }
-  data.push({type:type,date:dateVal,value:val,unit:unit});
+  data.push({type:type,date:dateVal,value:val,unit:unit,ts:Date.now()});
   data.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
   saveMeasurements(data);
   document.getElementById(valId).value='';
