@@ -411,7 +411,10 @@ function domIdByDataEx(doc, day, ex){
   // type higher → ↑ +N
   var w1=it.querySelector('.rep-input[data-set="1"]'); w1.value='100'; w1.dispatchEvent(new w.Event('input',{bubbles:true}));
   ok(/↑ \+10/.test(nudge.textContent) && nudge.className.indexOf('up')>=0,'planned>last → ↑ +10 green ('+nudge.textContent+')');
-  // type lower → ↓ −N
+  // type lower → ↓ −N. (v5.1/L3: boot now runs loadLastTimes, which ghost-prefills
+  // the OTHER sets with last values; the nudge plans off max(all sets), so clear
+  // the siblings to isolate Set 1 as the planned weight.)
+  it.querySelectorAll('.rep-input').forEach(function(i){ if(i!==w1) i.value=''; });
   w1.value='80'; w1.dispatchEvent(new w.Event('input',{bubbles:true}));
   ok(/↓ -10/.test(nudge.textContent) && nudge.className.indexOf('down')>=0,'planned<last → ↓ -10 warn ('+nudge.textContent+')');
   // no-history exercise → no pill

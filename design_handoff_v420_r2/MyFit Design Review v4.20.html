@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyFit · Design Review · v4.20 (Round 2)</title>
+<style>
+/* MyFit‑native palette (matches index.html v4.20) */
+:root{
+  --primary:#5B4EA8;
+  --primary-2:#7F77DD;
+  --tint:#EEEDFE;
+  --surface:#FAFAF8;
+  --card:#fff;
+  --ink:#1F1D38;
+  --muted:#6E6C66;
+  --border:#D3D1C7;
+  --border-soft:#E5E2D8;
+  --good:#0F6E56;
+  --warn:#E0A800;
+  --bad:#C53030;
+  --ok-tint:#E1F5EE;
+  --warn-tint:#FFF6DD;
+  --r-sm:8px;
+  --r:12px;
+  --r-lg:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--surface);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;text-wrap:pretty}
+body{padding:48px 24px 96px}
+.wrap{max-width:1080px;margin:0 auto}
+
+/* ── Header ─────────────────────────────────────── */
+header.hero{display:grid;grid-template-columns:1fr auto;gap:32px;align-items:end;padding-bottom:24px;border-bottom:1px solid var(--border-soft);margin-bottom:48px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--primary);margin-bottom:12px}
+.eyebrow .seq{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--primary);margin:0 8px 1px 0;vertical-align:middle}
+h1{font-size:44px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.lede{font-size:16px;color:var(--muted);margin-top:14px;max-width:64ch}
+.meta{font-size:12px;color:var(--muted);text-align:right;line-height:1.7}
+.meta b{color:var(--ink);font-weight:700}
+.meta .step{display:inline-flex;align-items:baseline;gap:6px;color:var(--muted)}
+.meta .step b{color:var(--primary)}
+
+/* ── Section primitives ─────────────────────────── */
+section{margin-bottom:72px;scroll-margin-top:24px}
+.sec-h{display:grid;grid-template-columns:60px 1fr;gap:18px;align-items:baseline;margin-bottom:24px}
+.sec-num{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.1em;padding-top:10px;border-top:2px solid var(--ink)}
+.sec-t{font-size:28px;font-weight:800;letter-spacing:-.015em}
+.sec-sub{font-size:14px;color:var(--muted);margin-top:6px;max-width:64ch}
+
+/* ── TLDR cards ─────────────────────────────────── */
+.tldr{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:0 0 24px}
+.tldr a{display:block;background:var(--card);border:1px solid var(--border-soft);border-radius:var(--r);padding:16px;text-decoration:none;color:inherit;position:relative;transition:transform .15s,border-color .15s}
+.tldr a:hover{border-color:var(--primary);transform:translateY(-1px)}
+.tldr .rank{font-size:10px;font-weight:700;color:var(--primary);letter-spacing:.12em;text-transform:uppercase}
+.tldr h3{font-size:14px;font-weight:700;margin:8px 0 4px;line-height:1.3}
+.tldr p{font-size:12px;color:var(--muted);line-height:1.5}
+.sev{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:999px;vertical-align:middle}
+.sev.h{background:#FBEAEA;color:var(--bad)}
+.sev.m{background:#FFF6DD;color:#7A5A00}
+.sev.l{background:var(--tint);color:var(--primary)}
+.sev.f{background:var(--ok-tint);color:var(--good)}
+
+/* ── Status banner (the "what shipped" header for §1) ─ */
+.status{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;background:var(--card);border:1px solid var(--border-soft);border-radius:var(--r);padding:18px;margin-bottom:20px}
+.status .col{padding:0 6px}
+.status .col + .col{border-left:1px solid var(--border-soft)}
+.status .col h4{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.status .col h4 .pip{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good);margin-right:6px;vertical-align:middle}
+.status .col.pending h4 .pip{background:var(--warn)}
+.status .col.next h4 .pip{background:var(--primary)}
+.status .col ul{list-style:none;font-size:12.5px}
+.status .col ul li{padding:3px 0;line-height:1.5;color:var(--ink)}
+.status .col ul li span.tag{font-size:9px;font-weight:700;color:var(--muted);background:var(--surface);border:1px solid var(--border-soft);border-radius:4px;padding:1px 5px;margin-right:6px;font-family:ui-monospace,"SF Mono",Menlo,monospace;vertical-align:1px}
+.status .col.pending ul li,.status .col.next ul li{color:var(--ink)}
+
+/* ── Finding cards ──────────────────────────────── */
+.finding{display:grid;grid-template-columns:1fr 1fr;gap:32px;padding:24px;background:var(--card);border:1px solid var(--border-soft);border-radius:var(--r);margin-bottom:18px}
+.finding.full{grid-template-columns:1fr}
+.finding > .body > h4{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;line-height:1.25;margin-bottom:10px;flex-wrap:wrap}
+.finding > .body > p{font-size:14px;color:var(--ink);margin-bottom:10px}
+.finding > .body > p + p{color:var(--muted)}
+.finding ul{list-style:none;font-size:13px;color:var(--ink);margin-top:8px}
+.finding ul li{padding-left:18px;position:relative;margin:6px 0;line-height:1.55}
+.finding ul li::before{content:"";position:absolute;left:4px;top:9px;width:5px;height:5px;border-radius:50%;background:var(--primary-2)}
+.recommend{margin-top:14px;padding:12px 14px;background:var(--tint);border-left:3px solid var(--primary);border-radius:0 8px 8px 0}
+.recommend .tag{font-size:10px;font-weight:800;color:var(--primary);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;display:block}
+.recommend p{font-size:13px;color:#3C3489;line-height:1.55}
+.recommend code{background:#fff;border:1px solid var(--border-soft);border-radius:5px;padding:1px 5px;font-size:11.5px;font-family:ui-monospace,"SF Mono",Menlo,monospace;color:var(--ink)}
+.recommend.warn{background:var(--warn-tint);border-left-color:var(--warn)}
+.recommend.warn .tag,.recommend.warn p{color:#7A5A00}
+.recommend.warn code{color:#7A5A00}
+
+/* ── Phone frame ────────────────────────────────── */
+.preview{align-self:stretch}
+.frame{width:330px;margin:0 auto;background:#1A1A2E;border-radius:32px;padding:12px;box-shadow:0 24px 48px -16px rgba(31,29,56,.25),0 1px 0 rgba(255,255,255,.04) inset}
+.frame .screen{background:var(--surface);border-radius:22px;overflow:hidden;height:520px;display:flex;flex-direction:column;position:relative}
+.frame.compact .screen{height:auto;min-height:280px}
+.frame .label{font-size:10px;font-weight:700;color:var(--muted);text-align:center;margin-top:10px;letter-spacing:.1em;text-transform:uppercase}
+.frame-row{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px;align-items:start}
+.before-after-tag{position:absolute;top:10px;left:10px;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.5);color:#fff;z-index:5}
+.before-after-tag.after{background:var(--primary)}
+
+/* ── Mock UI primitives (mimic MyFit v4.20) ─────── */
+.m-pad{padding:12px}
+.m-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.m-title{font-size:13px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+.m-sub{font-size:9px;color:var(--muted)}
+.m-card{background:#fff;border:1px solid var(--border);border-radius:9px;padding:10px;margin-bottom:6px;box-shadow:0 1px 2px rgba(91,78,168,.06)}
+.m-row{display:flex;gap:9px;align-items:flex-start}
+.m-check{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#4A476B,#2A2845);flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.m-check::after{content:"";width:24px;height:24px;border-radius:50%;background:#fff}
+.m-check.done::after{background:radial-gradient(circle at 30% 30%,#9C95EE,#5B4EA8);position:relative}
+.m-check.done svg{position:absolute;width:13px;height:13px;color:#fff;z-index:2}
+.m-ex-name{font-size:12px;font-weight:600;color:var(--ink);line-height:1.25}
+.m-ex-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.m-last{font-size:10px;color:var(--muted);margin-top:6px;padding:5px 8px;background:#F7F6F0;border-radius:6px;display:inline-block}
+.m-last b{color:var(--ink);font-weight:600}
+.m-sets-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.m-set{background:#F7F6F0;border:1px solid var(--border-soft);border-radius:6px;padding:5px 4px;text-align:center}
+.m-set .l{font-size:8.5px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.m-set .v{font-size:13px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:2px}
+.m-set .v.ghost{color:var(--muted);font-style:italic;font-weight:500}
+.m-set.pr{background:#FFF8E1;border-color:#F4D38A}
+.m-set.pr .v{color:#7A5A00}
+.m-set.pr .l{color:#7A5A00}
+.m-set.pr::after{content:"PR";display:inline-block;font-size:8px;font-weight:800;color:#7A5A00;letter-spacing:.06em;margin-left:3px;background:#FFE49B;padding:1px 4px;border-radius:3px}
+.m-foot-tog{font-size:10px;color:var(--primary);font-weight:600;border-top:.5px solid var(--border-soft);padding:6px 0 0;margin-top:8px;display:flex;align-items:center;justify-content:space-between}
+.m-tabbar{margin-top:auto;background:#fff;border-top:1px solid var(--border);padding:6px 4px 9px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;flex-shrink:0}
+.m-tab{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:8.5px;font-weight:600;color:var(--muted);padding:3px 0}
+.m-tab .ic{font-size:14px;line-height:1}
+.m-tab.on{color:var(--primary)}
+
+/* PR moment toast */
+.m-pr-toast{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #F4D38A;border-radius:999px;padding:5px 10px;font-size:10px;font-weight:700;color:#7A5A00;box-shadow:0 6px 20px -6px rgba(122,90,0,.3);display:inline-flex;align-items:center;gap:6px;z-index:6}
+.m-pr-toast .glyph{width:14px;height:14px;border-radius:50%;background:#FFE49B;display:flex;align-items:center;justify-content:center;font-size:9px}
+
+/* Plate stack */
+.m-plates{display:flex;align-items:center;gap:2px;margin-top:6px;padding:5px 7px;background:#F7F6F0;border:1px dashed var(--border);border-radius:7px;flex-wrap:wrap}
+.m-plate{display:inline-block;border-radius:2px;font-size:8px;font-weight:700;color:#fff;padding:2px 4px;text-align:center;line-height:1}
+.m-plate.bar{background:#6E6C66;font-size:7px;padding:4px 4px}
+.m-plate.p45{background:#1E5BAF}
+.m-plate.p25{background:#0F6E56}
+.m-plate.p10{background:#7A5A00}
+.m-plate.p5{background:#5B4EA8}
+.m-plate.p2{background:#9896C8}
+.m-plates .total{margin-left:auto;font-size:10px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* ── Side-by-side compare ───────────────────────── */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px}
+.compare .label{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;color:var(--muted)}
+.compare .label .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);vertical-align:middle;margin-right:5px}
+.compare .label.after .dot{background:var(--primary)}
+
+/* ── IA / More-tab reshape diagram ──────────────── */
+.ia-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;background:var(--card);border:1px solid var(--border-soft);border-radius:var(--r);padding:24px;margin-top:8px}
+.ia-col h5{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.ia-col h5::after{content:"";flex:1;height:1px;background:var(--border-soft)}
+.ia-col.after h5{color:var(--primary)}
+.ia-group{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px;padding-top:8px;border-top:1px dashed var(--border-soft)}
+.ia-group:first-child{margin-top:0;padding-top:0;border-top:0}
+.ia-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border-soft);border-radius:8px;margin-bottom:5px;font-size:12.5px;background:#fff}
+.ia-row .ic{font-size:14px;width:18px;text-align:center}
+.ia-row .desc{flex:1;font-size:11px;color:var(--muted);text-align:right}
+.ia-row.heavy{background:var(--tint);border-color:transparent}
+.ia-row.flat{opacity:.6}
+
+/* ── Card-density audit table ───────────────────── */
+.density{background:var(--card);border:1px solid var(--border-soft);border-radius:var(--r);overflow:hidden;margin-top:16px}
+.dn-row{display:grid;grid-template-columns:1.4fr 60px 60px 1.6fr;gap:14px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border-soft);font-size:12.5px}
+.dn-row:last-child{border-bottom:0}
+.dn-row.head{background:var(--surface);font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:9px 18px}
+.dn-row b{font-weight:700}
+.dn-row .verdict{font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px}
+.dn-row .verdict .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dn-row .verdict.keep{color:var(--good)} .dn-row .verdict.keep .dot{background:var(--good)}
+.dn-row .verdict.collapse{color:var(--warn)} .dn-row .verdict.collapse .dot{background:var(--warn)}
+.dn-row .verdict.drop{color:var(--bad)} .dn-row .verdict.drop .dot{background:var(--bad)}
+.dn-row .freq{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* ── Effort/Impact matrix ───────────────────────── */
+.matrix{position:relative;background:var(--card);border:1px solid var(--border-soft);border-radius:var(--r);padding:24px 24px 48px;margin-top:8px}
+.matrix-grid{position:relative;height:360px;border-left:1.5px solid var(--border);border-bottom:1.5px solid var(--border);background:
+  linear-gradient(to right, transparent 49.5%, var(--border-soft) 49.5%, var(--border-soft) 50.5%, transparent 50.5%),
+  linear-gradient(to top, transparent 49.5%, var(--border-soft) 49.5%, var(--border-soft) 50.5%, transparent 50.5%)
+}
+.axis-y{position:absolute;left:-6px;top:50%;transform:translate(-100%,-50%) rotate(-90deg);transform-origin:center;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.axis-x{position:absolute;left:50%;bottom:-32px;transform:translateX(-50%);font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.dot-item{position:absolute;width:170px;transform:translate(-50%,-50%);text-align:center}
+.dot-item .pt{width:14px;height:14px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 4px rgba(91,78,168,.15);margin:0 auto 4px}
+.dot-item.warn .pt{background:var(--warn);box-shadow:0 0 0 4px rgba(224,168,0,.18)}
+.dot-item.good .pt{background:var(--good);box-shadow:0 0 0 4px rgba(15,110,86,.15)}
+.dot-item.muted .pt{background:var(--muted);box-shadow:0 0 0 4px rgba(110,108,102,.15)}
+.dot-item .lbl{font-size:11px;font-weight:700;color:var(--ink);line-height:1.2}
+.dot-item .sub{font-size:9.5px;color:var(--muted);margin-top:1px;line-height:1.25}
+.matrix .corner{position:absolute;font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+
+/* ── Long-bets cards ───────────────────────────── */
+.bets{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px}
+.bet{background:var(--card);border:1px solid var(--border-soft);border-radius:var(--r);padding:18px}
+.bet .eb{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.bet .eb .ic{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--primary-2);margin-right:6px;vertical-align:middle}
+.bet h4{font-size:16px;font-weight:700;margin-bottom:8px;line-height:1.25}
+.bet p{font-size:12.5px;color:var(--muted);line-height:1.55}
+.bet .why{margin-top:10px;font-size:11.5px;color:var(--primary);font-weight:600}
+
+/* ── Bottom callout ─────────────────────────────── */
+.callout{background:var(--ink);color:#fff;border-radius:var(--r);padding:28px 30px;margin-top:8px}
+.callout h3{font-size:22px;font-weight:800;letter-spacing:-.01em;margin-bottom:10px;line-height:1.2}
+.callout p{font-size:13.5px;color:#B4B0E0;line-height:1.6;max-width:64ch}
+.callout p + p{margin-top:8px}
+.callout p code{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:5px;padding:1px 5px;font-size:11.5px;font-family:ui-monospace,"SF Mono",Menlo,monospace;color:#E8E6F8}
+.callout .pull{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+.callout .pull .stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px 14px}
+.callout .pull .num{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.01em}
+.callout .pull .cap{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9F9BD0;margin-top:3px}
+
+/* nav */
+.toc{position:sticky;top:0;background:var(--surface);padding:8px 0;margin:-8px 0 24px;border-bottom:1px solid var(--border-soft);z-index:10}
+.toc-inner{display:flex;flex-wrap:wrap;gap:8px;font-size:11.5px;font-weight:600}
+.toc a{color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:999px;border:1px solid var(--border-soft);background:var(--card)}
+.toc a:hover{color:var(--primary);border-color:var(--primary)}
+
+footer{margin-top:80px;padding-top:24px;border-top:1px solid var(--border-soft);font-size:12px;color:var(--muted);line-height:1.6}
+
+@media (max-width:880px){
+  body{padding:24px 16px 64px}
+  h1{font-size:30px}
+  .tldr{grid-template-columns:1fr 1fr}
+  .finding{grid-template-columns:1fr;gap:20px}
+  .ia-grid,.bets{grid-template-columns:1fr;gap:16px}
+  .status{grid-template-columns:1fr}
+  .status .col + .col{border-left:0;border-top:1px solid var(--border-soft);padding-top:14px;margin-top:8px}
+  .frame-row,.compare{grid-template-columns:1fr}
+  .sec-h{grid-template-columns:1fr;gap:6px}
+  .sec-num{padding-top:0;border:0}
+  .dn-row{grid-template-columns:1fr;gap:6px}
+  .dn-row.head{display:none}
+  .matrix-grid{height:280px}
+  .dot-item{width:140px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div>
+    <div class="eyebrow"><span class="seq"></span>Design Review · Round 2 · v4.20</div>
+    <h1>The obvious work is done.<br>What's the next‑order&nbsp;move?</h1>
+    <p class="lede">Round 1 closed out almost every finding from the v3.42 review — 4‑tab IA, 44pt checkboxes, sticky chips, floating Complete, balance hints, monoline icons, the appendix nits. v4.20 is a noticeably calmer product than v3.42 was. This is a fresh read of where to push <em>from here</em>: five concrete feature ideas, a card‑density audit, a More‑tab regrouping, and an honest call on the three deferred CSS sweeps.</p>
+  </div>
+  <div class="meta">
+    <b>v4.20</b> · live<br>
+    Reviewed&nbsp;2026‑05‑25<br>
+    Light&nbsp;+&nbsp;dark · iPhone first<br>
+    <div class="step"><span>R1 status:</span><b>26 of 27 shipped</b></div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="toc-inner">
+    <a href="#tldr">TL;DR</a>
+    <a href="#shipped">1 · What shipped</a>
+    <a href="#features">2 · Five feature ideas</a>
+    <a href="#card">3 · Workout‑card density</a>
+    <a href="#more">4 · The More tab</a>
+    <a href="#deferred">5 · Deferred CSS sweeps</a>
+    <a href="#bets">6 · Long bets</a>
+    <a href="#risk">7 · Risk &amp; what to retire</a>
+  </div>
+</nav>
+
+<!-- ════════════════ TL;DR ════════════════ -->
+<section id="tldr">
+  <div class="sec-h">
+    <div class="sec-num">TL;DR</div>
+    <div>
+      <div class="sec-t">Five moves that earn their place next</div>
+      <div class="sec-sub">Two are feature work, three are polish. Most of the file's structural problems are already fixed.</div>
+    </div>
+  </div>
+
+  <div class="tldr">
+    <a href="#feat-progression">
+      <div class="rank">#1 · Feature</div>
+      <h3>Surface the stalled‑lift nudge as a target</h3>
+      <p>The <code>v2-nudge</code> code already detects stalls. Promote it from a label into a tappable ghost target in the first set's weight field.</p>
+    </a>
+    <a href="#feat-pr">
+      <div class="rank">#2 · Feature</div>
+      <h3>Celebrate the PR moment</h3>
+      <p>A new estimated 1RM lands silently in Lifts. A subtle inline pill on the set that did it costs ~25 lines and changes the feel of logging.</p>
+    </a>
+    <a href="#feat-plates">
+      <div class="rank">#3 · Feature</div>
+      <h3>Inline plate math, not a modal</h3>
+      <p>Plate Calc is a button. For barbell lifts it could live <em>under</em> the weight field, recalculating as you type.</p>
+    </a>
+    <a href="#card">
+      <div class="rank">#4 · Polish</div>
+      <h3>The Workout card is now 8 layers deep</h3>
+      <p>Check, name, sub, location, demo link, last‑time strip, 3 set rows, RPE pill, notes footer. Two layers can collapse without losing utility.</p>
+    </a>
+    <a href="#more">
+      <div class="rank">#5 · Polish</div>
+      <h3>More tab is becoming a junk drawer</h3>
+      <p>Cloud, snapshots, backup, primary‑device, appearance, dark, test, developer, update, version — 10 surfaces flat. Three sub‑groups would do it.</p>
+    </a>
+  </div>
+</section>
+
+<!-- ════════════════ 1. State of play ════════════════ -->
+<section id="shipped">
+  <div class="sec-h">
+    <div class="sec-num">01</div>
+    <div>
+      <div class="sec-t">State of play · what shipped, what didn't, what to watch</div>
+      <div class="sec-sub">Honest read of the R1 closeout. v3.42 → v4.20 is a real distance.</div>
+    </div>
+  </div>
+
+  <div class="status">
+    <div class="col">
+      <h4><span class="pip"></span>Shipped from R1</h4>
+      <ul>
+        <li><span class="tag">v4.3</span>5‑tab → 4‑tab + More</li>
+        <li><span class="tag">v4.5</span>Body promoted to Progress sub‑tab</li>
+        <li><span class="tag">v4.6</span>Plan balance pill + header ⋯</li>
+        <li><span class="tag">v4.7–9</span>44pt checkbox, day‑bal hint, per‑day Reset moved off the foot row</li>
+        <li><span class="tag">v4.10</span>Floating Complete bar, keyboard‑aware bottom chrome</li>
+        <li><span class="tag">v4.11</span>Compressed header, dark toggle into More</li>
+        <li><span class="tag">v4.12–14</span>Monoline SVG icons across Progress / Plan / More</li>
+        <li><span class="tag">v4.15–20</span>Appendix nits 4–20, 22</li>
+      </ul>
+    </div>
+    <div class="col pending">
+      <h4><span class="pip"></span>Not done (deferred)</h4>
+      <ul>
+        <li><span class="tag">5.2</span>Type tokens — partial; v2 card uses them, older Progress / Plan / Modal markup still hardcodes 11–13px</li>
+        <li><span class="tag">5.3</span>Color / radius / shadow tokens — only the radius slice landed (v4.20)</li>
+        <li><span class="tag">5.5</span><code>.btn</code> vocab consolidation — 5+ flavors still alive</li>
+        <li><span class="tag">D</span>Auto‑progression prompts — detection is built (<code>v2-nudge</code>) but the surface is a passive label</li>
+        <li><span class="tag">D</span>Volume‑weighted balance scoring</li>
+        <li><span class="tag">IA</span>The nav rethink the handoff explicitly flagged</li>
+      </ul>
+    </div>
+    <div class="col next">
+      <h4><span class="pip"></span>Next‑order watch</h4>
+      <ul>
+        <li><span class="tag">size</span>index.html is ~520KB and a single file; each additive feature pays a flat tax</li>
+        <li><span class="tag">card</span>v2 card has grown to 8 visual layers — see §03</li>
+        <li><span class="tag">more</span>More tab is 10 flat rows — see §04</li>
+        <li><span class="tag">pr</span>Lifts knows about PRs; the moment of recording one is silent</li>
+        <li><span class="tag">plate</span>Plate Calc is the only inline tool gated behind a modal</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="finding full">
+    <div class="body">
+      <h4>The system is no longer fighting itself. <span class="sev f">Resolved</span></h4>
+      <p>The v3.42 review opened with "the bones are good." v4.20 moves past that — the bones are good <em>and</em> the muscle around them does what it says. Tap targets are honest. Day chips are sticky. The Complete pill floats. Dark mode no longer has rough edges. Removed/archived days have their own quiet container. The Reset button is in an overflow menu where it can't be hit by accident. The toast is at the top, out of the way of the floating bars. None of these are individually flashy; collectively they shift the product from "promising single‑user prototype" to "comfortable daily driver."</p>
+      <p>That's the right moment to stop reviewing the surface and start asking what <em>features</em> would change the experience next. The rest of this document is the answer.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ 2. Five feature ideas ════════════════ -->
+<section id="features">
+  <div class="sec-h">
+    <div class="sec-num">02</div>
+    <div>
+      <div class="sec-t">Five high‑leverage feature ideas</div>
+      <div class="sec-sub">Ordered by return on effort. All five fit the single‑file model, none require new data schemas.</div>
+    </div>
+  </div>
+
+  <!-- F1: Auto-progression -->
+  <div class="finding" id="feat-progression">
+    <div class="body">
+      <h4>#1 · Surface the stalled‑lift nudge as a target, not a label <span class="sev h">High</span></h4>
+      <p>The detection logic already exists — <code>v2-nudge</code> watches for stalled lifts (last 2 sessions ≤ prev 2 + 0.5) with high effort (RPE ≥ 8) and flags them with a small inline note. That's a passive nudge that asks the user to do the math.</p>
+      <p>The same condition could prefill the next set's <em>target</em>: italic ghost <code>140 lb</code> in the weight field with a small "+5" pill above it. Tap to accept. The detection is 100% built. The surface is what's missing.</p>
+      <ul>
+        <li><b>Stalled at RPE ≥ 8</b> → no bump (recommend hold, optionally suggest +1 rep)</li>
+        <li><b>Stalled at RPE ≤ 7</b> → +2.5–5 lb suggested (machine‑specific rounding from <code>exerciseMeta.equipment</code>)</li>
+        <li><b>PR last session</b> → carry forward the new weight + the same rep target</li>
+        <li><b>Untouched for 14+ days</b> → fall back to "last weight" ghost (no nudge)</li>
+      </ul>
+      <div class="recommend">
+        <span class="tag">Recommend</span>
+        <p>Don't store a "recommended" value. Compute on render from <code>bestEst1RM</code> + <code>exerciseMeta.equipment</code> + RPE trend. Show as italic ghost (same treatment as the existing prefill) with a +X pill that disappears once typed into. No new keys, no sync change.</p>
+      </div>
+    </div>
+    <div class="preview">
+      <div class="frame compact">
+        <div class="screen" style="padding:12px;height:auto">
+          <div class="m-card">
+            <div class="m-row">
+              <div class="m-check"></div>
+              <div style="flex:1">
+                <div class="m-ex-name">Chest press</div>
+                <div class="m-ex-sub">3 × 8–10 · rest 90s</div>
+                <div class="m-last"><b>Last:</b> 135 × 9, 9, 8 · RPE 7</div>
+              </div>
+            </div>
+            <div class="m-sets-row">
+              <div class="m-set" style="position:relative">
+                <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--good);color:#fff;font-size:8px;font-weight:800;padding:1px 5px;border-radius:999px;letter-spacing:.04em">+5 lb</div>
+                <div class="l">Set 1</div><div class="v ghost">140</div>
+              </div>
+              <div class="m-set"><div class="l">Set 2</div><div class="v ghost">140</div></div>
+              <div class="m-set"><div class="l">Set 3</div><div class="v ghost">140</div></div>
+            </div>
+            <div style="font-size:9.5px;color:var(--good);font-weight:600;margin-top:6px;text-align:center">Last two sessions felt easy (RPE 7) — try 140 lb today</div>
+          </div>
+        </div>
+        <div class="label">Detection already exists · upgrade the surface</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F2: PR moment -->
+  <div class="finding" id="feat-pr">
+    <div class="body">
+      <h4>#2 · The PR moment, when it happens <span class="sev h">High</span></h4>
+      <p>The app already computes <code>bestEst1RM</code> and renders a "PR" chip in the Lifts sub‑tab. But the moment a PR is actually <em>set</em> — the rep that beats the previous best estimated 1RM — passes silently. The user types <code>9</code> at <code>145 lb</code>, taps the checkbox, sees nothing different, moves on.</p>
+      <p>Two pieces fix this for a single line each in logic:</p>
+      <ul>
+        <li><b>Inline pill</b>: when the set the user just typed yields a new best estimated 1RM for that lift, the set tile gets a faint yellow halo and a tiny "PR" badge.</li>
+        <li><b>Toast at completion</b>: when a session is saved with ≥1 PR set, the top‑center toast says <em>"Session saved · 2 new PRs"</em> instead of the generic "saved" — no new modal, no celebration animation, no confetti.</li>
+      </ul>
+      <p>The point is signal, not spectacle. The thing that makes daily logging stick is noticing that something happened.</p>
+      <div class="recommend">
+        <span class="tag">Recommend</span>
+        <p>Compute on input blur, not on save — the user gets the feedback while still standing at the machine. PR detection: new <code>bestEst1RM</code> for this <code>histEx</code> vs. prior sessions only (ignore in‑progress sets so an early set doesn't "PR" against itself). Persist nothing — re‑derive on every render.</p>
+      </div>
+    </div>
+    <div class="preview">
+      <div class="frame compact">
+        <div class="screen" style="padding:12px;height:auto;position:relative">
+          <div class="m-pr-toast"><span class="glyph">★</span>New PR · est. 1RM 162 lb</div>
+          <div style="height:14px"></div>
+          <div class="m-card">
+            <div class="m-row">
+              <div class="m-check done"><svg viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div style="flex:1">
+                <div class="m-ex-name">Chest press</div>
+                <div class="m-ex-sub">3 × 8–10</div>
+              </div>
+            </div>
+            <div class="m-sets-row">
+              <div class="m-set"><div class="l">Set 1</div><div class="v">140 · 10</div></div>
+              <div class="m-set pr"><div class="l">Set 2</div><div class="v">145 · 9</div></div>
+              <div class="m-set"><div class="l">Set 3</div><div class="v">145 · 7</div></div>
+            </div>
+          </div>
+          <div style="font-size:9.5px;color:var(--muted);text-align:center;margin-top:10px">Halo + "PR" tag · re‑computed from history, never stored</div>
+        </div>
+        <div class="label">Acknowledge the moment, don't celebrate it</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F3: Inline plate math -->
+  <div class="finding" id="feat-plates">
+    <div class="body">
+      <h4>#3 · Plate math, inline under the weight field <span class="sev m">Med</span></h4>
+      <p><b>Plate Calc</b> currently lives as a button on the Plan screen that opens a modal. The math is useful, but the path is wrong — for a barbell lift you need the breakdown <em>while typing</em>, not three taps away on a different screen. Personal apps can be opinionated here: every weight on a barbell lift gets a tiny plate strip underneath.</p>
+      <p>Only render for exercises with <code>equipment === 'barbell'</code> (already in metadata). For machines, dumbbells, cables — render nothing. The strip is decorative + informative; no interaction, no taps.</p>
+      <div class="recommend">
+        <span class="tag">Recommend</span>
+        <p>Bar weight from a single setting (45 lb default), plates available from a fixed array. Strip color‑codes the standard plate hex (45 = blue, 25 = green, 10 = yellow, 5 = purple, 2.5 = light). Tap the strip → opens the existing modal for bar / plate set adjustments. The modal stays, but it's the rare deep‑dive, not the default path.</p>
+      </div>
+    </div>
+    <div class="preview">
+      <div class="frame compact">
+        <div class="screen" style="padding:12px;height:auto">
+          <div class="m-card">
+            <div class="m-row">
+              <div class="m-check"></div>
+              <div style="flex:1">
+                <div class="m-ex-name">Barbell back squat</div>
+                <div class="m-ex-sub">3 × 5 · rest 2 min</div>
+              </div>
+            </div>
+            <div class="m-sets-row" style="grid-template-columns:1fr">
+              <div class="m-set" style="padding:8px 10px;text-align:left">
+                <div class="l">Set 1 · working weight</div>
+                <div class="v" style="font-size:18px">225 lb</div>
+                <div class="m-plates">
+                  <span class="m-plate bar">bar 45</span>
+                  <span class="m-plate p45">45</span>
+                  <span class="m-plate p45">45</span>
+                  <span class="m-plate" style="background:#9C95EE;color:#3C3489">|</span>
+                  <span class="m-plate p45">45</span>
+                  <span class="m-plate p45">45</span>
+                  <span class="total">×2 per side</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:9.5px;color:var(--muted);text-align:center;margin-top:6px;line-height:1.4">Only renders when <code style="font-size:9px;background:#F7F6F0;padding:1px 4px;border-radius:3px">equipment:'barbell'</code></div>
+        </div>
+        <div class="label">The math you needed, where you needed it</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F4: Smart rest defaults -->
+  <div class="finding" id="feat-rest">
+    <div class="body">
+      <h4>#4 · Rest timer learns per‑exercise pattern <span class="sev m">Med</span></h4>
+      <p>The rest timer is a single global duration. But a compound barbell squat doesn't need the same rest as a cable tricep pushdown — the metadata pass (Phase B/B2) already tags every entry with a <code>pattern</code> (push/pull/squat/hinge/lunge/carry/core/cardio/isolation/mobility). That's enough information to set a sensible default per row:</p>
+      <ul>
+        <li><b>squat / hinge / carry</b> — 120s</li>
+        <li><b>push / pull (compound)</b> — 90s</li>
+        <li><b>isolation</b> — 60s</li>
+        <li><b>core / mobility</b> — 30s (or no timer)</li>
+        <li><b>cardio</b> — no rest timer (it's the activity)</li>
+      </ul>
+      <p>The user can still override; the global preference becomes "long" / "short" / "auto" — auto is the new default.</p>
+      <div class="recommend">
+        <span class="tag">Recommend</span>
+        <p>One lookup table, one line at the tap‑checkbox handler. Persist override per <code>linkId</code> in a new key <code>rest_overrides_v1</code> (mirrored in the synced payload). Display the chosen duration in the rest‑timer pill: "Resting · 1:23 · auto&nbsp;90s · ⏯".</p>
+      </div>
+    </div>
+    <div class="preview">
+      <div class="frame compact">
+        <div class="screen" style="padding:0;height:auto;display:flex;flex-direction:column">
+          <div style="padding:12px;flex:1">
+            <div style="font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:700;margin-bottom:5px">Day 1 · Upper A</div>
+            <div class="m-card">
+              <div class="m-row">
+                <div class="m-check done"><svg viewBox="0 0 10 7" fill="none"><polyline points="1,3.5 4,6.5 9,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div style="flex:1">
+                  <div class="m-ex-name">Barbell bench press</div>
+                  <div class="m-ex-sub">push · compound</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="margin:0 12px 14px;padding:9px 14px;background:rgba(60,52,137,.96);color:#fff;border-radius:14px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600">
+            <div>Resting <span style="font-variant-numeric:tabular-nums">1:23</span></div>
+            <div style="font-size:10px;opacity:.7;font-weight:500">push · 90s auto</div>
+            <div style="display:flex;gap:4px"><span style="background:#fff3;border-radius:6px;padding:2px 6px;font-size:11px">+30</span><span style="background:#fff3;border-radius:6px;padding:2px 6px;font-size:11px">skip</span></div>
+          </div>
+        </div>
+        <div class="label">One word in the pill explains the choice</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F5: Sunday retrospective -->
+  <div class="finding" id="feat-sunday">
+    <div class="body">
+      <h4>#5 · The Sunday retrospective card <span class="sev m">Med</span></h4>
+      <p>Right now there's no end‑of‑week moment. Sessions get logged, the Lifts tab gets richer, but nothing prompts the user to <em>look back</em>. A single card on the Workout tab — visible Sunday evenings through Monday morning, hidden the rest of the week — would carry the whole week's signal in one read:</p>
+      <ul>
+        <li>3 sessions completed · 14 days streak</li>
+        <li>+2.5 lb on chest press · +1 rep on lat pulldown · 2 new PRs</li>
+        <li>One muscle group flagged: rear delts — last logged 11 days ago</li>
+        <li>Suggested next: <em>Try Day 4 (Upper B) tomorrow</em> — based on plan cycle position</li>
+      </ul>
+      <p>It's a low‑interaction surface — read‑only, dismissable, never the primary action. But it's the moment that makes a habit stick. Strava's Sunday email is the same idea; it doesn't need a notification, just a screen presence at the right time.</p>
+      <div class="recommend">
+        <span class="tag">Recommend</span>
+        <p>Render gate: <code>day === sunday || (day === monday &amp;&amp; hour &lt; 10)</code>, and at least 1 logged session in the previous 7d. Data is all derived (no new keys). Tap to expand → inline list of PRs with set details; second tap → goes to Lifts filtered to that exercise.</p>
+      </div>
+    </div>
+    <div class="preview">
+      <div class="frame compact">
+        <div class="screen" style="padding:14px;height:auto;background:linear-gradient(180deg,#FAFAF8,#F1EFE8)">
+          <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;box-shadow:0 4px 14px -8px rgba(91,78,168,.15)">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+              <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--primary)">Week of May 18</div>
+              <div style="font-size:10px;color:var(--muted)">Sun 7:14 pm</div>
+            </div>
+            <div style="font-size:18px;font-weight:800;line-height:1.25;margin-bottom:10px;color:var(--ink)">A strong week — 3 sessions, 2 new PRs.</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">
+              <div style="background:var(--tint);border-radius:7px;padding:7px 8px;text-align:center"><div style="font-size:15px;font-weight:800;color:var(--primary)">3</div><div style="font-size:8.5px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase">sessions</div></div>
+              <div style="background:#FFF8E1;border-radius:7px;padding:7px 8px;text-align:center"><div style="font-size:15px;font-weight:800;color:#7A5A00">2</div><div style="font-size:8.5px;color:#7A5A00;font-weight:700;letter-spacing:.06em;text-transform:uppercase">PRs</div></div>
+              <div style="background:var(--ok-tint);border-radius:7px;padding:7px 8px;text-align:center"><div style="font-size:15px;font-weight:800;color:var(--good)">14d</div><div style="font-size:8.5px;color:var(--good);font-weight:700;letter-spacing:.06em;text-transform:uppercase">streak</div></div>
+            </div>
+            <div style="font-size:11px;color:var(--ink);line-height:1.6;margin-bottom:6px">+5 lb on <b>Chest press</b> · +1 rep on <b>Lat pulldown</b></div>
+            <div style="font-size:10.5px;color:#7A5A00;background:var(--warn-tint);border-radius:6px;padding:6px 8px;line-height:1.4">⚠︎ Rear delts last logged 11 days ago</div>
+          </div>
+          <div style="font-size:9px;color:var(--muted);text-align:center;margin-top:10px;font-style:italic">Sun + Mon only · derived, no new keys</div>
+        </div>
+        <div class="label">The end‑of‑week look‑back you don't get yet</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ 3. Card density audit ════════════════ -->
+<section id="card">
+  <div class="sec-h">
+    <div class="sec-num">03</div>
+    <div>
+      <div class="sec-t">The Workout card is now 8 layers deep</div>
+      <div class="sec-sub">Each layer was added for a good reason. Together they're starting to read as a wall.</div>
+    </div>
+  </div>
+
+  <div class="finding full">
+    <div class="body">
+      <h4>What lives in a single v2 card today</h4>
+      <p>Auditing one strength card top to bottom: <b>checkbox</b>, <b>name</b>, <b>sub</b> ("3 × 12 · rest 60–90s"), <b>location</b> ("📍 Cable area · ground floor"), <b>demo link</b> ("▶ Watch demo"), the always‑on <b>last‑time strip</b> (v4.16), 3 <b>set rows</b> with weight + reps + unit toggles, and the collapsed <b>RPE & notes footer</b>. Then for cardio cards, a machine toggle row and 5 cardio fields per machine. That's 8 visual layers per row on the screen the user spends the most time on.</p>
+      <p>Three are unambiguously useful and stay (check, name, sets). The other five need a quick verdict: keep, collapse, or drop:</p>
+
+      <div class="density">
+        <div class="dn-row head">
+          <div>Layer</div><div>Useful?</div><div>How often</div><div>Verdict</div>
+        </div>
+        <div class="dn-row">
+          <div><b>Location</b> — "📍 Cable area · ground floor"</div>
+          <div class="freq">Setup</div>
+          <div class="freq">1 / 10 sessions</div>
+          <div><span class="verdict collapse"><span class="dot"></span>Collapse</span> · move into the footer disclosure (already where "RPE & notes" lives). Show only on first‑time exercises or when explicitly tapped.</div>
+        </div>
+        <div class="dn-row">
+          <div><b>Demo link</b> — "▶ Watch demo"</div>
+          <div class="freq">Learning</div>
+          <div class="freq">1 / 20 sessions</div>
+          <div><span class="verdict collapse"><span class="dot"></span>Collapse</span> · same disclosure. Or a tiny ⓘ icon on the exercise name → opens YouTube.</div>
+        </div>
+        <div class="dn-row">
+          <div><b>Last‑time strip</b> — always‑on</div>
+          <div class="freq">High</div>
+          <div class="freq">every set</div>
+          <div><span class="verdict keep"><span class="dot"></span>Keep</span> · this is the reference you check before typing. Stay always‑on.</div>
+        </div>
+        <div class="dn-row">
+          <div><b>Unit toggle (lbs / kg) per set</b></div>
+          <div class="freq">~Never changes</div>
+          <div class="freq">1 / 100 sessions</div>
+          <div><span class="verdict drop"><span class="dot"></span>Promote out</span> · one global unit preference (Settings → Units) → no per‑set toggle. Saves ~28px per set, the unit row is currently 3× per card.</div>
+        </div>
+        <div class="dn-row">
+          <div><b>RPE & notes footer toggle</b></div>
+          <div class="freq">Medium</div>
+          <div class="freq">~50% of sets</div>
+          <div><span class="verdict keep"><span class="dot"></span>Keep</span> · it's already opt‑in (the v4.16 collapse was right). Location + demo can join it.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="body">
+      <h4>The collapsed form is calmer, same information density <span class="sev m">Med</span></h4>
+      <p>Move the per‑set unit toggle into a single Settings → Units control (default lbs, switches both display and entry to kg). Tuck location and demo behind the existing footer disclosure. The card goes from 8 layers to 5 without losing any actionable surface — and the surface that's <em>left</em> is the surface you actually need mid‑set.</p>
+      <div class="recommend">
+        <span class="tag">Recommend</span>
+        <p>Settings → Units (<code>units_v1: 'lbs'|'kg'</code>, synced) replaces the in‑card toggle. Migration: existing sessions keep their saved‑with unit on the data side; only the input field's label changes. The set tile becomes label + value; the unit lives in the column header instead ("Weight · lb").</p>
+      </div>
+    </div>
+    <div class="preview">
+      <div class="frame-row">
+        <div>
+          <div class="frame compact">
+            <div class="screen" style="padding:12px;height:auto">
+              <span class="before-after-tag">Now</span><div style="height:18px"></div>
+              <div class="m-card" style="padding:8px">
+                <div class="m-row">
+                  <div class="m-check"></div>
+                  <div style="flex:1">
+                    <div class="m-ex-name">Chest press</div>
+                    <div class="m-ex-sub">3 × 12 · rest 60–90s</div>
+                    <div class="m-ex-sub" style="color:var(--muted)">📍 Selectorized machines · ground floor</div>
+                    <div style="font-size:9.5px;color:var(--primary);margin-top:2px">▶ Watch demo</div>
+                  </div>
+                </div>
+                <div class="m-last" style="font-size:9px;margin-top:6px"><b>Last:</b> 135 × 9, 9, 8</div>
+                <div style="margin-top:6px"><div style="font-size:9.5px;color:var(--ink);font-weight:600">Set 1: <span style="background:#F7F6F0;padding:2px 8px;border-radius:4px;font-weight:500">135</span> <span style="font-size:8px;background:var(--primary);color:#fff;padding:1px 4px;border-radius:3px">lbs</span> <span style="font-size:8px;color:var(--muted)">|kg</span></div></div>
+                <div style="margin-top:3px"><div style="font-size:9.5px;color:var(--ink);font-weight:600">Set 2: <span style="background:#F7F6F0;padding:2px 8px;border-radius:4px;font-weight:500">135</span> <span style="font-size:8px;background:var(--primary);color:#fff;padding:1px 4px;border-radius:3px">lbs</span> <span style="font-size:8px;color:var(--muted)">|kg</span></div></div>
+                <div style="margin-top:3px"><div style="font-size:9.5px;color:var(--ink);font-weight:600">Set 3: <span style="background:#F7F6F0;padding:2px 8px;border-radius:4px;font-weight:500">135</span> <span style="font-size:8px;background:var(--primary);color:#fff;padding:1px 4px;border-radius:3px">lbs</span> <span style="font-size:8px;color:var(--muted)">|kg</span></div></div>
+                <div class="m-foot-tog">RPE & notes <span>▾</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="label" style="text-align:center;margin-top:8px">8 layers</div>
+        </div>
+        <div>
+          <div class="frame compact">
+            <div class="screen" style="padding:12px;height:auto">
+              <span class="before-after-tag after">Proposed</span><div style="height:18px"></div>
+              <div class="m-card" style="padding:10px">
+                <div class="m-row">
+                  <div class="m-check"></div>
+                  <div style="flex:1">
+                    <div class="m-ex-name">Chest press</div>
+                    <div class="m-ex-sub">3 × 12 · rest 60–90s</div>
+                    <div class="m-last" style="font-size:9.5px;margin-top:6px"><b>Last:</b> 135 × 9, 9, 8</div>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:30px 1fr 1fr;gap:6px;margin-top:8px;font-size:8.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase">
+                  <div></div><div>Weight · lb</div><div>Reps</div>
+                </div>
+                <div style="display:grid;grid-template-columns:30px 1fr 1fr;gap:6px;align-items:center;margin-top:4px">
+                  <div style="font-size:9px;color:var(--muted);font-weight:700">SET 1</div>
+                  <div style="background:#F7F6F0;border:1px solid var(--border-soft);border-radius:6px;padding:5px 7px;font-size:11px;font-weight:600">135</div>
+                  <div style="background:#F7F6F0;border:1px solid var(--border-soft);border-radius:6px;padding:5px 7px;font-size:11px;font-weight:600;text-align:center">10</div>
+                </div>
+                <div style="display:grid;grid-template-columns:30px 1fr 1fr;gap:6px;align-items:center;margin-top:3px">
+                  <div style="font-size:9px;color:var(--muted);font-weight:700">SET 2</div>
+                  <div style="background:#F7F6F0;border:1px solid var(--border-soft);border-radius:6px;padding:5px 7px;font-size:11px;font-weight:600">135</div>
+                  <div style="background:#F7F6F0;border:1px solid var(--border-soft);border-radius:6px;padding:5px 7px;font-size:11px;font-weight:600;text-align:center">—</div>
+                </div>
+                <div style="display:grid;grid-template-columns:30px 1fr 1fr;gap:6px;align-items:center;margin-top:3px">
+                  <div style="font-size:9px;color:var(--muted);font-weight:700">SET 3</div>
+                  <div style="background:#F7F6F0;border:1px solid var(--border-soft);border-radius:6px;padding:5px 7px;font-size:11px;font-weight:600">—</div>
+                  <div style="background:#F7F6F0;border:1px solid var(--border-soft);border-radius:6px;padding:5px 7px;font-size:11px;font-weight:600;text-align:center">—</div>
+                </div>
+                <div class="m-foot-tog">RPE · notes · location · ▶ demo <span>▾</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="label" style="text-align:center;margin-top:8px;color:var(--primary)">5 layers · same data</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ 4. The More tab ════════════════ -->
+<section id="more">
+  <div class="sec-h">
+    <div class="sec-num">04</div>
+    <div>
+      <div class="sec-t">The More tab is becoming a junk drawer</div>
+      <div class="sec-sub">It made sense when there were 3 things in it. There are now ten, all at the same level.</div>
+    </div>
+  </div>
+
+  <div class="finding full">
+    <div class="body">
+      <h4>Ten flat surfaces, no sub‑structure <span class="sev m">Med</span></h4>
+      <p>The R1 IA decision (5 tabs → 4 + More) was clearly the right one — but the More tab inherited everything the other four tabs didn't want. As of v4.20 it holds: cloud sync, primary‑device toggle, primary‑toggle hint, pull‑from‑cloud, on‑device snapshots launcher, cloud‑archive launcher, backup‑code / export / import launcher, dark‑mode toggle, "Developer" disclosure (Test mode), Update, version footer. Ten interactive rows, none grouped.</p>
+      <p>The fix isn't more screens — it's three lightweight section headers + a deliberate order. The data‑risky stuff at the top (where you'd look in a panic), the cosmetic stuff in the middle, the developer / about stuff at the bottom.</p>
+    </div>
+  </div>
+
+  <div class="finding full">
+    <div class="body" style="grid-column:1/-1">
+      <div class="ia-grid">
+        <div class="ia-col">
+          <h5>Today · 10 flat rows</h5>
+          <div class="ia-row"><span class="ic">☁️</span><span>Cloud sync · enable</span><span class="desc">toggle</span></div>
+          <div class="ia-row"><span class="ic">📲</span><span>This phone uploads…</span><span class="desc">tgl</span></div>
+          <div class="ia-row"><span class="ic">⬇</span><span>Pull from cloud</span><span class="desc">›</span></div>
+          <div class="ia-row"><span class="ic">📸</span><span>On‑device snapshots</span><span class="desc">›</span></div>
+          <div class="ia-row"><span class="ic">☁︎</span><span>Cloud archive</span><span class="desc">›</span></div>
+          <div class="ia-row"><span class="ic">💾</span><span>Backup code · export · import</span><span class="desc">›</span></div>
+          <div class="ia-row"><span class="ic">🌙</span><span>Dark mode</span><span class="desc">On</span></div>
+          <div class="ia-row"><span class="ic">🛠</span><span>Developer · Test mode</span><span class="desc">▾</span></div>
+          <div class="ia-row"><span class="ic">🔄</span><span>Update</span><span class="desc">›</span></div>
+          <div class="ia-row flat"><span class="ic">·</span><span>v4.20</span><span class="desc">footer</span></div>
+        </div>
+        <div class="ia-col after">
+          <h5>Proposed · 3 groups</h5>
+          <div class="ia-group">Data &amp; sync · top</div>
+          <div class="ia-row heavy"><span class="ic">☁️</span><span>Cloud sync</span><span class="desc">On · this phone uploads</span></div>
+          <div class="ia-row"><span class="ic">⬇</span><span>Pull from cloud</span><span class="desc">›</span></div>
+          <div class="ia-row"><span class="ic">💾</span><span>Backup &amp; restore</span><span class="desc">snapshots · code · archive</span></div>
+          <div class="ia-group">Customize</div>
+          <div class="ia-row"><span class="ic">🌙</span><span>Appearance</span><span class="desc">Dark · units · day labels</span></div>
+          <div class="ia-row"><span class="ic">⏱</span><span>Rest timer</span><span class="desc">Auto · long · short</span></div>
+          <div class="ia-group">About &amp; advanced</div>
+          <div class="ia-row"><span class="ic">🔄</span><span>Check for update</span><span class="desc">v4.20</span></div>
+          <div class="ia-row flat"><span class="ic">🛠</span><span>Developer</span><span class="desc">Test mode · etc ▾</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="body">
+      <h4>Three subgroups, a stable order, two consolidations <span class="sev l">Low</span></h4>
+      <p>The right is a 1:1 collapse — no rows lost. The wins:</p>
+      <ul>
+        <li><b>Cloud sync + primary device → one row</b>. The toggle is the on/off, the secondary line carries the primary‑device state. They're already coupled functionally.</li>
+        <li><b>Snapshots + cloud archive + backup → one row</b> ("Backup &amp; restore"). They're three ways of doing the same thing; let the launcher show all three options once you tap in.</li>
+        <li><b>Appearance gets two more controls</b>: units (from §03) + day‑label length (currently a parked decision in the handoff). Folding them in here gives "Appearance" something to do.</li>
+        <li><b>Rest timer as its own row</b> — the auto/long/short setting from §02 #4 lives here.</li>
+      </ul>
+      <div class="recommend">
+        <span class="tag">Recommend</span>
+        <p>Three <code>&lt;h3 class="more-group"&gt;</code> headers between rows. No new screen, no new disclosure pattern — just visual grouping. The "Developer" disclosure stays exactly as v4.19 shipped it; it just moves to the bottom of its group.</p>
+      </div>
+    </div>
+    <div class="preview">
+      <div class="frame compact">
+        <div class="screen" style="padding:14px;height:auto">
+          <div style="font-size:14px;font-weight:800;margin-bottom:10px">More</div>
+          <div style="font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:4px 2px 6px">Data &amp; sync</div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:9px;margin-bottom:5px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11.5px;font-weight:600">Cloud sync</div><div style="font-size:9.5px;color:var(--muted);margin-top:1px">On · this phone uploads</div></div><div style="width:32px;height:18px;background:var(--good);border-radius:999px;position:relative"><div style="position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:2px;right:2px"></div></div></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:9px;margin-bottom:5px;padding:10px 12px;display:flex;justify-content:space-between;font-size:11.5px"><span>Pull from cloud</span><span style="color:var(--muted)">›</span></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:9px;margin-bottom:5px;padding:10px 12px;display:flex;justify-content:space-between;font-size:11.5px"><span>Backup &amp; restore</span><span style="color:var(--muted);font-size:9px">snapshots · code · archive ›</span></div>
+          <div style="font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:12px 2px 6px">Customize</div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:9px;margin-bottom:5px;padding:10px 12px;display:flex;justify-content:space-between;font-size:11.5px"><span>Appearance</span><span style="color:var(--muted);font-size:9px">dark · units · labels ›</span></div>
+        </div>
+        <div class="label">Same content · readable hierarchy</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ 5. Deferred CSS sweeps ════════════════ -->
+<section id="deferred">
+  <div class="sec-h">
+    <div class="sec-num">05</div>
+    <div>
+      <div class="sec-t">The three deferred CSS sweeps · honest cost / benefit</div>
+      <div class="sec-sub">5.2 (type), 5.3 (color/radius/shadow), 5.5 (.btn vocab) — flagged as low payoff in the handoff. Here's the call from a fresh read.</div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="body">
+      <h4>5.2 · Type tokens · <i>partially done is the right place to stop</i> <span class="sev l">Low</span></h4>
+      <p>The handoff is right: this is invisible to the user. The v2 card already uses the tokens; the older Progress / Plan / Modal markup hardcodes 11–13px values that the user will never consciously notice. Token discipline matters when multiple people are working on a file — for a single‑user, single‑maintainer build, the cost of the find‑replace pass exceeds the benefit.</p>
+      <div class="recommend">
+        <span class="tag">Recommend</span>
+        <p><b>Skip.</b> Only do this if you're about to touch the older markup for an unrelated reason — opportunistic, not standalone.</p>
+      </div>
+    </div>
+    <div class="preview">
+      <div style="background:var(--card);border:1px solid var(--border-soft);border-radius:var(--r);padding:18px;height:100%;display:flex;flex-direction:column;justify-content:center">
+        <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Token usage today</div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:8px;font-size:12px;align-items:center;line-height:1.6">
+          <span>v2 card (Workout)</span><span style="font-weight:700;color:var(--good)">✓ on tokens</span>
+          <span>Modals</span><span style="font-weight:700;color:var(--warn)">hardcoded 11–13</span>
+          <span>Progress tabs / charts</span><span style="font-weight:700;color:var(--warn)">hardcoded</span>
+          <span>Plan / mgr screen</span><span style="font-weight:700;color:var(--warn)">hardcoded</span>
+          <span>Settings / More</span><span style="font-weight:700;color:var(--warn)">hardcoded</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:14px;line-height:1.5">~70% of the file off‑tokens but visually consistent enough that the user can't tell. <b>Cost</b>: 1 day of careful regex + smoke. <b>Payoff</b>: 0 visible change.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="body">
+      <h4>5.3 · Color / shadow tokens · <i>same answer, with one exception</i> <span class="sev l">Low</span></h4>
+      <p>The radius slice landed in v4.20 — that's the part the user can feel (modals now agree on <code>--r-lg</code>). The remaining color & shadow drift is again invisible from outside the file. The one thing worth doing on this front <em>separately</em>: replace the ~6 ad‑hoc grays (<code>#888780 · #B4B2A9 · #C8C6BD · #2C2C2A</code>) with their nearest <code>--muted</code>/<code>--ink</code>/<code>--border</code> token in <em>only the dark‑mode rules</em>, where contrast actually matters and any drift is visible.</p>
+      <div class="recommend">
+        <span class="tag">Recommend</span>
+        <p><b>Targeted dark‑only pass.</b> Light mode is fine as‑is. Roughly 2 hours of work, fixes the half‑dozen places where the 4‑hex‑deep gray ladder actually shows up.</p>
+      </div>
+    </div>
+    <div class="preview">
+      <div style="background:var(--card);border:1px solid var(--border-soft);border-radius:var(--r);padding:18px;height:100%">
+        <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Gray ladder in dark mode</div>
+        <div style="background:#1A1A2E;border-radius:8px;padding:14px;color:#E8E6F8">
+          <div style="display:grid;grid-template-columns:1fr 80px;gap:10px;font-size:11.5px;line-height:1.7;font-family:ui-monospace,'SF Mono',Menlo,monospace">
+            <span style="color:#E8E6F8">#E8E6F8</span><span style="color:#9F9BD0">— text</span>
+            <span style="color:#9896C8">#9896C8</span><span style="color:#9F9BD0">— muted</span>
+            <span style="color:#7F77DD">#7F77DD</span><span style="color:#9F9BD0">— accent</span>
+            <span style="color:#5C5A80">#5C5A80</span><span style="color:#9F9BD0">— ?</span>
+            <span style="color:#3C3A5C">#3C3A5C</span><span style="color:#9F9BD0">— border</span>
+          </div>
+          <div style="font-size:10px;color:#9896C8;margin-top:10px;line-height:1.45;border-top:1px solid #3C3A5C;padding-top:8px">The middle two land in the same visual band — they're indistinguishable mid‑scroll but live in different code paths.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="body">
+      <h4>5.5 · <code>.btn</code> vocab consolidation · <i>do this one</i> <span class="sev m">Med</span></h4>
+      <p>This is the only deferred sweep with a real user‑visible payoff. There are 5+ "primary affirmative" buttons in the file (<code>.complete-btn</code>, <code>.modal-btn-primary</code>, <code>.mgr-add-btn</code>, <code>.tray-act</code>, <code>.deload-plan-btn</code>, <code>.patch5-rerun-btn</code>), and they don't look like each other. A user clicking the "Save session" modal button and the "Add exercise" mgr button gets two different button shapes for two affirmative actions. Consolidation is a real polish gain.</p>
+      <p>You'd also get a smaller file (these classes all have their own dark‑mode rule too, so the savings compound).</p>
+      <div class="recommend">
+        <span class="tag">Recommend</span>
+        <p>Define <code>.btn</code> + <code>.btn-primary / .btn-ghost / .btn-danger / .btn-sm / .btn-block</code>. Each existing class becomes an alias for one month, then gets deleted. The deload button is the only one that arguably wants its own treatment (a destructive recovery action) — it can keep <code>.deload-plan-btn</code> as a one‑off composition: <code>.btn .btn-danger .btn-block</code>.</p>
+      </div>
+    </div>
+    <div class="preview">
+      <div style="background:var(--card);border:1px solid var(--border-soft);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:8px;font-size:11px;color:var(--muted)">
+        <div style="display:flex;gap:8px;align-items:center"><button style="padding:11px 16px;background:var(--primary);color:#fff;border:0;border-radius:10px;font-size:13px;font-weight:700">.btn .btn-primary</button><span>save · complete · add</span></div>
+        <div style="display:flex;gap:8px;align-items:center"><button style="padding:11px 16px;background:transparent;border:1.5px solid var(--primary);color:var(--primary);border-radius:10px;font-size:13px;font-weight:700">.btn .btn-ghost</button><span>secondary path</span></div>
+        <div style="display:flex;gap:8px;align-items:center"><button style="padding:11px 16px;background:var(--bad);color:#fff;border:0;border-radius:10px;font-size:13px;font-weight:700">.btn .btn-danger</button><span>destructive · reset · clear</span></div>
+        <div style="display:flex;gap:8px;align-items:center"><button style="padding:7px 12px;background:var(--primary);color:#fff;border:0;border-radius:8px;font-size:11px;font-weight:700">.btn .btn-primary .btn-sm</button><span>inline · row · pill</span></div>
+        <div style="font-size:11px;line-height:1.5;color:var(--muted);margin-top:6px">Estimated file delta: −1.4 KB after dedup of the 5 dark‑mode rules.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ 6. Long bets ════════════════ -->
+<section id="bets">
+  <div class="sec-h">
+    <div class="sec-num">06</div>
+    <div>
+      <div class="sec-t">Three long bets</div>
+      <div class="sec-sub">Bigger, less certain. Worth thinking about — not necessarily worth doing soon.</div>
+    </div>
+  </div>
+
+  <div class="bets">
+    <div class="bet">
+      <div class="eb"><span class="ic"></span>Long bet · 01</div>
+      <h4>Notes are unsearchable history</h4>
+      <p>Every session can carry per‑exercise notes ("right shoulder twinge", "felt strong"). They're there forever, but there's no way to ask <em>"every session where I noted shoulder pain"</em>. Lifts gives you weight history; nothing gives you narrative history.</p>
+      <p class="why">A search field at the top of Sessions, scanning notes + session‑level note, would unlock the data you've already been writing.</p>
+    </div>
+    <div class="bet">
+      <div class="eb"><span class="ic"></span>Long bet · 02</div>
+      <h4>Apple Health two‑way</h4>
+      <p>Body Measurements (Weight / Waist / Body Fat) duplicates data the user almost certainly already has in Health. Even a one‑way read (pull Weight from Health on Body panel load) would mean the user stops double‑entering.</p>
+      <p class="why">PWA can't talk to HealthKit directly, but a one‑shot iOS Shortcut + Files share could fill <code>body_v1</code> with no schema change.</p>
+    </div>
+    <div class="bet">
+      <div class="eb"><span class="ic"></span>Long bet · 03</div>
+      <h4>The cycle position is invisible</h4>
+      <p>The plan has a cycle (Day 1 → 2 → 3 → 4 → 5 → repeat). The user manually picks the chip. The app already knows the most‑recently‑logged day and could surface "Up next: Day 3" on Workout with one tap.</p>
+      <p class="why">Removes one decision per session. Especially valuable on weeks where the user skipped a day and forgot where they were.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ 7. Risk ════════════════ -->
+<section id="risk">
+  <div class="sec-h">
+    <div class="sec-num">07</div>
+    <div>
+      <div class="sec-t">Risk · the additive paradigm has gravity</div>
+      <div class="sec-sub">Every version of this app has been additive (it's the right call for data‑safety). But "additive only" has a cost — eventually every screen carries dead weight, because removing anything is a re‑baseline.</div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <h3>You're carrying a lot of "this is here because removing it would re‑baseline <code>index.html.bak</code>".</h3>
+    <p>The handoff is honest about this: the byte‑identity gate on <code>verify.js</code> means any change to rendered card markup intentionally fails the smoke test, which is why a clean‑up of <code>EXERCISE_DATA</code> markup is treated as a separate event. That's correct for safety. The cost is that small adjustments to the card surface have become disproportionately expensive — and so the surface accretes.</p>
+    <p>A separate verify pass that locks <em>data</em> identity (the parsed plan, exercise list, history JSON) without locking <em>markup</em> identity would let the card breathe. It's the difference between protecting the user's logs and protecting the user's view of their logs. Only the first one actually matters.</p>
+    <div class="pull">
+      <div class="stat"><div class="num">~520 KB</div><div class="cap">index.html size</div></div>
+      <div class="stat"><div class="num">8,511</div><div class="cap">lines (v3.42)</div></div>
+      <div class="stat"><div class="num">38</div><div class="cap">test suites</div></div>
+    </div>
+    <p style="margin-top:14px"><b style="color:#fff">What to retire, opportunistically:</b> the legacy non‑v2 RPE path (cardio/legacy) duplicates surface the v2 card already covers. The <code>plansync_spot</code>/<code>patch5</code>/<code>patchN</code> gated markup blocks were the right pattern at the time but the gates can collapse now that the patches have all landed. Each retirement is a single‑version, single‑section commit. None individually flashy; together they keep the file maintainable.</p>
+  </div>
+</section>
+
+<footer>
+  <b>About this review.</b>&nbsp; Based on a fresh read of <code>index.html</code> at v4.20, the <code>SESSION-HANDOFF.md</code> closeout notes, and the open patches gated in. None of the recommendations require new sync keys, schema changes, or data migrations — they're all additive surface work that fits the single‑file model. The 5 feature ideas in §02 are roughly ordered by ROI; the 3 deferred CSS sweeps in §05 are ordered by user‑visible payoff (5.5 first, 5.3 dark‑only second, 5.2 skip).<br><br>
+  Read this alongside the v3.42 review for context. That document opened with "the bones are good" — this one opens with "the muscle is good too." The next version of this review, whenever it lands, should be about what features the data is starting to tell you about.
+</footer>
+
+</div>
+</body>
+</html>

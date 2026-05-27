@@ -52,5 +52,46 @@ ok(!ST3.getItem('gymlog_sync_pending'),'clearPendingSync clears pending');
 ok(!!ST3.getItem('gymlog_last_sync_ok'),'clearPendingSync stamps last-sync-ok time');
 ok(D3.getElementById('sync-banner').style.display==='none','synced → banner hidden');
 
+// ── v5.1 · new synced keys (F4 rest_overrides_v1, F3 plate_setup_v1) survive
+//    the buildBinPayload → applyPayloadToLocal round-trip (both sync directions) ──
+const ST4=store(); ST4.setItem('gym_primary_device','1');
+ST4.setItem('rest_overrides_v1', JSON.stringify({lk123:75,_mode:'long'}));
+ST4.setItem('plate_setup_v1', JSON.stringify({barWeight:35,plates:[45,25,10]}));
+const w4=app(ST4,{}); const payload4=w4.buildBinPayload();
+ok(payload4['rest_overrides_v1'] && payload4['rest_overrides_v1'].lk123===75 && payload4['rest_overrides_v1']._mode==='long','rest_overrides_v1 (overrides + _mode) rides the payload');
+ok(payload4['plate_setup_v1'] && payload4['plate_setup_v1'].barWeight===35,'plate_setup_v1 rides the payload');
+// apply into a fresh device → both keys land
+const ST5=store(); const w5=app(ST5,{});
+w5.applyPayloadToLocal(payload4);
+ok(JSON.parse(ST5.getItem('rest_overrides_v1'))._mode==='long','applyPayloadToLocal restores rest_overrides_v1');
+ok(JSON.parse(ST5.getItem('plate_setup_v1')).barWeight===35,'applyPayloadToLocal restores plate_setup_v1');
+// union-merge keeps both sides' rest overrides (never shrinks)
+const merged=w5._mergeRestOverrides({lkA:60},{lkB:90,_mode:'short'});
+ok(merged.lkA===60 && merged.lkB===90 && merged._mode==='short','_mergeRestOverrides unions both sides');
+// F3 plate math (fresh app = default 45 bar / [45,25,10,5,2.5]):
+const wM=app(store({}));
+const pp=wM.platesPerSide(225);
+ok(pp && pp.per===90 && pp.list.length===2 && pp.short===0,'platesPerSide(225) → 90/side as 45+45, no short');
+const pp2=wM.platesPerSide(96);
+ok(pp2 && pp2.short>0,'platesPerSide(96) → flags the unachievable remainder');
+ok(wM.platesPerSide(30)===null,'platesPerSide(below bar) → null');
+
+// ── L3 (v5.1) · cycle auto-advance picks the next day after the last logged ──
+const wL3=app(store({}));
+ok(wL3._nextCycleDay()===wL3.getDays()[0],'L3 · no history → next cycle day = Day 1');
+const days=wL3.getDays();   // a,b,c,d,e
+const STl=store({}); STl.setItem('gymlog_'+days[1], JSON.stringify([{label:'x',date:'x',ts:Date.now(),entries:[{ex:'Bench',note:'Set 1: 100 lbs x5reps'}]}]));
+const wL3b=app(STl);
+ok(wL3b._lastLoggedDay()===days[1],'L3 · lastLoggedDay = the most-recently-logged day');
+ok(wL3b._nextCycleDay()===days[2],'L3 · next cycle day = the day after the last logged');
+// wrap-around: logging the last day → next is Day 1
+const STw=store({}); STw.setItem('gymlog_'+days[days.length-1], JSON.stringify([{label:'x',date:'x',ts:Date.now(),entries:[{ex:'Bench',note:'Set 1: 100 lbs x5reps'}]}]));
+const wL3c=app(STw);
+ok(wL3c._nextCycleDay()===days[0],'L3 · cycle wraps from the last day back to Day 1');
+// draft guard: an in-progress draft opts out of auto-advance
+const STd=store({}); STd.setItem('gymlog_draft_'+days[2], JSON.stringify({checked:['x'],fields:{}}));
+const wL3d=app(STd);
+ok(wL3d._hasAnyDraft()===true && wL3d._workoutTargetDay().auto===false,'L3 · in-progress draft → no auto-advance');
+
 console.log('\n'+(fail?('DURABILITY SPOT-CHECK: '+fail+' FAILED'):'DURABILITY SPOT-CHECK: ALL PASS'));
 process.exit(fail?1:0);

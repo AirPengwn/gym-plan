@@ -82,5 +82,25 @@ try{ wL.loadLastTimes(); }catch(e){}
 var nudge=[].slice.call(wL.document.querySelectorAll('.overload-nudge')).map(function(n){return n.textContent;}).join(' | ');
 ok(/try 105 lbs|Hit|Build to|Ready to try|hold/.test(nudge),'loadLastTimes injects an .overload-nudge on the workout card ('+(nudge||'none')+')');
 
+// ── F1 (v5.1) · progressionNudge: stalled+easy → bump, stalled+hard → hold ──
+var wP1=withHist([ sess(2000,'Set 1: 100 lbs x'+R+'reps'), sess(1000,'Set 1: 100 lbs x'+R+'reps') ]);
+var n1=wP1.progressionNudge(K, wP1.exerciseMeta(K));
+ok(n1 && n1.kind==='bump' && n1.target>100,'F1 · flat top weight, easy/no RPE → bump suggestion ('+JSON.stringify(n1)+')');
+
+var wP2=withHist([ sess(2000,'Set 1: 100 lbs x'+R+'reps',9), sess(1000,'Set 1: 100 lbs x'+R+'reps',8) ]);
+var n2=wP2.progressionNudge(K, wP2.exerciseMeta(K));
+ok(n2 && n2.kind==='hold','F1 · flat top weight, hard RPE (avg ≥8) → hold ('+JSON.stringify(n2)+')');
+
+var wP3=app(store({gym_primary_device:'1'}));
+ok(wP3.progressionNudge(K, wP3.exerciseMeta(K))===null,'F1 · no history → null (no nudge)');
+
+// ── F2 (v5.1) · countNewEstPRs: new est-1RM beats prior completed sessions ──
+// index 0 = "just saved" (excluded from baseline); est1RM Epley = w*(1+r/30).
+var wF2a=withHist([ sess(2000,'Set 1: 140 lbs x5reps'), sess(1000,'Set 1: 100 lbs x5reps') ]);
+ok(wF2a.countNewEstPRs('a', [{ex:K,note:'Set 1: 140 lbs x5reps'}])===1,'F2 · new est-1RM beats history → 1 PR');
+var wF2b=withHist([ sess(2000,'Set 1: 90 lbs x5reps'), sess(1000,'Set 1: 100 lbs x5reps') ]);
+ok(wF2b.countNewEstPRs('a', [{ex:K,note:'Set 1: 90 lbs x5reps'}])===0,'F2 · below prior best → 0 PRs');
+ok(wF2a.est1RM(140,5)>wF2a.est1RM(100,5),'F2 · est1RM monotonic in weight (Epley reused, not reinvented)');
+
 console.log('\n'+(fail?('PROGRESSION SPOT-CHECK: '+fail+' FAILED'):'PROGRESSION SPOT-CHECK: ALL PASS'));
 process.exit(fail?1:0);
