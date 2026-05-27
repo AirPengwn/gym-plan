@@ -168,5 +168,21 @@ ok(aSW.order['a'].length===len0,'swap · replaces (not adds) — day length unch
 ok(aSW.order['a'].indexOf(swDom)<0,'swap · original instance removed from the day');
 ok(aSW.order['a'].some(function(id){return wSwap.normalizeEx((aSW.ex[id]||{}).histEx||(aSW.ex[id]||{}).name)==='barbell bench press';}),'swap · the alternative is now on the day');
 
-console.log('\n'+(fail?('DURABILITY SPOT-CHECK: '+fail+' FAILED'):'DURABILITY SPOT-CHECK: ALL PASS'));
-process.exit(fail?1:0);
+// ── v5.8 · cloud read-modify-write ops serialize (no self-overlap) ──
+function _finish(){
+  console.log('\n'+(fail?('DURABILITY SPOT-CHECK: '+fail+' FAILED'):'DURABILITY SPOT-CHECK: ALL PASS'));
+  process.exit(fail?1:0);
+}
+(function(){
+  var STser=store({gym_primary_device:'1'});
+  STser.setItem('body_measurements', JSON.stringify([{type:'weight',date:'2026-05-25',value:180,unit:'lbs',ts:2}]));
+  var wSer=app(STser,{});
+  var inF=0, maxF=0;
+  wSer.cloudGET=function(){ inF++; if(inF>maxF) maxF=inF; return new Promise(function(r){ setTimeout(function(){ r({}); },20); }); };
+  wSer._rawCloudPUT=function(){ return new Promise(function(r){ setTimeout(function(){ inF--; r(); },20); }); };
+  // two overlapping writes from this device must run one-at-a-time
+  Promise.all([wSer.pushMeasurementsToCloud(), wSer.pushMeasurementsToCloud()])
+    .then(function(){ ok(maxF===1,'v5.8 · overlapping cloud writes serialize (max concurrent = 1)'); })
+    .catch(function(e){ ok(false,'v5.8 · serialize test threw: '+(e&&e.message)); })
+    .then(function(){ try{ wSer.close(); }catch(e){} _finish(); });
+})();

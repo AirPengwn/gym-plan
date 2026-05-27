@@ -1020,7 +1020,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.7</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.8</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -1727,7 +1727,7 @@ function pushPlanToCloud(){
   if(!getPlanSyncEnabled()){ showToast('Switch "Cloud enabled" on first'); return; }
   if(TEST_MODE){ showToast('Test mode — cloud sync disabled'); return; }
   showToast('Pushing plan to cloud…');
-  cloudGET().then(function(cloud){
+  _serializeCloudWrite(function(){ return cloudGET().then(function(cloud){
     cloud=(cloud && typeof cloud==='object')?cloud:{};
     // Overlay ONLY the plan + day config; keep cloud's sessions etc. as-is.
     try{ var pv=JSON.parse(localStorage.getItem('plan_v2')); if(pv) cloud['plan_v2']=pv; else delete cloud['plan_v2']; }catch(e){}
@@ -1743,7 +1743,7 @@ function pushPlanToCloud(){
     try{ var un=localStorage.getItem('units_v1'); if(un) cloud['units_v1']=un; }catch(e){}
     if(!cloud.__schema) cloud.__schema=SCHEMA_VERSION;
     return _rawCloudPUT(cloud);
-  }).then(function(){
+  }); }).then(function(){
     try{ localStorage.setItem('plan_last_pushed', String(Date.now())); }catch(e){}
     showToast('Plan pushed to cloud ✓ (sessions untouched)');
     try{ haptic('light'); }catch(e){}
@@ -8133,13 +8133,25 @@ function toggleTestMode(){
 // both local and cloud. opts.authoritative=true does a straight overwrite
 // PUT — only for DELIBERATE destructive actions (clear history, restore
 // backup) where the user explicitly intends to replace cloud state.
+// v5.8: serialize THIS device's cloud read-modify-write ops so two never overlap
+// and clobber each other (the realistic self-race: e.g. a session save + a
+// measurement push firing together). Each op runs only after the prior settles;
+// a failed write never breaks the chain. Cross-device writes are still possible
+// but rare for a single user, and the union-merge self-heals most data on the
+// next sync (JSONbin offers no atomic compare-and-swap to fully close that gap).
+var _cloudWriteChain=Promise.resolve();
+function _serializeCloudWrite(fn){
+  var p=_cloudWriteChain.then(fn, fn);
+  _cloudWriteChain=p.then(function(){}, function(){});
+  return p;
+}
 function syncToJbin(onDone, opts){
   if(TEST_MODE){ if(typeof onDone==='function') onDone(true); return; }
   opts=opts||{};
   // v2.72 — capture last error message so the diagnostic surface can show
   // the actual cause instead of opaque "Cloud sync failed".
   if(opts.authoritative){
-    cloudPUT(buildBinPayload())
+    _serializeCloudWrite(function(){ return cloudPUT(buildBinPayload()); })
       .then(function(){ clearPendingSync(); window._lastSyncErr=null; if(onDone) onDone(true); })
       .catch(function(err){
         console.warn('JSONbin authoritative sync failed:', err);
@@ -8149,14 +8161,15 @@ function syncToJbin(onDone, opts){
     return;
   }
   var _cloudSnap=null;
-  cloudGET()
-    .then(function(cloud){
+  _serializeCloudWrite(function(){
+    return cloudGET().then(function(cloud){
       _cloudSnap=cloud;
       var merged=mergeCloudIntoPayload(cloud);
       applyPayloadToLocal(merged);
       refreshAfterSync();
       return cloudPUT(merged);
-    })
+    });
+  })
     .then(function(){ clearPendingSync(); window._lastSyncErr=null; try{ maybeArchiveToCloud(_cloudSnap); }catch(e){} if(onDone) onDone(true); })
     .catch(function(err){
       console.warn('JSONbin merge sync failed (kept local, will retry):', err);
@@ -8941,7 +8954,7 @@ function _refreshMeasUI(){
 // with the cloud, ask whether to replace (you're right there after saving).
 function pushMeasurementsToCloud(){
   if(typeof TEST_MODE!=='undefined' && TEST_MODE) return;
-  cloudGET().then(function(cloud){
+  return _serializeCloudWrite(function(){ return cloudGET().then(function(cloud){
     cloud=(cloud&&typeof cloud==='object')?cloud:{};
     var cloudMeas=Array.isArray(cloud['body_measurements'])?cloud['body_measurements']:[];
     var cloudByKey={}; cloudMeas.forEach(function(m){ if(m&&m.date&&m.type) cloudByKey[m.type+'|'+m.date]=m; });
@@ -8962,7 +8975,7 @@ function pushMeasurementsToCloud(){
     cloud['body_measurements']=merged;
     if(!cloud.__schema) cloud.__schema=SCHEMA_VERSION;
     return _rawCloudPUT(cloud).then(function(){ _refreshMeasUI(); });
-  }).catch(function(){ /* best-effort safety net — never disrupt the app */ });
+  }); }).catch(function(){ /* best-effort safety net — never disrupt the app */ });
 }
 
 // ── Weight (existing, lbs/kg toggle) ────────────────────────────────
