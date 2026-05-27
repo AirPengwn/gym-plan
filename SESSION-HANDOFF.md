@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.4 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.5 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -93,9 +93,13 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
   beep (Web Audio, unlocked on the Rest tap) / toast / haptic. **No background notification** —
   an iOS client-side timer is suspended while backgrounded, so a true background alert needs push
   infra (out of scope); the win is accuracy + an alert the instant you return. Still queued (one
-  version each, pause for verify): v5.5 tap exercise name → inline history+1RM, v5.6 warm-up set
-  calc, v5.7 metadata-matched exercise swap (plan-mode), v5.8 cloud read-modify-write hardening
-  (plan-mode).
+  version each, pause for verify): v5.6 warm-up set calc, v5.7 metadata-matched exercise swap
+  (plan-mode), v5.8 cloud read-modify-write hardening (plan-mode).
+  - **v5.5 (DONE):** tap a strength card's **exercise name** → inline history panel
+    (`toggleExHistory`) with the last ~6 sessions + an est-1RM sparkline (`_exSparkline`), from
+    `getExerciseProgress`. The name is excluded from the card's tap-to-check handler (added
+    `.ex-name[role="button"]` to the exclusion); the rest of the row still toggles done. A 📈
+    glyph marks it. No re-baseline (buildCardHTML_v2 + runtime).
 
 Personal, single-user workout tracker. **Data safety is paramount** — never risk losing
 logged history.
