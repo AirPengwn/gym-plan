@@ -540,6 +540,42 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.14 · T6 Awards rework + T7 "Worth a look" ──
+(function(){
+  // Seed enough sessions for some milestones earned + some Up Next.
+  var now=Date.now(), DAY=86400000;
+  var sessions=[];
+  // Need both an exercise that's logged consistently AND one that's sometimes skipped
+  // so exPoss/exApp produce a non-empty topSkipped.
+  for(var i=0;i<6;i++){
+    var entries=[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}];
+    // Cable row logged only on the most recent session (1 of 6 → 83% skipped)
+    if(i===0) entries.push({ex:'Cable row',note:'Set 1: 100 lbs x8reps'});
+    sessions.push({label:'D1',date:'',ts:now-i*DAY,entries:entries});
+  }
+  const w=loadApp(makeStore({ 'gymlog_a': JSON.stringify(sessions) }));
+  var html=w.renderMilestones();
+  // T6 · earned section + Up Next badges + collapse button
+  ok(/milestone-badge earned/.test(html),'v5.14 T6 · earned badges present');
+  ok(/milestone-badge upnext/.test(html),'v5.14 T6 · Up Next badges present');
+  ok(/milestone-progress/.test(html),'v5.14 T6 · progress bars rendered for derivable Up Next');
+  ok(/more locked/.test(html),'v5.14 T6 · "+ N more locked" collapse button');
+  ok(/milestone-rest/.test(html) && /hidden/.test(html),'v5.14 T6 · the rest are collapsed by default');
+  // Test that earned badges come first
+  var earnedIdx=html.indexOf('milestone-badge earned');
+  var upnextIdx=html.indexOf('milestone-badge upnext');
+  ok(earnedIdx<upnextIdx,'v5.14 T6 · earned sorted before Up Next');
+  // T7 · "Worth a look" — needs sessions with un-checked items. Add some.
+  // Each session above only has 1 entry, so other day-1 exercises (Cable row,
+  // Pec fly, …) appear in 6 possibilities but 0 times → 100% "skipped".
+  try{ w.renderStats(); }catch(e){}
+  var statsHtml=w.document.getElementById('prog-stats')?w.document.getElementById('prog-stats').innerHTML:'';
+  ok(/Worth a look/.test(statsHtml),'v5.14 T7 · section renamed to "Worth a look"');
+  ok(/done \d+ of last \d+/.test(statsHtml),'v5.14 T7 · row reads "done X of last Y"');
+  ok(!/% skipped/.test(statsHtml),'v5.14 T7 · old "% skipped" framing removed');
+  w.close();
+})();
+
 // ── v5.14 · Phase 2 — fmtSet chips + empty-chip dimming ──
 (function(){
   const w=loadApp(makeStore({}));

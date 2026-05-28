@@ -467,9 +467,12 @@ body.dark .mm-dot.low{background:#3C3A6E}body.dark .mm-dot.moderate{background:#
 .ex-stat-chip.ex-stat-std{background:var(--primary-tint);color:var(--primary)}
 .ex-stat-chip.green{background:#E8F5E9;color:#2E7D32}
 .skip-list{display:flex;flex-direction:column;gap:4px}
-.skip-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#FFF8F8;border-radius:7px;font-size:12px}
-.skip-row-name{color:#2C2C2A;font-weight:500}
-.skip-row-pct{color:#C0392B;font-weight:700}
+/* v5.14 (T7): "Worth a look" rows — muted framing, no red pct badge.
+   Background drops to the neutral surface so it stops looking like an alert. */
+.skip-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--surface);border:1px solid var(--border-soft);border-radius:7px;font-size:12px}
+.skip-row-name{color:var(--text);font-weight:500}
+.skip-row-cnt{color:var(--muted);font-weight:600}
+.skip-row-pct{color:var(--muted);font-weight:600}      /* legacy; superseded by .skip-row-cnt in render */
 .meas-sub-btn{padding:7px 14px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:13px;font-weight:600;color:#888780;background:#F5F5F2;cursor:pointer}
 .meas-sub-btn.active{background:#7F77DD;border-color:#7F77DD;color:#fff}
 .meas-entry-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
@@ -611,7 +614,7 @@ body.dark #share-text{background:var(--surface);color:var(--text);border-color:v
 body.dark .sess-nav{background:#252540}
 body.dark .sess-nav-btn{background:var(--surface);border-color:var(--border);color:#B4B2D8}
 body.dark .prog-empty{color:#9896C8}
-body.dark .skip-row{background:#2A1A1A}
+body.dark .skip-row{background:var(--surface);border-color:var(--border)}
 body{transition:background 0.2s,color 0.2s}
 
 /* ── Pre-session check-in ── */
@@ -767,6 +770,20 @@ body.dark .pain-btn.active-ok{background:#0F3A2E;border-color:#0F6E56;color:#5DD
 body.dark .pain-btn.active-flag{background:#3A1A1A;border-color:#C53030;color:#FF8080}
 body.dark .milestone-badge.earned{background:#3A2E00;border-color:#E0A800;color:#FFD740}
 body.dark .milestone-badge.locked{background:#252540;border-color:var(--border);color:#5C5A80}
+/* v5.14 (T6): "Up next" + collapsed-locked variants. Up-next is wider, shows a
+   tiny progress bar (var(--gold)) for milestones with a numeric target. The
+   collapsed rest hides behind a small text button; dim outline, no 🔒 glyph. */
+.milestone-badge.upnext{flex-direction:column;align-items:stretch;gap:4px;min-width:120px;padding:7px 10px;background:transparent;border-color:var(--border-soft);color:var(--text)}
+.milestone-up-head{font-weight:700}
+.milestone-progress{height:4px;background:var(--border-soft);border-radius:2px;overflow:hidden;display:block}
+.milestone-progress-fill{display:block;height:100%;background:var(--gold);border-radius:2px}
+.milestone-progress-cap{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.milestone-more{display:block;margin:6px auto 0;background:transparent;border:0;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;padding:6px 12px}
+.milestone-more:hover{color:var(--text)}
+.milestone-badge.locked-dim{background:transparent;border:1px dashed var(--border);color:var(--muted);font-weight:600;padding:4px 9px}
+body.dark .milestone-badge.upnext{border-color:var(--border)}
+body.dark .milestone-progress{background:var(--border)}
+body.dark .milestone-badge.locked-dim{border-color:var(--border);color:#5C5A80}
 body.dark .mgr-day-label{color:#B4B2D8;border-bottom-color:var(--border)}
 body.dark .ex-list-btn:hover{background:var(--primary-tint);border-color:#7F77DD}
 body.dark .ex-list-btn.active{background:var(--primary-tint);border-color:#5B4EA8;color:#B4B2D8}
@@ -8667,7 +8684,9 @@ function computeStats(){
   var skipRates=[];
   Object.keys(exApp).forEach(function(ex){
     var poss=exPoss[ex]||1,app=exApp[ex],pct=Math.round((1-(app/poss))*100);
-    if(poss>=2&&pct>0) skipRates.push({ex:ex,pct:pct});
+    // v5.14 (T7): carry done/total counts so the "Worth a look" row can say
+    // "done X of last Y" instead of the harsher "{N}% skipped".
+    if(poss>=2&&pct>0) skipRates.push({ex:ex, pct:pct, done:app, total:poss});
   });
   skipRates.sort(function(a,b){return b.pct-a.pct;});
   var favDay=Object.keys(dayCounts).sort(function(a,b){return dayCounts[b]-dayCounts[a];})[0];
@@ -8840,9 +8859,10 @@ function renderStats(){
     +statCard('Most Done Day',s.favDay,''+s.favCount+' sessions')
     +'</div></div>';
   if(s.topSkipped.length){
-    html+='<div class="stats-section"><div class="stats-section-title">Most Skipped — review these</div><div class="skip-list">';
+    // v5.14 (T7): renamed to "Worth a look" with muted "done X of last Y" framing.
+    html+='<div class="stats-section"><div class="stats-section-title">Worth a look</div><div class="skip-list">';
     s.topSkipped.forEach(function(item){
-      html+='<div class="skip-row"><span class="skip-row-name">'+item.ex+'</span><span class="skip-row-pct">'+item.pct+'% skipped</span></div>';
+      html+='<div class="skip-row"><span class="skip-row-name">'+_esc(item.ex)+'</span><span class="skip-row-cnt">done '+(item.done||0)+' of last '+(item.total||0)+'</span></div>';
     });
     html+='</div></div>';
   }
@@ -8951,19 +8971,79 @@ function getEarnedMilestones(){
   catch(e){ return []; }
 }
 
+// v5.14 (T6): derive numeric progress for milestones whose target is a counter
+// (sessions, streak days, consistent weeks, PR count). Other badges (earlybird,
+// marathon, alldays, …) return null and stay binary.
+function _milestoneProgress(m, s, wk, prs){
+  if(!s) return null;
+  var match, cur=0, tgt=0;
+  if((match=m.id.match(/^s(\d+)$/))){ tgt=parseInt(match[1],10); cur=s.total||0; }
+  else if((match=m.id.match(/^streak(\d+)$/))){ tgt=parseInt(match[1],10); cur=s.streak||0; }
+  else if((match=m.id.match(/^wk(\d+)$/))){ tgt=parseInt(match[1],10); cur=wk||0; }
+  else if((match=m.id.match(/^pr(\d+)$/))){ tgt=parseInt(match[1],10); cur=prs||0; }
+  else return null;
+  return {current:Math.min(cur,tgt), target:tgt, raw:cur};
+}
 function renderMilestones(){
   var earned=getEarnedMilestones();
   var s=computeStats();
   var wkData=getWeeklyConsistency();
   var prs=getTotalPRs();
-  var html='<div class="stats-section"><div class="stats-section-title">🏅 Milestone Badges</div><div class="milestone-shelf">';
-  MILESTONES.forEach(function(m){
+  // v5.14 (T6): sort {earned desc, distance asc}; reveal only earned + 3 Up Next.
+  var scored=MILESTONES.map(function(m){
     var isEarned=m.check(s,wkData.weeksHit,prs,wkData.sessions)||earned.indexOf(m.id)!==-1;
-    html+='<div class="milestone-badge '+(isEarned?'earned':'locked')+'">'
-      +(isEarned?m.icon:'🔒')+' '+m.label+'</div>';
+    var prog=_milestoneProgress(m, s, wkData.weeksHit, prs);
+    var distance=(!isEarned && prog && prog.target>0)?Math.max(0,prog.target-prog.current):null;
+    return {m:m, earned:isEarned, prog:prog, distance:distance};
   });
-  html+='</div></div>';
+  scored.sort(function(a,b){
+    if(a.earned!==b.earned) return a.earned?-1:1;
+    if(a.earned) return 0;
+    // unearned: progress-bar-eligible ones first (closer to earning), then binary lockeds.
+    if(a.distance==null && b.distance==null) return 0;
+    if(a.distance==null) return 1;
+    if(b.distance==null) return -1;
+    return a.distance - b.distance;
+  });
+  var earnedItems=scored.filter(function(x){return x.earned;});
+  var unearned=scored.filter(function(x){return !x.earned;});
+  var upNext=unearned.slice(0, 3);
+  var rest=unearned.slice(3);
+
+  var html='<div class="stats-section"><div class="stats-section-title">🏅 Milestone Badges</div>';
+  html+='<div class="milestone-shelf">';
+  earnedItems.forEach(function(x){
+    html+='<div class="milestone-badge earned">'+x.m.icon+' '+_esc(x.m.label)+'</div>';
+  });
+  upNext.forEach(function(x){
+    var bar='';
+    if(x.prog && x.prog.target>0){
+      var pct=Math.min(100, Math.round(100*(x.prog.current||0)/x.prog.target));
+      bar='<div class="milestone-progress" aria-hidden="true"><span class="milestone-progress-fill" style="width:'+pct+'%"></span></div>'
+        +'<span class="milestone-progress-cap">'+(x.prog.raw||0)+' / '+x.prog.target+'</span>';
+    }
+    html+='<div class="milestone-badge upnext" aria-label="'+_esc(x.m.label)+' — '+(x.prog?(x.prog.raw||0)+' of '+x.prog.target:'locked')+'">'
+      +'<span class="milestone-up-head">'+x.m.icon+' '+_esc(x.m.label)+'</span>'
+      +bar+'</div>';
+  });
+  html+='</div>';
+  if(rest.length){
+    html+='<button type="button" class="milestone-more" onclick="_toggleMilestoneRest(this)" aria-expanded="false" data-count="'+rest.length+'">+ '+rest.length+' more locked</button>';
+    html+='<div class="milestone-rest milestone-shelf" hidden>';
+    rest.forEach(function(x){
+      html+='<div class="milestone-badge locked-dim">'+_esc(x.m.label)+'</div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
   return html;
+}
+function _toggleMilestoneRest(btn){
+  var rest=btn.parentNode.querySelector('.milestone-rest');
+  if(!rest) return;
+  var hidden=rest.hasAttribute('hidden');
+  if(hidden){ rest.removeAttribute('hidden'); btn.setAttribute('aria-expanded','true'); btn.textContent='– hide locked'; }
+  else      { rest.setAttribute('hidden',''); btn.setAttribute('aria-expanded','false'); btn.textContent='+ '+(btn.getAttribute('data-count')||rest.querySelectorAll('.milestone-badge').length)+' more locked'; }
 }
 
 // ── Weekly consistency in Stats ──────────────────────────────────────
