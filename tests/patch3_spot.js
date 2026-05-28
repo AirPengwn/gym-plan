@@ -36,8 +36,10 @@ ok(w._streakPill(2,10)==='','Step 1 · _streakPill empty when current<50% longes
 var css=D.documentElement.innerHTML;
 ok(/\.delta-pb\{background:#FBF1D6;color:#8C6500\}/.test(css),'Step 1 · .delta-pb light colors match spec (#FBF1D6 / #8C6500)');
 ok(/body\.dark \.delta-pb\{background:#3A2E00;color:#FFD740\}/.test(css),'Step 1 · .delta-pb dark colors match spec');
-// 1e. Body-measurements summary now uses deltaPill (lowerIsBetter).
-// Seed two weight entries (start 200, current 185 — loss).
+// 1e. Body-measurements summary now uses deltaPill.
+// v5.14 (T2-B5): bodyweight Change is colored ONLY when a goal is explicitly set.
+// Seed two weight entries (start 200, current 185 — loss) and goal=down.
+w.localStorage.setItem('bodyweight_goal_v1','down');
 w.localStorage.setItem('body_measurements', JSON.stringify([
   {type:'weight', value:200, unit:'lbs', date:'2026-04-01'},
   {type:'weight', value:185, unit:'lbs', date:'2026-05-15'}
@@ -45,15 +47,20 @@ w.localStorage.setItem('body_measurements', JSON.stringify([
 try{ w.renderGenericMeas('weight'); }catch(e){console.log('renderGenericMeas err: '+e.message);}
 var summW=(D.getElementById('meas-summary')||{}).innerHTML||'';
 ok(/delta-pill/.test(summW),'Step 1 · weight summary card renders a delta-pill');
-ok(/delta-up/.test(summW) && /▼/.test(summW),'Step 1 · weight loss reads green ▼ (lowerIsBetter)');
-// Inverse: gain → red
+ok(/delta-up/.test(summW) && /▼/.test(summW),'Step 1 · v5.14 · with goal=down, loss reads green ▼');
+// Inverse: gain → red (still goal=down so gain is bad)
 w.localStorage.setItem('body_measurements', JSON.stringify([
   {type:'weight', value:180, unit:'lbs', date:'2026-04-01'},
   {type:'weight', value:195, unit:'lbs', date:'2026-05-15'}
 ]));
 try{ w.renderGenericMeas('weight'); }catch(e){}
 var summG=(D.getElementById('meas-summary')||{}).innerHTML||'';
-ok(/delta-down/.test(summG) && /▲/.test(summG),'Step 1 · weight gain reads red ▲ (lowerIsBetter inverse)');
+ok(/delta-down/.test(summG) && /▲/.test(summG),'Step 1 · v5.14 · with goal=down, gain reads red ▲');
+// v5.14 (T2-B5): without a goal set, weight Change is neutral muted text.
+w.localStorage.removeItem('bodyweight_goal_v1');
+try{ w.renderGenericMeas('weight'); }catch(e){}
+var summN=(D.getElementById('meas-summary')||{}).innerHTML||'';
+ok(/delta-neutral/.test(summN) && !/delta-up|delta-down/.test(summN),'Step 1 · v5.14 · without goal, Change is neutral (no green/red)');
 // Waist
 w.localStorage.setItem('body_measurements', JSON.stringify([
   {type:'waist', value:36, unit:'in', date:'2026-04-01'},

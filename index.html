@@ -35,6 +35,9 @@
   --good:           #0F6E56;
   --warn:           #E0A800;
   --bad:            #C53030;
+  /* v5.14 (T10): tokenized card surface + reusable celebratory gold. */
+  --card:           #ffffff;
+  --gold:           #FFD740;
   /* v4.20 (nit 19): radius scale (the useful slice of the deferred 5.3 token pass) */
   --r-sm:  8px;
   --r:     12px;
@@ -55,6 +58,7 @@ body.dark{
   --border-soft:    #3C3A5C;
   --primary-tint:   #2A2850;
   --ghost:          #A7A2CE;   /* italic prefill, dark theme — legible, italic is the cue (nit 5) */
+  --card:           #252540;   /* v5.14 (T10): matches body.dark .item bg */
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:420px;margin:0 auto}
@@ -476,9 +480,16 @@ body.dark .mm-dot.low{background:#3C3A6E}body.dark .mm-dot.moderate{background:#
 .meas-history-date{font-size:12px;color:#888780}
 .meas-history-val{font-size:15px;font-weight:700;color:#3C3489}
 .meas-history-del{background:none;border:none;color:#C0392B;font-size:16px;cursor:pointer;padding:2px 6px}
-.meas-stat-chip{background:#F0EFF9;border-radius:8px;padding:8px 10px;text-align:center;flex:1}
-.meas-stat-label{font-size:10px;color:#888780;margin-bottom:2px}
-.meas-stat-val{font-size:14px;font-weight:700;color:#3C3489}
+/* v5.14 (T2-B2): Body summary cards (Current/Change/Over) now follow var(--card)
+   so dark mode picks them up automatically — previously hardcoded near-white. */
+.meas-stat-chip{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center;flex:1}
+.meas-stat-label{font-size:10px;color:var(--muted);margin-bottom:2px}
+.meas-stat-val{font-size:14px;font-weight:700;color:var(--text)}
+/* v5.14 (T2-B4): caption under the value (e.g. "since May 25"). */
+.meas-stat-sub{font-size:9.5px;font-weight:600;color:var(--muted);margin-top:3px;letter-spacing:.02em}
+/* v5.14 (T2-B5): neutral delta — no green/red, just muted text. Used on the
+   Change card when the user hasn't set a bodyweight goal yet. */
+.delta-neutral{background:transparent;color:var(--muted);font-weight:700;padding:2px 0}
 .ex-detail-header{padding:12px 14px;border-bottom:0.5px solid #F1EFE8}
 .ex-detail-title{font-size:14px;font-weight:700;color:#3C3489}
 .ex-history-item{padding:10px 14px;border-bottom:0.5px solid #F1EFE8;font-size:12px}
@@ -1050,7 +1061,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.13</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.14</span></div>
   </div>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
@@ -4763,7 +4774,10 @@ function loadLastTimes(){
       var existingNudge=el.parentNode.querySelector('.overload-nudge');
       if(existingNudge) existingNudge.parentNode.removeChild(existingNudge);
       if(match){
-        el.querySelector('.last-time-vals').textContent=match.note+' ('+match.date+')';
+        // v5.14 (T1): friendlier relative date — "2 days ago · May 25" — with ISO in title.
+        var _vals=el.querySelector('.last-time-vals');
+        _vals.textContent=match.note+' ('+fmtDate(match.ts||match.date,'rel')+')';
+        _vals.setAttribute('title', fmtDateISO(match.ts||match.date));
         el.classList.add('has-data');
         // v5.13: the progressive-overload cue now lives in the consolidated
         // coach line (_applyCoachLine), not a separate nudge under last-time.
@@ -5080,8 +5094,9 @@ function renderExerciseList(){
       var sessions=exMap[k];
       var reversed=sessions.slice().reverse();
       var histHTML=sessions.map(function(s){
+        var _ts=_sessWhen(s);
         return ('<div class="ex-history-item">'
-          +'<div class="ex-history-date">'+s.date+'</div>'
+          +'<div class="ex-history-date" title="'+_esc(fmtDateISO(_ts))+'">'+_esc(fmtDate(_ts,'med'))+'</div>'
           +'<div class="ex-history-sets">'+s.note.replace(/\|/g,' &middot; ')+'</div>'
           +'</div>');
       }).join('');
@@ -5132,8 +5147,9 @@ function renderExerciseList(){
         var prevWs=prev?parseSetWeights(prev.note||''):[];
         var prevMax=prevWs.length?Math.max.apply(null,prevWs):null;
         var dp=(curMax!=null && prevMax!=null)?deltaPill(curMax, prevMax, {unit:'lbs', threshold:0.5}):'';
+        var _ts=_sessWhen(s);
         return '<div class="ex-history-item">'
-          +'<div class="ex-history-date">'+s.date+'</div>'
+          +'<div class="ex-history-date" title="'+_esc(fmtDateISO(_ts))+'">'+_esc(fmtDate(_ts,'med'))+'</div>'
           +'<div class="ex-history-sets">'+s.note.replace(/\|/g,' &middot; ')+'</div>'
           +(dp?'<div class="ex-history-delta">'+dp+'</div>':'')
           +'</div>';
@@ -5196,7 +5212,7 @@ function _redrawLiftChart(){
     }).filter(Boolean);
   }
   var unit=_currentLiftMetric==='volume'?'lbs':'lbs';
-  drawChartV2(canvas, pts, {unit:unit, height:200});
+  drawChartV2(canvas, pts, {unit:unit, height:200, labelCount:4});
 }
 
 // Patch 5: dual-signature parsers.
@@ -5311,12 +5327,60 @@ function countNewEstPRs(day, entries){
   return n;
 }
 
-function fmtChartDate(d){
-  var months={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
-  var m=d.match(/(\w+)\s+(\d+),\s*(\d{4})/);
-  if(m && months[m[1]]) return months[m[1]]+'/'+m[2]+'/'+m[3].slice(-2);
-  return d.split(',')[0].trim();
+// v5.14 (T1): unified date formatting. Replaces ad-hoc new Date(ts).toString()
+// and the old fmtChartDate. Modes:
+//   'short' → "May 25" (appends " '24" when more than ~6 months from today)
+//   'med'   → "Mon · May 25"
+//   'rel'   → "2 days ago · May 25" (falls back to 'short' past 14 days)
+// Accepts a number (epoch ms), a Date, or a stored session.date string.
+function fmtDate(ts, mode){
+  mode=mode||'short';
+  if(ts==null||ts==='') return '';
+  var d;
+  if(ts instanceof Date) d=ts;
+  else if(typeof ts==='number') d=new Date(ts);
+  else { // string — try direct, fall back to _sessWhen-style parse for Safari
+    d=new Date(String(ts).replace(' at ',' '));
+    if(isNaN(d.getTime())){
+      var m=String(ts).match(/([A-Za-z]{3,})\s+(\d{1,2}),\s*(\d{4})(?:.*?(\d{1,2}):(\d{2})\s*(AM|PM))?/i);
+      if(m){
+        var MO={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+        var mo=MO[m[1].slice(0,3).toLowerCase()];
+        if(mo!=null){
+          var hh=m[4]?parseInt(m[4],10):0, mm=m[5]?parseInt(m[5],10):0, ap=(m[6]||'').toUpperCase();
+          if(ap==='PM'&&hh<12) hh+=12; if(ap==='AM'&&hh===12) hh=0;
+          d=new Date(parseInt(m[3],10),mo,parseInt(m[2],10),hh,mm);
+        }
+      }
+    }
+  }
+  if(!d || isNaN(d.getTime())) return '';
+  var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var DOWS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var now=Date.now();
+  var ageDays=Math.floor((now - d.getTime())/86400000);
+  var sixMo=183*86400000;
+  var yearTag=(Math.abs(now - d.getTime()) > sixMo) ? " '"+String(d.getFullYear()).slice(-2) : '';
+  var shortStr=MONTHS[d.getMonth()]+' '+d.getDate()+yearTag;
+  if(mode==='med') return DOWS[d.getDay()]+' · '+shortStr;
+  if(mode==='rel'){
+    if(ageDays<0 || ageDays>14) return shortStr;
+    var rel=(ageDays===0)?'Today':(ageDays===1)?'Yesterday':(ageDays+' days ago');
+    return rel+' · '+shortStr;
+  }
+  return shortStr;
 }
+// Companion: full ISO for title= tooltips on rendered date nodes.
+function fmtDateISO(ts){
+  if(ts==null||ts==='') return '';
+  var d;
+  if(ts instanceof Date) d=ts;
+  else if(typeof ts==='number') d=new Date(ts);
+  else d=new Date(String(ts).replace(' at ',' '));
+  return (!d||isNaN(d.getTime()))?'':d.toISOString();
+}
+// Back-compat: existing callers of fmtChartDate keep working (chart axes).
+function fmtChartDate(d){ return fmtDate(d,'short'); }
 
 // Step 8 — Unified line-chart renderer. Single visual anatomy per audit §07:
 // one line (var(--primary) light / --primary-2 dark, 2px), one gradient fill,
@@ -5374,10 +5438,35 @@ function drawChartV2(canvas, dataPoints, opts){
     ctx.beginPath(); ctx.moveTo(pad.l,yp); ctx.lineTo(pad.l+cw,yp); ctx.stroke();
   }
 
-  // Two axis labels along bottom (first / last date).
+  // Axis labels along bottom. Default = first/last (legacy 2-label mode).
+  // v5.14 (T2-B1): opt-in multi-label mode for per-exercise charts. opts.labelCount
+  // up to 4 evenly distributed indices; rotate −25° if combined label width would
+  // exceed ~85% of the available track. Uses each point's `label` as-is.
   ctx.fillStyle=axis; ctx.font='10px system-ui';
-  if(dataPoints[0]){ ctx.textAlign='left'; ctx.fillText(dataPoints[0].label||'', pad.l, h-4); }
-  if(dataPoints.length>1){ ctx.textAlign='right'; ctx.fillText(dataPoints[dataPoints.length-1].label||'', pad.l+cw, h-4); }
+  var labelCount=Math.max(2, Math.min(4, opts.labelCount||2));
+  if(labelCount<=2 || dataPoints.length<=2){
+    if(dataPoints[0]){ ctx.textAlign='left'; ctx.fillText(dataPoints[0].label||'', pad.l, h-4); }
+    if(dataPoints.length>1){ ctx.textAlign='right'; ctx.fillText(dataPoints[dataPoints.length-1].label||'', pad.l+cw, h-4); }
+  } else {
+    var step=(dataPoints.length-1)/(labelCount-1);
+    var idxs=[]; for(var li=0;li<labelCount;li++){ idxs.push(Math.round(li*step)); }
+    // Estimate combined width: avg label chars × 6.5px + 12px gap each.
+    var avgChars=0; idxs.forEach(function(i){ avgChars+=String((dataPoints[i]&&dataPoints[i].label)||'').length; });
+    var estW=(avgChars*6.5) + (idxs.length-1)*12;
+    var rotate=(estW > cw*0.85);
+    idxs.forEach(function(i, ii){
+      var p=dataPoints[i]; if(!p||p.label==null) return;
+      var x=(dataPoints.length>1)?(pad.l+(i/(dataPoints.length-1))*cw):(pad.l+cw/2);
+      // Edge alignment: first → left, last → right, middle → center.
+      ctx.textAlign=(ii===0)?'left':(ii===idxs.length-1)?'right':'center';
+      if(rotate){
+        ctx.save(); ctx.translate(x, h-4); ctx.rotate(-25*Math.PI/180);
+        ctx.textAlign='right'; ctx.fillText(p.label||'', 0, 0); ctx.restore();
+      } else {
+        ctx.fillText(p.label||'', x, h-4);
+      }
+    });
+  }
 
   function xAt(i){ return dataPoints.length>1 ? pad.l+(i/(dataPoints.length-1))*cw : pad.l+cw/2; }
   function yAt(v){ return pad.t+ch-ch*((Number(v)||0)-yMin)/yRange; }
@@ -5427,7 +5516,7 @@ function drawChart(sessions, canvasId){
       pts.push({label:fmtChartDate(s.date||''), val:Math.round(avg)});
     }
   });
-  drawChartV2(canvas, pts, {unit:'lbs', height:180});
+  drawChartV2(canvas, pts, {unit:'lbs', height:180, labelCount:4});
 }
 
 var EXERCISE_REGISTRY=[
@@ -7640,7 +7729,9 @@ function renderProgress(){
       var dpill='<span class="sess-day-pill sess-day-'+day+'">'+dayLbl(day)+'</span>';
       var rowList=_sessionRowsHTML(exEntries);
       var notes=s.notes?'<div class="sess-notes">📝 '+_hl(_esc(s.notes))+'</div>':'';
-      var dateBlk='<span class="ps-date" id="pdate-'+day+'-'+idx+'" role="button" tabindex="0" title="Tap to edit date" onclick="editSessionDate(\''+day+'\','+idx+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();editSessionDate(\''+day+'\','+idx+')}">'+_esc(s.date||'')+' <span class="ps-cv" aria-hidden="true">▾</span></span>';
+      // v5.14 (T1): friendlier date display + ISO in title (was raw stored string).
+      var _sts=_sessWhen(s);
+      var dateBlk='<span class="ps-date" id="pdate-'+day+'-'+idx+'" role="button" tabindex="0" aria-label="Tap to edit date" title="'+_esc(fmtDateISO(_sts))+'" onclick="editSessionDate(\''+day+'\','+idx+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();editSessionDate(\''+day+'\','+idx+')}">'+_esc(fmtDate(_sts||s.date,'rel'))+' <span class="ps-cv" aria-hidden="true">▾</span></span>';
       html+='<div class="sess-card" data-day="'+day+'" data-idx="'+idx+'">'
         +'<div class="sess-card-head">'
         +'<div class="sess-card-head-l">'+dpill+mood+'</div>'
@@ -9209,14 +9300,39 @@ function renderGenericMeas(type){
 
   // Summary chips
   if(data.length>=2){
-    var first=data[0],last=data[data.length-1];
-    var weeks=Math.round((new Date(last.date)-new Date(first.date))/(1000*60*60*24*7)*10)/10;
-    // Patch 3 Step 1: standardised delta pill replaces the inline coloured text.
-    // For weight/waist/bodyfat, lower is the "good" direction (John's profile per spec).
-    var pill=deltaPill(last.value, first.value, {lowerIsBetter:true, unit:last.unit, threshold:0});
+    // v5.14 (T2-B3/B4): sort ascending by date so first=oldest, last=newest.
+    // The previous code took data[0]/data[len-1] from a newest-first array,
+    // producing negative "Over -5 wks".
+    var asc=data.slice().sort(function(a,b){ return String(a.date||'').localeCompare(String(b.date||'')); });
+    var first=asc[0], last=asc[asc.length-1];
+    var weeks=Math.max(0, Math.round((new Date(last.date)-new Date(first.date))/(1000*60*60*24*7)*10)/10);
+    // v5.14 (T2-B5): on the bodyweight card, the Change pill is colored only when
+    // the user has explicitly set a goal (localStorage.bodyweight_goal_v1 = 'down'
+    // | 'maintain' | 'up'). Otherwise it renders as neutral muted text — the app
+    // shouldn't assume "down is better" for everyone.
+    var diff=last.value-first.value, sign=diff>0?'+':'';
+    var diffTxt=sign+(Math.round(diff*10)/10)+' '+last.unit;
+    var goal=null; try{ if(isWeight) goal=localStorage.getItem('bodyweight_goal_v1'); }catch(_e){}
+    var changePill;
+    if(isWeight && (goal==='down'||goal==='up'||goal==='maintain')){
+      if(goal==='maintain'){
+        var flat=(Math.abs(diff)<1);
+        changePill='<span class="delta-pill '+(flat?'delta-flat':'delta-down')+'">'+diffTxt+'</span>';
+      } else {
+        changePill=deltaPill(last.value, first.value, {lowerIsBetter:(goal==='down'), unit:last.unit, threshold:0});
+      }
+    } else if(isWeight){
+      // No goal set → muted neutral, no color, no arrow. Tooltip nudges the user toward settings.
+      changePill='<span class="delta-pill delta-neutral" title="Set a bodyweight goal to color this trend">'+diffTxt+'</span>';
+    } else {
+      // Waist / body fat: keep the existing "lower is better" default for now.
+      changePill=deltaPill(last.value, first.value, {lowerIsBetter:true, unit:last.unit, threshold:0});
+    }
+    // v5.14 (T2-B4): "Over -5 wks" → "Over · 5 wks · since May 25" (no minus).
+    var since='since '+fmtDate(new Date(first.date+'T12:00:00'),'short');
     summEl.innerHTML=measChip('Current',last.value+' '+last.unit)
-      +measChip('Change',pill)
-      +measChip('Over',weeks+' wks');
+      +measChip('Change',changePill)
+      +measChip('Over',weeks+' wks', since);
   } else if(data.length===1){
     summEl.innerHTML=measChip('Current',data[0].value+' '+data[0].unit);
   } else {
@@ -9231,11 +9347,12 @@ function renderGenericMeas(type){
     histEl.innerHTML=reversed.map(function(m,i){
       var realIdx=data.length-1-i;
       var d=new Date(m.date+'T12:00:00');
-      var dateStr=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+      // v5.14 (T1): unified date display + ISO in title.
+      var dateStr=fmtDate(d,'med');
       var delFn=isWeight?'deleteMeasurement('+realIdx+')':'deleteGenericMeas(\"'+type+'\",'+realIdx+')';
       return '<div class="meas-history-item">'
         +'<div><div class="meas-history-val">'+m.value+' '+m.unit+'</div>'
-        +'<div class="meas-history-date">'+dateStr+'</div></div>'
+        +'<div class="meas-history-date" title="'+_esc(d.toISOString())+'">'+dateStr+'</div></div>'
         +'<button class="meas-history-del" onclick="'+delFn+'" title="Delete">✕</button>'
         +'</div>';
     }).join('');
@@ -9245,8 +9362,10 @@ function renderGenericMeas(type){
   if(chartWrap&&chartCanvas) drawMeasChartGeneric(data, chartCanvas, chartWrap);
 }
 
-function measChip(label,val){
-  return '<div class="meas-stat-chip"><div class="meas-stat-label">'+label+'</div><div class="meas-stat-val">'+val+'</div></div>';
+function measChip(label,val,sub){
+  return '<div class="meas-stat-chip"><div class="meas-stat-label">'+label+'</div><div class="meas-stat-val">'+val+'</div>'
+    +(sub?'<div class="meas-stat-sub">'+sub+'</div>':'')
+    +'</div>';
 }
 
 function drawMeasChart(data){ drawMeasChartGeneric(data, document.getElementById('meas-chart'), document.getElementById('meas-chart-wrap')); }
@@ -9256,9 +9375,14 @@ function drawMeasChartGeneric(data, canvas, wrap){
   if(!canvas||!wrap) return;
   if(!data.length){ wrap.style.display='none'; return; }
   wrap.style.display='block';
-  var pts=data.map(function(m){
+  // v5.14 (T2-B3): sort ascending by date BEFORE plotting. The caller passes the
+  // newest-first history array; without copy+sort the chart drew right→left.
+  // v5.14 (T1): use the unified fmtDate for axis labels.
+  var pts=data.slice().sort(function(a,b){
+    return String(a.date||'').localeCompare(String(b.date||''));
+  }).map(function(m){
     var d=new Date(m.date+'T12:00:00');
-    return {label:(d.getMonth()+1)+'/'+d.getDate(), val:m.value};
+    return {label:fmtDate(d,'short'), val:m.value, ts:d.getTime()};
   });
   var unit=(data[0]&&data[0].unit)||'';
   drawChartV2(canvas, pts, {unit:unit, height:180});

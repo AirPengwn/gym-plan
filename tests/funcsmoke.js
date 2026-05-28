@@ -540,6 +540,40 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.14 · fmtDate helper + B1–B5 bugfixes (Phase 1) ──
+(function(){
+  const w=loadApp(makeStore({}));
+  // T1 · fmtDate
+  var t=new Date(2026,4,25,18,0).getTime();
+  ok(w.fmtDate(t,'short')==='May 25','v5.14 T1 · short → "May 25" (got "'+w.fmtDate(t,'short')+'")');
+  ok(/^Mon · May 25$/.test(w.fmtDate(t,'med')),'v5.14 T1 · med → "Mon · May 25"');
+  ok(w.fmtDate('Mon, May 25, 2026 at 6:00 PM','short')==='May 25','v5.14 T1 · short parses session.date string');
+  ok(/^\d{4}-\d{2}-\d{2}T/.test(w.fmtDateISO(t)),'v5.14 T1 · fmtDateISO returns ISO string');
+  ok(w.fmtDate('not-a-date','short')==='','v5.14 T1 · invalid input → empty');
+  // T2-B4: "Over" caption + non-negative weeks
+  w.localStorage.setItem('body_measurements', JSON.stringify([
+    {type:'weight',value:200,unit:'lbs',date:'2026-04-20'},
+    {type:'weight',value:198,unit:'lbs',date:'2026-05-25'}
+  ]));
+  try{ w.renderGenericMeas('weight'); }catch(e){}
+  var summ=(w.document.getElementById('meas-summary')||{}).innerHTML||'';
+  ok(/Over/.test(summ) && !/-\s*\d+\s*wks/.test(summ),'v5.14 B4 · "Over" no negative wks ('+summ.match(/Over[\s\S]{0,40}/)+')');
+  ok(/since/i.test(summ),'v5.14 B4 · "since {date}" caption rendered');
+  // T2-B2: Body card uses var(--card), not hardcoded near-white
+  var css=w.document.documentElement.innerHTML;
+  ok(/\.meas-stat-chip\{background:var\(--card\)/.test(css),'v5.14 B2 · .meas-stat-chip uses var(--card)');
+  // T2-B5: neutral when no goal set
+  w.localStorage.removeItem('bodyweight_goal_v1');
+  try{ w.renderGenericMeas('weight'); }catch(e){}
+  var summN=(w.document.getElementById('meas-summary')||{}).innerHTML||'';
+  ok(/delta-neutral/.test(summN),'v5.14 B5 · no goal → neutral delta on Change card');
+  // T2-B3: chart data is sorted ascending — drawMeasChartGeneric has the sort.
+  ok(/sort/.test(w.drawMeasChartGeneric.toString()) && /localeCompare/.test(w.drawMeasChartGeneric.toString()),'v5.14 B3 · drawMeasChartGeneric sorts ascending');
+  // T2-B1: drawChartV2 honors labelCount option
+  ok(/opts\.labelCount/.test(w.drawChartV2.toString()),'v5.14 B1 · drawChartV2 supports labelCount option');
+  w.close();
+})();
+
 // ── v5.11 · monthly recap card in Progress ──
 (function(){
   var now=Date.now();
