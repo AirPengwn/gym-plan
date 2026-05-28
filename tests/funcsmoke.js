@@ -540,6 +540,25 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.14 · Phase 2 — fmtSet chips + empty-chip dimming ──
+(function(){
+  const w=loadApp(makeStore({}));
+  // T3 · fmtSet
+  ok(w.fmtSet('Set 1: 120 lbs x12reps', 0)==='1 · 120×12','v5.14 T3 · fmtSet: simple lbs+reps ('+w.fmtSet('Set 1: 120 lbs x12reps',0)+')');
+  ok(w.fmtSet('Set 3: 95 lbs', 2)==='3 · 95','v5.14 T3 · fmtSet: weight only, no reps');
+  ok(w.fmtSet('Set 1: On step', 0)==='1 · On step','v5.14 T3 · fmtSet: non-numeric falls through');
+  // Unit suffix only when set's stored unit differs from pref
+  w.localStorage.setItem('units_v1','lbs');
+  ok(!/kg/.test(w.fmtSet('Set 1: 100 lbs x10reps',0)),'v5.14 T3 · fmtSet: same-unit → no suffix');
+  ok(/kg/.test(w.fmtSet('Set 1: 45 kg x10reps',0)),'v5.14 T3 · fmtSet: differing unit → kg suffix');
+  // Chip CSS uses 3-col grid
+  var css=w.document.documentElement.innerHTML;
+  ok(/\.sess-lift-sets\{display:grid;grid-template-columns:repeat\(3,1fr\)/.test(css),'v5.14 T3 · chips lay out in 3-col grid');
+  // T5 · empty chip dimming
+  ok(/\.sess-filter\.empty\{opacity:\.35;pointer-events:none\}/.test(css),'v5.14 T5 · .sess-filter.empty CSS present');
+  w.close();
+})();
+
 // ── v5.14 · fmtDate helper + B1–B5 bugfixes (Phase 1) ──
 (function(){
   const w=loadApp(makeStore({}));
@@ -610,8 +629,10 @@ function domIdByDataEx(doc, day, ex){
   var lines=card?card.querySelectorAll('.coach-line'):[];
   ok(lines.length===1,'v5.13 · exactly one coach line per card (got '+lines.length+')');
   var ready=card && card.querySelector('.coach-ready');
-  ok(ready && /Ready — try/.test(ready.textContent),'v5.13 · ready state renders ('+(ready?ready.textContent:'none')+')');
-  ok(ready && /Fill →/.test(ready.textContent),'v5.13 · ready state is tappable (Fill → affordance)');
+  ok(ready && /Ready · try/.test(ready.textContent),'v5.14 T4 · ready state renders ('+(ready?ready.textContent:'none')+')');
+  ok(ready && /→ Fill/.test(ready.textContent),'v5.14 T4 · ready state is tappable (→ Fill affordance)');
+  ok(ready && /lbs/i.test(ready.textContent),'v5.14 T4 · ready state includes unit');
+  ok(ready && /^\+[\d.]+ lb/.test(ready.getAttribute('title')||''),'v5.14 T4 · long-press detail in title= ('+(ready?ready.getAttribute('title'):'none')+')');
   // legacy stacked cues must be gone
   ok(card && !card.querySelector('.overload-nudge,.prog-pill,.prog-hold,.aim-cap'),'v5.13 · no legacy stacked cues remain');
   // tapping fills the set inputs
@@ -630,7 +651,9 @@ function domIdByDataEx(doc, day, ex){
   try{ wa.loadLastTimes(); }catch(e){}
   const cardA=wa.document.getElementById(domIdByDataEx(wa.document,'a','Chest press'));
   var quiet=cardA && cardA.querySelector('.coach-quiet');
-  ok(quiet && /Aim ~\d+ .* \d+% of e1RM \d+/.test(quiet.textContent),'v5.13 · quiet aim fallback shows e1RM target ('+(quiet?quiet.textContent:'none')+')');
+  ok(quiet && /Aim ~\d+ .* same as last time/.test(quiet.textContent),'v5.14 T4 · aim copy: "Aim ~N · same as last time" ('+(quiet?quiet.textContent:'none')+')');
+  ok(quiet && !/% of e1RM/.test(quiet.textContent),'v5.14 T4 · e1RM% removed from surface (now in title)');
+  ok(quiet && /\d+% of e1RM \d+/.test(quiet.getAttribute('title')||''),'v5.14 T4 · aim detail in title=');
   wa.close();
   // No history → no coach line at all.
   const w2=loadApp(makeStore({}));

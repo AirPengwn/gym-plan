@@ -912,6 +912,10 @@ body.dark .sess-card mark,body.dark .sess-notes mark{background:#7A5A00;color:#F
 .sess-filter-row{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-bottom:0.75rem}
 .sess-filter{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--muted);background:#F5F5F2;border:1px solid var(--border);border-radius:14px;cursor:pointer;white-space:nowrap}
 .sess-filter.on{background:var(--primary);border-color:var(--primary);color:#fff}
+/* v5.14 (T5): chips with no sessions for that day dim out, taps disabled.
+   Preserves day-cycle context (D1..D5 stay in place) without inviting a
+   wasted tap to an empty list. */
+.sess-filter.empty{opacity:.35;pointer-events:none}
 .sess-cnt{font-size:10px;font-weight:700;color:var(--primary);background:#fff;border-radius:8px;padding:1px 6px;min-width:14px;text-align:center}
 .sess-filter.on .sess-cnt{color:var(--primary);background:#fff}
 body.dark .sess-filter{background:#252540;border-color:var(--border);color:#9896C8}
@@ -949,8 +953,11 @@ body.dark .sess-meta-chip.sess-pr{background:#3A2E00;color:#FFD740}
 .sess-lift:first-child{border-top:0;padding-top:0}
 body.dark .sess-lift{border-top-color:var(--border)}
 .sess-lift-name{font-size:12px;font-weight:600;color:var(--text)}
-.sess-lift-sets{display:flex;gap:4px;flex-wrap:wrap;margin-top:1px}
-.sess-lift-set{font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border-soft);border-radius:5px;padding:1px 6px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+/* v5.14 (T3): set chips now read "1 · 120×12" and lay out 3-up. The cleaner
+   chip is short enough to fit a 3-col grid at phone width; longer notes
+   (e.g. "1 · On step") gracefully wrap inside their cell. */
+.sess-lift-sets{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:2px}
+.sess-lift-set{font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border-soft);border-radius:5px;padding:2px 8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-align:center}
 body.dark .sess-lift-set{background:var(--surface);border-color:var(--border);color:#B4B2D8}
 .sess-lift-empty{font-style:italic;color:var(--muted)}
 /* v3.10: a note folded under its exercise + collapsible cardio bundle */
@@ -4627,24 +4634,47 @@ function _applyCoachLine(panel){
     var st; try{ st=coachState(exKey, exerciseMeta(raw)); }catch(e){ st=null; }
     if(!st) return;
     var sets=card.querySelector('.v2-sets'); if(!sets) return;
-    var el=null;
+    // v5.14 (T4): trimmed copy + long-press tooltip with the full math.
+    // The on-surface line is conversational; precise numbers (e1RM %, deltas)
+    // live in the title= tooltip (hover on desktop) and a long-press toast
+    // (touch). Computations inside coachState() are unchanged.
+    var unit='lbs'; try{ if(typeof getUnits==='function') unit=getUnits(); }catch(_e){}
+    var el=null, detail='';
     if(st.kind==='ready'){
       el=document.createElement('button'); el.type='button'; el.className='coach-line coach-ready';
-      var sub=(st.pct!=null)?' <span class="coach-sub">('+(st.step?'+'+st.step+' · ':'')+st.pct+'% e1RM)</span>':(st.step?' <span class="coach-sub">(+'+st.step+')</span>':'');
-      el.innerHTML='<span class="coach-ic">⬆️</span><span class="coach-msg">Ready — try <b>'+st.target+'</b>'+sub+'</span><span class="coach-act">Fill →</span>';
-      el.setAttribute('aria-label','Ready to progress — suggested '+st.target+'. Tap to fill the sets.');
+      el.innerHTML='<span class="coach-ic">↑</span><span class="coach-msg">Ready · try <b>'+st.target+'</b> '+unit+'</span><span class="coach-act">→ Fill</span>';
+      detail='+'+(st.step||5)+' lb'+(st.pct!=null?' · '+st.pct+'% e1RM':'');
+      el.setAttribute('aria-label','Ready to progress — suggested '+st.target+' '+unit+'. Tap to fill the sets.');
       el.onclick=function(e){ e.stopPropagation(); _acceptProgression(card, st.target); };
     } else if(st.kind==='hold'){
       el=document.createElement('div'); el.className='coach-line coach-hold';
-      el.innerHTML='<span class="coach-ic">●</span><span class="coach-msg">Hold <b>'+st.W+'</b> — stalled, sharpen form</span>';
+      el.innerHTML='<span class="coach-ic">●</span><span class="coach-msg">Same as last week · focus on form</span>';
+      detail='Stalled at '+st.W+' '+unit+' — RPE ≥ 8 last session';
     } else if(st.kind==='build'){
       el=document.createElement('div'); el.className='coach-line coach-quiet';
-      el.innerHTML='<span class="coach-ic">🎯</span><span class="coach-msg">Build to <b>'+st.sets+'×'+st.reps+' @ '+st.W+'</b> <span class="coach-sub">· last top set '+st.lastReps+' reps</span></span>';
+      el.innerHTML='<span class="coach-msg">Building to <b>'+st.sets+'×'+st.reps+' @ '+st.W+'</b> <span class="coach-sub">· '+st.lastReps+' reps last time</span></span>';
+      detail='Target '+st.sets+'×'+st.reps+' · last top set '+st.lastReps+' reps at '+st.W+' '+unit;
     } else if(st.kind==='aim'){
       el=document.createElement('div'); el.className='coach-line coach-quiet';
-      el.innerHTML='<span class="coach-ic">🎯</span><span class="coach-msg">Aim <b>~'+st.aim+'</b> <span class="coach-sub">· '+st.pct+'% of e1RM '+st.best+'</span></span>';
+      el.innerHTML='<span class="coach-msg">Aim <b>~'+st.aim+'</b> '+unit+' <span class="coach-sub">· same as last time</span></span>';
+      detail=st.pct+'% of e1RM '+st.best+' '+unit+' (Epley)';
     }
-    if(el) sets.insertBefore(el, sets.firstChild);
+    if(el){
+      if(detail){
+        el.setAttribute('title', detail);
+        // Long-press (≥500ms) → toast with full math. Cancel on move/up early.
+        var _lpT=null;
+        el.addEventListener('pointerdown', function(ev){
+          _lpT=setTimeout(function(){ _lpT=null; try{ showToast(detail); }catch(_e){} }, 500);
+        });
+        var _cancel=function(){ if(_lpT){ clearTimeout(_lpT); _lpT=null; } };
+        el.addEventListener('pointerup', _cancel);
+        el.addEventListener('pointercancel', _cancel);
+        el.addEventListener('pointerleave', _cancel);
+        el.addEventListener('pointermove', function(ev){ if(_lpT && (Math.abs(ev.movementX)+Math.abs(ev.movementY) > 6)) _cancel(); });
+      }
+      sets.insertBefore(el, sets.firstChild);
+    }
   });
 }
 function _acceptProgression(card, target){
@@ -5260,6 +5290,25 @@ function parseSetWR(arg){
     if(m) out.push({ w:parseFloat(m[1]), r:m[2]?parseInt(m[2],10):null });
   });
   return out;
+}
+// v5.14 (T3): friendlier set-chip text. "Set 1: 120 lbs x12reps" → "1 · 120×12".
+// Unit suffix is appended ONLY when the set's stored unit differs from the
+// global units pref (units_v1) — so a kg set inside an lbs-default app keeps "kg".
+// Non-numeric notes (bodyweight, "Set 1: On step") render as "N · <text>".
+function fmtSet(rawStr, idx){
+  var s=String(rawStr||'').trim();
+  var nm=s.match(/^Set\s*(\d+)\s*:\s*([\s\S]*)$/i);
+  if(!nm) return s;
+  var n=nm[1], rest=nm[2].trim();
+  var wm=rest.match(/^([\d.]+)\s*(lbs|lb|kg|kgs)?(?:\s*[x×]\s*(\d+)\s*reps?)?\s*$/i);
+  var prefix=(idx!=null?(idx+1):n);
+  if(!wm) return prefix+' · '+rest;
+  var w=parseFloat(wm[1]), unit=(wm[2]||'').toLowerCase(), reps=wm[3];
+  if(unit==='lb') unit='lbs'; if(unit==='kgs') unit='kg';
+  var pref='lbs'; try{ if(typeof getUnits==='function') pref=getUnits(); }catch(_e){}
+  var sfx=(unit && unit!==pref) ? (' '+unit) : '';
+  var wTxt=(w%1===0)?String(w):String(Math.round(w*10)/10);
+  return prefix+' · '+wTxt+(reps?'×'+reps:'')+sfx;
 }
 // Epley estimated one-rep max. Needs reps; 1 rep == the weight itself.
 function est1RM(w,r){
@@ -7592,8 +7641,9 @@ function _sessionRowsHTML(exEntries){
       // named exercise — keep sets visible inline; fold notes/extras beneath
       var e=grp.main;
       var sets=(e.note||'').split('|').map(function(x){return x.trim();}).filter(Boolean);
+      // v5.14 (T3): chips render via fmtSet → "1 · 120×12" (drop "Set "/"lbs"/"reps").
       var body = sets.length
-        ? '<div class="sess-lift-sets">'+sets.map(function(st){return '<span class="sess-lift-set">'+_esc(st)+'</span>';}).join('')+'</div>'
+        ? '<div class="sess-lift-sets">'+sets.map(function(st,si){return '<span class="sess-lift-set">'+_esc(fmtSet(st,si))+'</span>';}).join('')+'</div>'
         : '<span class="sess-lift-sets">'+_hl(_esc(e.note||''))+'</span>';
       var extra=grp.fields.map(function(f){
         return '<div class="sess-lift-note">'+(f.field==='notes'?'📝 ':('<b>'+_esc(_titleField(f.field))+':</b> '))+_hl(_esc(f.note))+'</div>';
@@ -7631,7 +7681,16 @@ function renderProgress(){
     total+=saved.length;
     var n=saved.length;
     // Keep the filter-chip per-day count updating (functionality contract).
-    var cEl=document.getElementById('prog-count-'+day); if(cEl) cEl.textContent=n;
+    // v5.14 (T5): chips with count 0 get .empty (dimmed, taps disabled) so
+    // they preserve cycle context without inviting taps to a dead view.
+    var cEl=document.getElementById('prog-count-'+day);
+    if(cEl){
+      cEl.textContent=n;
+      var chip=cEl.parentNode;
+      if(chip && chip.classList){
+        if(n===0) chip.classList.add('empty'); else chip.classList.remove('empty');
+      }
+    }
     saved.forEach(function(s, idx){
       var ts=sessTs(s);
       allItems.push({day:day, idx:idx, sess:s, ts:ts});
