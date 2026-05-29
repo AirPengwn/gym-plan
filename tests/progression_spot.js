@@ -82,7 +82,7 @@ try{ wL.loadLastTimes(); }catch(e){}
 var lines=[].slice.call(wL.document.querySelectorAll('.coach-line'));
 var nudge=lines.map(function(n){return n.textContent;}).join(' | ');
 ok(lines.length<=1,'v5.13 · at most one coach line per card (got '+lines.length+')');
-ok(/try \d+|Hit|Build to|Ready|Hold|Aim/.test(nudge),'loadLastTimes injects the consolidated .coach-line on the workout card ('+(nudge||'none')+')');
+ok(/try \d+|Hit|Building to|Ready|Hold|Aim|Same as/.test(nudge),'loadLastTimes injects the consolidated .coach-line on the workout card ('+(nudge||'none')+')');
 // the old stacked cues are gone
 ok(!wL.document.querySelector('.overload-nudge,.prog-pill,.prog-hold,.aim-cap'),'v5.13 · legacy stacked cues no longer rendered');
 

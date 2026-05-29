@@ -152,7 +152,13 @@ function domIdByDataEx(doc, day, ex){
   w.document.getElementById('deload-banner').style.display='flex';
   w.document.getElementById('backup-banner').style.display='flex';
   w.renderNoticeTray();
-  ok(tray.style.display==='block','tray shows when notices active');
+  // v5.14 (T8): tray is now collapsed by default — visibility is on the bell.
+  var bell=w.document.getElementById('notice-bell');
+  ok(bell && !bell.hidden,'v5.14 T8 · notice bell shown when notices active');
+  ok(bell && bell.getAttribute('data-unread')==='2','v5.14 T8 · bell carries unread count');
+  // toggling opens the tray
+  w.toggleNoticeTray();
+  ok(tray.style.display==='block','v5.14 T8 · toggleNoticeTray opens the tray');
   ok((tray.querySelectorAll('.tray-row')||[]).length===2,'2 rows rendered (deload+backup)');
   ok(/Clear all/.test(tray.innerHTML),'Clear all shown when >=2 notices');
   ok(tray.querySelector('.tray-row .tray-ic.red') && tray.querySelector('.tray-row .tray-ic.warn'),'severity-tinted icons (red+warn)');
@@ -540,6 +546,175 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.14 · T11 post-save summary + T12 plan editor tightening ──
+(function(){
+  const w=loadApp(makeStore({}));
+  // T11 · showSessionSummary defined + mounts a card
+  ok(typeof w.showSessionSummary==='function','v5.14 T11 · showSessionSummary defined');
+  var sessObj={label:'D1',date:'',ts:Date.now(),entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps | Set 2: 120 lbs x12reps'}]};
+  // Seed gymlog so getSaved works.
+  w.localStorage.setItem('gymlog_a', JSON.stringify([sessObj]));
+  w.showSessionSummary('a','Upper A',sessObj,0);
+  var card=w.document.getElementById('sess-summary-card');
+  ok(!!card,'v5.14 T11 · summary card mounts');
+  ok(card && /saved/i.test(card.textContent||''),'v5.14 T11 · card header reads "{Day} saved"');
+  ok(card && /lb moved/.test(card.textContent||''),'v5.14 T11 · falls back to volume when no PRs');
+  // PR-count variant
+  w.showSessionSummary('a','Upper A',sessObj,2);
+  var card2=w.document.getElementById('sess-summary-card');
+  ok(card2 && /2.*new PRs/.test(card2.textContent||''),'v5.14 T11 · PR count shown when prCount>0 ('+(card2?card2.textContent:'none')+')');
+  if(card2) card2.remove();
+  // T12 · plan editor changes
+  var css=w.document.documentElement.innerHTML;
+  ok(/\.mgr-icon-btn/.test(css),'v5.14 T12 · .mgr-icon-btn style present');
+  ok(/_inlineRenameDay/.test(css),'v5.14 T12 · inline rename wiring present in markup-render');
+  ok(/_dismissPlanIntro/.test(css),'v5.14 T12 · intro dismiss handler wired');
+  ok(typeof w._inlineRenameDay==='function','v5.14 T12 · _inlineRenameDay defined');
+  ok(typeof w._dismissPlanIntro==='function','v5.14 T12 · _dismissPlanIntro defined');
+  // dismiss flag persists
+  w._dismissPlanIntro();
+  ok(w.localStorage.getItem('plan_intro_dismissed_v1')==='1','v5.14 T12 · dismiss writes localStorage flag');
+  w.close();
+})();
+
+// ── v5.14 · T9 dividers + T10 token cleanups ──
+(function(){
+  const w=loadApp(makeStore({}));
+  var css=w.document.documentElement.innerHTML;
+  // T9 · "Last 21 days" line uses divider styling, no colored bg.
+  ok(/\.day-bal-hint\{[^}]*background:transparent[^}]*border-top:1px solid var\(--border-soft\)/.test(css),'v5.14 T9 · day-bal-hint uses transparent bg + top/bottom dividers');
+  // T10 · tokens added
+  ok(/--muted-2:\s*#9896C8/.test(css),'v5.14 T10 · --muted-2 token defined in dark');
+  ok(/--muted-deep:\s*#5C5A80/.test(css),'v5.14 T10 · --muted-deep token defined in dark');
+  ok(/--gold:\s*#FFD740/.test(css),'v5.14 T10 · --gold token defined');
+  // Raw hex usage of replaced shades is gone (excluding token decls themselves).
+  // We allow the hex in the :root/body.dark token declarations only.
+  var bodyOnly=css;
+  ['9896C8','9E9CC4','B4B2D8'].forEach(function(h){
+    // Count occurrences outside the line "--muted-2: #XXXXXX"
+    var rgx=new RegExp('#'+h,'gi');
+    var occurrences=(bodyOnly.match(rgx)||[]).length;
+    // Only the 1 token decl + maybe a comment line remains; 2 max is OK.
+    ok(occurrences<=2,'v5.14 T10 · raw #'+h+' nearly eliminated ('+occurrences+' left, ≤2 expected)');
+  });
+  w.close();
+})();
+
+// ── v5.14 · T8 Progress hierarchy (strap removed, recap chip, notice bell) ──
+(function(){
+  // 1) Strap is gone — #prog-stats-row hidden in markup.
+  const w=loadApp(makeStore({}));
+  var statsRow=w.document.getElementById('prog-stats-row');
+  ok(statsRow && statsRow.hidden,'v5.14 T8 · prog-stats-row strap is hidden (deleted)');
+  // 2) Recap header shows 🔥 chip when month1 was earned ≤7d ago.
+  var now=Date.now();
+  w.localStorage.setItem('gymlog_a', JSON.stringify([
+    {label:'D1',date:'',ts:now-1*86400000,entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]},
+    {label:'D1',date:'',ts:now-3*86400000,entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]},
+    {label:'D1',date:'',ts:now-5*86400000,entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]},
+    {label:'D1',date:'',ts:now-7*86400000,entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]}
+  ]));
+  w.localStorage.setItem('earned_milestones', JSON.stringify(['month1']));
+  w.localStorage.setItem('milestones_earned_at', JSON.stringify({month1:now-86400000}));
+  try{ w.renderProgress(); }catch(e){}
+  var recap=w.document.getElementById('prog-recap');
+  ok(recap && /1mo active/.test(recap.innerHTML||''),'v5.14 T8 · 🔥 1mo active chip shown when earned ≤7d ago');
+  // After 8 days, the chip is gone.
+  w.localStorage.setItem('milestones_earned_at', JSON.stringify({month1:now-8*86400000}));
+  try{ w.renderProgress(); }catch(e){}
+  ok(recap && !/1mo active/.test(recap.innerHTML||''),'v5.14 T8 · chip drops after 7 days');
+  w.close();
+})();
+
+// ── v5.14 · T6 Awards rework + T7 "Worth a look" ──
+(function(){
+  // Seed enough sessions for some milestones earned + some Up Next.
+  var now=Date.now(), DAY=86400000;
+  var sessions=[];
+  // Need both an exercise that's logged consistently AND one that's sometimes skipped
+  // so exPoss/exApp produce a non-empty topSkipped.
+  for(var i=0;i<6;i++){
+    var entries=[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}];
+    // Cable row logged only on the most recent session (1 of 6 → 83% skipped)
+    if(i===0) entries.push({ex:'Cable row',note:'Set 1: 100 lbs x8reps'});
+    sessions.push({label:'D1',date:'',ts:now-i*DAY,entries:entries});
+  }
+  const w=loadApp(makeStore({ 'gymlog_a': JSON.stringify(sessions) }));
+  var html=w.renderMilestones();
+  // T6 · earned section + Up Next badges + collapse button
+  ok(/milestone-badge earned/.test(html),'v5.14 T6 · earned badges present');
+  ok(/milestone-badge upnext/.test(html),'v5.14 T6 · Up Next badges present');
+  ok(/milestone-progress/.test(html),'v5.14 T6 · progress bars rendered for derivable Up Next');
+  ok(/more locked/.test(html),'v5.14 T6 · "+ N more locked" collapse button');
+  ok(/milestone-rest/.test(html) && /hidden/.test(html),'v5.14 T6 · the rest are collapsed by default');
+  // Test that earned badges come first
+  var earnedIdx=html.indexOf('milestone-badge earned');
+  var upnextIdx=html.indexOf('milestone-badge upnext');
+  ok(earnedIdx<upnextIdx,'v5.14 T6 · earned sorted before Up Next');
+  // T7 · "Worth a look" — needs sessions with un-checked items. Add some.
+  // Each session above only has 1 entry, so other day-1 exercises (Cable row,
+  // Pec fly, …) appear in 6 possibilities but 0 times → 100% "skipped".
+  try{ w.renderStats(); }catch(e){}
+  var statsHtml=w.document.getElementById('prog-stats')?w.document.getElementById('prog-stats').innerHTML:'';
+  ok(/Worth a look/.test(statsHtml),'v5.14 T7 · section renamed to "Worth a look"');
+  ok(/done \d+ of last \d+/.test(statsHtml),'v5.14 T7 · row reads "done X of last Y"');
+  ok(!/% skipped/.test(statsHtml),'v5.14 T7 · old "% skipped" framing removed');
+  w.close();
+})();
+
+// ── v5.14 · Phase 2 — fmtSet chips + empty-chip dimming ──
+(function(){
+  const w=loadApp(makeStore({}));
+  // T3 · fmtSet
+  ok(w.fmtSet('Set 1: 120 lbs x12reps', 0)==='1 · 120×12','v5.14 T3 · fmtSet: simple lbs+reps ('+w.fmtSet('Set 1: 120 lbs x12reps',0)+')');
+  ok(w.fmtSet('Set 3: 95 lbs', 2)==='3 · 95','v5.14 T3 · fmtSet: weight only, no reps');
+  ok(w.fmtSet('Set 1: On step', 0)==='1 · On step','v5.14 T3 · fmtSet: non-numeric falls through');
+  // Unit suffix only when set's stored unit differs from pref
+  w.localStorage.setItem('units_v1','lbs');
+  ok(!/kg/.test(w.fmtSet('Set 1: 100 lbs x10reps',0)),'v5.14 T3 · fmtSet: same-unit → no suffix');
+  ok(/kg/.test(w.fmtSet('Set 1: 45 kg x10reps',0)),'v5.14 T3 · fmtSet: differing unit → kg suffix');
+  // Chip CSS uses 3-col grid
+  var css=w.document.documentElement.innerHTML;
+  ok(/\.sess-lift-sets\{display:grid;grid-template-columns:repeat\(3,1fr\)/.test(css),'v5.14 T3 · chips lay out in 3-col grid');
+  // T5 · empty chip dimming
+  ok(/\.sess-filter\.empty\{opacity:\.35;pointer-events:none\}/.test(css),'v5.14 T5 · .sess-filter.empty CSS present');
+  w.close();
+})();
+
+// ── v5.14 · fmtDate helper + B1–B5 bugfixes (Phase 1) ──
+(function(){
+  const w=loadApp(makeStore({}));
+  // T1 · fmtDate
+  var t=new Date(2026,4,25,18,0).getTime();
+  ok(w.fmtDate(t,'short')==='May 25','v5.14 T1 · short → "May 25" (got "'+w.fmtDate(t,'short')+'")');
+  ok(/^Mon · May 25$/.test(w.fmtDate(t,'med')),'v5.14 T1 · med → "Mon · May 25"');
+  ok(w.fmtDate('Mon, May 25, 2026 at 6:00 PM','short')==='May 25','v5.14 T1 · short parses session.date string');
+  ok(/^\d{4}-\d{2}-\d{2}T/.test(w.fmtDateISO(t)),'v5.14 T1 · fmtDateISO returns ISO string');
+  ok(w.fmtDate('not-a-date','short')==='','v5.14 T1 · invalid input → empty');
+  // T2-B4: "Over" caption + non-negative weeks
+  w.localStorage.setItem('body_measurements', JSON.stringify([
+    {type:'weight',value:200,unit:'lbs',date:'2026-04-20'},
+    {type:'weight',value:198,unit:'lbs',date:'2026-05-25'}
+  ]));
+  try{ w.renderGenericMeas('weight'); }catch(e){}
+  var summ=(w.document.getElementById('meas-summary')||{}).innerHTML||'';
+  ok(/Over/.test(summ) && !/-\s*\d+\s*wks/.test(summ),'v5.14 B4 · "Over" no negative wks ('+summ.match(/Over[\s\S]{0,40}/)+')');
+  ok(/since/i.test(summ),'v5.14 B4 · "since {date}" caption rendered');
+  // T2-B2: Body card uses var(--card), not hardcoded near-white
+  var css=w.document.documentElement.innerHTML;
+  ok(/\.meas-stat-chip\{background:var\(--card\)/.test(css),'v5.14 B2 · .meas-stat-chip uses var(--card)');
+  // T2-B5: neutral when no goal set
+  w.localStorage.removeItem('bodyweight_goal_v1');
+  try{ w.renderGenericMeas('weight'); }catch(e){}
+  var summN=(w.document.getElementById('meas-summary')||{}).innerHTML||'';
+  ok(/delta-neutral/.test(summN),'v5.14 B5 · no goal → neutral delta on Change card');
+  // T2-B3: chart data is sorted ascending — drawMeasChartGeneric has the sort.
+  ok(/sort/.test(w.drawMeasChartGeneric.toString()) && /localeCompare/.test(w.drawMeasChartGeneric.toString()),'v5.14 B3 · drawMeasChartGeneric sorts ascending');
+  // T2-B1: drawChartV2 honors labelCount option
+  ok(/opts\.labelCount/.test(w.drawChartV2.toString()),'v5.14 B1 · drawChartV2 supports labelCount option');
+  w.close();
+})();
+
 // ── v5.11 · monthly recap card in Progress ──
 (function(){
   var now=Date.now();
@@ -576,8 +751,10 @@ function domIdByDataEx(doc, day, ex){
   var lines=card?card.querySelectorAll('.coach-line'):[];
   ok(lines.length===1,'v5.13 · exactly one coach line per card (got '+lines.length+')');
   var ready=card && card.querySelector('.coach-ready');
-  ok(ready && /Ready — try/.test(ready.textContent),'v5.13 · ready state renders ('+(ready?ready.textContent:'none')+')');
-  ok(ready && /Fill →/.test(ready.textContent),'v5.13 · ready state is tappable (Fill → affordance)');
+  ok(ready && /Ready · try/.test(ready.textContent),'v5.14 T4 · ready state renders ('+(ready?ready.textContent:'none')+')');
+  ok(ready && /→ Fill/.test(ready.textContent),'v5.14 T4 · ready state is tappable (→ Fill affordance)');
+  ok(ready && /lbs/i.test(ready.textContent),'v5.14 T4 · ready state includes unit');
+  ok(ready && /^\+[\d.]+ lb/.test(ready.getAttribute('title')||''),'v5.14 T4 · long-press detail in title= ('+(ready?ready.getAttribute('title'):'none')+')');
   // legacy stacked cues must be gone
   ok(card && !card.querySelector('.overload-nudge,.prog-pill,.prog-hold,.aim-cap'),'v5.13 · no legacy stacked cues remain');
   // tapping fills the set inputs
@@ -596,7 +773,9 @@ function domIdByDataEx(doc, day, ex){
   try{ wa.loadLastTimes(); }catch(e){}
   const cardA=wa.document.getElementById(domIdByDataEx(wa.document,'a','Chest press'));
   var quiet=cardA && cardA.querySelector('.coach-quiet');
-  ok(quiet && /Aim ~\d+ .* \d+% of e1RM \d+/.test(quiet.textContent),'v5.13 · quiet aim fallback shows e1RM target ('+(quiet?quiet.textContent:'none')+')');
+  ok(quiet && /Aim ~\d+ .* same as last time/.test(quiet.textContent),'v5.14 T4 · aim copy: "Aim ~N · same as last time" ('+(quiet?quiet.textContent:'none')+')');
+  ok(quiet && !/% of e1RM/.test(quiet.textContent),'v5.14 T4 · e1RM% removed from surface (now in title)');
+  ok(quiet && /\d+% of e1RM \d+/.test(quiet.getAttribute('title')||''),'v5.14 T4 · aim detail in title=');
   wa.close();
   // No history → no coach line at all.
   const w2=loadApp(makeStore({}));

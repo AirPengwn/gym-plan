@@ -35,6 +35,15 @@
   --good:           #0F6E56;
   --warn:           #E0A800;
   --bad:            #C53030;
+  /* v5.14 (T10): tokenized card surface + reusable celebratory gold + the two
+     "lavender-gray" muted shades that were sprinkled across dark-mode rules.
+     muted-2 collapses the close trio (#9896C8/var(--muted-2)/var(--muted-2)); muted-deep is
+     the noticeably darker var(--muted-deep) kept distinct. Light-mode values are picked
+     to be benign if these tokens are ever reused outside body.dark. */
+  --card:           #ffffff;
+  --gold:           #FFD740;
+  --muted-2:        #8E8AAA;
+  --muted-deep:     #6E6C66;
   /* v4.20 (nit 19): radius scale (the useful slice of the deferred 5.3 token pass) */
   --r-sm:  8px;
   --r:     12px;
@@ -50,11 +59,14 @@
 body.dark{
   --surface:        #1A1A2E;
   --text:           #E8E6F8;
-  --muted:          #8B89B0;   /* nudged up from #5C5A80 for AA */
+  --muted:          #8B89B0;   /* nudged up from var(--muted-deep) for AA */
   --border:         #3C3A5C;
   --border-soft:    #3C3A5C;
   --primary-tint:   #2A2850;
   --ghost:          #A7A2CE;   /* italic prefill, dark theme — legible, italic is the cue (nit 5) */
+  --card:           #252540;   /* v5.14 (T10): matches body.dark .item bg */
+  --muted-2:        #9896C8;   /* the bright lavender-gray (was sprinkled raw) */
+  --muted-deep:     #5C5A80;   /* the dark lavender-gray (deeper "muted") */
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:420px;margin:0 auto}
@@ -75,7 +87,7 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .progress-label{display:flex;justify-content:space-between;font-size:12px;color:#888780}
 .section-hdr{font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:0.07em;margin:0.5rem 0 0.4rem;padding-bottom:4px;border-bottom:0.5px solid var(--border-soft)}
 .ex-cat{display:inline-block;font-size:9px;font-weight:700;color:#534AB7;background:#EEEDFE;border-radius:4px;padding:1px 5px;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em}
-body.dark .ex-cat{background:var(--primary-tint);color:#9896C8}
+body.dark .ex-cat{background:var(--primary-tint);color:var(--muted-2)}
 .day-summary{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:0.75rem;box-shadow:0 1px 3px rgba(91,78,168,0.06)}
 .day-summary-title{font-size:10px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px}
 .day-summary-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
@@ -84,10 +96,10 @@ body.dark .ex-cat{background:var(--primary-tint);color:#9896C8}
 .day-summary-total{display:flex;align-items:center;gap:6px;border-top:1px solid #F1EFE8;padding-top:8px;font-size:12px;font-weight:700;color:#5B4EA8}
 .day-summary-total span{font-weight:400;color:#888780;font-size:11px}
 body.dark .day-summary{background:#252540;border-color:var(--border)}
-body.dark .day-summary-chip{background:var(--surface);color:#B4B2D8}
-body.dark .day-summary-title{color:#5C5A80}
-body.dark .day-summary-total{color:#9896C8;border-top-color:var(--border)}
-body.dark .day-summary-total span{color:#5C5A80}
+body.dark .day-summary-chip{background:var(--surface);color:var(--muted-2)}
+body.dark .day-summary-title{color:var(--muted-deep)}
+body.dark .day-summary-total{color:var(--muted-2);border-top-color:var(--border)}
+body.dark .day-summary-total span{color:var(--muted-deep)}
 .item{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(91,78,168,0.06)}
 .item.done{background:#F5F5F2}
 .item-top{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer}
@@ -177,7 +189,7 @@ body.timer-active.complete-ready .day-panel.show{padding-bottom:140px}
 /* Per-exercise manual rest timer button */
 .item-timer-btn{background:#EEEDFE;border:1px solid var(--border-soft);border-radius:20px;cursor:pointer;padding:3px 12px;min-height:32px;box-sizing:border-box;font-size:11px;font-weight:600;line-height:1.4;color:#5B4EA8;flex-shrink:0;display:flex;align-items:center;gap:3px;white-space:nowrap}
 .item-timer-btn:active{background:#D8D4F0}
-body.dark .item-timer-btn{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .item-timer-btn{background:#252540;border-color:var(--border);color:var(--muted-2)}
 .notes-row{display:flex;gap:6px;align-items:center}
 .notes-input{flex:1;font-size:16px;padding:5px 8px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
 .last-time{font-size:11px;color:#7F77DD;background:#EEEDFE;border-radius:6px;padding:5px 8px;margin-bottom:2px;line-height:1.5;display:none}
@@ -193,13 +205,22 @@ body.dark .item-timer-btn{background:#252540;border-color:var(--border);color:#9
 .legacy-banner{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:0!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;border:0!important}
 #notice-tray{display:none;background:#fff;border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:0.75rem}
 body.dark #notice-tray{background:#252540;border-color:var(--border)}
+/* v5.14 (T8): header notice bell. Hidden when 0 notices; lights an unread
+   dot when any are present. Tap toggles the existing notice tray below. */
+.notice-bell{appearance:none;background:transparent;border:0;color:var(--muted);font-size:18px;cursor:pointer;padding:6px 8px;border-radius:8px;position:relative;line-height:1;flex-shrink:0}
+.notice-bell:hover{color:var(--text)}
+.notice-bell-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--warn);border-radius:50%;border:2px solid var(--surface);display:none}
+.notice-bell[data-unread]:not([data-unread="0"]) .notice-bell-dot{display:block}
+body.dark .notice-bell{color:var(--muted-2)}
+body.dark .notice-bell:hover{color:var(--text)}
+body.dark .notice-bell-dot{border-color:#1A1A2E}
 .tray-head{display:flex;justify-content:space-between;align-items:center;padding:8px 11px;font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;border-bottom:.5px solid var(--border-soft)}
 .tray-clear{font-weight:600;color:var(--primary-2);text-transform:none;letter-spacing:0;cursor:pointer;background:none;border:0;font-size:11px}
 .tray-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border-bottom:.5px solid var(--border-soft)}
 .tray-row:last-child{border-bottom:none}
 .tray-ic{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
 .tray-ic.red{background:#FBEAEA;color:var(--bad)} .tray-ic.warn{background:#FFF6DD;color:#9A7400} .tray-ic.info{background:var(--primary-tint);color:var(--primary)}
-body.dark .tray-ic.red{background:#3A1A1A} body.dark .tray-ic.warn{background:#3A2E00;color:#FFD740} body.dark .tray-ic.info{background:var(--primary-tint);color:var(--primary-2)}
+body.dark .tray-ic.red{background:#3A1A1A} body.dark .tray-ic.warn{background:#3A2E00;color:var(--gold)} body.dark .tray-ic.info{background:var(--primary-tint);color:var(--primary-2)}
 .tray-bd{flex:1;min-width:0}
 .tray-t{font-size:12px;font-weight:700;color:var(--text);line-height:1.3}
 .tray-m{font-size:11px;color:var(--muted);line-height:1.4;margin-top:1px}
@@ -321,7 +342,7 @@ body.dark .set-dev-summary{color:var(--muted)}
 .primary-toggle-hint.pt-primary{color:var(--good)}
 .primary-toggle-hint.pt-reader{color:var(--warn)}
 body.dark .primary-toggle-hint.pt-primary{color:#5DD8A0}
-body.dark .primary-toggle-hint.pt-reader{color:#FFD740}
+body.dark .primary-toggle-hint.pt-reader{color:var(--gold)}
 #hdr-menu[hidden]{display:none}
 /* Follow-up 4: AA contrast for the expanded card footer (both themes) */
 /* v4.16 (nit 9): last-time is now always-on (above the sets), not in .v2-foot. */
@@ -331,7 +352,7 @@ body.dark .primary-toggle-hint.pt-reader{color:#FFD740}
 .v2-foot .notes-input{color:var(--text)}
 .v2-foot .notes-input::placeholder{color:var(--muted);opacity:1}
 body.dark .v2-card .last-time{background:var(--primary-tint)}
-body.dark .v2-foot .rpe-ends{color:#9E9CC4}
+body.dark .v2-foot .rpe-ends{color:var(--muted-2)}
 /* Patch-2 Step 1: inline progress badge on the card head */
 .v2-nudge{display:none;margin-top:4px}
 .v2-nudge.show{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;border-radius:8px;padding:2px 8px}
@@ -369,8 +390,11 @@ body.dark .day-ovf-btn{background:#252540;border-color:var(--border);color:var(-
 .day-ovf-menu .reset-btn:hover{background:var(--border-soft)}
 body.dark .day-ovf-menu .reset-btn{background:none;border:0;color:var(--text)}
 /* v4.9 — per-day balance hint (last-7d logged mix; distinct from the plan pill) */
-.day-bal-hint{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11px;color:var(--muted);background:var(--primary-tint,#F3F1FB);border-radius:9px;padding:7px 11px;margin:0 0 10px}
-body.dark .day-bal-hint{background:#252540}
+/* v5.14 (T9): the "Last 21 days · …" line is the only "you-are-here" cue on
+   the Workout screen. Replaces the colored chip background with thin dividers
+   above + below for breathing room. Type size unchanged. */
+.day-bal-hint{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11px;color:var(--muted);background:transparent;border-top:1px solid var(--border-soft);border-bottom:1px solid var(--border-soft);border-radius:0;padding:10px 2px;margin:14px 0}
+body.dark .day-bal-hint{background:transparent;border-top-color:var(--border-soft);border-bottom-color:var(--border-soft)}
 .day-bal-hint b{color:var(--text);font-weight:700}
 .day-bal-hint .day-bal-hint-lead{font-weight:700;color:var(--text)}
 .day-bal-hint .day-bal-hint-sep{opacity:.5}
@@ -384,7 +408,10 @@ body.dark .day-bal-hint{background:#252540}
 .prog-hero b{color:var(--text);font-weight:800;font-size:15px}
 .prog-hero-sep{margin:0 9px;color:var(--border);font-weight:400}
 .prog-recap{width:100%;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:2px 0 8px}
-.prog-recap-h{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.prog-recap-h{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;display:flex;align-items:center;gap:6px}
+/* v5.14 (T8): inline "recently earned" chip on recap header (e.g. 🔥 1mo active). */
+.prog-recap-chip{margin-left:auto;font-size:10px;font-weight:800;letter-spacing:.02em;color:#8A6A00;background:rgba(255,215,64,.18);border:1px solid var(--gold);border-radius:999px;padding:2px 8px;text-transform:none}
+body.dark .prog-recap-chip{color:var(--gold);background:rgba(255,215,64,.10)}
 .prog-recap-row{display:flex;flex-wrap:wrap;gap:6px}
 .prog-recap-s{font-size:12px;font-weight:600;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:3px 10px}
 .prog-recap-s b{color:var(--text);font-weight:800}
@@ -463,9 +490,12 @@ body.dark .mm-dot.low{background:#3C3A6E}body.dark .mm-dot.moderate{background:#
 .ex-stat-chip.ex-stat-std{background:var(--primary-tint);color:var(--primary)}
 .ex-stat-chip.green{background:#E8F5E9;color:#2E7D32}
 .skip-list{display:flex;flex-direction:column;gap:4px}
-.skip-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#FFF8F8;border-radius:7px;font-size:12px}
-.skip-row-name{color:#2C2C2A;font-weight:500}
-.skip-row-pct{color:#C0392B;font-weight:700}
+/* v5.14 (T7): "Worth a look" rows — muted framing, no red pct badge.
+   Background drops to the neutral surface so it stops looking like an alert. */
+.skip-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--surface);border:1px solid var(--border-soft);border-radius:7px;font-size:12px}
+.skip-row-name{color:var(--text);font-weight:500}
+.skip-row-cnt{color:var(--muted);font-weight:600}
+.skip-row-pct{color:var(--muted);font-weight:600}      /* legacy; superseded by .skip-row-cnt in render */
 .meas-sub-btn{padding:7px 14px;border:1.5px solid #D3D1C7;border-radius:8px;font-size:13px;font-weight:600;color:#888780;background:#F5F5F2;cursor:pointer}
 .meas-sub-btn.active{background:#7F77DD;border-color:#7F77DD;color:#fff}
 .meas-entry-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
@@ -476,9 +506,16 @@ body.dark .mm-dot.low{background:#3C3A6E}body.dark .mm-dot.moderate{background:#
 .meas-history-date{font-size:12px;color:#888780}
 .meas-history-val{font-size:15px;font-weight:700;color:#3C3489}
 .meas-history-del{background:none;border:none;color:#C0392B;font-size:16px;cursor:pointer;padding:2px 6px}
-.meas-stat-chip{background:#F0EFF9;border-radius:8px;padding:8px 10px;text-align:center;flex:1}
-.meas-stat-label{font-size:10px;color:#888780;margin-bottom:2px}
-.meas-stat-val{font-size:14px;font-weight:700;color:#3C3489}
+/* v5.14 (T2-B2): Body summary cards (Current/Change/Over) now follow var(--card)
+   so dark mode picks them up automatically — previously hardcoded near-white. */
+.meas-stat-chip{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center;flex:1}
+.meas-stat-label{font-size:10px;color:var(--muted);margin-bottom:2px}
+.meas-stat-val{font-size:14px;font-weight:700;color:var(--text)}
+/* v5.14 (T2-B4): caption under the value (e.g. "since May 25"). */
+.meas-stat-sub{font-size:9.5px;font-weight:600;color:var(--muted);margin-top:3px;letter-spacing:.02em}
+/* v5.14 (T2-B5): neutral delta — no green/red, just muted text. Used on the
+   Change card when the user hasn't set a bodyweight goal yet. */
+.delta-neutral{background:transparent;color:var(--muted);font-weight:700;padding:2px 0}
 .ex-detail-header{padding:12px 14px;border-bottom:0.5px solid #F1EFE8}
 .ex-detail-title{font-size:14px;font-weight:700;color:#3C3489}
 .ex-history-item{padding:10px 14px;border-bottom:0.5px solid #F1EFE8;font-size:12px}
@@ -490,7 +527,27 @@ body.dark .mm-dot.low{background:#3C3A6E}body.dark .mm-dot.moderate{background:#
 .chart-canvas-wrap{width:100%;overflow-x:auto}
 canvas.prog-chart{display:block;border-radius:8px}
 .mgr-day-label{font-size:14px;font-weight:700;color:#3C3489;margin:1.25rem 0 0.6rem;padding-bottom:6px;border-bottom:2px solid var(--border-soft)}
-.mgr-ex-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:6px}
+.mgr-ex-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;gap:6px}
+/* v5.14 (T12): icon-only Edit / Remove buttons, paired and right-aligned. */
+.mgr-ex-acts{display:inline-flex;gap:4px;margin-left:auto;flex-shrink:0}
+.mgr-icon-btn{appearance:none;background:transparent;border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;padding:0;line-height:1}
+.mgr-icon-btn:hover{color:var(--text);border-color:var(--primary-2)}
+.mgr-icon-btn.mgr-icon-danger:hover{color:#fff;background:var(--bad);border-color:var(--bad)}
+.mgr-icon-btn svg.ic{width:14px;height:14px}
+body.dark .mgr-icon-btn{border-color:var(--border);color:var(--muted-2)}
+body.dark .mgr-icon-btn:hover{color:var(--text)}
+/* Muted "Nx" replaces the filled session-count chip. */
+.mgr-ex-count{font-size:11px;font-weight:700;color:var(--muted);margin-left:auto;padding:0 2px;letter-spacing:.02em}
+.mgr-ex-row .mgr-ex-acts{margin-left:0} /* count already absorbs the spacer */
+/* Inline-editable day name (tap → input). */
+.mgr-day-name-edit{cursor:pointer;border-bottom:1px dashed transparent;transition:border-color .15s}
+.mgr-day-name-edit:hover{border-bottom-color:var(--border)}
+.mgr-day-name-input{flex:1;padding:6px 8px;font-size:14px;font-weight:700;color:var(--text);background:var(--surface);border:1px solid var(--primary-2);border-radius:6px;outline:none;font-family:inherit;min-width:0}
+body.dark .mgr-day-name-input{background:var(--surface);color:var(--text)}
+/* Intro-banner dismiss × button. */
+.mgr-notice-x{position:absolute;top:6px;right:8px;background:transparent;border:0;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:6px}
+.mgr-notice-x:hover{color:var(--text);background:rgba(0,0,0,.04)}
+body.dark .mgr-notice-x:hover{background:rgba(255,255,255,.06)}
 .mgr-ex-row.archived{background:#F5F5F2;border-color:#E8E8E4;opacity:0.75}
 .mgr-ex-name{font-size:13px;font-weight:500;color:#2C2C2A;flex:1}
 .mgr-ex-name.archived{color:#888780;text-decoration:line-through}
@@ -503,6 +560,16 @@ canvas.prog-chart{display:block;border-radius:8px}
 /* v4.20 (nit 22): toast anchored TOP-center — clears the bottom tab bar + the
    floating rest-timer / Complete pills (which it used to collide with). */
 .toast{position:fixed;top:calc(env(safe-area-inset-top) + 14px);bottom:auto;left:50%;transform:translateX(-50%) translateY(-90px);background:#2C2C2A;color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:1003}
+/* v5.14 (T11): self-dismissing post-save summary card. Mounts ~upper-third,
+   slides in, dims out in 3.5s, tap → opens the saved session. Gold accent on
+   the big number. */
+.sess-summary-card{position:fixed;top:22%;left:50%;transform:translate(-50%,-12px) scale(.96);background:var(--card);border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:14px;padding:14px 18px;min-width:240px;max-width:340px;box-shadow:0 8px 28px rgba(91,78,168,.18),0 2px 8px rgba(0,0,0,.12);opacity:0;cursor:pointer;z-index:1005;transition:opacity .22s ease,transform .22s ease;text-align:center}
+.sess-summary-card.show{opacity:1;transform:translate(-50%,0) scale(1)}
+.ssc-h{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.ssc-big{font-size:30px;font-weight:800;color:var(--gold);line-height:1.05;letter-spacing:-.01em}
+.ssc-big-cap{font-size:13px;font-weight:700;color:var(--text);margin-left:4px;letter-spacing:0}
+.ssc-cmp{font-size:12px;font-weight:600;color:var(--muted);margin-top:6px}
+body.dark .sess-summary-card{box-shadow:0 8px 28px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.4)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.toast-sticky{pointer-events:auto;white-space:normal;max-width:88vw;display:flex;align-items:center;gap:12px;text-align:left}
 .toast .toast-x{background:none;border:0;color:#fff;font-size:13px;line-height:1;cursor:pointer;padding:4px 6px;margin:-2px -6px -2px 0;opacity:.75;flex-shrink:0}
@@ -550,57 +617,57 @@ body.dark .modal-overlay{background:rgba(0,0,0,0.4)}
 body.dark{background:var(--surface);color:var(--text)}
 body.dark .item{background:#252540;border-color:var(--border)}
 body.dark .ex-name{color:var(--text)}
-body.dark .ex-sub{color:#9896C8}
+body.dark .ex-sub{color:var(--muted-2)}
 body.dark .ex-loc{color:#7F77DD}
-body.dark .item.done .ex-name{color:#5C5A80;text-decoration:line-through}
+body.dark .item.done .ex-name{color:var(--muted-deep);text-decoration:line-through}
 body.dark .item.done .ex-sub,body.dark .item.done .ex-loc{color:#9A95C4}
 body.dark .day-selector{background:transparent;border:0}
 body.dark .day-btn{background:var(--surface);border-color:var(--border);color:#C7C4EE}
 body.dark .day-btn.active{background:#5B4EA8;color:#fff;border-color:#5B4EA8}
-body.dark .prog-tab-btn{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .prog-tab-btn{background:#252540;border-color:var(--border);color:var(--muted-2)}
 body.dark .prog-tab-btn.active{background:#5B4EA8;color:#fff}
 body.dark .prog-stats{background:transparent}
 body.dark .stat-box{background:var(--surface)}
-body.dark .stat-num{color:#B4B2D8}
+body.dark .stat-num{color:var(--muted-2)}
 body.dark .prog-day-card{background:#252540;border-color:var(--border)}
 body.dark .prog-day-title{color:var(--text)}
-body.dark .prog-day-sub{color:#9896C8}
-body.dark .prog-day-count{background:var(--primary-tint);color:#B4B2D8}
+body.dark .prog-day-sub{color:var(--muted-2)}
+body.dark .prog-day-count{background:var(--primary-tint);color:var(--muted-2)}
 body.dark .prog-day-header:hover{background:var(--primary-tint)}
 .prog-session-notes{padding:8px 14px;font-size:12px;color:#7F77DD;font-style:italic;border-top:0.5px solid #F1EFE8}
 .prog-session-dur{font-size:11px;color:#888780;font-weight:400}
 body.dark .prog-session-notes{color:#7F77DD;border-top-color:var(--border)}
-body.dark .prog-session-dur{color:#5C5A80}
-body.dark .prog-session-date{color:#9896C8}
-body.dark .prog-session-item{color:#B4B2D8}
+body.dark .prog-session-dur{color:var(--muted-deep)}
+body.dark .prog-session-date{color:var(--muted-2)}
+body.dark .prog-session-item{color:var(--muted-2)}
 body.dark .prog-session-item b{color:var(--text)}
 body.dark .prog-session-item span{color:#7F77DD}
 body.dark .sess-nav-label{color:#7F77DD}
 body.dark .prog-clear-btn{background:#2A1A1A;border-color:#7A2020;color:#FF8080}
 body.dark .prog-clear-btn:hover{background:#3A1A1A}
-body.dark .muscle-map-title{color:#9896C8}
+body.dark .muscle-map-title{color:var(--muted-2)}
 body.dark .ex-detail-panel{background:#252540;border-color:var(--border)}
 body.dark .stat-card{background:#252540}
-body.dark .stat-card-label{color:#9896C8}
-body.dark .stat-card-val{color:#B4B2D8}
+body.dark .stat-card-label{color:var(--muted-2)}
+body.dark .stat-card-val{color:var(--muted-2)}
 body.dark .meas-entry-card,.dark .meas-history-item{background:#252540;border-color:var(--border)}
 body.dark .modal{background:#252540;color:var(--text)}
 body.dark .modal-title{color:var(--text)}
-body.dark .modal-sub{color:#9E9CC4}
+body.dark .modal-sub{color:var(--muted-2)}
 #session-notes{background:#fff;color:#2C2C2A;border:1px solid var(--border-soft)}
 body.dark .date-input,body.dark #session-notes{background:var(--surface);color:var(--text);border-color:var(--border)}
 body.dark .modal-textarea{background:var(--surface);color:var(--text);border-color:var(--border)}
 body.dark .date-input-wrap{background:#252540;border-color:var(--border)}
-body.dark .date-input-label{color:#9E9CC4}
-body.dark .modal-btn-secondary{background:var(--surface-dark);color:#9E9CC4;border-color:var(--border)}
+body.dark .date-input-label{color:var(--muted-2)}
+body.dark .modal-btn-secondary{background:var(--surface-dark);color:var(--muted-2);border-color:var(--border)}
 /* Dark-mode input chrome for the three input families (set weight / cardio / notes) */
 body.dark .rep-input,body.dark .cardio-input,body.dark .notes-input{background:#1F1D38;color:var(--text);border-color:var(--border)}
 body.dark #share-modal{background:#252540}
 body.dark #share-text{background:var(--surface);color:var(--text);border-color:var(--border)}
 body.dark .sess-nav{background:#252540}
-body.dark .sess-nav-btn{background:var(--surface);border-color:var(--border);color:#B4B2D8}
-body.dark .prog-empty{color:#9896C8}
-body.dark .skip-row{background:#2A1A1A}
+body.dark .sess-nav-btn{background:var(--surface);border-color:var(--border);color:var(--muted-2)}
+body.dark .prog-empty{color:var(--muted-2)}
+body.dark .skip-row{background:var(--surface);border-color:var(--border)}
 body{transition:background 0.2s,color 0.2s}
 
 /* ── Pre-session check-in ── */
@@ -618,13 +685,13 @@ body{transition:background 0.2s,color 0.2s}
 .checkin-done{font-size:12px;color:#888780;padding:4px 0 6px;display:flex;align-items:center;gap:6px}
 /* ── Progressive overload nudge ── */
 .overload-nudge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#085041;background:#D4F0E2;border-radius:8px;padding:2px 8px;margin-top:3px}
-body.dark .checkin-bar .checkin-label{color:#5C5A80}
+body.dark .checkin-bar .checkin-label{color:var(--muted-deep)}
 body.dark .checkin-btn{background:#252540;border-color:var(--border);color:var(--text)}
-body.dark .checkin-btn span{color:#5C5A80}
+body.dark .checkin-btn span{color:var(--muted-deep)}
 body.dark .checkin-btn.selected-great{background:#0F3A2E;border-color:#0F6E56}
 body.dark .checkin-btn.selected-great span{color:#5DD8A0}
 body.dark .checkin-btn.selected-okay{background:#3A2E00;border-color:#B8860B}
-body.dark .checkin-btn.selected-okay span{color:#FFD740}
+body.dark .checkin-btn.selected-okay span{color:var(--gold)}
 body.dark .checkin-btn.selected-tired{background:#3A1A1A;border-color:#C53030}
 body.dark .checkin-btn.selected-tired span{color:#FF8080}
 body.dark .overload-nudge{background:#0F3A2E;color:#5DD8A0}
@@ -721,8 +788,8 @@ body.dark .rpe-pill{background:var(--primary-tint);color:#C7C4EE}
 .rpe-label{display:none}
 .rpe-val{display:none}
 .rpe-desc{display:none}
-body.dark .rpe-top-label{color:#5C5A80}
-body.dark .rpe-top-val{color:#9896C8}
+body.dark .rpe-top-label{color:var(--muted-deep)}
+body.dark .rpe-top-val{color:var(--muted-2)}
 body.dark .rpe-ends{color:var(--border)}
 body.dark .rpe-slider{background:linear-gradient(to right,#7F77DD 0%,#7F77DD var(--rpe-pct,0%),var(--border) var(--rpe-pct,0%),var(--border) 100%)}
 body.dark .rpe-slider::-webkit-slider-thumb{border-color:#252540}
@@ -751,47 +818,61 @@ body.dark .rpe-slider::-webkit-slider-thumb{border-color:#252540}
 .vol-chart-title{font-size:11px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
 /* ── Dark mode additions ── */
 body.dark .quick-fill-btn{background:#252540;border-color:#6562A0;color:#B4B2E0}
-body.dark .pain-btn{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .pain-btn{background:#252540;border-color:var(--border);color:var(--muted-2)}
 body.dark .pain-btn.active-ok{background:#0F3A2E;border-color:#0F6E56;color:#5DD8A0}
 body.dark .pain-btn.active-flag{background:#3A1A1A;border-color:#C53030;color:#FF8080}
-body.dark .milestone-badge.earned{background:#3A2E00;border-color:#E0A800;color:#FFD740}
-body.dark .milestone-badge.locked{background:#252540;border-color:var(--border);color:#5C5A80}
-body.dark .mgr-day-label{color:#B4B2D8;border-bottom-color:var(--border)}
+body.dark .milestone-badge.earned{background:#3A2E00;border-color:#E0A800;color:var(--gold)}
+body.dark .milestone-badge.locked{background:#252540;border-color:var(--border);color:var(--muted-deep)}
+/* v5.14 (T6): "Up next" + collapsed-locked variants. Up-next is wider, shows a
+   tiny progress bar (var(--gold)) for milestones with a numeric target. The
+   collapsed rest hides behind a small text button; dim outline, no 🔒 glyph. */
+.milestone-badge.upnext{flex-direction:column;align-items:stretch;gap:4px;min-width:120px;padding:7px 10px;background:transparent;border-color:var(--border-soft);color:var(--text)}
+.milestone-up-head{font-weight:700}
+.milestone-progress{height:4px;background:var(--border-soft);border-radius:2px;overflow:hidden;display:block}
+.milestone-progress-fill{display:block;height:100%;background:var(--gold);border-radius:2px}
+.milestone-progress-cap{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.milestone-more{display:block;margin:6px auto 0;background:transparent;border:0;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;padding:6px 12px}
+.milestone-more:hover{color:var(--text)}
+.milestone-badge.locked-dim{background:transparent;border:1px dashed var(--border);color:var(--muted);font-weight:600;padding:4px 9px}
+body.dark .milestone-badge.upnext{border-color:var(--border)}
+body.dark .milestone-progress{background:var(--border)}
+body.dark .milestone-badge.locked-dim{border-color:var(--border);color:var(--muted-deep)}
+body.dark .mgr-day-label{color:var(--muted-2);border-bottom-color:var(--border)}
 body.dark .ex-list-btn:hover{background:var(--primary-tint);border-color:#7F77DD}
-body.dark .ex-list-btn.active{background:var(--primary-tint);border-color:#5B4EA8;color:#B4B2D8}
-body.dark .ex-session-count{background:var(--primary-tint);color:#9896C8}
+body.dark .ex-list-btn.active{background:var(--primary-tint);border-color:#5B4EA8;color:var(--muted-2)}
+body.dark .ex-session-count{background:var(--primary-tint);color:var(--muted-2)}
 body.dark .ex-detail-panel{background:#252540;border-color:var(--border)}
 body.dark .ex-history-item{border-bottom-color:var(--border)}
-body.dark .ex-history-date{color:#9896C8}
-body.dark .ex-history-sets{color:#B4B2D8}
+body.dark .ex-history-date{color:var(--muted-2)}
+body.dark .ex-history-sets{color:var(--muted-2)}
 body.dark .ex-stat-row{border-bottom-color:var(--border)}
-body.dark .ex-stat-chip{background:var(--primary-tint);color:#B4B2D8}
-body.dark .ex-stat-chip.gold{background:#3A2E00;color:#FFD740}
+body.dark .ex-stat-chip{background:var(--primary-tint);color:var(--muted-2)}
+body.dark .ex-stat-chip.gold{background:#3A2E00;color:var(--gold)}
 body.dark .ex-stat-chip.ex-stat-std{background:#2A2850;color:var(--primary-2)}
 body.dark .ex-stat-chip.green{background:#0F3A2E;color:#5DD8A0}
 body.dark .chart-wrap{background:#1E1E38;border-top-color:var(--border)}
-body.dark .chart-title{color:#9896C8}
+body.dark .chart-title{color:var(--muted-2)}
 body.dark .vol-chart-wrap{background:#252540;border-color:var(--border)}
 body.dark .reps-actual-input{background:var(--surface);border-color:var(--border);color:var(--text)}
-body.dark .reps-col-label{color:#5C5A80}
-body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
+body.dark .reps-col-label{color:var(--muted-deep)}
+body.dark .session-timer-badge{background:#252540;color:var(--muted-2)}
 /* Bottom-of-panel + sweep: surfaces that lacked dark variants */
-body.dark .tip{background:var(--primary-tint);border-left-color:var(--primary-2);color:#B4B2D8}
+body.dark .tip{background:var(--primary-tint);border-left-color:var(--primary-2);color:var(--muted-2)}
 body.dark .reset-btn{background:#252540;border-color:var(--border);color:var(--muted)}
 body.dark .item.done{background:#1F1D38}
-body.dark #share-close-btn{background:#252540;color:#B4B2D8}
+body.dark #share-close-btn{background:#252540;color:var(--muted-2)}
 body.dark .day-since-card{background:#252540}
-body.dark .meas-sub-btn{background:#252540;border-color:var(--border);color:#9896C8}
-body.dark .meas-unit-btn{background:#252540;border-color:var(--border);color:#9896C8}
-body.dark .cardio-machine-btn{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .meas-sub-btn{background:#252540;border-color:var(--border);color:var(--muted-2)}
+body.dark .meas-unit-btn{background:#252540;border-color:var(--border);color:var(--muted-2)}
+body.dark .cardio-machine-btn{background:#252540;border-color:var(--border);color:var(--muted-2)}
 body.dark .mgr-reorder-btn{background:#252540;border-color:var(--border);color:var(--text)}
-body.dark .unit-btn{background:var(--surface);color:#9896C8}
+body.dark .unit-btn{background:var(--surface);color:var(--muted-2)}
 body.dark .ex-list-btn{background:#252540;color:var(--text)}
 body.dark .mgr-ex-row{background:#252540;border-color:var(--border)}
 body.dark .mgr-ex-row.archived{background:#1F1D38;border-color:var(--border)}
 body.dark .mgr-ex-name{color:var(--text)}
 body.dark .mgr-ex-name.archived{color:var(--muted)}
-body.dark .mgr-archived-title{color:#9896C8}
+body.dark .mgr-archived-title{color:var(--muted-2)}
 body.dark .mgr-archived-section{border-top-color:var(--border)}
 body.dark .mgr-archive-btn{background:#3A1A1A;border-color:#7A2020;color:#FF8080}
 .mgr-edit-btn{background:#EEEDFE;border-color:var(--border-soft);color:#3C3489;margin-right:5px}
@@ -901,11 +982,15 @@ body.dark .sess-card mark,body.dark .sess-notes mark{background:#7A5A00;color:#F
 .sess-filter-row{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-bottom:0.75rem}
 .sess-filter{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--muted);background:#F5F5F2;border:1px solid var(--border);border-radius:14px;cursor:pointer;white-space:nowrap}
 .sess-filter.on{background:var(--primary);border-color:var(--primary);color:#fff}
+/* v5.14 (T5): chips with no sessions for that day dim out, taps disabled.
+   Preserves day-cycle context (D1..D5 stay in place) without inviting a
+   wasted tap to an empty list. */
+.sess-filter.empty{opacity:.35;pointer-events:none}
 .sess-cnt{font-size:10px;font-weight:700;color:var(--primary);background:#fff;border-radius:8px;padding:1px 6px;min-width:14px;text-align:center}
 .sess-filter.on .sess-cnt{color:var(--primary);background:#fff}
-body.dark .sess-filter{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .sess-filter{background:#252540;border-color:var(--border);color:var(--muted-2)}
 body.dark .sess-filter.on{background:var(--primary);border-color:var(--primary);color:#fff}
-body.dark .sess-cnt{background:var(--surface);color:#9896C8}
+body.dark .sess-cnt{background:var(--surface);color:var(--muted-2)}
 body.dark .sess-filter.on .sess-cnt{background:#fff;color:var(--primary)}
 .sess-day-clear{font-size:11px;font-weight:600;padding:4px 10px;background:transparent;border:1px solid var(--bad);border-radius:6px;color:var(--bad);cursor:pointer}
 body.dark .sess-day-clear{border-color:#7A2020;color:#FF8080}
@@ -931,16 +1016,19 @@ body.dark .sess-ovf-danger{color:#FF8080}
 .sess-card-chips{display:flex;gap:5px;flex-wrap:wrap}
 .sess-meta-chip{font-size:11px;font-weight:600;color:var(--muted);background:var(--border-soft);border-radius:7px;padding:2px 7px;white-space:nowrap}
 .sess-meta-chip.sess-pr{background:#FFF8E1;color:#7A5A00}
-body.dark .sess-meta-chip{background:#1F1D38;color:#9896C8}
-body.dark .sess-meta-chip.sess-pr{background:#3A2E00;color:#FFD740}
+body.dark .sess-meta-chip{background:#1F1D38;color:var(--muted-2)}
+body.dark .sess-meta-chip.sess-pr{background:#3A2E00;color:var(--gold)}
 .sess-card-body{font-size:12px;color:var(--text);line-height:1.5}
 .sess-lift{display:flex;flex-direction:column;gap:2px;padding:4px 0;border-top:.5px solid var(--border-soft)}
 .sess-lift:first-child{border-top:0;padding-top:0}
 body.dark .sess-lift{border-top-color:var(--border)}
 .sess-lift-name{font-size:12px;font-weight:600;color:var(--text)}
-.sess-lift-sets{display:flex;gap:4px;flex-wrap:wrap;margin-top:1px}
-.sess-lift-set{font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border-soft);border-radius:5px;padding:1px 6px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-body.dark .sess-lift-set{background:var(--surface);border-color:var(--border);color:#B4B2D8}
+/* v5.14 (T3): set chips now read "1 · 120×12" and lay out 3-up. The cleaner
+   chip is short enough to fit a 3-col grid at phone width; longer notes
+   (e.g. "1 · On step") gracefully wrap inside their cell. */
+.sess-lift-sets{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:2px}
+.sess-lift-set{font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border-soft);border-radius:5px;padding:2px 8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-align:center}
+body.dark .sess-lift-set{background:var(--surface);border-color:var(--border);color:var(--muted-2)}
 .sess-lift-empty{font-style:italic;color:var(--muted)}
 /* v3.10: a note folded under its exercise + collapsible cardio bundle */
 .sess-lift-note{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45}
@@ -955,12 +1043,12 @@ body.dark .sess-lift-set{background:var(--surface);border-color:var(--border);co
 body.dark .sess-cardio{border-color:var(--border)}
 body.dark .sess-cardio-line{border-top-color:var(--border)}
 .sess-notes{margin-top:6px;font-size:11.5px;color:var(--muted);background:var(--primary-tint);border-radius:6px;padding:6px 8px;line-height:1.5}
-body.dark .sess-notes{background:var(--primary-tint);color:#B4B2D8}
+body.dark .sess-notes{background:var(--primary-tint);color:var(--muted-2)}
 /* Step 6 — Lifts sort chips + inline sparklines */
 .lifts-sort-row{display:flex;gap:5px;margin-bottom:0.6rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .lifts-sort-chip{flex:0 0 auto;padding:6px 11px;font-size:11.5px;font-weight:600;color:var(--muted);background:#F5F5F2;border:1px solid var(--border);border-radius:14px;cursor:pointer;white-space:nowrap}
 .lifts-sort-chip.on{background:var(--primary);border-color:var(--primary);color:#fff}
-body.dark .lifts-sort-chip{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .lifts-sort-chip{background:#252540;border-color:var(--border);color:var(--muted-2)}
 body.dark .lifts-sort-chip.on{background:var(--primary);border-color:var(--primary);color:#fff}
 .lift-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lift-trail{display:flex;align-items:center;gap:6px;flex-shrink:0}
@@ -971,14 +1059,14 @@ body.dark .lifts-sort-chip.on{background:var(--primary);border-color:var(--prima
 .lift-pill-flat{background:var(--border-soft);color:var(--muted)}
 body.dark .lift-pill-up{background:#0F3A2E;color:#5DD8A0}
 body.dark .lift-pill-down{background:#3A1A1A;color:#FF8080}
-body.dark .lift-pill-flat{background:#1F1D38;color:#9896C8}
+body.dark .lift-pill-flat{background:#1F1D38;color:var(--muted-2)}
 .ex-list-btn{gap:8px}
 /* Step 7 — Lift detail single-chart-three-metrics toggle */
 .lift-chart-panel{padding:12px}
 .lift-metric-row{display:flex;gap:5px;margin-bottom:10px}
 .lift-metric-pill{flex:1;padding:6px 8px;font-size:11px;font-weight:600;color:var(--muted);background:#F5F5F2;border:1px solid var(--border);border-radius:7px;cursor:pointer}
 .lift-metric-pill.on{background:var(--primary);border-color:var(--primary);color:#fff}
-body.dark .lift-metric-pill{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .lift-metric-pill{background:#252540;border-color:var(--border);color:var(--muted-2)}
 body.dark .lift-metric-pill.on{background:var(--primary);border-color:var(--primary);color:#fff}
 .ex-history-delta{margin-top:3px}
 /* Step 9 — Trend delta pills (unified visual) */
@@ -989,8 +1077,8 @@ body.dark .lift-metric-pill.on{background:var(--primary);border-color:var(--prim
 .delta-pb{background:#FBF1D6;color:#8C6500}
 body.dark .delta-up{background:#0F3A2E;color:#5DD8A0}
 body.dark .delta-down{background:#3A1A1A;color:#FF8080}
-body.dark .delta-flat{background:#1F1D38;color:#9896C8}
-body.dark .delta-pb{background:#3A2E00;color:#FFD740}
+body.dark .delta-flat{background:#1F1D38;color:var(--muted-2)}
+body.dark .delta-pb{background:#3A2E00;color:var(--gold)}
 /* v2.41 dark-mode finish — focus states, refactored chip/tab classes */
 body.dark .rep-input:focus,body.dark .reps-actual-input:focus,body.dark .notes-input:focus,body.dark .cardio-input:focus{background:#26244D}
 body.dark .edit-date-input{background:var(--surface);color:var(--text);border-color:var(--border)}
@@ -1003,18 +1091,18 @@ body.dark .meas-in{background:var(--surface);border-color:var(--border);color:va
 .tab-btn{flex:1;padding:9px;font-size:13px;font-weight:600;border-radius:8px;border:1.5px solid;cursor:pointer}
 .tab-btn.on{border-color:#5B4EA8;background:#5B4EA8;color:#fff}
 .tab-btn.off{border-color:var(--border);background:#F5F5F2;color:var(--muted)}
-body.dark .tab-btn.off{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .tab-btn.off{background:#252540;border-color:var(--border);color:var(--muted-2)}
 /* Lift-detail stat row (refactored from inline in JS template) */
 .lift-stat-row{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#F5F5F2;border-radius:7px;padding:7px 10px;font-size:12px}
 .lift-stat-row>.k{font-weight:600;color:#3C3489;flex-shrink:0}
 .lift-stat-row>.v{color:#5F5E5A;text-align:right}
 body.dark .lift-stat-row{background:#252540}
-body.dark .lift-stat-row>.k{color:#B4B2D8}
-body.dark .lift-stat-row>.v{color:#9896C8}
+body.dark .lift-stat-row>.k{color:var(--muted-2)}
+body.dark .lift-stat-row>.v{color:var(--muted-2)}
 /* Builder/multi-day chips (refactored from inline + toggleMuscleChip JS) */
 .chip{padding:5px 9px;font-size:11px;font-weight:600;border-radius:14px;cursor:pointer;border:1px solid var(--border-soft);background:#FAFAF8;color:#5B4EA8}
 .chip.on{border-color:#5B4EA8;background:#5B4EA8;color:#fff}
-body.dark .chip{background:var(--surface);border-color:var(--border);color:#9896C8}
+body.dark .chip{background:var(--surface);border-color:var(--border);color:var(--muted-2)}
 body.dark .chip.on{background:#5B4EA8;border-color:#5B4EA8;color:#fff}
 /* Plate Calc inputs (refactored from inline) */
 #pc-target,#pc-bar{background:#FAFAF8;color:var(--text);border:1px solid var(--border-soft)}
@@ -1050,8 +1138,14 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.13</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.14</span></div>
   </div>
+  <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
+       dot lights up while notices exist. Tap toggles the tray below. -->
+  <button id="notice-bell" type="button" class="notice-bell" aria-label="0 notices" onclick="toggleNoticeTray()" hidden>
+    <span aria-hidden="true">ⓘ</span>
+    <span class="notice-bell-dot" aria-hidden="true"></span>
+  </button>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
 <div id="backup-banner" class="legacy-banner" style="display:none;background:#FFF8E1;border:1px solid #E0A800;color:#7A5A00;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:0.75rem;line-height:1.5;display:none;align-items:center;justify-content:space-between;gap:8px;">
@@ -1083,12 +1177,14 @@ body.dark #pc-result{color:var(--text)}
 
 <!-- ═══ PROGRESS ═══ -->
 <div class="day-panel" id="p-prog">
-  <!-- v4.1: a single compact hero metric line (sessions · PRs · streak) replaces the
-       old per-day stat-box grid; per-day counts still live on the filter-chip pills. -->
-  <div class="prog-stats" id="prog-stats-row">
+  <!-- v5.14 (T8): the v4.1 "{N} sessions · {N} PRs · streak" strap is gone —
+       it duplicated the monthly recap below. Keeping #prog-stats-row + an
+       empty #prog-hero stub for backward-compat with any external selector. -->
+  <div class="prog-stats" id="prog-stats-row" hidden>
     <div id="prog-hero" class="prog-hero"></div>
   </div>
-  <!-- v5.11: quiet "this month" recap (sessions · PRs · volume · bodyweight Δ) -->
+  <!-- v5.11: quiet "this month" recap (sessions · PRs · volume · bodyweight Δ).
+       v5.14 (T8): now the only content between the page header and the sub-tabs. -->
   <div id="prog-recap" class="prog-recap" hidden></div>
 
   <!--
@@ -1205,7 +1301,9 @@ body.dark #pc-result{color:var(--text)}
         </div>
       </div>
     </div>
-    <div class="mgr-notice">
+    <!-- v5.14 (T12): one-time-dismiss intro banner (plan_intro_dismissed_v1). -->
+    <div class="mgr-notice" id="mgr-intro-notice" style="position:relative">
+      <button type="button" class="mgr-notice-x" aria-label="Dismiss plan intro" onclick="_dismissPlanIntro()" title="Got it — hide this">×</button>
       <strong>Add</strong>, <strong>Edit</strong>, rename, swap and reorder your plan right here. Renaming <strong>keeps all logged history</strong> (the underlying tracking id never changes). <strong>Remove</strong> takes an exercise off just that day — re-add it anytime from <strong>📚 From library</strong>, and all its history is kept.
     </div>
     <!-- v2.79 (Phase B.3): adjustable day cycle — add / rename / remove / reorder days. -->
@@ -4283,6 +4381,11 @@ function confirmSave(){
   var _estPRs=0; try{ _estPRs=countNewEstPRs(day, savedEntries); }catch(e){}
   showToast(_estPRs===0 ? 'Session saved! ✓' : _estPRs===1 ? 'Session saved · new PR' : 'Session saved · '+_estPRs+' new PRs');
   var prs=checkForPRs(day, savedEntries);
+  // v5.14 (T11): post-save summary card (self-dismissing) — promoted by John
+  // from post-1.0. Reuses PR detection + tonnage math; tap → opens this
+  // session in the Sessions tab. The toast stays as the brief confirmation;
+  // this card is the celebration moment.
+  try{ showSessionSummary(savedDay, savedLabel, sessionObj, _estPRs); }catch(_e){}
   rst(day,counts[day]);
   clearSessionStart(day);
   // Reset check-in bar for next session
@@ -4616,24 +4719,47 @@ function _applyCoachLine(panel){
     var st; try{ st=coachState(exKey, exerciseMeta(raw)); }catch(e){ st=null; }
     if(!st) return;
     var sets=card.querySelector('.v2-sets'); if(!sets) return;
-    var el=null;
+    // v5.14 (T4): trimmed copy + long-press tooltip with the full math.
+    // The on-surface line is conversational; precise numbers (e1RM %, deltas)
+    // live in the title= tooltip (hover on desktop) and a long-press toast
+    // (touch). Computations inside coachState() are unchanged.
+    var unit='lbs'; try{ if(typeof getUnits==='function') unit=getUnits(); }catch(_e){}
+    var el=null, detail='';
     if(st.kind==='ready'){
       el=document.createElement('button'); el.type='button'; el.className='coach-line coach-ready';
-      var sub=(st.pct!=null)?' <span class="coach-sub">('+(st.step?'+'+st.step+' · ':'')+st.pct+'% e1RM)</span>':(st.step?' <span class="coach-sub">(+'+st.step+')</span>':'');
-      el.innerHTML='<span class="coach-ic">⬆️</span><span class="coach-msg">Ready — try <b>'+st.target+'</b>'+sub+'</span><span class="coach-act">Fill →</span>';
-      el.setAttribute('aria-label','Ready to progress — suggested '+st.target+'. Tap to fill the sets.');
+      el.innerHTML='<span class="coach-ic">↑</span><span class="coach-msg">Ready · try <b>'+st.target+'</b> '+unit+'</span><span class="coach-act">→ Fill</span>';
+      detail='+'+(st.step||5)+' lb'+(st.pct!=null?' · '+st.pct+'% e1RM':'');
+      el.setAttribute('aria-label','Ready to progress — suggested '+st.target+' '+unit+'. Tap to fill the sets.');
       el.onclick=function(e){ e.stopPropagation(); _acceptProgression(card, st.target); };
     } else if(st.kind==='hold'){
       el=document.createElement('div'); el.className='coach-line coach-hold';
-      el.innerHTML='<span class="coach-ic">●</span><span class="coach-msg">Hold <b>'+st.W+'</b> — stalled, sharpen form</span>';
+      el.innerHTML='<span class="coach-ic">●</span><span class="coach-msg">Same as last week · focus on form</span>';
+      detail='Stalled at '+st.W+' '+unit+' — RPE ≥ 8 last session';
     } else if(st.kind==='build'){
       el=document.createElement('div'); el.className='coach-line coach-quiet';
-      el.innerHTML='<span class="coach-ic">🎯</span><span class="coach-msg">Build to <b>'+st.sets+'×'+st.reps+' @ '+st.W+'</b> <span class="coach-sub">· last top set '+st.lastReps+' reps</span></span>';
+      el.innerHTML='<span class="coach-msg">Building to <b>'+st.sets+'×'+st.reps+' @ '+st.W+'</b> <span class="coach-sub">· '+st.lastReps+' reps last time</span></span>';
+      detail='Target '+st.sets+'×'+st.reps+' · last top set '+st.lastReps+' reps at '+st.W+' '+unit;
     } else if(st.kind==='aim'){
       el=document.createElement('div'); el.className='coach-line coach-quiet';
-      el.innerHTML='<span class="coach-ic">🎯</span><span class="coach-msg">Aim <b>~'+st.aim+'</b> <span class="coach-sub">· '+st.pct+'% of e1RM '+st.best+'</span></span>';
+      el.innerHTML='<span class="coach-msg">Aim <b>~'+st.aim+'</b> '+unit+' <span class="coach-sub">· same as last time</span></span>';
+      detail=st.pct+'% of e1RM '+st.best+' '+unit+' (Epley)';
     }
-    if(el) sets.insertBefore(el, sets.firstChild);
+    if(el){
+      if(detail){
+        el.setAttribute('title', detail);
+        // Long-press (≥500ms) → toast with full math. Cancel on move/up early.
+        var _lpT=null;
+        el.addEventListener('pointerdown', function(ev){
+          _lpT=setTimeout(function(){ _lpT=null; try{ showToast(detail); }catch(_e){} }, 500);
+        });
+        var _cancel=function(){ if(_lpT){ clearTimeout(_lpT); _lpT=null; } };
+        el.addEventListener('pointerup', _cancel);
+        el.addEventListener('pointercancel', _cancel);
+        el.addEventListener('pointerleave', _cancel);
+        el.addEventListener('pointermove', function(ev){ if(_lpT && (Math.abs(ev.movementX)+Math.abs(ev.movementY) > 6)) _cancel(); });
+      }
+      sets.insertBefore(el, sets.firstChild);
+    }
   });
 }
 function _acceptProgression(card, target){
@@ -4763,7 +4889,10 @@ function loadLastTimes(){
       var existingNudge=el.parentNode.querySelector('.overload-nudge');
       if(existingNudge) existingNudge.parentNode.removeChild(existingNudge);
       if(match){
-        el.querySelector('.last-time-vals').textContent=match.note+' ('+match.date+')';
+        // v5.14 (T1): friendlier relative date — "2 days ago · May 25" — with ISO in title.
+        var _vals=el.querySelector('.last-time-vals');
+        _vals.textContent=match.note+' ('+fmtDate(match.ts||match.date,'rel')+')';
+        _vals.setAttribute('title', fmtDateISO(match.ts||match.date));
         el.classList.add('has-data');
         // v5.13: the progressive-overload cue now lives in the consolidated
         // coach line (_applyCoachLine), not a separate nudge under last-time.
@@ -4886,6 +5015,8 @@ function openManage(){
   var pb=document.getElementById('hdr-prog-btn');
   if(!document.getElementById('p-prog').classList.contains('show')) sw('prog', pb||document.getElementById('hdr-plan-btn'));
   switchProgTab('manage', null);
+  // v5.14 (T12): honor a previous one-time dismiss of the green intro banner.
+  try{ _applyPlanIntroDismissed(); }catch(_e){}
 }
 
 // ── Confirmed clear ──
@@ -5080,8 +5211,9 @@ function renderExerciseList(){
       var sessions=exMap[k];
       var reversed=sessions.slice().reverse();
       var histHTML=sessions.map(function(s){
+        var _ts=_sessWhen(s);
         return ('<div class="ex-history-item">'
-          +'<div class="ex-history-date">'+s.date+'</div>'
+          +'<div class="ex-history-date" title="'+_esc(fmtDateISO(_ts))+'">'+_esc(fmtDate(_ts,'med'))+'</div>'
           +'<div class="ex-history-sets">'+s.note.replace(/\|/g,' &middot; ')+'</div>'
           +'</div>');
       }).join('');
@@ -5132,8 +5264,9 @@ function renderExerciseList(){
         var prevWs=prev?parseSetWeights(prev.note||''):[];
         var prevMax=prevWs.length?Math.max.apply(null,prevWs):null;
         var dp=(curMax!=null && prevMax!=null)?deltaPill(curMax, prevMax, {unit:'lbs', threshold:0.5}):'';
+        var _ts=_sessWhen(s);
         return '<div class="ex-history-item">'
-          +'<div class="ex-history-date">'+s.date+'</div>'
+          +'<div class="ex-history-date" title="'+_esc(fmtDateISO(_ts))+'">'+_esc(fmtDate(_ts,'med'))+'</div>'
           +'<div class="ex-history-sets">'+s.note.replace(/\|/g,' &middot; ')+'</div>'
           +(dp?'<div class="ex-history-delta">'+dp+'</div>':'')
           +'</div>';
@@ -5196,7 +5329,7 @@ function _redrawLiftChart(){
     }).filter(Boolean);
   }
   var unit=_currentLiftMetric==='volume'?'lbs':'lbs';
-  drawChartV2(canvas, pts, {unit:unit, height:200});
+  drawChartV2(canvas, pts, {unit:unit, height:200, labelCount:4});
 }
 
 // Patch 5: dual-signature parsers.
@@ -5244,6 +5377,25 @@ function parseSetWR(arg){
     if(m) out.push({ w:parseFloat(m[1]), r:m[2]?parseInt(m[2],10):null });
   });
   return out;
+}
+// v5.14 (T3): friendlier set-chip text. "Set 1: 120 lbs x12reps" → "1 · 120×12".
+// Unit suffix is appended ONLY when the set's stored unit differs from the
+// global units pref (units_v1) — so a kg set inside an lbs-default app keeps "kg".
+// Non-numeric notes (bodyweight, "Set 1: On step") render as "N · <text>".
+function fmtSet(rawStr, idx){
+  var s=String(rawStr||'').trim();
+  var nm=s.match(/^Set\s*(\d+)\s*:\s*([\s\S]*)$/i);
+  if(!nm) return s;
+  var n=nm[1], rest=nm[2].trim();
+  var wm=rest.match(/^([\d.]+)\s*(lbs|lb|kg|kgs)?(?:\s*[x×]\s*(\d+)\s*reps?)?\s*$/i);
+  var prefix=(idx!=null?(idx+1):n);
+  if(!wm) return prefix+' · '+rest;
+  var w=parseFloat(wm[1]), unit=(wm[2]||'').toLowerCase(), reps=wm[3];
+  if(unit==='lb') unit='lbs'; if(unit==='kgs') unit='kg';
+  var pref='lbs'; try{ if(typeof getUnits==='function') pref=getUnits(); }catch(_e){}
+  var sfx=(unit && unit!==pref) ? (' '+unit) : '';
+  var wTxt=(w%1===0)?String(w):String(Math.round(w*10)/10);
+  return prefix+' · '+wTxt+(reps?'×'+reps:'')+sfx;
 }
 // Epley estimated one-rep max. Needs reps; 1 rep == the weight itself.
 function est1RM(w,r){
@@ -5311,12 +5463,60 @@ function countNewEstPRs(day, entries){
   return n;
 }
 
-function fmtChartDate(d){
-  var months={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
-  var m=d.match(/(\w+)\s+(\d+),\s*(\d{4})/);
-  if(m && months[m[1]]) return months[m[1]]+'/'+m[2]+'/'+m[3].slice(-2);
-  return d.split(',')[0].trim();
+// v5.14 (T1): unified date formatting. Replaces ad-hoc new Date(ts).toString()
+// and the old fmtChartDate. Modes:
+//   'short' → "May 25" (appends " '24" when more than ~6 months from today)
+//   'med'   → "Mon · May 25"
+//   'rel'   → "2 days ago · May 25" (falls back to 'short' past 14 days)
+// Accepts a number (epoch ms), a Date, or a stored session.date string.
+function fmtDate(ts, mode){
+  mode=mode||'short';
+  if(ts==null||ts==='') return '';
+  var d;
+  if(ts instanceof Date) d=ts;
+  else if(typeof ts==='number') d=new Date(ts);
+  else { // string — try direct, fall back to _sessWhen-style parse for Safari
+    d=new Date(String(ts).replace(' at ',' '));
+    if(isNaN(d.getTime())){
+      var m=String(ts).match(/([A-Za-z]{3,})\s+(\d{1,2}),\s*(\d{4})(?:.*?(\d{1,2}):(\d{2})\s*(AM|PM))?/i);
+      if(m){
+        var MO={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+        var mo=MO[m[1].slice(0,3).toLowerCase()];
+        if(mo!=null){
+          var hh=m[4]?parseInt(m[4],10):0, mm=m[5]?parseInt(m[5],10):0, ap=(m[6]||'').toUpperCase();
+          if(ap==='PM'&&hh<12) hh+=12; if(ap==='AM'&&hh===12) hh=0;
+          d=new Date(parseInt(m[3],10),mo,parseInt(m[2],10),hh,mm);
+        }
+      }
+    }
+  }
+  if(!d || isNaN(d.getTime())) return '';
+  var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var DOWS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var now=Date.now();
+  var ageDays=Math.floor((now - d.getTime())/86400000);
+  var sixMo=183*86400000;
+  var yearTag=(Math.abs(now - d.getTime()) > sixMo) ? " '"+String(d.getFullYear()).slice(-2) : '';
+  var shortStr=MONTHS[d.getMonth()]+' '+d.getDate()+yearTag;
+  if(mode==='med') return DOWS[d.getDay()]+' · '+shortStr;
+  if(mode==='rel'){
+    if(ageDays<0 || ageDays>14) return shortStr;
+    var rel=(ageDays===0)?'Today':(ageDays===1)?'Yesterday':(ageDays+' days ago');
+    return rel+' · '+shortStr;
+  }
+  return shortStr;
 }
+// Companion: full ISO for title= tooltips on rendered date nodes.
+function fmtDateISO(ts){
+  if(ts==null||ts==='') return '';
+  var d;
+  if(ts instanceof Date) d=ts;
+  else if(typeof ts==='number') d=new Date(ts);
+  else d=new Date(String(ts).replace(' at ',' '));
+  return (!d||isNaN(d.getTime()))?'':d.toISOString();
+}
+// Back-compat: existing callers of fmtChartDate keep working (chart axes).
+function fmtChartDate(d){ return fmtDate(d,'short'); }
 
 // Step 8 — Unified line-chart renderer. Single visual anatomy per audit §07:
 // one line (var(--primary) light / --primary-2 dark, 2px), one gradient fill,
@@ -5343,7 +5543,7 @@ function drawChartV2(canvas, dataPoints, opts){
   var fillTop=isDark?'rgba(159,151,224,0.22)':'rgba(91,78,168,0.22)';
   var fillBot=isDark?'rgba(159,151,224,0)':'rgba(91,78,168,0)';
   var grid=isDark?'#3C3A5C':'#F1EFE8';
-  var axis=isDark?'#9896C8':'#888780';
+  var axis=isDark?'var(--muted-2)':'#888780';
   var dotStroke=isDark?'#252540':'#FFFFFF';
 
   var pad={t:20,r:16,b:22,l:16};
@@ -5374,10 +5574,35 @@ function drawChartV2(canvas, dataPoints, opts){
     ctx.beginPath(); ctx.moveTo(pad.l,yp); ctx.lineTo(pad.l+cw,yp); ctx.stroke();
   }
 
-  // Two axis labels along bottom (first / last date).
+  // Axis labels along bottom. Default = first/last (legacy 2-label mode).
+  // v5.14 (T2-B1): opt-in multi-label mode for per-exercise charts. opts.labelCount
+  // up to 4 evenly distributed indices; rotate −25° if combined label width would
+  // exceed ~85% of the available track. Uses each point's `label` as-is.
   ctx.fillStyle=axis; ctx.font='10px system-ui';
-  if(dataPoints[0]){ ctx.textAlign='left'; ctx.fillText(dataPoints[0].label||'', pad.l, h-4); }
-  if(dataPoints.length>1){ ctx.textAlign='right'; ctx.fillText(dataPoints[dataPoints.length-1].label||'', pad.l+cw, h-4); }
+  var labelCount=Math.max(2, Math.min(4, opts.labelCount||2));
+  if(labelCount<=2 || dataPoints.length<=2){
+    if(dataPoints[0]){ ctx.textAlign='left'; ctx.fillText(dataPoints[0].label||'', pad.l, h-4); }
+    if(dataPoints.length>1){ ctx.textAlign='right'; ctx.fillText(dataPoints[dataPoints.length-1].label||'', pad.l+cw, h-4); }
+  } else {
+    var step=(dataPoints.length-1)/(labelCount-1);
+    var idxs=[]; for(var li=0;li<labelCount;li++){ idxs.push(Math.round(li*step)); }
+    // Estimate combined width: avg label chars × 6.5px + 12px gap each.
+    var avgChars=0; idxs.forEach(function(i){ avgChars+=String((dataPoints[i]&&dataPoints[i].label)||'').length; });
+    var estW=(avgChars*6.5) + (idxs.length-1)*12;
+    var rotate=(estW > cw*0.85);
+    idxs.forEach(function(i, ii){
+      var p=dataPoints[i]; if(!p||p.label==null) return;
+      var x=(dataPoints.length>1)?(pad.l+(i/(dataPoints.length-1))*cw):(pad.l+cw/2);
+      // Edge alignment: first → left, last → right, middle → center.
+      ctx.textAlign=(ii===0)?'left':(ii===idxs.length-1)?'right':'center';
+      if(rotate){
+        ctx.save(); ctx.translate(x, h-4); ctx.rotate(-25*Math.PI/180);
+        ctx.textAlign='right'; ctx.fillText(p.label||'', 0, 0); ctx.restore();
+      } else {
+        ctx.fillText(p.label||'', x, h-4);
+      }
+    });
+  }
 
   function xAt(i){ return dataPoints.length>1 ? pad.l+(i/(dataPoints.length-1))*cw : pad.l+cw/2; }
   function yAt(v){ return pad.t+ch-ch*((Number(v)||0)-yMin)/yRange; }
@@ -5427,7 +5652,7 @@ function drawChart(sessions, canvasId){
       pts.push({label:fmtChartDate(s.date||''), val:Math.round(avg)});
     }
   });
-  drawChartV2(canvas, pts, {unit:'lbs', height:180});
+  drawChartV2(canvas, pts, {unit:'lbs', height:180, labelCount:4});
 }
 
 var EXERCISE_REGISTRY=[
@@ -5668,14 +5893,16 @@ function renderDayManager(){
   var html='<div class="mgr-day-label"><svg class="ic ic-sm" style="margin-right:6px" aria-hidden="true"><use href="#ic-sessions"/></svg>Days in your cycle</div>';
   html+='<div class="mgr-days-list">';
   active.forEach(function(d,i){
+    // v5.14 (T12): the day name is now an inline-editable affordance.
+    // Tap the name → swaps to a text input (focused); Enter or blur saves;
+    // Escape cancels. The standalone "Rename" button is gone.
     html+='<div class="mgr-day-row">'
       +'<div class="mgr-day-reorder">'
       +'<button class="mgr-reorder-btn" '+(i===0?'disabled':'')+' onclick="moveDay(\''+d.key+'\',-1)" title="Move up">↑</button>'
       +'<button class="mgr-reorder-btn" '+(i===active.length-1?'disabled':'')+' onclick="moveDay(\''+d.key+'\',1)" title="Move down">↓</button>'
       +'</div>'
-      +'<span class="mgr-day-name">'+_esc(d.name)+'</span>'
-      +'<button class="mgr-archive-btn mgr-edit-btn" onclick="_promptRenameDay(\''+d.key+'\')">Rename</button>'
-      +'<button class="mgr-archive-btn" onclick="confirmRemoveDay(\''+d.key+'\')" title="Remove this day (history kept)">Remove</button>'
+      +'<span class="mgr-day-name mgr-day-name-edit" role="button" tabindex="0" title="Tap to rename" onclick="_inlineRenameDay(this,\''+d.key+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();_inlineRenameDay(this,\''+d.key+'\')}">'+_esc(d.name)+'</span>'
+      +'<button class="mgr-icon-btn mgr-icon-danger" onclick="confirmRemoveDay(\''+d.key+'\')" title="Remove this day (history kept)" aria-label="Remove day"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-trash"/></svg></button>'
       +'</div>';
   });
   html+='</div>';
@@ -5722,6 +5949,50 @@ function renderSync(){
 var _dayEditKey=null;
 function _promptAddDay(){ openDayEdit(null); }
 function _promptRenameDay(key){ openDayEdit(key); }
+// v5.14 (T12): inline-edit the day name in place — tap → text input → blur/Enter saves.
+function _inlineRenameDay(span, key){
+  if(!span || span.dataset.editing==='1') return;
+  span.dataset.editing='1';
+  var current=getDayName(key)||'';
+  var inp=document.createElement('input');
+  inp.type='text'; inp.value=current;
+  inp.className='mgr-day-name-input';
+  inp.setAttribute('aria-label','Day name');
+  // Swap span → input
+  span.style.display='none';
+  span.parentNode.insertBefore(inp, span.nextSibling);
+  inp.focus(); inp.select();
+  var cleaned=false;
+  function commit(save){
+    if(cleaned) return; cleaned=true;
+    var next=(inp.value||'').trim();
+    inp.parentNode.removeChild(inp);
+    span.style.display=''; delete span.dataset.editing;
+    if(save && next && next!==current){
+      try{
+        var c=getDayConfig(key)||{};
+        editDayMeta(key, next, c.short||'');
+        try{ renderDaysManage(); }catch(_e){}
+        try{ renderDaySelector(); }catch(_e){}
+      }catch(_e){}
+    }
+  }
+  inp.addEventListener('blur', function(){ commit(true); });
+  inp.addEventListener('keydown', function(ev){
+    if(ev.key==='Enter'){ ev.preventDefault(); inp.blur(); }
+    else if(ev.key==='Escape'){ ev.preventDefault(); commit(false); }
+  });
+}
+// v5.14 (T12): one-time dismiss for the green "Add, Edit, rename…" intro banner.
+function _dismissPlanIntro(){
+  try{ localStorage.setItem('plan_intro_dismissed_v1','1'); }catch(_e){}
+  var el=document.getElementById('mgr-intro-notice'); if(el) el.style.display='none';
+}
+function _applyPlanIntroDismissed(){
+  var dismissed=false;
+  try{ dismissed=localStorage.getItem('plan_intro_dismissed_v1')==='1'; }catch(_e){}
+  var el=document.getElementById('mgr-intro-notice'); if(el && dismissed) el.style.display='none';
+}
 function openDayEdit(key){
   _dayEditKey=key||null;
   var nameI=document.getElementById('day-edit-name'), shortI=document.getElementById('day-edit-short');
@@ -5867,7 +6138,8 @@ function renderManager(){
       var r=plan.ex[id];
       var nm=r.name||r.histEx||id;
       var sessionCount=(exMap[r.histEx]||[]).length;
-      var countStr=sessionCount?'<span class="mgr-ex-count">'+sessionCount+' session'+(sessionCount===1?'':'s')+'</span>':'';
+      // v5.14 (T12): muted right-aligned "6×" instead of a filled chip.
+      var countStr=sessionCount?'<span class="mgr-ex-count" title="'+sessionCount+' logged session'+(sessionCount===1?'':'s')+'">'+sessionCount+'×</span>':'';
       var idx=_mgrActiveExs.length;
       _mgrActiveExs.push(r.histEx||nm);
       var isFirst=i===0,isLast=i===ids.length-1;
@@ -5887,8 +6159,10 @@ function renderManager(){
           return c>1?'<span class="mgr-link-pill">↔ '+c+' days</span>':'';
         })()+'</span>'
         +countStr
-        +'<button class="mgr-archive-btn mgr-edit-btn" onclick="openBuilder(\''+id+'\')" title="Edit / rename / swap">Edit</button>'
-        +'<button class="mgr-archive-btn" onclick="confirmRemoveFromDay(\''+id+'\',\''+day+'\')" title="Remove from this day (history kept)">Remove</button>'
+        +'<div class="mgr-ex-acts">'
+        +'<button class="mgr-icon-btn" onclick="openBuilder(\''+id+'\')" title="Edit / rename / swap" aria-label="Edit exercise"><span aria-hidden="true">✎</span></button>'
+        +'<button class="mgr-icon-btn mgr-icon-danger" onclick="confirmRemoveFromDay(\''+id+'\',\''+day+'\')" title="Remove from this day (history kept)" aria-label="Remove from day"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-trash"/></svg></button>'
+        +'</div>'
         +'</div>');
     });
   });
@@ -6613,7 +6887,20 @@ function renderNoticeTray(){
     m:'It’s been a while since your last backup.',act:'showExportImport',actLabel:'Back up',dismiss:'dismissBackupBanner'});
   if(_noticeActive('merge-banner')) items.push({k:'info',ic:'☁',t:'Synced from cloud',
     m:_noticeStrip(mg&&mg.textContent)||'Cloud history merged in.',dismiss:'dismissMergeBanner'});
-  if(!items.length){ tray.style.display='none'; tray.innerHTML=''; return; }
+  // v5.14 (T8): tray is no longer always-shown. The header bell exposes count
+  // (and a dot when ≥1); the tray itself stays hidden until the bell is tapped
+  // — toggled via toggleNoticeTray(). Notices auto-collapse when count hits 0.
+  var bell=document.getElementById('notice-bell');
+  if(!items.length){
+    tray.style.display='none'; tray.innerHTML='';
+    if(bell){ bell.hidden=true; bell.setAttribute('aria-label','0 notices'); bell.removeAttribute('data-unread'); }
+    return;
+  }
+  if(bell){
+    bell.hidden=false;
+    bell.setAttribute('aria-label', items.length+' notice'+(items.length>1?'s':''));
+    bell.setAttribute('data-unread', String(items.length));
+  }
   var h='<div class="tray-head"><span>'+items.length+' notice'+(items.length>1?'s':'')+'</span>'
     +(items.length>=2?'<button type="button" class="tray-clear" onclick="noticeClearAll()">Clear all</button>':'')+'</div>';
   items.forEach(function(n){
@@ -6625,7 +6912,15 @@ function renderNoticeTray(){
       +'</div>';
   });
   tray.innerHTML=h;
-  tray.style.display='block';
+  // Default visibility: collapsed. toggleNoticeTray flips it open.
+  if(!tray.dataset.userToggled) tray.style.display='none';
+}
+function toggleNoticeTray(){
+  var tray=document.getElementById('notice-tray'); if(!tray) return;
+  var open=(tray.style.display!=='none' && tray.style.display!=='');
+  tray.style.display=open?'none':'block';
+  tray.dataset.userToggled='1';
+  if(!open){ try{ tray.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(_e){} }
 }
 function noticeClearAll(){
   ['dismissDeloadBanner','dismissBackupBanner','dismissMergeBanner'].forEach(function(fn){
@@ -6706,7 +7001,7 @@ function getPlateSetup(){
   return {barWeight:45, plates:[45,25,10,5,2.5]};
 }
 function savePlateSetup(o){ try{ localStorage.setItem('plate_setup_v1', JSON.stringify({barWeight:o.barWeight, plates:o.plates})); }catch(e){} }
-var PLATE_COLORS={45:'#1E5BAF',25:'#0F6E56',10:'#7A5A00',5:'#5B4EA8',2.5:'#9896C8',35:'#3A3A3A',1.25:'#777'};
+var PLATE_COLORS={45:'#1E5BAF',25:'#0F6E56',10:'#7A5A00',5:'#5B4EA8',2.5:'var(--muted-2)',35:'#3A3A3A',1.25:'#777'};
 // Greedy plate breakdown per side for a target weight using the user's setup.
 function platesPerSide(target){
   var s=getPlateSetup(), bar=s.barWeight||45;
@@ -7503,8 +7798,9 @@ function _sessionRowsHTML(exEntries){
       // named exercise — keep sets visible inline; fold notes/extras beneath
       var e=grp.main;
       var sets=(e.note||'').split('|').map(function(x){return x.trim();}).filter(Boolean);
+      // v5.14 (T3): chips render via fmtSet → "1 · 120×12" (drop "Set "/"lbs"/"reps").
       var body = sets.length
-        ? '<div class="sess-lift-sets">'+sets.map(function(st){return '<span class="sess-lift-set">'+_esc(st)+'</span>';}).join('')+'</div>'
+        ? '<div class="sess-lift-sets">'+sets.map(function(st,si){return '<span class="sess-lift-set">'+_esc(fmtSet(st,si))+'</span>';}).join('')+'</div>'
         : '<span class="sess-lift-sets">'+_hl(_esc(e.note||''))+'</span>';
       var extra=grp.fields.map(function(f){
         return '<div class="sess-lift-note">'+(f.field==='notes'?'📝 ':('<b>'+_esc(_titleField(f.field))+':</b> '))+_hl(_esc(f.note))+'</div>';
@@ -7542,7 +7838,16 @@ function renderProgress(){
     total+=saved.length;
     var n=saved.length;
     // Keep the filter-chip per-day count updating (functionality contract).
-    var cEl=document.getElementById('prog-count-'+day); if(cEl) cEl.textContent=n;
+    // v5.14 (T5): chips with count 0 get .empty (dimmed, taps disabled) so
+    // they preserve cycle context without inviting taps to a dead view.
+    var cEl=document.getElementById('prog-count-'+day);
+    if(cEl){
+      cEl.textContent=n;
+      var chip=cEl.parentNode;
+      if(chip && chip.classList){
+        if(n===0) chip.classList.add('empty'); else chip.classList.remove('empty');
+      }
+    }
     saved.forEach(function(s, idx){
       var ts=sessTs(s);
       allItems.push({day:day, idx:idx, sess:s, ts:ts});
@@ -7573,7 +7878,14 @@ function renderProgress(){
         if(mPR>0) bits.push('<span class="prog-recap-s"><b>'+mPR+'</b> PR'+(mPR===1?'':'s')+'</span>');
         bits.push('<span class="prog-recap-s"><b>'+volTxt+'</b> volume</span>');
         if(bwDelta!=null && bwDelta!==0) bits.push('<span class="prog-recap-s"><b>'+(bwDelta>0?'+':'')+bwDelta+(bwUnit?' '+bwUnit:'')+'</b> bodyweight</span>');
-        recapEl.innerHTML='<div class="prog-recap-h">This month · '+mname+'</div><div class="prog-recap-row">'+bits.join('')+'</div>';
+        // v5.14 (T8): inline "🔥 1mo active" chip on the right of the recap
+        // header — only when month1 was earned within the last 7 days.
+        var headerChip='';
+        try{
+          var recent=_recentlyEarnedMilestones(7);
+          if(recent['month1']) headerChip=' <span class="prog-recap-chip" title="Earned within the last week">🔥 1mo active</span>';
+        }catch(_e){}
+        recapEl.innerHTML='<div class="prog-recap-h"><span>This month · '+mname+'</span>'+headerChip+'</div><div class="prog-recap-row">'+bits.join('')+'</div>';
         recapEl.hidden=false;
       }
     }
@@ -7640,7 +7952,9 @@ function renderProgress(){
       var dpill='<span class="sess-day-pill sess-day-'+day+'">'+dayLbl(day)+'</span>';
       var rowList=_sessionRowsHTML(exEntries);
       var notes=s.notes?'<div class="sess-notes">📝 '+_hl(_esc(s.notes))+'</div>':'';
-      var dateBlk='<span class="ps-date" id="pdate-'+day+'-'+idx+'" role="button" tabindex="0" title="Tap to edit date" onclick="editSessionDate(\''+day+'\','+idx+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();editSessionDate(\''+day+'\','+idx+')}">'+_esc(s.date||'')+' <span class="ps-cv" aria-hidden="true">▾</span></span>';
+      // v5.14 (T1): friendlier date display + ISO in title (was raw stored string).
+      var _sts=_sessWhen(s);
+      var dateBlk='<span class="ps-date" id="pdate-'+day+'-'+idx+'" role="button" tabindex="0" aria-label="Tap to edit date" title="'+_esc(fmtDateISO(_sts))+'" onclick="editSessionDate(\''+day+'\','+idx+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();editSessionDate(\''+day+'\','+idx+')}">'+_esc(fmtDate(_sts||s.date,'rel'))+' <span class="ps-cv" aria-hidden="true">▾</span></span>';
       html+='<div class="sess-card" data-day="'+day+'" data-idx="'+idx+'">'
         +'<div class="sess-card-head">'
         +'<div class="sess-card-head-l">'+dpill+mood+'</div>'
@@ -8517,7 +8831,9 @@ function computeStats(){
   var skipRates=[];
   Object.keys(exApp).forEach(function(ex){
     var poss=exPoss[ex]||1,app=exApp[ex],pct=Math.round((1-(app/poss))*100);
-    if(poss>=2&&pct>0) skipRates.push({ex:ex,pct:pct});
+    // v5.14 (T7): carry done/total counts so the "Worth a look" row can say
+    // "done X of last Y" instead of the harsher "{N}% skipped".
+    if(poss>=2&&pct>0) skipRates.push({ex:ex, pct:pct, done:app, total:poss});
   });
   skipRates.sort(function(a,b){return b.pct-a.pct;});
   var favDay=Object.keys(dayCounts).sort(function(a,b){return dayCounts[b]-dayCounts[a];})[0];
@@ -8690,9 +9006,10 @@ function renderStats(){
     +statCard('Most Done Day',s.favDay,''+s.favCount+' sessions')
     +'</div></div>';
   if(s.topSkipped.length){
-    html+='<div class="stats-section"><div class="stats-section-title">Most Skipped — review these</div><div class="skip-list">';
+    // v5.14 (T7): renamed to "Worth a look" with muted "done X of last Y" framing.
+    html+='<div class="stats-section"><div class="stats-section-title">Worth a look</div><div class="skip-list">';
     s.topSkipped.forEach(function(item){
-      html+='<div class="skip-row"><span class="skip-row-name">'+item.ex+'</span><span class="skip-row-pct">'+item.pct+'% skipped</span></div>';
+      html+='<div class="skip-row"><span class="skip-row-name">'+_esc(item.ex)+'</span><span class="skip-row-cnt">done '+(item.done||0)+' of last '+(item.total||0)+'</span></div>';
     });
     html+='</div></div>';
   }
@@ -8790,10 +9107,28 @@ function checkMilestones(){
   });
   if(newOnes.length){
     localStorage.setItem('earned_milestones',JSON.stringify(earned));
+    // v5.14 (T8): record earn timestamps so the recap header can show a
+    // short-lived "recently earned" chip (e.g. 🔥 1mo active).
+    try{
+      var stamps={}; try{ stamps=JSON.parse(localStorage.getItem('milestones_earned_at'))||{}; }catch(_e){}
+      var nowTs=Date.now();
+      newOnes.forEach(function(m){ stamps[m.id]=nowTs; });
+      localStorage.setItem('milestones_earned_at', JSON.stringify(stamps));
+    }catch(_e){}
     newOnes.forEach(function(m,i){
       setTimeout(function(){ showToast('🎉 Badge: '+m.icon+' '+m.label+'!'); haptic('success'); },i*2500);
     });
   }
+}
+// v5.14 (T8): which milestone ids were earned within the last N days.
+function _recentlyEarnedMilestones(maxAgeDays){
+  var out={};
+  try{
+    var stamps=JSON.parse(localStorage.getItem('milestones_earned_at'))||{};
+    var cutoff=Date.now()-(maxAgeDays||7)*86400000;
+    Object.keys(stamps).forEach(function(k){ if(stamps[k]>=cutoff) out[k]=stamps[k]; });
+  }catch(_e){}
+  return out;
 }
 
 function getEarnedMilestones(){
@@ -8801,19 +9136,79 @@ function getEarnedMilestones(){
   catch(e){ return []; }
 }
 
+// v5.14 (T6): derive numeric progress for milestones whose target is a counter
+// (sessions, streak days, consistent weeks, PR count). Other badges (earlybird,
+// marathon, alldays, …) return null and stay binary.
+function _milestoneProgress(m, s, wk, prs){
+  if(!s) return null;
+  var match, cur=0, tgt=0;
+  if((match=m.id.match(/^s(\d+)$/))){ tgt=parseInt(match[1],10); cur=s.total||0; }
+  else if((match=m.id.match(/^streak(\d+)$/))){ tgt=parseInt(match[1],10); cur=s.streak||0; }
+  else if((match=m.id.match(/^wk(\d+)$/))){ tgt=parseInt(match[1],10); cur=wk||0; }
+  else if((match=m.id.match(/^pr(\d+)$/))){ tgt=parseInt(match[1],10); cur=prs||0; }
+  else return null;
+  return {current:Math.min(cur,tgt), target:tgt, raw:cur};
+}
 function renderMilestones(){
   var earned=getEarnedMilestones();
   var s=computeStats();
   var wkData=getWeeklyConsistency();
   var prs=getTotalPRs();
-  var html='<div class="stats-section"><div class="stats-section-title">🏅 Milestone Badges</div><div class="milestone-shelf">';
-  MILESTONES.forEach(function(m){
+  // v5.14 (T6): sort {earned desc, distance asc}; reveal only earned + 3 Up Next.
+  var scored=MILESTONES.map(function(m){
     var isEarned=m.check(s,wkData.weeksHit,prs,wkData.sessions)||earned.indexOf(m.id)!==-1;
-    html+='<div class="milestone-badge '+(isEarned?'earned':'locked')+'">'
-      +(isEarned?m.icon:'🔒')+' '+m.label+'</div>';
+    var prog=_milestoneProgress(m, s, wkData.weeksHit, prs);
+    var distance=(!isEarned && prog && prog.target>0)?Math.max(0,prog.target-prog.current):null;
+    return {m:m, earned:isEarned, prog:prog, distance:distance};
   });
-  html+='</div></div>';
+  scored.sort(function(a,b){
+    if(a.earned!==b.earned) return a.earned?-1:1;
+    if(a.earned) return 0;
+    // unearned: progress-bar-eligible ones first (closer to earning), then binary lockeds.
+    if(a.distance==null && b.distance==null) return 0;
+    if(a.distance==null) return 1;
+    if(b.distance==null) return -1;
+    return a.distance - b.distance;
+  });
+  var earnedItems=scored.filter(function(x){return x.earned;});
+  var unearned=scored.filter(function(x){return !x.earned;});
+  var upNext=unearned.slice(0, 3);
+  var rest=unearned.slice(3);
+
+  var html='<div class="stats-section"><div class="stats-section-title">🏅 Milestone Badges</div>';
+  html+='<div class="milestone-shelf">';
+  earnedItems.forEach(function(x){
+    html+='<div class="milestone-badge earned">'+x.m.icon+' '+_esc(x.m.label)+'</div>';
+  });
+  upNext.forEach(function(x){
+    var bar='';
+    if(x.prog && x.prog.target>0){
+      var pct=Math.min(100, Math.round(100*(x.prog.current||0)/x.prog.target));
+      bar='<div class="milestone-progress" aria-hidden="true"><span class="milestone-progress-fill" style="width:'+pct+'%"></span></div>'
+        +'<span class="milestone-progress-cap">'+(x.prog.raw||0)+' / '+x.prog.target+'</span>';
+    }
+    html+='<div class="milestone-badge upnext" aria-label="'+_esc(x.m.label)+' — '+(x.prog?(x.prog.raw||0)+' of '+x.prog.target:'locked')+'">'
+      +'<span class="milestone-up-head">'+x.m.icon+' '+_esc(x.m.label)+'</span>'
+      +bar+'</div>';
+  });
+  html+='</div>';
+  if(rest.length){
+    html+='<button type="button" class="milestone-more" onclick="_toggleMilestoneRest(this)" aria-expanded="false" data-count="'+rest.length+'">+ '+rest.length+' more locked</button>';
+    html+='<div class="milestone-rest milestone-shelf" hidden>';
+    rest.forEach(function(x){
+      html+='<div class="milestone-badge locked-dim">'+_esc(x.m.label)+'</div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
   return html;
+}
+function _toggleMilestoneRest(btn){
+  var rest=btn.parentNode.querySelector('.milestone-rest');
+  if(!rest) return;
+  var hidden=rest.hasAttribute('hidden');
+  if(hidden){ rest.removeAttribute('hidden'); btn.setAttribute('aria-expanded','true'); btn.textContent='– hide locked'; }
+  else      { rest.setAttribute('hidden',''); btn.setAttribute('aria-expanded','false'); btn.textContent='+ '+(btn.getAttribute('data-count')||rest.querySelectorAll('.milestone-badge').length)+' more locked'; }
 }
 
 // ── Weekly consistency in Stats ──────────────────────────────────────
@@ -9209,14 +9604,39 @@ function renderGenericMeas(type){
 
   // Summary chips
   if(data.length>=2){
-    var first=data[0],last=data[data.length-1];
-    var weeks=Math.round((new Date(last.date)-new Date(first.date))/(1000*60*60*24*7)*10)/10;
-    // Patch 3 Step 1: standardised delta pill replaces the inline coloured text.
-    // For weight/waist/bodyfat, lower is the "good" direction (John's profile per spec).
-    var pill=deltaPill(last.value, first.value, {lowerIsBetter:true, unit:last.unit, threshold:0});
+    // v5.14 (T2-B3/B4): sort ascending by date so first=oldest, last=newest.
+    // The previous code took data[0]/data[len-1] from a newest-first array,
+    // producing negative "Over -5 wks".
+    var asc=data.slice().sort(function(a,b){ return String(a.date||'').localeCompare(String(b.date||'')); });
+    var first=asc[0], last=asc[asc.length-1];
+    var weeks=Math.max(0, Math.round((new Date(last.date)-new Date(first.date))/(1000*60*60*24*7)*10)/10);
+    // v5.14 (T2-B5): on the bodyweight card, the Change pill is colored only when
+    // the user has explicitly set a goal (localStorage.bodyweight_goal_v1 = 'down'
+    // | 'maintain' | 'up'). Otherwise it renders as neutral muted text — the app
+    // shouldn't assume "down is better" for everyone.
+    var diff=last.value-first.value, sign=diff>0?'+':'';
+    var diffTxt=sign+(Math.round(diff*10)/10)+' '+last.unit;
+    var goal=null; try{ if(isWeight) goal=localStorage.getItem('bodyweight_goal_v1'); }catch(_e){}
+    var changePill;
+    if(isWeight && (goal==='down'||goal==='up'||goal==='maintain')){
+      if(goal==='maintain'){
+        var flat=(Math.abs(diff)<1);
+        changePill='<span class="delta-pill '+(flat?'delta-flat':'delta-down')+'">'+diffTxt+'</span>';
+      } else {
+        changePill=deltaPill(last.value, first.value, {lowerIsBetter:(goal==='down'), unit:last.unit, threshold:0});
+      }
+    } else if(isWeight){
+      // No goal set → muted neutral, no color, no arrow. Tooltip nudges the user toward settings.
+      changePill='<span class="delta-pill delta-neutral" title="Set a bodyweight goal to color this trend">'+diffTxt+'</span>';
+    } else {
+      // Waist / body fat: keep the existing "lower is better" default for now.
+      changePill=deltaPill(last.value, first.value, {lowerIsBetter:true, unit:last.unit, threshold:0});
+    }
+    // v5.14 (T2-B4): "Over -5 wks" → "Over · 5 wks · since May 25" (no minus).
+    var since='since '+fmtDate(new Date(first.date+'T12:00:00'),'short');
     summEl.innerHTML=measChip('Current',last.value+' '+last.unit)
-      +measChip('Change',pill)
-      +measChip('Over',weeks+' wks');
+      +measChip('Change',changePill)
+      +measChip('Over',weeks+' wks', since);
   } else if(data.length===1){
     summEl.innerHTML=measChip('Current',data[0].value+' '+data[0].unit);
   } else {
@@ -9231,11 +9651,12 @@ function renderGenericMeas(type){
     histEl.innerHTML=reversed.map(function(m,i){
       var realIdx=data.length-1-i;
       var d=new Date(m.date+'T12:00:00');
-      var dateStr=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+      // v5.14 (T1): unified date display + ISO in title.
+      var dateStr=fmtDate(d,'med');
       var delFn=isWeight?'deleteMeasurement('+realIdx+')':'deleteGenericMeas(\"'+type+'\",'+realIdx+')';
       return '<div class="meas-history-item">'
         +'<div><div class="meas-history-val">'+m.value+' '+m.unit+'</div>'
-        +'<div class="meas-history-date">'+dateStr+'</div></div>'
+        +'<div class="meas-history-date" title="'+_esc(d.toISOString())+'">'+dateStr+'</div></div>'
         +'<button class="meas-history-del" onclick="'+delFn+'" title="Delete">✕</button>'
         +'</div>';
     }).join('');
@@ -9245,8 +9666,10 @@ function renderGenericMeas(type){
   if(chartWrap&&chartCanvas) drawMeasChartGeneric(data, chartCanvas, chartWrap);
 }
 
-function measChip(label,val){
-  return '<div class="meas-stat-chip"><div class="meas-stat-label">'+label+'</div><div class="meas-stat-val">'+val+'</div></div>';
+function measChip(label,val,sub){
+  return '<div class="meas-stat-chip"><div class="meas-stat-label">'+label+'</div><div class="meas-stat-val">'+val+'</div>'
+    +(sub?'<div class="meas-stat-sub">'+sub+'</div>':'')
+    +'</div>';
 }
 
 function drawMeasChart(data){ drawMeasChartGeneric(data, document.getElementById('meas-chart'), document.getElementById('meas-chart-wrap')); }
@@ -9256,9 +9679,14 @@ function drawMeasChartGeneric(data, canvas, wrap){
   if(!canvas||!wrap) return;
   if(!data.length){ wrap.style.display='none'; return; }
   wrap.style.display='block';
-  var pts=data.map(function(m){
+  // v5.14 (T2-B3): sort ascending by date BEFORE plotting. The caller passes the
+  // newest-first history array; without copy+sort the chart drew right→left.
+  // v5.14 (T1): use the unified fmtDate for axis labels.
+  var pts=data.slice().sort(function(a,b){
+    return String(a.date||'').localeCompare(String(b.date||''));
+  }).map(function(m){
     var d=new Date(m.date+'T12:00:00');
-    return {label:(d.getMonth()+1)+'/'+d.getDate(), val:m.value};
+    return {label:fmtDate(d,'short'), val:m.value, ts:d.getTime()};
   });
   var unit=(data[0]&&data[0].unit)||'';
   drawChartV2(canvas, pts, {unit:unit, height:180});
@@ -9572,6 +10000,73 @@ function showPRToast(prs){
     setTimeout(function(){ showToast('🏆 PR: '+pr.ex+' — '+pr.weight+' lbs!'); haptic('success'); },i*2200);
   });
 }
+// v5.14 (T11): post-save summary card. Self-dismissing in ~3.5s, tap to
+// open the just-saved session in the Sessions tab. Big number prefers
+// PR count when >0, else tonnage moved (w×r). Comparative line derives
+// the last PR-day from this day's history when possible.
+function showSessionSummary(day, label, sessionObj, prCount){
+  var saved=[]; try{ saved=getSaved(day)||[]; }catch(_e){}
+  // saved[0] is the just-saved session (unshift). Look at saved[1+] for the
+  // most recent prior session that had at least one PR.
+  var anchorTs=null;
+  for(var i=1;i<saved.length;i++){
+    var s=saved[i];
+    var hadPR=(s.entries||[]).some(function(e){ return e.ex && /-pr$/.test(e.ex); });
+    if(hadPR){ anchorTs=_sessWhen(s); break; }
+  }
+  // Compute tonnage (w*r) for the fallback big number.
+  var vol=0;
+  (sessionObj.entries||[]).forEach(function(e){
+    if(e.note && e.note.indexOf('Set ')===0){
+      try{ parseSetWR(e.note).forEach(function(p){ if(p.w>0 && p.r>0) vol+=p.w*p.r; }); }catch(_e){}
+    }
+  });
+  var bigNum, bigCap;
+  if(prCount>0){
+    bigNum=String(prCount);
+    bigCap='new PR'+(prCount===1?'':'s');
+  } else if(vol>0){
+    bigNum=(vol>=1000)?(Math.round(vol/100)/10)+'k':String(Math.round(vol));
+    bigCap='lb moved';
+  } else {
+    bigNum='✓';
+    bigCap='session saved';
+  }
+  var compare;
+  if(prCount>0 && anchorTs)  compare='best work since '+fmtDate(anchorTs,'short');
+  else if(prCount>0)         compare='first PRs logged — keep stacking';
+  else if(anchorTs)          compare='solid · last PR-day was '+fmtDate(anchorTs,'short');
+  else                       compare='keep stacking';
+  var dayLabelTxt=''; try{ dayLabelTxt=getDayName(day)||label||''; }catch(_e){}
+  if(!dayLabelTxt) dayLabelTxt='Day '+((getDays().indexOf(day))+1);
+  // Remove any pending summary, then mount the new one.
+  var existing=document.getElementById('sess-summary-card'); if(existing) existing.remove();
+  var card=document.createElement('div');
+  card.id='sess-summary-card'; card.className='sess-summary-card';
+  card.setAttribute('role','status'); card.setAttribute('aria-live','polite');
+  card.setAttribute('tabindex','0'); card.setAttribute('aria-label', dayLabelTxt+' saved — tap to open session');
+  card.innerHTML=''
+    +'<div class="ssc-h">'+_esc(dayLabelTxt)+' saved</div>'
+    +'<div class="ssc-big">'+_esc(bigNum)+'<span class="ssc-big-cap"> '+_esc(bigCap)+'</span></div>'
+    +'<div class="ssc-cmp">'+_esc(compare)+'</div>';
+  function openSavedSession(){
+    if(card.parentNode) card.remove();
+    try{ var b=document.getElementById('hdr-prog-btn'); if(b) b.click(); }catch(_e){}
+    try{
+      var st=[].slice.call(document.querySelectorAll('.prog-tab-btn')).filter(function(x){ return /Sessions/.test(x.textContent); })[0];
+      if(st) st.click();
+    }catch(_e){}
+  }
+  card.onclick=openSavedSession;
+  card.onkeydown=function(ev){ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); openSavedSession(); } };
+  document.body.appendChild(card);
+  setTimeout(function(){ card.classList.add('show'); }, 20);
+  setTimeout(function(){
+    if(!card.parentNode) return;
+    card.classList.remove('show');
+    setTimeout(function(){ if(card.parentNode) card.remove(); }, 260);
+  }, 3500);
+}
 
 // Hook: stronger haptic on checkbox, no auto-timer (use per-exercise ⏱ button instead)
 (function(){
@@ -9731,7 +10226,7 @@ function showPRToast(prs){
       .bld-grp{margin-bottom:11px}
       .bld-mode{flex:1;padding:8px 6px;border:1px solid var(--border-soft);border-radius:8px;background:#FAFAF8;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer}
       .bld-mode.on{background:var(--primary);border-color:var(--primary);color:#fff}
-      body.dark .bld-mode{background:var(--surface);color:#9E9CC4;border-color:var(--border)}
+      body.dark .bld-mode{background:var(--surface);color:var(--muted-2);border-color:var(--border)}
       body.dark .bld-mode.on{background:#5B4EA8;color:#fff}
       .bld-lib-list{max-height:210px;overflow-y:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border-soft);border-radius:8px}
       .bld-lib-item{display:flex;align-items:center;gap:6px;padding:9px 10px;border-bottom:1px solid var(--border-soft);cursor:pointer;font-size:13px;color:#2C2C2A}
@@ -9765,7 +10260,7 @@ function showPRToast(prs){
       .bld-lbl{font-size:12px;font-weight:700;color:#3C3489;display:block;margin-bottom:2px}
       .bld-hint{font-size:10.5px;color:#888780;font-weight:400;display:block;margin-bottom:5px;line-height:1.4}
       .bld-in{width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border-soft);border-radius:8px;font-size:13px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
-      body.dark .bld-lbl{color:#C7C4EE} body.dark .bld-hint{color:#9E9CC4}
+      body.dark .bld-lbl{color:#C7C4EE} body.dark .bld-hint{color:var(--muted-2)}
       body.dark .bld-in{background:var(--surface);color:var(--text);border-color:var(--border)}
       .bld-sec{padding-top:12px;margin-top:12px;border-top:1px solid var(--border-soft)}
       .bld-sec:first-of-type{border-top:0;margin-top:4px;padding-top:0}

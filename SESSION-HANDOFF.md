@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.13 · **Updated:** 2026-05-27 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.14 · **Updated:** 2026-05-28 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -100,6 +100,45 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
   three; (3) one canonical metric per concept (e1RM=Epley, volume=w×r), reused via shared helpers,
   never recomputed inline; (4) progressive disclosure / default-off for power features; (5) the
   "no new synced keys / read-only" bar stays the default gate, writes get plan-mode.
+  - **v5.14 (DONE):** **design review polish batch** (12 items from Claude design review, 5 phases):
+    - **Phase 1** · T1 added `fmtDate(ts,'short'|'med'|'rel')` + `fmtDateISO`; replaced ad-hoc
+      `Date.toString()` in last-session line, session card header, Lifts history rows, body chart
+      axis + history list. fmtChartDate now delegates. T2 fixed 5 bugs: drawChartV2 gets a
+      `labelCount` opt (≤4 evenly-spaced labels, rotates if tight); Body summary cards tokenized
+      to `var(--card)` (introduced `--card` + `--gold` tokens); drawMeasChartGeneric sorts
+      ascending by date (chart now reads oldest→newest); "Over -5 wks" → "Over · 5 wks · since
+      May 25"; bodyweight Change is neutral muted unless `bodyweight_goal_v1` is set.
+    - **Phase 2** · T3 `fmtSet(rawStr, idx)` → "1 · 120×12" chips in 3-col grid (drops Set/lbs/
+      reps; unit suffix only when different from pref). T4 coach-line copy pass: "↑ Ready · try
+      230 lbs → Fill", "Building to 3×12 @ 100 · 8 reps last time", "Aim ~205 lbs · same as last
+      time", "Same as last week · focus on form" — full math (e1RM %, deltas) moves to `title=`
+      + 500ms long-press → showToast. T5 day-filter chips with count 0 get `.empty` (dim,
+      pointer-events:none). T6 awards reworked: sort {earned desc, distance asc}, show earned +
+      next 3 Up Next with thin --gold progress bars, "+N more locked" collapse for the rest.
+      T7 "Most Skipped" renamed "Worth a look" with "done X of last Y" muted framing.
+    - **Phase 3** · T8 Progress hierarchy: deleted the duplicate "{N} sessions" strap above
+      Trends; moved Back-up Notice to an ⓘ bell next to MyFit logo (with unread dot, toggles
+      the existing tray); folded "1 Month Active" into the recap header as a `🔥 1mo active`
+      chip when earned ≤7d ago (new `milestones_earned_at` tracking).
+    - **Phase 4** · T9 "Last 21 days" line gets divider styling (transparent bg, 1px borders
+      above/below, 14px outer margin, 10px inner padding). T10 tokens: introduced `--muted-2`
+      (#9896C8 dark) collapsing three near-identical lavender-grays, `--muted-deep` (#5C5A80)
+      for the noticeably darker shade; `--gold` replaces 7 raw #FFD740 callsites; no
+      problematic #fff in dark-active rules.
+    - **Phase 5** · T11 `showSessionSummary(day, label, sessionObj, prCount)` — centered self-
+      dismissing card after confirmSave (3.5s, tap to open the saved session in Sessions tab).
+      Big number prefers PR count, else tonnage (w×r). Comparative line derives last PR-day.
+      Gold accent reuses --gold. T12 plan editor: Edit/Remove → icon-only (✎ + trash) right-
+      aligned; day-name Rename → inline edit-on-tap (`_inlineRenameDay`); per-ex sessions
+      chip demoted to muted "6×" text; green intro banner one-time dismissible
+      (`plan_intro_dismissed_v1`).
+    - **Out of scope (explicit):** §09 Bet 2 onboarding/empty-state work, any coachState
+      architecture refactor, synced-key shape changes, build step / new deps.
+    - **Tests:** 38 suites green, 279 funcsmoke checks (+72 new for v5.14). Two existing v5.13
+      tests updated for new copy (ready/aim regexes, `progression_spot` "Building to"). Two
+      patch3_spot assertions updated (bodyweight goal seed + `var(--gold)` regex).
+    - **Screenshots:** `design-review/v5.14-final/` (paired with `v5.14-phase1/` + the original
+      `design-review/*.png` v5.13 baseline). Re-run via `design-review/_export.js`.
   - **v5.13 (DONE):** **consolidation / subtraction release.** Merged the three stacked workout-card
     coaching cues (v5.1 progression pill/hold + legacy `.overload-nudge` + v5.9 `.aim-cap`) into a
     SINGLE adaptive `.coach-line`. `coachState(exKey,meta)` is a priority ladder → `ready`
