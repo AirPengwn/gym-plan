@@ -229,17 +229,24 @@ body.dark .tray-ic.red{background:#3A1A1A} body.dark .tray-ic.warn{background:#3
 /* Step 5 (audit §02): redesigned exercise card (head / sets / footer). */
 /* v5.15: lift the category eyebrow to a full-width strip so the bold name
    becomes the head's first line. v5.16: center the disk (and action buttons)
-   on the name's FIRST LINE specifically — not the name/sub block. The disk
-   anchors to row top; the head + actions are padded down by their own
-   "first-line offset" so all three vertical centers line up with the disk
+   on the name's FIRST LINE specifically — not the name/sub block. v5.17:
+   broaden from `.v2-card` to all `.item` cards so the legacy warm-up / cardio
+   card gets the same alignment. The disk anchors to row top; the head + any
+   action buttons are padded down so their visual centers land at the disk
    midpoint. Works for 1- and 2-line names, with or without a subtitle. */
-.v2-card .item-top{align-items:flex-start;flex-wrap:wrap}
-.v2-card .ex-cat{display:block;order:-1;width:100%;margin:0 0 6px}
-.v2-card .checkbox{align-self:flex-start}
-/* Push name first-line center to the disk center (disk:44px, name lh:1.3em). */
-.v2-card .v2-head{padding-top:calc((44px - 1.3em) / 2)}
-/* Action buttons (Rest 32px / ⋯ 32px) get a smaller offset to land at the same line. */
-.v2-card .v2-actions{align-self:flex-start;padding-top:calc((44px - 32px) / 2)}
+.item .item-top{align-items:flex-start;flex-wrap:wrap}
+.item .item-top > .ex-cat{display:block;order:-1;width:100%;margin:0 0 6px}
+.item .item-top > .checkbox{align-self:flex-start}
+/* The "head" is the unclassed div in legacy or .v2-head in v2 — anything that
+   isn't the checkbox, eyebrow, or a known action. Push its first line down.
+   v5.17: also force flex:1 + min-width:0 so the legacy head shrinks to share
+   the row with the checkbox+actions (otherwise it expands to natural width
+   and wrap-fails to its own row, throwing off the disk/name centering). */
+.item .item-top > div:not(.checkbox):not(.ex-cat):not(.v2-actions){flex:1;min-width:0;padding-top:calc((44px - 1.3em) / 2)}
+/* Action buttons (~32px tall): smaller offset so their center hits the same line. */
+.item .item-top > .v2-actions,
+.item .item-top > .item-timer-btn,
+.item .item-top > .v2-ovf-btn{align-self:flex-start;padding-top:calc((44px - 32px) / 2)}
 .v2-head{flex:1;min-width:0}
 .v2-head .ex-name{font-size:var(--fs-md);font-weight:600;color:var(--text);line-height:1.3}
 .v2-head .ex-sub{font-size:var(--fs-sm);color:var(--muted);margin-top:2px;line-height:1.4}
@@ -1154,7 +1161,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.16</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.17</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -5739,15 +5746,14 @@ function exCatMins(domId){
     var tag=document.createElement('div');
     tag.className='ex-cat';
     tag.textContent=cm.cat+(cm.mins!=null?(' · '+cm.mins+' min'):'');
-    // v5.16: on v2 cards, the eyebrow lives at .item-top level (as a flex
-    // sibling of the checkbox) so the `.v2-card .ex-cat{order:-1;width:100%}`
-    // rule can pull it onto its own full-width row above the checkbox+name+
-    // actions. On legacy .item cards, keep the original placement (inside
-    // the head div, above the name) so existing layout doesn't shift.
+    // v5.16: eyebrow lives at .item-top level (as a flex sibling of the
+    // checkbox) so the CSS `order:-1;width:100%` pulls it onto its own
+    // full-width row above the checkbox+name+actions row. v5.17: do this for
+    // legacy .item cards too (warm-up / cardio), not just .v2-card — the
+    // alignment treatment now covers both.
     var head=nameEl.parentNode;
     var itemTop=head && head.parentNode;
-    var isV2=head && head.classList && head.classList.contains('v2-head');
-    if(isV2 && itemTop){
+    if(itemTop && itemTop.classList && itemTop.classList.contains('item-top')){
       itemTop.insertBefore(tag, itemTop.firstChild);
     } else {
       head.insertBefore(tag, nameEl);
