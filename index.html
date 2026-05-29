@@ -55,6 +55,16 @@
   --fs-lg:  16px;
   --fs-xl:  20px;
   --fs-2xl: 28px;
+  /* v5.20: fine-grained numeric tokens for the in-between sizes used
+     across Plan / Progress / More. Default values match the px they
+     replace, so a plain :root render is byte-for-byte the same. Each
+     body.fs-* variant scales them in lockstep with the main scale. */
+  --fs-9:   9px;
+  --fs-11:  11px;
+  --fs-13:  13px;
+  --fs-15:  15px;
+  --fs-17:  17px;
+  --fs-18:  18px;
 }
 body.dark{
   --surface:        #1A1A2E;
@@ -126,7 +136,7 @@ body.dark .day-summary-total span{color:var(--muted-deep)}
 button.checkbox{background:transparent;border:0;-webkit-appearance:none;appearance:none;color:inherit;padding:0;font:inherit;line-height:0}
 .checkmark{width:18px;height:18px;display:block;position:relative;z-index:2;opacity:0;transform:scale(.6);transition:opacity .15s,transform .15s ease-out}
 .item.done .checkmark{opacity:1;transform:scale(1)}
-.prog-badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;vertical-align:middle}
+.prog-badge{display:inline-block;font-size:var(--fs-11);font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;vertical-align:middle}
 .prog-up{background:#D4F0E2;color:#0A6640}
 .prog-down{background:#FFE5E5;color:#C0392B}
 .prog-same{background:#F0F0F0;color:#888780}
@@ -285,8 +295,8 @@ body{padding-bottom:calc(70px + env(safe-area-inset-bottom)) !important}
 .more-group{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:18px 2px 8px}
 .more-group:first-of-type{margin-top:4px}
 body.dark .set-group{background:#252540;border-color:var(--border)}
-.set-gh{font-size:12px;font-weight:800;color:var(--text);padding:11px 0 9px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
-.set-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:13px 0;border:0;border-bottom:1px solid var(--border);background:none;font-size:13px;color:var(--text);font-family:inherit;cursor:pointer}
+.set-gh{font-size:var(--fs-sm);font-weight:800;color:var(--text);padding:11px 0 9px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
+.set-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:13px 0;border:0;border-bottom:1px solid var(--border);background:none;font-size:var(--fs-13);color:var(--text);font-family:inherit;cursor:pointer}
 .set-item:last-child{border-bottom:0}
 /* F4 (v5.1): Auto|Long|Short rest-timer segmented control */
 .rest-seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;flex-shrink:0}
@@ -297,10 +307,10 @@ body.dark .set-group{background:#252540;border-color:var(--border)}
 .eq-plates{display:flex;flex-wrap:wrap;gap:6px}
 .eq-plate-chip{font-size:12px;font-weight:700;padding:6px 11px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--muted);cursor:pointer;font-family:inherit}
 .eq-plate-chip.on{background:var(--primary);border-color:var(--primary);color:#fff}
-.set-caret{color:var(--muted);font-size:15px;flex-shrink:0}
-.set-sub{color:var(--muted);font-size:12px;font-weight:600}
-.set-note{font-size:12px;color:var(--muted);line-height:1.5;padding:11px 0}
-.set-about{font-size:11px;color:var(--muted);text-align:center;margin-top:16px}
+.set-caret{color:var(--muted);font-size:var(--fs-15);flex-shrink:0}
+.set-sub{color:var(--muted);font-size:var(--fs-sm);font-weight:600}
+.set-note{font-size:var(--fs-sm);color:var(--muted);line-height:1.5;padding:11px 0}
+.set-about{font-size:var(--fs-11);color:var(--muted);text-align:center;margin-top:16px}
 /* Header overflow menu */
 .hdr-mi{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;border-bottom:.5px solid var(--border-soft);padding:11px 14px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;text-align:left}
 .hdr-mi:last-child{border-bottom:0}
@@ -350,7 +360,7 @@ body.dark .tgl-track{background:var(--border)}
 .snap-diff{font-size:11px;color:var(--muted);margin-bottom:2px}
 .snap-diff b{color:var(--text)}
 /* v4.19 (nit 18): Developer group collapsed by default so Test mode isn't a stray tap */
-.set-dev-summary{font-size:12px;font-weight:800;color:var(--muted);padding:11px 0 9px;border-bottom:1px solid var(--border);cursor:pointer}
+.set-dev-summary{font-size:var(--fs-sm);font-weight:800;color:var(--muted);padding:11px 0 9px;border-bottom:1px solid var(--border);cursor:pointer}
 body.dark .set-dev-summary{color:var(--muted)}
 .snap-meta{font-size:11px;color:var(--muted);font-weight:600}
 .snap-empty{font-size:11px;color:var(--muted);padding:6px 0}
@@ -412,7 +422,7 @@ body.dark .day-ovf-menu .reset-btn{background:none;border:0;color:var(--text)}
 /* v5.14 (T9): the "Last 21 days · …" line is the only "you-are-here" cue on
    the Workout screen. Replaces the colored chip background with thin dividers
    above + below for breathing room. Type size unchanged. */
-.day-bal-hint{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11px;color:var(--muted);background:transparent;border-top:1px solid var(--border-soft);border-bottom:1px solid var(--border-soft);border-radius:0;padding:10px 2px;margin:14px 0}
+.day-bal-hint{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:var(--fs-11);color:var(--muted);background:transparent;border-top:1px solid var(--border-soft);border-bottom:1px solid var(--border-soft);border-radius:0;padding:10px 2px;margin:14px 0}
 body.dark .day-bal-hint{background:transparent;border-top-color:var(--border-soft);border-bottom-color:var(--border-soft)}
 .day-bal-hint b{color:var(--text);font-weight:700}
 .day-bal-hint .day-bal-hint-lead{font-weight:700;color:var(--text)}
@@ -420,19 +430,19 @@ body.dark .day-bal-hint{background:transparent;border-top-color:var(--border-sof
 /* progress page */
 .prog-stats{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-bottom:1rem}
 .stat-box{flex:1 1 54px;min-width:54px;max-width:96px;background:#fff;border:0.5px solid #E8E8E4;border-radius:10px;padding:8px 4px;text-align:center}
-.stat-num{font-size:20px;font-weight:700;color:#5B4EA8}
-.stat-label{font-size:10px;color:#888780;margin-top:2px;line-height:1.3}
+.stat-num{font-size:var(--fs-xl);font-weight:700;color:#5B4EA8}
+.stat-label{font-size:var(--fs-xs);color:#888780;margin-top:2px;line-height:1.3}
 /* v4.1 — single hero metric line (replaces the per-day stat-box grid) */
-.prog-hero{width:100%;text-align:center;font-size:13px;font-weight:600;color:var(--muted);padding:2px 0}
+.prog-hero{width:100%;text-align:center;font-size:var(--fs-13);font-weight:600;color:var(--muted);padding:2px 0}
 .prog-hero b{color:var(--text);font-weight:800;font-size:15px}
 .prog-hero-sep{margin:0 9px;color:var(--border);font-weight:400}
 .prog-recap{width:100%;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:2px 0 8px}
-.prog-recap-h{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;display:flex;align-items:center;gap:6px}
+.prog-recap-h{font-size:var(--fs-11);font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;display:flex;align-items:center;gap:6px}
 /* v5.14 (T8): inline "recently earned" chip on recap header (e.g. 🔥 1mo active). */
-.prog-recap-chip{margin-left:auto;font-size:10px;font-weight:800;letter-spacing:.02em;color:#8A6A00;background:rgba(255,215,64,.18);border:1px solid var(--gold);border-radius:999px;padding:2px 8px;text-transform:none}
+.prog-recap-chip{margin-left:auto;font-size:var(--fs-xs);font-weight:800;letter-spacing:.02em;color:#8A6A00;background:rgba(255,215,64,.18);border:1px solid var(--gold);border-radius:999px;padding:2px 8px;text-transform:none}
 body.dark .prog-recap-chip{color:var(--gold);background:rgba(255,215,64,.10)}
 .prog-recap-row{display:flex;flex-wrap:wrap;gap:6px}
-.prog-recap-s{font-size:12px;font-weight:600;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:3px 10px}
+.prog-recap-s{font-size:var(--fs-sm);font-weight:600;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:3px 10px}
 .prog-recap-s b{color:var(--text);font-weight:800}
 .vol-title{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
 .vol-seg{display:inline-flex;margin-left:auto;border:1px solid var(--border);border-radius:8px;overflow:hidden}
@@ -442,20 +452,20 @@ body.dark .prog-recap-chip{color:var(--gold);background:rgba(255,215,64,.10)}
 .prog-day-card{background:#fff;border:0.5px solid #E8E8E4;border-radius:12px;margin-bottom:1rem;overflow:hidden}
 .prog-day-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
 .prog-day-header:hover{background:#FAFAF8}
-.prog-day-title{font-size:14px;font-weight:700;color:#2C2C2A}
-.prog-day-sub{font-size:11px;color:#888780;margin-top:2px}
-.prog-day-count{font-size:12px;font-weight:600;color:#5B4EA8;background:#EEEDFE;padding:3px 10px;border-radius:12px;white-space:nowrap}
+.prog-day-title{font-size:var(--fs-md);font-weight:700;color:#2C2C2A}
+.prog-day-sub{font-size:var(--fs-11);color:#888780;margin-top:2px}
+.prog-day-count{font-size:var(--fs-sm);font-weight:600;color:#5B4EA8;background:#EEEDFE;padding:3px 10px;border-radius:12px;white-space:nowrap}
 .prog-day-body{display:none;border-top:0.5px solid #F1EFE8}
 .prog-day-body.open{display:block}
 .prog-session{padding:12px 14px;border-bottom:0.5px solid #F1EFE8}
 .prog-session:last-child{border-bottom:none}
 .sess-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#F5F5F2;border-bottom:0.5px solid #F1EFE8}
-.sess-nav-btn{background:#fff;border:1.5px solid #D3D1C7;border-radius:7px;padding:5px 12px;font-size:12px;font-weight:600;color:#3C3489;cursor:pointer}
+.sess-nav-btn{background:#fff;border:1.5px solid #D3D1C7;border-radius:7px;padding:5px 12px;font-size:var(--fs-sm);font-weight:600;color:#3C3489;cursor:pointer}
 .sess-nav-btn:disabled{opacity:0.35;cursor:default}
-.sess-nav-label{font-size:12px;color:#888780;font-weight:600}
+.sess-nav-label{font-size:var(--fs-sm);color:#888780;font-weight:600}
 .muscle-map-wrap{padding:10px 14px 4px;border-top:0.5px solid #F1EFE8}
 /* v4.17 (nit 12): the muscle-load heading reads as a real header, not small-caps. */
-.stats-section-title.muscle-map-title{font-size:14px;font-weight:700;color:var(--text);letter-spacing:0;text-transform:none;margin-bottom:8px}
+.stats-section-title.muscle-map-title{font-size:var(--fs-md);font-weight:700;color:var(--text);letter-spacing:0;text-transform:none;margin-bottom:8px}
 .muscle-map-svg{width:100%;max-width:320px;display:block;margin:0 auto}
 /* v3.37 — interactive muscle chips (tap → drill-in) below the heat map */
 .mm-chips{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 2px}
@@ -470,18 +480,18 @@ body.dark .mm-dot.low{background:#3C3A6E}body.dark .mm-dot.moderate{background:#
 .mm-drill-load{font-size:11px;font-weight:700;margin:3px 0 7px}
 .mm-drill-row{font-size:11.5px;color:var(--text);margin-top:3px;line-height:1.45}
 .mm-drill-row b{color:var(--muted);font-weight:700}
-.prog-session-date{font-size:11px;font-weight:700;color:#5B4EA8;margin-bottom:6px}
-.prog-session-item{font-size:12px;color:#444;margin-bottom:3px;line-height:1.5}
+.prog-session-date{font-size:var(--fs-11);font-weight:700;color:#5B4EA8;margin-bottom:6px}
+.prog-session-item{font-size:var(--fs-sm);color:#444;margin-bottom:3px;line-height:1.5}
 .prog-session-item b{color:#2C2C2A}
 .prog-session-item span{color:#888780}
-.prog-empty{font-size:12px;color:#C8C6BD;font-style:italic;padding:14px}
-.prog-clear-btn{display:block;width:calc(100% - 28px);margin:0 14px 12px;padding:8px;font-size:12px;border-radius:6px;border:0.5px solid #FFBDBD;background:#FFF5F5;color:#C53030;cursor:pointer;text-align:center;font-weight:600}
+.prog-empty{font-size:var(--fs-sm);color:#C8C6BD;font-style:italic;padding:14px}
+.prog-clear-btn{display:block;width:calc(100% - 28px);margin:0 14px 12px;padding:8px;font-size:var(--fs-sm);border-radius:6px;border:0.5px solid #FFBDBD;background:#FFF5F5;color:#C53030;cursor:pointer;text-align:center;font-weight:600}
 .prog-clear-btn:hover{background:#FED7D7}
 .prog-tab-row{display:flex;gap:6px;margin-bottom:1rem}
 /* v4.12 (Step 5.4): monoline icon — inherits currentColor; swap in via <use>. */
 .ic{width:18px;height:18px;display:inline-block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;vertical-align:middle}
 .ic-sm{width:15px;height:15px}
-.prog-tab-btn{flex:1;padding:10px 6px;font-size:11px;font-weight:600;border-radius:8px;border:1.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1.2}
+.prog-tab-btn{flex:1;padding:10px 6px;font-size:var(--fs-11);font-weight:600;border-radius:8px;border:1.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1.2}
 .prog-tab-btn.active{background:#5B4EA8;border-color:#5B4EA8;color:#fff}
 .prog-panel{display:none}
 .prog-panel.show{display:block}
@@ -492,26 +502,26 @@ body.dark .mm-dot.low{background:#3C3A6E}body.dark .mm-dot.moderate{background:#
 .ex-session-count{font-size:11px;color:#7F77DD;font-weight:600;background:#EEEDFE;padding:2px 8px;border-radius:10px}
 .ex-detail-panel{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:1rem;overflow:hidden}
 .stats-section{margin-bottom:18px}
-.stats-section-title{font-size:11px;font-weight:700;color:#888780;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.stats-section-title{font-size:var(--fs-11);font-weight:700;color:#888780;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .stat-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .stat-card{background:#F5F5F2;border-radius:10px;padding:11px 10px;text-align:center}
-.stat-card-label{font-size:10px;color:#888780;margin-bottom:3px}
-.stat-card-val{font-size:17px;font-weight:700;color:#3C3489}
-.stat-card-sub{font-size:10px;color:#B4B2A9;margin-top:2px}
+.stat-card-label{font-size:var(--fs-xs);color:#888780;margin-bottom:3px}
+.stat-card-val{font-size:var(--fs-17);font-weight:700;color:#3C3489}
+.stat-card-sub{font-size:var(--fs-xs);color:#B4B2A9;margin-top:2px}
 .day-since-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .day-since-card{background:#F5F5F2;border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center}
 .day-since-name{font-size:11px;font-weight:600;color:#3C3489}
 .day-since-val{font-size:11px;color:#888780}
 .ex-stat-row{display:flex;gap:6px;padding:10px 14px;border-bottom:0.5px solid #F1EFE8;flex-wrap:wrap}
-.ex-stat-chip{background:#F0EFF9;border-radius:6px;padding:3px 8px;font-size:11px;color:#3C3489;font-weight:600}
+.ex-stat-chip{background:#F0EFF9;border-radius:6px;padding:3px 8px;font-size:var(--fs-11);color:#3C3489;font-weight:600}
 .ex-stat-chip.gold{background:#FFF8E1;color:#B8860B}
 .ex-stat-chip.ex-stat-std{background:var(--primary-tint);color:var(--primary)}
 .ex-stat-chip.green{background:#E8F5E9;color:#2E7D32}
 .skip-list{display:flex;flex-direction:column;gap:4px}
 /* v5.14 (T7): "Worth a look" rows — muted framing, no red pct badge.
    Background drops to the neutral surface so it stops looking like an alert. */
-.skip-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--surface);border:1px solid var(--border-soft);border-radius:7px;font-size:12px}
+.skip-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--surface);border:1px solid var(--border-soft);border-radius:7px;font-size:var(--fs-sm)}
 .skip-row-name{color:var(--text);font-weight:500}
 .skip-row-cnt{color:var(--muted);font-weight:600}
 .skip-row-pct{color:var(--muted);font-weight:600}      /* legacy; superseded by .skip-row-cnt in render */
@@ -522,9 +532,9 @@ body.dark .mm-dot.low{background:#3C3A6E}body.dark .mm-dot.moderate{background:#
 .meas-unit-btn{padding:8px 12px;border:1.5px solid #D3D1C7;border-radius:7px;font-size:13px;font-weight:600;color:#888780;background:#F5F5F2;cursor:pointer}
 .meas-unit-btn.active{background:#7F77DD;border-color:#7F77DD;color:#fff}
 .meas-history-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
-.meas-history-date{font-size:12px;color:#888780}
-.meas-history-val{font-size:15px;font-weight:700;color:#3C3489}
-.meas-history-del{background:none;border:none;color:#C0392B;font-size:16px;cursor:pointer;padding:2px 6px}
+.meas-history-date{font-size:var(--fs-sm);color:#888780}
+.meas-history-val{font-size:var(--fs-15);font-weight:700;color:#3C3489}
+.meas-history-del{background:none;border:none;color:#C0392B;font-size:var(--fs-lg);cursor:pointer;padding:2px 6px}
 /* v5.14 (T2-B2): Body summary cards (Current/Change/Over) now follow var(--card)
    so dark mode picks them up automatically — previously hardcoded near-white. */
 .meas-stat-chip{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center;flex:1}
@@ -536,46 +546,46 @@ body.dark .mm-dot.low{background:#3C3A6E}body.dark .mm-dot.moderate{background:#
    Change card when the user hasn't set a bodyweight goal yet. */
 .delta-neutral{background:transparent;color:var(--muted);font-weight:700;padding:2px 0}
 .ex-detail-header{padding:12px 14px;border-bottom:0.5px solid #F1EFE8}
-.ex-detail-title{font-size:14px;font-weight:700;color:#3C3489}
-.ex-history-item{padding:10px 14px;border-bottom:0.5px solid #F1EFE8;font-size:12px}
+.ex-detail-title{font-size:var(--fs-md);font-weight:700;color:#3C3489}
+.ex-history-item{padding:10px 14px;border-bottom:0.5px solid #F1EFE8;font-size:var(--fs-sm)}
 .ex-history-item:last-child{border-bottom:none}
-.ex-history-date{font-size:11px;font-weight:600;color:#5B4EA8;margin-bottom:4px}
+.ex-history-date{font-size:var(--fs-11);font-weight:600;color:#5B4EA8;margin-bottom:4px}
 .ex-history-sets{color:#2C2C2A;line-height:1.6}
 .chart-wrap{padding:14px;background:#FAFAF8;border-top:0.5px solid #F1EFE8}
 .chart-title{font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
 .chart-canvas-wrap{width:100%;overflow-x:auto}
 canvas.prog-chart{display:block;border-radius:8px}
-.mgr-day-label{font-size:14px;font-weight:700;color:#3C3489;margin:1.25rem 0 0.6rem;padding-bottom:6px;border-bottom:2px solid var(--border-soft)}
+.mgr-day-label{font-size:var(--fs-md);font-weight:700;color:#3C3489;margin:1.25rem 0 0.6rem;padding-bottom:6px;border-bottom:2px solid var(--border-soft)}
 .mgr-ex-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;gap:6px}
 /* v5.14 (T12): icon-only Edit / Remove buttons, paired and right-aligned. */
 .mgr-ex-acts{display:inline-flex;gap:4px;margin-left:auto;flex-shrink:0}
-.mgr-icon-btn{appearance:none;background:transparent;border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;padding:0;line-height:1}
+.mgr-icon-btn{appearance:none;background:transparent;border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:var(--fs-md);padding:0;line-height:1}
 .mgr-icon-btn:hover{color:var(--text);border-color:var(--primary-2)}
 .mgr-icon-btn.mgr-icon-danger:hover{color:#fff;background:var(--bad);border-color:var(--bad)}
 .mgr-icon-btn svg.ic{width:14px;height:14px}
 body.dark .mgr-icon-btn{border-color:var(--border);color:var(--muted-2)}
 body.dark .mgr-icon-btn:hover{color:var(--text)}
 /* Muted "Nx" replaces the filled session-count chip. */
-.mgr-ex-count{font-size:11px;font-weight:700;color:var(--muted);margin-left:auto;padding:0 2px;letter-spacing:.02em}
+.mgr-ex-count{font-size:var(--fs-11);font-weight:700;color:var(--muted);margin-left:auto;padding:0 2px;letter-spacing:.02em}
 .mgr-ex-row .mgr-ex-acts{margin-left:0} /* count already absorbs the spacer */
 /* Inline-editable day name (tap → input). */
 .mgr-day-name-edit{cursor:pointer;border-bottom:1px dashed transparent;transition:border-color .15s}
 .mgr-day-name-edit:hover{border-bottom-color:var(--border)}
-.mgr-day-name-input{flex:1;padding:6px 8px;font-size:14px;font-weight:700;color:var(--text);background:var(--surface);border:1px solid var(--primary-2);border-radius:6px;outline:none;font-family:inherit;min-width:0}
+.mgr-day-name-input{flex:1;padding:6px 8px;font-size:var(--fs-md);font-weight:700;color:var(--text);background:var(--surface);border:1px solid var(--primary-2);border-radius:6px;outline:none;font-family:inherit;min-width:0}
 body.dark .mgr-day-name-input{background:var(--surface);color:var(--text)}
 /* Intro-banner dismiss × button. */
-.mgr-notice-x{position:absolute;top:6px;right:8px;background:transparent;border:0;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:6px}
+.mgr-notice-x{position:absolute;top:6px;right:8px;background:transparent;border:0;color:var(--muted);font-size:var(--fs-18);cursor:pointer;line-height:1;padding:2px 6px;border-radius:6px}
 .mgr-notice-x:hover{color:var(--text);background:rgba(0,0,0,.04)}
 body.dark .mgr-notice-x:hover{background:rgba(255,255,255,.06)}
 .mgr-ex-row.archived{background:#F5F5F2;border-color:#E8E8E4;opacity:0.75}
-.mgr-ex-name{font-size:13px;font-weight:500;color:#2C2C2A;flex:1}
+.mgr-ex-name{font-size:var(--fs-13);font-weight:500;color:#2C2C2A;flex:1}
 .mgr-ex-name.archived{color:#888780;text-decoration:line-through}
-.mgr-ex-count{font-size:11px;color:#7F77DD;font-weight:600;margin-right:8px}
-.mgr-archive-btn{font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #FFBDBD;background:#FFF5F5;color:#C53030;cursor:pointer;white-space:nowrap}
-.mgr-restore-btn{font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid var(--border-soft);background:#EEEDFE;color:#3C3489;cursor:pointer;white-space:nowrap}
-.mgr-notice{background:#E1F5EE;border-left:3px solid #0F6E56;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:#085041;line-height:1.6;margin-bottom:1rem}
+.mgr-ex-count{font-size:var(--fs-11);color:#7F77DD;font-weight:600;margin-right:8px}
+.mgr-archive-btn{font-size:var(--fs-11);font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #FFBDBD;background:#FFF5F5;color:#C53030;cursor:pointer;white-space:nowrap}
+.mgr-restore-btn{font-size:var(--fs-11);font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid var(--border-soft);background:#EEEDFE;color:#3C3489;cursor:pointer;white-space:nowrap}
+.mgr-notice{background:#E1F5EE;border-left:3px solid #0F6E56;border-radius:0 8px 8px 0;padding:10px 12px;font-size:var(--fs-sm);color:#085041;line-height:1.6;margin-bottom:1rem}
 .mgr-archived-section{margin-top:1.5rem;padding-top:1rem;border-top:1px solid #E8E8E4}
-.mgr-archived-title{font-size:13px;font-weight:700;color:#888780;margin-bottom:0.75rem}
+.mgr-archived-title{font-size:var(--fs-13);font-weight:700;color:#888780;margin-bottom:0.75rem}
 /* v4.20 (nit 22): toast anchored TOP-center — clears the bottom tab bar + the
    floating rest-timer / Complete pills (which it used to collide with). */
 .toast{position:fixed;top:calc(env(safe-area-inset-top) + 14px);bottom:auto;left:50%;transform:translateX(-50%) translateY(-90px);background:#2C2C2A;color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:1003}
@@ -828,11 +838,11 @@ body.dark .rpe-slider::-webkit-slider-thumb{border-color:#252540}
 .pain-btn.active-flag{background:#FFF5F5;border-color:#C53030;color:#C53030}
 /* ── Reorder arrows ── */
 .mgr-reorder-btns{display:flex;gap:2px;margin-right:6px}
-.mgr-reorder-btn{background:#F5F5F2;border:1px solid #D3D1C7;border-radius:5px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;font-weight:700;color:#5B4EA8;line-height:1}
+.mgr-reorder-btn{background:#F5F5F2;border:1px solid #D3D1C7;border-radius:5px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:var(--fs-17);font-weight:700;color:#5B4EA8;line-height:1}
 .mgr-reorder-btn:disabled{opacity:0.3;cursor:default}
 /* ── Milestone badges ── */
 .milestone-shelf{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
-.milestone-badge{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid}
+.milestone-badge{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;font-size:var(--fs-11);font-weight:700;border:1.5px solid}
 .milestone-badge.earned{background:#FFF8E1;border-color:#E0A800;color:#7A5A00}
 .milestone-badge.locked{background:#F5F5F2;border-color:#D3D1C7;color:#B4B2A9}
 /* ── Volume chart wrap ── */
@@ -900,7 +910,7 @@ body.dark .mgr-archived-section{border-top-color:var(--border)}
 body.dark .mgr-archive-btn{background:#3A1A1A;border-color:#7A2020;color:#FF8080}
 .mgr-edit-btn{background:#EEEDFE;border-color:var(--border-soft);color:#3C3489;margin-right:5px}
 body.dark .mgr-edit-btn{background:var(--primary-tint);border-color:var(--border);color:#C7C4EE}
-.mgr-link-pill{font-size:9px;font-weight:700;color:#5B4EA8;background:#EEEDFE;border-radius:10px;padding:1px 6px;margin-left:5px;white-space:nowrap;flex-shrink:0}
+.mgr-link-pill{font-size:var(--fs-9);font-weight:700;color:#5B4EA8;background:#EEEDFE;border-radius:10px;padding:1px 6px;margin-left:5px;white-space:nowrap;flex-shrink:0}
 body.dark .mgr-link-pill{background:var(--primary-tint);color:#C7C4EE}
 /* v3.25 (Phase D) — Plan balance card */
 .bal-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:4px 0 14px}
@@ -923,8 +933,8 @@ body.dark .bal-flag-untrained{color:#C4A6F5}
 .bal-ok{font-size:11px;color:#10B981;margin-top:8px}
 /* v4.6 — Plan: header overflow + balance status pill */
 .mgr-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 12px}
-.mgr-head-title{font-size:18px;font-weight:800;color:var(--text)}
-.mgr-ovf-btn{width:40px;height:40px;border:1px solid var(--border);border-radius:9px;background:var(--card,#fff);color:var(--text);font-size:18px;line-height:1;cursor:pointer;flex-shrink:0}
+.mgr-head-title{font-size:var(--fs-18);font-weight:800;color:var(--text)}
+.mgr-ovf-btn{width:40px;height:40px;border:1px solid var(--border);border-radius:9px;background:var(--card,#fff);color:var(--text);font-size:var(--fs-18);line-height:1;cursor:pointer;flex-shrink:0}
 body.dark .mgr-ovf-btn{background:#252540;border-color:var(--border)}
 .mgr-ovf-menu{position:absolute;top:100%;right:0;margin-top:6px;background:var(--surface);border:1px solid var(--border-soft);border-radius:10px;box-shadow:0 8px 24px rgba(31,29,56,.18);z-index:1100;min-width:208px;overflow:hidden}
 .mgr-ovf-menu[hidden]{display:none}
@@ -1037,7 +1047,7 @@ body.dark .sess-ovf-menu{background:#252540;border-color:var(--border)}
 body.dark .sess-ovf-danger{color:#FF8080}
 .sess-card-meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-bottom:8px;gap:8px;flex-wrap:wrap}
 .sess-card-chips{display:flex;gap:5px;flex-wrap:wrap}
-.sess-meta-chip{font-size:11px;font-weight:600;color:var(--muted);background:var(--border-soft);border-radius:7px;padding:2px 7px;white-space:nowrap}
+.sess-meta-chip{font-size:var(--fs-11);font-weight:600;color:var(--muted);background:var(--border-soft);border-radius:7px;padding:2px 7px;white-space:nowrap}
 .sess-meta-chip.sess-pr{background:#FFF8E1;color:#7A5A00}
 body.dark .sess-meta-chip{background:#1F1D38;color:var(--muted-2)}
 body.dark .sess-meta-chip.sess-pr{background:#3A2E00;color:var(--gold)}
@@ -1045,7 +1055,7 @@ body.dark .sess-meta-chip.sess-pr{background:#3A2E00;color:var(--gold)}
 .sess-lift{display:flex;flex-direction:column;gap:2px;padding:4px 0;border-top:.5px solid var(--border-soft)}
 .sess-lift:first-child{border-top:0;padding-top:0}
 body.dark .sess-lift{border-top-color:var(--border)}
-.sess-lift-name{font-size:12px;font-weight:600;color:var(--text)}
+.sess-lift-name{font-size:var(--fs-sm);font-weight:600;color:var(--text)}
 /* v5.14 (T3): set chips now read "1 · 120×12" and lay out 3-up. The cleaner
    chip is short enough to fit a 3-col grid at phone width; longer notes
    (e.g. "1 · On step") gracefully wrap inside their cell. */
@@ -1054,13 +1064,13 @@ body.dark .sess-lift{border-top-color:var(--border)}
 body.dark .sess-lift-set{background:var(--surface);border-color:var(--border);color:var(--muted-2)}
 .sess-lift-empty{font-style:italic;color:var(--muted)}
 /* v3.10: a note folded under its exercise + collapsible cardio bundle */
-.sess-lift-note{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45}
+.sess-lift-note{font-size:var(--fs-11);color:var(--muted);margin-top:3px;line-height:1.45}
 .sess-cardio{border:1px solid var(--border-soft);border-radius:8px;margin:6px 0 2px;overflow:hidden}
 .sess-cardio>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 10px}
 .sess-cardio>summary::-webkit-details-marker{display:none}
 .sess-cardio>summary::after{content:'\25be';color:var(--muted);font-size:11px;flex-shrink:0;transition:transform .15s}
 .sess-cardio[open]>summary::after{transform:rotate(180deg)}
-.sess-cardio-sum{font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap;margin-left:auto}
+.sess-cardio-sum{font-size:var(--fs-11);color:var(--muted);font-weight:600;white-space:nowrap;margin-left:auto}
 .sess-cardio-line{font-size:11.5px;color:var(--text);padding:5px 10px;border-top:1px solid var(--border-soft);display:flex;gap:8px;align-items:baseline}
 .sess-cardio-line .scf{color:var(--muted);min-width:66px;flex-shrink:0;font-weight:600}
 body.dark .sess-cardio{border-color:var(--border)}
@@ -1116,7 +1126,7 @@ body.dark .meas-in{background:var(--surface);border-color:var(--border);color:va
 .tab-btn.off{border-color:var(--border);background:#F5F5F2;color:var(--muted)}
 body.dark .tab-btn.off{background:#252540;border-color:var(--border);color:var(--muted-2)}
 /* Lift-detail stat row (refactored from inline in JS template) */
-.lift-stat-row{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#F5F5F2;border-radius:7px;padding:7px 10px;font-size:12px}
+.lift-stat-row{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#F5F5F2;border-radius:7px;padding:7px 10px;font-size:var(--fs-sm)}
 .lift-stat-row>.k{font-weight:600;color:#3C3489;flex-shrink:0}
 .lift-stat-row>.v{color:#5F5E5A;text-align:right}
 body.dark .lift-stat-row{background:#252540}
@@ -1136,9 +1146,12 @@ body.dark #pc-result{color:var(--text)}
    the --fs-* tokens and floor the smallest chips so the floor stays at 11 /
    12 / 13 px respectively. Cardio toggle is held at 13 px in all bumped
    variants so the 5 chips don't wrap at iPhone-12 width. */
-body.fs-bumped { --fs-xs:12px; --fs-sm:13px; --fs-md:16px; --fs-lg:17px; --fs-xl:22px }
-body.fs-larger { --fs-xs:13px; --fs-sm:14px; --fs-md:17px; --fs-lg:19px; --fs-xl:24px }
-body.fs-xl     { --fs-xs:15px; --fs-sm:16px; --fs-md:19px; --fs-lg:21px; --fs-xl:26px }
+body.fs-bumped { --fs-xs:12px; --fs-sm:13px; --fs-md:16px; --fs-lg:17px; --fs-xl:22px;
+                 --fs-9:11px; --fs-11:12px; --fs-13:14px; --fs-15:16px; --fs-17:18px; --fs-18:19px }
+body.fs-larger { --fs-xs:13px; --fs-sm:14px; --fs-md:17px; --fs-lg:19px; --fs-xl:24px;
+                 --fs-9:12px; --fs-11:13px; --fs-13:15px; --fs-15:17px; --fs-17:19px; --fs-18:21px }
+body.fs-xl     { --fs-xs:15px; --fs-sm:16px; --fs-md:19px; --fs-lg:21px; --fs-xl:26px;
+                 --fs-9:13px; --fs-11:14px; --fs-13:17px; --fs-15:19px; --fs-17:21px; --fs-18:23px }
 /* Bumped — floors */
 body.fs-bumped .meas-stat-sub,body.fs-bumped .milestone-progress-cap,body.fs-bumped .prog-recap-chip,body.fs-bumped .ssc-h,body.fs-bumped .ex-stat-label,body.fs-bumped .ex-cat{font-size:11px !important}
 body.fs-bumped .vol-seg-btn,body.fs-bumped .aim-cap,body.fs-bumped .coach-sub{font-size:12px !important}
@@ -1217,7 +1230,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.19</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.20</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
