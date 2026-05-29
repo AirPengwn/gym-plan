@@ -152,7 +152,13 @@ function domIdByDataEx(doc, day, ex){
   w.document.getElementById('deload-banner').style.display='flex';
   w.document.getElementById('backup-banner').style.display='flex';
   w.renderNoticeTray();
-  ok(tray.style.display==='block','tray shows when notices active');
+  // v5.14 (T8): tray is now collapsed by default — visibility is on the bell.
+  var bell=w.document.getElementById('notice-bell');
+  ok(bell && !bell.hidden,'v5.14 T8 · notice bell shown when notices active');
+  ok(bell && bell.getAttribute('data-unread')==='2','v5.14 T8 · bell carries unread count');
+  // toggling opens the tray
+  w.toggleNoticeTray();
+  ok(tray.style.display==='block','v5.14 T8 · toggleNoticeTray opens the tray');
   ok((tray.querySelectorAll('.tray-row')||[]).length===2,'2 rows rendered (deload+backup)');
   ok(/Clear all/.test(tray.innerHTML),'Clear all shown when >=2 notices');
   ok(tray.querySelector('.tray-row .tray-ic.red') && tray.querySelector('.tray-row .tray-ic.warn'),'severity-tinted icons (red+warn)');
@@ -537,6 +543,32 @@ function domIdByDataEx(doc, day, ex){
   try{ w.switchProgTab && w.switchProgTab('stats'); w.renderStats(); }catch(e){}
   var seg=w.document.querySelector('.vol-seg');
   ok(seg && seg.querySelectorAll('.vol-seg-btn').length===2,'v5.12 · two-button volume toggle renders in Trends');
+  w.close();
+})();
+
+// ── v5.14 · T8 Progress hierarchy (strap removed, recap chip, notice bell) ──
+(function(){
+  // 1) Strap is gone — #prog-stats-row hidden in markup.
+  const w=loadApp(makeStore({}));
+  var statsRow=w.document.getElementById('prog-stats-row');
+  ok(statsRow && statsRow.hidden,'v5.14 T8 · prog-stats-row strap is hidden (deleted)');
+  // 2) Recap header shows 🔥 chip when month1 was earned ≤7d ago.
+  var now=Date.now();
+  w.localStorage.setItem('gymlog_a', JSON.stringify([
+    {label:'D1',date:'',ts:now-1*86400000,entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]},
+    {label:'D1',date:'',ts:now-3*86400000,entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]},
+    {label:'D1',date:'',ts:now-5*86400000,entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]},
+    {label:'D1',date:'',ts:now-7*86400000,entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]}
+  ]));
+  w.localStorage.setItem('earned_milestones', JSON.stringify(['month1']));
+  w.localStorage.setItem('milestones_earned_at', JSON.stringify({month1:now-86400000}));
+  try{ w.renderProgress(); }catch(e){}
+  var recap=w.document.getElementById('prog-recap');
+  ok(recap && /1mo active/.test(recap.innerHTML||''),'v5.14 T8 · 🔥 1mo active chip shown when earned ≤7d ago');
+  // After 8 days, the chip is gone.
+  w.localStorage.setItem('milestones_earned_at', JSON.stringify({month1:now-8*86400000}));
+  try{ w.renderProgress(); }catch(e){}
+  ok(recap && !/1mo active/.test(recap.innerHTML||''),'v5.14 T8 · chip drops after 7 days');
   w.close();
 })();
 

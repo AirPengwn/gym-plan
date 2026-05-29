@@ -197,6 +197,15 @@ body.dark .item-timer-btn{background:#252540;border-color:var(--border);color:#9
 .legacy-banner{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:0!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;border:0!important}
 #notice-tray{display:none;background:#fff;border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:0.75rem}
 body.dark #notice-tray{background:#252540;border-color:var(--border)}
+/* v5.14 (T8): header notice bell. Hidden when 0 notices; lights an unread
+   dot when any are present. Tap toggles the existing notice tray below. */
+.notice-bell{appearance:none;background:transparent;border:0;color:var(--muted);font-size:18px;cursor:pointer;padding:6px 8px;border-radius:8px;position:relative;line-height:1;flex-shrink:0}
+.notice-bell:hover{color:var(--text)}
+.notice-bell-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--warn);border-radius:50%;border:2px solid var(--surface);display:none}
+.notice-bell[data-unread]:not([data-unread="0"]) .notice-bell-dot{display:block}
+body.dark .notice-bell{color:#9896C8}
+body.dark .notice-bell:hover{color:var(--text)}
+body.dark .notice-bell-dot{border-color:#1A1A2E}
 .tray-head{display:flex;justify-content:space-between;align-items:center;padding:8px 11px;font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;border-bottom:.5px solid var(--border-soft)}
 .tray-clear{font-weight:600;color:var(--primary-2);text-transform:none;letter-spacing:0;cursor:pointer;background:none;border:0;font-size:11px}
 .tray-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border-bottom:.5px solid var(--border-soft)}
@@ -388,7 +397,10 @@ body.dark .day-bal-hint{background:#252540}
 .prog-hero b{color:var(--text);font-weight:800;font-size:15px}
 .prog-hero-sep{margin:0 9px;color:var(--border);font-weight:400}
 .prog-recap{width:100%;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:2px 0 8px}
-.prog-recap-h{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.prog-recap-h{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;display:flex;align-items:center;gap:6px}
+/* v5.14 (T8): inline "recently earned" chip on recap header (e.g. 🔥 1mo active). */
+.prog-recap-chip{margin-left:auto;font-size:10px;font-weight:800;letter-spacing:.02em;color:#8A6A00;background:rgba(255,215,64,.18);border:1px solid var(--gold);border-radius:999px;padding:2px 8px;text-transform:none}
+body.dark .prog-recap-chip{color:var(--gold);background:rgba(255,215,64,.10)}
 .prog-recap-row{display:flex;flex-wrap:wrap;gap:6px}
 .prog-recap-s{font-size:12px;font-weight:600;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:3px 10px}
 .prog-recap-s b{color:var(--text);font-weight:800}
@@ -1087,6 +1099,12 @@ body.dark #pc-result{color:var(--text)}
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
     <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.14</span></div>
   </div>
+  <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
+       dot lights up while notices exist. Tap toggles the tray below. -->
+  <button id="notice-bell" type="button" class="notice-bell" aria-label="0 notices" onclick="toggleNoticeTray()" hidden>
+    <span aria-hidden="true">ⓘ</span>
+    <span class="notice-bell-dot" aria-hidden="true"></span>
+  </button>
 </div>
 <div id="test-banner" style="display:none;background:#C53030;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:0.75rem;line-height:1.4;">🧪 TEST MODE — cloud sync OFF · nothing is saved · tap “End test” to discard</div>
 <div id="backup-banner" class="legacy-banner" style="display:none;background:#FFF8E1;border:1px solid #E0A800;color:#7A5A00;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:0.75rem;line-height:1.5;display:none;align-items:center;justify-content:space-between;gap:8px;">
@@ -1118,12 +1136,14 @@ body.dark #pc-result{color:var(--text)}
 
 <!-- ═══ PROGRESS ═══ -->
 <div class="day-panel" id="p-prog">
-  <!-- v4.1: a single compact hero metric line (sessions · PRs · streak) replaces the
-       old per-day stat-box grid; per-day counts still live on the filter-chip pills. -->
-  <div class="prog-stats" id="prog-stats-row">
+  <!-- v5.14 (T8): the v4.1 "{N} sessions · {N} PRs · streak" strap is gone —
+       it duplicated the monthly recap below. Keeping #prog-stats-row + an
+       empty #prog-hero stub for backward-compat with any external selector. -->
+  <div class="prog-stats" id="prog-stats-row" hidden>
     <div id="prog-hero" class="prog-hero"></div>
   </div>
-  <!-- v5.11: quiet "this month" recap (sessions · PRs · volume · bodyweight Δ) -->
+  <!-- v5.11: quiet "this month" recap (sessions · PRs · volume · bodyweight Δ).
+       v5.14 (T8): now the only content between the page header and the sub-tabs. -->
   <div id="prog-recap" class="prog-recap" hidden></div>
 
   <!--
@@ -6768,7 +6788,20 @@ function renderNoticeTray(){
     m:'It’s been a while since your last backup.',act:'showExportImport',actLabel:'Back up',dismiss:'dismissBackupBanner'});
   if(_noticeActive('merge-banner')) items.push({k:'info',ic:'☁',t:'Synced from cloud',
     m:_noticeStrip(mg&&mg.textContent)||'Cloud history merged in.',dismiss:'dismissMergeBanner'});
-  if(!items.length){ tray.style.display='none'; tray.innerHTML=''; return; }
+  // v5.14 (T8): tray is no longer always-shown. The header bell exposes count
+  // (and a dot when ≥1); the tray itself stays hidden until the bell is tapped
+  // — toggled via toggleNoticeTray(). Notices auto-collapse when count hits 0.
+  var bell=document.getElementById('notice-bell');
+  if(!items.length){
+    tray.style.display='none'; tray.innerHTML='';
+    if(bell){ bell.hidden=true; bell.setAttribute('aria-label','0 notices'); bell.removeAttribute('data-unread'); }
+    return;
+  }
+  if(bell){
+    bell.hidden=false;
+    bell.setAttribute('aria-label', items.length+' notice'+(items.length>1?'s':''));
+    bell.setAttribute('data-unread', String(items.length));
+  }
   var h='<div class="tray-head"><span>'+items.length+' notice'+(items.length>1?'s':'')+'</span>'
     +(items.length>=2?'<button type="button" class="tray-clear" onclick="noticeClearAll()">Clear all</button>':'')+'</div>';
   items.forEach(function(n){
@@ -6780,7 +6813,15 @@ function renderNoticeTray(){
       +'</div>';
   });
   tray.innerHTML=h;
-  tray.style.display='block';
+  // Default visibility: collapsed. toggleNoticeTray flips it open.
+  if(!tray.dataset.userToggled) tray.style.display='none';
+}
+function toggleNoticeTray(){
+  var tray=document.getElementById('notice-tray'); if(!tray) return;
+  var open=(tray.style.display!=='none' && tray.style.display!=='');
+  tray.style.display=open?'none':'block';
+  tray.dataset.userToggled='1';
+  if(!open){ try{ tray.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(_e){} }
 }
 function noticeClearAll(){
   ['dismissDeloadBanner','dismissBackupBanner','dismissMergeBanner'].forEach(function(fn){
@@ -7738,7 +7779,14 @@ function renderProgress(){
         if(mPR>0) bits.push('<span class="prog-recap-s"><b>'+mPR+'</b> PR'+(mPR===1?'':'s')+'</span>');
         bits.push('<span class="prog-recap-s"><b>'+volTxt+'</b> volume</span>');
         if(bwDelta!=null && bwDelta!==0) bits.push('<span class="prog-recap-s"><b>'+(bwDelta>0?'+':'')+bwDelta+(bwUnit?' '+bwUnit:'')+'</b> bodyweight</span>');
-        recapEl.innerHTML='<div class="prog-recap-h">This month · '+mname+'</div><div class="prog-recap-row">'+bits.join('')+'</div>';
+        // v5.14 (T8): inline "🔥 1mo active" chip on the right of the recap
+        // header — only when month1 was earned within the last 7 days.
+        var headerChip='';
+        try{
+          var recent=_recentlyEarnedMilestones(7);
+          if(recent['month1']) headerChip=' <span class="prog-recap-chip" title="Earned within the last week">🔥 1mo active</span>';
+        }catch(_e){}
+        recapEl.innerHTML='<div class="prog-recap-h"><span>This month · '+mname+'</span>'+headerChip+'</div><div class="prog-recap-row">'+bits.join('')+'</div>';
         recapEl.hidden=false;
       }
     }
@@ -8960,10 +9008,28 @@ function checkMilestones(){
   });
   if(newOnes.length){
     localStorage.setItem('earned_milestones',JSON.stringify(earned));
+    // v5.14 (T8): record earn timestamps so the recap header can show a
+    // short-lived "recently earned" chip (e.g. 🔥 1mo active).
+    try{
+      var stamps={}; try{ stamps=JSON.parse(localStorage.getItem('milestones_earned_at'))||{}; }catch(_e){}
+      var nowTs=Date.now();
+      newOnes.forEach(function(m){ stamps[m.id]=nowTs; });
+      localStorage.setItem('milestones_earned_at', JSON.stringify(stamps));
+    }catch(_e){}
     newOnes.forEach(function(m,i){
       setTimeout(function(){ showToast('🎉 Badge: '+m.icon+' '+m.label+'!'); haptic('success'); },i*2500);
     });
   }
+}
+// v5.14 (T8): which milestone ids were earned within the last N days.
+function _recentlyEarnedMilestones(maxAgeDays){
+  var out={};
+  try{
+    var stamps=JSON.parse(localStorage.getItem('milestones_earned_at'))||{};
+    var cutoff=Date.now()-(maxAgeDays||7)*86400000;
+    Object.keys(stamps).forEach(function(k){ if(stamps[k]>=cutoff) out[k]=stamps[k]; });
+  }catch(_e){}
+  return out;
 }
 
 function getEarnedMilestones(){
