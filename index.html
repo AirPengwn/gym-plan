@@ -1164,6 +1164,29 @@ body.fs-xl .cardio-machine-btn{font-size:13px !important}      /* held tight to 
 body.fs-xl .sess-lift-set,body.fs-xl .prog-recap-s,body.fs-xl .mgr-ex-count{font-size:15px !important}
 body.fs-xl .day-bal-hint,body.fs-xl .prog-tab-btn{font-size:14.5px !important}
 body.fs-xl .tab{font-size:13px !important}
+/* ── v5.19: activity heatmap (Trends → Activity, last 12 weeks) ──
+   13-col grid (DOW label + 12 weeks), 8 rows (month marker + 7 days),
+   centered. Future days read as rest (no "missing" gaps). Today gets
+   a thin outline. Colors theme-aware. */
+.hm-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 0 2px}
+.hm-grid{display:grid;grid-template-columns:18px repeat(12,15px);grid-template-rows:14px repeat(7,15px);gap:4px;align-items:center;justify-items:center}
+.hm-mo-spacer{}
+.hm-mo{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.04em;align-self:end;justify-self:start;line-height:1}
+.hm-dow{font-size:9px;font-weight:700;color:var(--muted);justify-self:end;letter-spacing:.04em}
+.hm-cell{width:14px;height:14px;border-radius:3px;background:#EAE9F3}
+.hm-cell.med{background:#9F97E0}
+.hm-cell.high{background:var(--primary)}
+.hm-cell.today{box-shadow:0 0 0 1.5px var(--primary-2);border-radius:4px}
+body.dark .hm-cell{background:#2A2A48}
+body.dark .hm-cell.med{background:#7F77DD}
+body.dark .hm-cell.high{background:var(--primary)}
+.hm-legend{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--muted);flex-wrap:wrap;justify-content:center}
+.hm-legend span+span+.hm-sw{margin-left:8px}
+.hm-sw{width:11px;height:11px;border-radius:3px;display:inline-block;background:#EAE9F3}
+.hm-sw.med{background:#9F97E0}
+.hm-sw.high{background:var(--primary)}
+body.dark .hm-sw{background:#2A2A48}
+body.dark .hm-sw.med{background:#7F77DD}
 </style>
 </head>
 <body>
@@ -1194,7 +1217,7 @@ body.fs-xl .tab{font-size:13px !important}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.18</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.19</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -9307,6 +9330,15 @@ function renderWeeklyConsistency(){
 }
 
 // ── Activity heatmap (GitHub-style, last 12 weeks) ───────────────────
+// v5.19: redesigned for legibility.
+//   - 13-column grid: leftmost col = M/T/W/T/F/S/S labels, then 12 week cols.
+//   - Month markers along the top axis (label appears the week the month starts).
+//   - Dots are theme-aware via .hm-cell.rest/.med/.high (no inline hex).
+//   - Future days no longer transparent — they read as "rest" too, so the grid
+//     never looks like it has missing cells.
+//   - "Today" gets a thin primary-2 outline so the grid has a clear "you-are-here".
+//   - Whole thing is centered (justify-content:center) instead of overflow:auto.
+//   - Legend now spells out the color meanings ("rest · 1 session · 2+ sessions").
 function renderActivityHeatmap(){
   var cnt={};
   getDays().forEach(function(d){
@@ -9318,31 +9350,50 @@ function renderActivityHeatmap(){
     });
   });
   if(!Object.keys(cnt).length) return '';
-  var WEEKS=12;   // v4.17 (nit 11): a clean quarter, not an off-by-one 13
+  var WEEKS=12;
   var today=new Date(); today.setHours(0,0,0,0);
+  var todayKey=today.getFullYear()+'-'+today.getMonth()+'-'+today.getDate();
   var start=new Date(today);
   var dow=(start.getDay()===0?6:start.getDay()-1); // Mon=0
   start.setDate(start.getDate()-dow-(WEEKS-1)*7);
-  var cols='';
+  var MOS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var DOW=['M','T','W','T','F','S','S'];
+  // Build the cells in row-major order: row 0 is the month marker row
+  // (blank label cell + 12 week cells with a name only when that week's
+  // Monday is in a new month). Rows 1-7 are DOW label + 12 dots each.
+  var html='<div class="hm-grid" role="img" aria-label="Activity heatmap, last 12 weeks. Tap a cell for that day\'s session count.">';
+  // Row 0: month markers
+  html+='<div class="hm-mo-spacer"></div>';
+  var prevMo=-1;
   for(var w=0;w<WEEKS;w++){
-    cols+='<div style="display:flex;flex-direction:column;gap:3px">';
-    for(var r=0;r<7;r++){
-      var d=new Date(start); d.setDate(start.getDate()+w*7+r);
-      var future=d.getTime()>today.getTime();
+    var mon=new Date(start); mon.setDate(start.getDate()+w*7);
+    var m=mon.getMonth();
+    var label=(m!==prevMo)?MOS[m]:'';
+    prevMo=m;
+    html+='<div class="hm-mo">'+label+'</div>';
+  }
+  // Rows 1-7: per day-of-week
+  for(var r=0;r<7;r++){
+    html+='<div class="hm-dow">'+DOW[r]+'</div>';
+    for(var w2=0;w2<WEEKS;w2++){
+      var d=new Date(start); d.setDate(start.getDate()+w2*7+r);
       var k=d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();
       var c=cnt[k]||0;
-      var bg=future?'transparent':(c===0?'#EAE9F3':(c===1?'#9F97E0':'#5B4EA8'));
+      var cls=(c===0?'rest':(c===1?'med':'high'));
+      var isToday=(k===todayKey);
       var t=d.toLocaleDateString()+(c?(' — '+c+' session'+(c>1?'s':'')):' — rest');
-      cols+='<div title="'+t+'" style="width:13px;height:13px;border-radius:3px;background:'+bg+'"></div>';
+      html+='<div class="hm-cell '+cls+(isToday?' today':'')+'" title="'+t+'"></div>';
     }
-    cols+='</div>';
   }
+  html+='</div>';
+  // Legend with explicit labels (was just "Less ▪▪▪ More").
+  html+='<div class="hm-legend" aria-hidden="true">'
+    +'<span class="hm-sw rest"></span><span>rest</span>'
+    +'<span class="hm-sw med"></span><span>1 session</span>'
+    +'<span class="hm-sw high"></span><span>2+ sessions</span>'
+    +'</div>';
   return '<div class="stats-section"><div class="stats-section-title">Activity &mdash; last 12 weeks</div>'
-    +'<div style="display:flex;gap:3px;overflow-x:auto;padding-bottom:4px">'+cols+'</div>'
-    +'<div style="display:flex;align-items:center;gap:5px;margin-top:6px;font-size:10px;color:#888780">Less'
-    +'<span style="width:11px;height:11px;border-radius:3px;background:#EAE9F3;display:inline-block"></span>'
-    +'<span style="width:11px;height:11px;border-radius:3px;background:#9F97E0;display:inline-block"></span>'
-    +'<span style="width:11px;height:11px;border-radius:3px;background:#5B4EA8;display:inline-block"></span>More</div>'
+    +'<div class="hm-wrap">'+html+'</div>'
     +'</div>';
 }
 
