@@ -546,6 +546,37 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.14 · T11 post-save summary + T12 plan editor tightening ──
+(function(){
+  const w=loadApp(makeStore({}));
+  // T11 · showSessionSummary defined + mounts a card
+  ok(typeof w.showSessionSummary==='function','v5.14 T11 · showSessionSummary defined');
+  var sessObj={label:'D1',date:'',ts:Date.now(),entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps | Set 2: 120 lbs x12reps'}]};
+  // Seed gymlog so getSaved works.
+  w.localStorage.setItem('gymlog_a', JSON.stringify([sessObj]));
+  w.showSessionSummary('a','Upper A',sessObj,0);
+  var card=w.document.getElementById('sess-summary-card');
+  ok(!!card,'v5.14 T11 · summary card mounts');
+  ok(card && /saved/i.test(card.textContent||''),'v5.14 T11 · card header reads "{Day} saved"');
+  ok(card && /lb moved/.test(card.textContent||''),'v5.14 T11 · falls back to volume when no PRs');
+  // PR-count variant
+  w.showSessionSummary('a','Upper A',sessObj,2);
+  var card2=w.document.getElementById('sess-summary-card');
+  ok(card2 && /2.*new PRs/.test(card2.textContent||''),'v5.14 T11 · PR count shown when prCount>0 ('+(card2?card2.textContent:'none')+')');
+  if(card2) card2.remove();
+  // T12 · plan editor changes
+  var css=w.document.documentElement.innerHTML;
+  ok(/\.mgr-icon-btn/.test(css),'v5.14 T12 · .mgr-icon-btn style present');
+  ok(/_inlineRenameDay/.test(css),'v5.14 T12 · inline rename wiring present in markup-render');
+  ok(/_dismissPlanIntro/.test(css),'v5.14 T12 · intro dismiss handler wired');
+  ok(typeof w._inlineRenameDay==='function','v5.14 T12 · _inlineRenameDay defined');
+  ok(typeof w._dismissPlanIntro==='function','v5.14 T12 · _dismissPlanIntro defined');
+  // dismiss flag persists
+  w._dismissPlanIntro();
+  ok(w.localStorage.getItem('plan_intro_dismissed_v1')==='1','v5.14 T12 · dismiss writes localStorage flag');
+  w.close();
+})();
+
 // ── v5.14 · T9 dividers + T10 token cleanups ──
 (function(){
   const w=loadApp(makeStore({}));

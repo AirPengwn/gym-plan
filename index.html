@@ -527,7 +527,27 @@ body.dark .mm-dot.low{background:#3C3A6E}body.dark .mm-dot.moderate{background:#
 .chart-canvas-wrap{width:100%;overflow-x:auto}
 canvas.prog-chart{display:block;border-radius:8px}
 .mgr-day-label{font-size:14px;font-weight:700;color:#3C3489;margin:1.25rem 0 0.6rem;padding-bottom:6px;border-bottom:2px solid var(--border-soft)}
-.mgr-ex-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:6px}
+.mgr-ex-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;gap:6px}
+/* v5.14 (T12): icon-only Edit / Remove buttons, paired and right-aligned. */
+.mgr-ex-acts{display:inline-flex;gap:4px;margin-left:auto;flex-shrink:0}
+.mgr-icon-btn{appearance:none;background:transparent;border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;padding:0;line-height:1}
+.mgr-icon-btn:hover{color:var(--text);border-color:var(--primary-2)}
+.mgr-icon-btn.mgr-icon-danger:hover{color:#fff;background:var(--bad);border-color:var(--bad)}
+.mgr-icon-btn svg.ic{width:14px;height:14px}
+body.dark .mgr-icon-btn{border-color:var(--border);color:var(--muted-2)}
+body.dark .mgr-icon-btn:hover{color:var(--text)}
+/* Muted "Nx" replaces the filled session-count chip. */
+.mgr-ex-count{font-size:11px;font-weight:700;color:var(--muted);margin-left:auto;padding:0 2px;letter-spacing:.02em}
+.mgr-ex-row .mgr-ex-acts{margin-left:0} /* count already absorbs the spacer */
+/* Inline-editable day name (tap → input). */
+.mgr-day-name-edit{cursor:pointer;border-bottom:1px dashed transparent;transition:border-color .15s}
+.mgr-day-name-edit:hover{border-bottom-color:var(--border)}
+.mgr-day-name-input{flex:1;padding:6px 8px;font-size:14px;font-weight:700;color:var(--text);background:var(--surface);border:1px solid var(--primary-2);border-radius:6px;outline:none;font-family:inherit;min-width:0}
+body.dark .mgr-day-name-input{background:var(--surface);color:var(--text)}
+/* Intro-banner dismiss × button. */
+.mgr-notice-x{position:absolute;top:6px;right:8px;background:transparent;border:0;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:6px}
+.mgr-notice-x:hover{color:var(--text);background:rgba(0,0,0,.04)}
+body.dark .mgr-notice-x:hover{background:rgba(255,255,255,.06)}
 .mgr-ex-row.archived{background:#F5F5F2;border-color:#E8E8E4;opacity:0.75}
 .mgr-ex-name{font-size:13px;font-weight:500;color:#2C2C2A;flex:1}
 .mgr-ex-name.archived{color:#888780;text-decoration:line-through}
@@ -540,6 +560,16 @@ canvas.prog-chart{display:block;border-radius:8px}
 /* v4.20 (nit 22): toast anchored TOP-center — clears the bottom tab bar + the
    floating rest-timer / Complete pills (which it used to collide with). */
 .toast{position:fixed;top:calc(env(safe-area-inset-top) + 14px);bottom:auto;left:50%;transform:translateX(-50%) translateY(-90px);background:#2C2C2A;color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:1003}
+/* v5.14 (T11): self-dismissing post-save summary card. Mounts ~upper-third,
+   slides in, dims out in 3.5s, tap → opens the saved session. Gold accent on
+   the big number. */
+.sess-summary-card{position:fixed;top:22%;left:50%;transform:translate(-50%,-12px) scale(.96);background:var(--card);border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:14px;padding:14px 18px;min-width:240px;max-width:340px;box-shadow:0 8px 28px rgba(91,78,168,.18),0 2px 8px rgba(0,0,0,.12);opacity:0;cursor:pointer;z-index:1005;transition:opacity .22s ease,transform .22s ease;text-align:center}
+.sess-summary-card.show{opacity:1;transform:translate(-50%,0) scale(1)}
+.ssc-h{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.ssc-big{font-size:30px;font-weight:800;color:var(--gold);line-height:1.05;letter-spacing:-.01em}
+.ssc-big-cap{font-size:13px;font-weight:700;color:var(--text);margin-left:4px;letter-spacing:0}
+.ssc-cmp{font-size:12px;font-weight:600;color:var(--muted);margin-top:6px}
+body.dark .sess-summary-card{box-shadow:0 8px 28px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.4)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.toast-sticky{pointer-events:auto;white-space:normal;max-width:88vw;display:flex;align-items:center;gap:12px;text-align:left}
 .toast .toast-x{background:none;border:0;color:#fff;font-size:13px;line-height:1;cursor:pointer;padding:4px 6px;margin:-2px -6px -2px 0;opacity:.75;flex-shrink:0}
@@ -1271,7 +1301,9 @@ body.dark #pc-result{color:var(--text)}
         </div>
       </div>
     </div>
-    <div class="mgr-notice">
+    <!-- v5.14 (T12): one-time-dismiss intro banner (plan_intro_dismissed_v1). -->
+    <div class="mgr-notice" id="mgr-intro-notice" style="position:relative">
+      <button type="button" class="mgr-notice-x" aria-label="Dismiss plan intro" onclick="_dismissPlanIntro()" title="Got it — hide this">×</button>
       <strong>Add</strong>, <strong>Edit</strong>, rename, swap and reorder your plan right here. Renaming <strong>keeps all logged history</strong> (the underlying tracking id never changes). <strong>Remove</strong> takes an exercise off just that day — re-add it anytime from <strong>📚 From library</strong>, and all its history is kept.
     </div>
     <!-- v2.79 (Phase B.3): adjustable day cycle — add / rename / remove / reorder days. -->
@@ -4349,6 +4381,11 @@ function confirmSave(){
   var _estPRs=0; try{ _estPRs=countNewEstPRs(day, savedEntries); }catch(e){}
   showToast(_estPRs===0 ? 'Session saved! ✓' : _estPRs===1 ? 'Session saved · new PR' : 'Session saved · '+_estPRs+' new PRs');
   var prs=checkForPRs(day, savedEntries);
+  // v5.14 (T11): post-save summary card (self-dismissing) — promoted by John
+  // from post-1.0. Reuses PR detection + tonnage math; tap → opens this
+  // session in the Sessions tab. The toast stays as the brief confirmation;
+  // this card is the celebration moment.
+  try{ showSessionSummary(savedDay, savedLabel, sessionObj, _estPRs); }catch(_e){}
   rst(day,counts[day]);
   clearSessionStart(day);
   // Reset check-in bar for next session
@@ -4978,6 +5015,8 @@ function openManage(){
   var pb=document.getElementById('hdr-prog-btn');
   if(!document.getElementById('p-prog').classList.contains('show')) sw('prog', pb||document.getElementById('hdr-plan-btn'));
   switchProgTab('manage', null);
+  // v5.14 (T12): honor a previous one-time dismiss of the green intro banner.
+  try{ _applyPlanIntroDismissed(); }catch(_e){}
 }
 
 // ── Confirmed clear ──
@@ -5854,14 +5893,16 @@ function renderDayManager(){
   var html='<div class="mgr-day-label"><svg class="ic ic-sm" style="margin-right:6px" aria-hidden="true"><use href="#ic-sessions"/></svg>Days in your cycle</div>';
   html+='<div class="mgr-days-list">';
   active.forEach(function(d,i){
+    // v5.14 (T12): the day name is now an inline-editable affordance.
+    // Tap the name → swaps to a text input (focused); Enter or blur saves;
+    // Escape cancels. The standalone "Rename" button is gone.
     html+='<div class="mgr-day-row">'
       +'<div class="mgr-day-reorder">'
       +'<button class="mgr-reorder-btn" '+(i===0?'disabled':'')+' onclick="moveDay(\''+d.key+'\',-1)" title="Move up">↑</button>'
       +'<button class="mgr-reorder-btn" '+(i===active.length-1?'disabled':'')+' onclick="moveDay(\''+d.key+'\',1)" title="Move down">↓</button>'
       +'</div>'
-      +'<span class="mgr-day-name">'+_esc(d.name)+'</span>'
-      +'<button class="mgr-archive-btn mgr-edit-btn" onclick="_promptRenameDay(\''+d.key+'\')">Rename</button>'
-      +'<button class="mgr-archive-btn" onclick="confirmRemoveDay(\''+d.key+'\')" title="Remove this day (history kept)">Remove</button>'
+      +'<span class="mgr-day-name mgr-day-name-edit" role="button" tabindex="0" title="Tap to rename" onclick="_inlineRenameDay(this,\''+d.key+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();_inlineRenameDay(this,\''+d.key+'\')}">'+_esc(d.name)+'</span>'
+      +'<button class="mgr-icon-btn mgr-icon-danger" onclick="confirmRemoveDay(\''+d.key+'\')" title="Remove this day (history kept)" aria-label="Remove day"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-trash"/></svg></button>'
       +'</div>';
   });
   html+='</div>';
@@ -5908,6 +5949,50 @@ function renderSync(){
 var _dayEditKey=null;
 function _promptAddDay(){ openDayEdit(null); }
 function _promptRenameDay(key){ openDayEdit(key); }
+// v5.14 (T12): inline-edit the day name in place — tap → text input → blur/Enter saves.
+function _inlineRenameDay(span, key){
+  if(!span || span.dataset.editing==='1') return;
+  span.dataset.editing='1';
+  var current=getDayName(key)||'';
+  var inp=document.createElement('input');
+  inp.type='text'; inp.value=current;
+  inp.className='mgr-day-name-input';
+  inp.setAttribute('aria-label','Day name');
+  // Swap span → input
+  span.style.display='none';
+  span.parentNode.insertBefore(inp, span.nextSibling);
+  inp.focus(); inp.select();
+  var cleaned=false;
+  function commit(save){
+    if(cleaned) return; cleaned=true;
+    var next=(inp.value||'').trim();
+    inp.parentNode.removeChild(inp);
+    span.style.display=''; delete span.dataset.editing;
+    if(save && next && next!==current){
+      try{
+        var c=getDayConfig(key)||{};
+        editDayMeta(key, next, c.short||'');
+        try{ renderDaysManage(); }catch(_e){}
+        try{ renderDaySelector(); }catch(_e){}
+      }catch(_e){}
+    }
+  }
+  inp.addEventListener('blur', function(){ commit(true); });
+  inp.addEventListener('keydown', function(ev){
+    if(ev.key==='Enter'){ ev.preventDefault(); inp.blur(); }
+    else if(ev.key==='Escape'){ ev.preventDefault(); commit(false); }
+  });
+}
+// v5.14 (T12): one-time dismiss for the green "Add, Edit, rename…" intro banner.
+function _dismissPlanIntro(){
+  try{ localStorage.setItem('plan_intro_dismissed_v1','1'); }catch(_e){}
+  var el=document.getElementById('mgr-intro-notice'); if(el) el.style.display='none';
+}
+function _applyPlanIntroDismissed(){
+  var dismissed=false;
+  try{ dismissed=localStorage.getItem('plan_intro_dismissed_v1')==='1'; }catch(_e){}
+  var el=document.getElementById('mgr-intro-notice'); if(el && dismissed) el.style.display='none';
+}
 function openDayEdit(key){
   _dayEditKey=key||null;
   var nameI=document.getElementById('day-edit-name'), shortI=document.getElementById('day-edit-short');
@@ -6053,7 +6138,8 @@ function renderManager(){
       var r=plan.ex[id];
       var nm=r.name||r.histEx||id;
       var sessionCount=(exMap[r.histEx]||[]).length;
-      var countStr=sessionCount?'<span class="mgr-ex-count">'+sessionCount+' session'+(sessionCount===1?'':'s')+'</span>':'';
+      // v5.14 (T12): muted right-aligned "6×" instead of a filled chip.
+      var countStr=sessionCount?'<span class="mgr-ex-count" title="'+sessionCount+' logged session'+(sessionCount===1?'':'s')+'">'+sessionCount+'×</span>':'';
       var idx=_mgrActiveExs.length;
       _mgrActiveExs.push(r.histEx||nm);
       var isFirst=i===0,isLast=i===ids.length-1;
@@ -6073,8 +6159,10 @@ function renderManager(){
           return c>1?'<span class="mgr-link-pill">↔ '+c+' days</span>':'';
         })()+'</span>'
         +countStr
-        +'<button class="mgr-archive-btn mgr-edit-btn" onclick="openBuilder(\''+id+'\')" title="Edit / rename / swap">Edit</button>'
-        +'<button class="mgr-archive-btn" onclick="confirmRemoveFromDay(\''+id+'\',\''+day+'\')" title="Remove from this day (history kept)">Remove</button>'
+        +'<div class="mgr-ex-acts">'
+        +'<button class="mgr-icon-btn" onclick="openBuilder(\''+id+'\')" title="Edit / rename / swap" aria-label="Edit exercise"><span aria-hidden="true">✎</span></button>'
+        +'<button class="mgr-icon-btn mgr-icon-danger" onclick="confirmRemoveFromDay(\''+id+'\',\''+day+'\')" title="Remove from this day (history kept)" aria-label="Remove from day"><svg class="ic ic-sm" aria-hidden="true"><use href="#ic-trash"/></svg></button>'
+        +'</div>'
         +'</div>');
     });
   });
@@ -9911,6 +9999,73 @@ function showPRToast(prs){
   prs.forEach(function(pr,i){
     setTimeout(function(){ showToast('🏆 PR: '+pr.ex+' — '+pr.weight+' lbs!'); haptic('success'); },i*2200);
   });
+}
+// v5.14 (T11): post-save summary card. Self-dismissing in ~3.5s, tap to
+// open the just-saved session in the Sessions tab. Big number prefers
+// PR count when >0, else tonnage moved (w×r). Comparative line derives
+// the last PR-day from this day's history when possible.
+function showSessionSummary(day, label, sessionObj, prCount){
+  var saved=[]; try{ saved=getSaved(day)||[]; }catch(_e){}
+  // saved[0] is the just-saved session (unshift). Look at saved[1+] for the
+  // most recent prior session that had at least one PR.
+  var anchorTs=null;
+  for(var i=1;i<saved.length;i++){
+    var s=saved[i];
+    var hadPR=(s.entries||[]).some(function(e){ return e.ex && /-pr$/.test(e.ex); });
+    if(hadPR){ anchorTs=_sessWhen(s); break; }
+  }
+  // Compute tonnage (w*r) for the fallback big number.
+  var vol=0;
+  (sessionObj.entries||[]).forEach(function(e){
+    if(e.note && e.note.indexOf('Set ')===0){
+      try{ parseSetWR(e.note).forEach(function(p){ if(p.w>0 && p.r>0) vol+=p.w*p.r; }); }catch(_e){}
+    }
+  });
+  var bigNum, bigCap;
+  if(prCount>0){
+    bigNum=String(prCount);
+    bigCap='new PR'+(prCount===1?'':'s');
+  } else if(vol>0){
+    bigNum=(vol>=1000)?(Math.round(vol/100)/10)+'k':String(Math.round(vol));
+    bigCap='lb moved';
+  } else {
+    bigNum='✓';
+    bigCap='session saved';
+  }
+  var compare;
+  if(prCount>0 && anchorTs)  compare='best work since '+fmtDate(anchorTs,'short');
+  else if(prCount>0)         compare='first PRs logged — keep stacking';
+  else if(anchorTs)          compare='solid · last PR-day was '+fmtDate(anchorTs,'short');
+  else                       compare='keep stacking';
+  var dayLabelTxt=''; try{ dayLabelTxt=getDayName(day)||label||''; }catch(_e){}
+  if(!dayLabelTxt) dayLabelTxt='Day '+((getDays().indexOf(day))+1);
+  // Remove any pending summary, then mount the new one.
+  var existing=document.getElementById('sess-summary-card'); if(existing) existing.remove();
+  var card=document.createElement('div');
+  card.id='sess-summary-card'; card.className='sess-summary-card';
+  card.setAttribute('role','status'); card.setAttribute('aria-live','polite');
+  card.setAttribute('tabindex','0'); card.setAttribute('aria-label', dayLabelTxt+' saved — tap to open session');
+  card.innerHTML=''
+    +'<div class="ssc-h">'+_esc(dayLabelTxt)+' saved</div>'
+    +'<div class="ssc-big">'+_esc(bigNum)+'<span class="ssc-big-cap"> '+_esc(bigCap)+'</span></div>'
+    +'<div class="ssc-cmp">'+_esc(compare)+'</div>';
+  function openSavedSession(){
+    if(card.parentNode) card.remove();
+    try{ var b=document.getElementById('hdr-prog-btn'); if(b) b.click(); }catch(_e){}
+    try{
+      var st=[].slice.call(document.querySelectorAll('.prog-tab-btn')).filter(function(x){ return /Sessions/.test(x.textContent); })[0];
+      if(st) st.click();
+    }catch(_e){}
+  }
+  card.onclick=openSavedSession;
+  card.onkeydown=function(ev){ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); openSavedSession(); } };
+  document.body.appendChild(card);
+  setTimeout(function(){ card.classList.add('show'); }, 20);
+  setTimeout(function(){
+    if(!card.parentNode) return;
+    card.classList.remove('show');
+    setTimeout(function(){ if(card.parentNode) card.remove(); }, 260);
+  }, 3500);
 }
 
 // Hook: stronger haptic on checkbox, no auto-timer (use per-exercise ⏱ button instead)
