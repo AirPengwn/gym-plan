@@ -474,7 +474,7 @@ body.dark .mm-chip{background:var(--surface);color:var(--text);border-color:var(
 .mm-chip.on{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
 .mm-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--border)}
 .mm-dot.low{background:#BFBADD}.mm-dot.moderate{background:#7F77DD}.mm-dot.high{background:#E0A800}.mm-dot.overworked{background:#9B2222}.mm-dot.none{background:var(--border)}
-body.dark .mm-dot.low{background:#3C3A6E}body.dark .mm-dot.moderate{background:#9F97E0}body.dark .mm-dot.overworked{background:#FF6464}
+body.dark .mm-dot.low{background:#6B62A8}body.dark .mm-dot.moderate{background:#9F97E0}body.dark .mm-dot.overworked{background:#FF6464}
 .mm-drill{margin-top:8px;padding:11px 12px;border:1px solid var(--primary);border-radius:10px;background:var(--primary-tint)}
 .mm-drill-h{font-size:13px;font-weight:800;color:var(--text)}
 .mm-drill-load{font-size:11px;font-weight:700;margin:3px 0 7px}
@@ -1230,7 +1230,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.22</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.23</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -7547,8 +7547,13 @@ function buildMuscleHeatMapSVG(loads){
   var BG   = dark ? '#1A1A2E' : '#F9F9F7';
   var TXT  = dark ? '#7E7CA8' : '#888780';
 
+  // v5.23: dark-mode "low" was #3C3A6E — too close to the silhouette
+  // (#2E2B4A) for clear separation. Brighter muted-lavender now reads as
+  // "lit up, but lighter than moderate" while still distinct from the
+  // unlit silhouette behind it. Light mode unchanged (already had good
+  // warm-vs-cool contrast: cream silhouette + cool lavender low).
   var HEAT = dark ? {
-    low:        '#3C3A6E',
+    low:        '#6B62A8',
     moderate:   '#9F97E0',
     high:       '#E0A800',
     overworked: '#FF6464'
