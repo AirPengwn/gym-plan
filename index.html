@@ -1131,6 +1131,39 @@ body.dark .chip.on{background:#5B4EA8;border-color:#5B4EA8;color:#fff}
 #pc-target,#pc-bar{background:#FAFAF8;color:var(--text);border:1px solid var(--border-soft)}
 body.dark #pc-target,body.dark #pc-bar{background:var(--surface);color:var(--text);border-color:var(--border)}
 body.dark #pc-result{color:var(--text)}
+/* ── v5.18: runtime text-size setting (More → Appearance → Text size) ──
+   Default leaves the app untouched; .fs-bumped / .fs-larger / .fs-xl bump
+   the --fs-* tokens and floor the smallest chips so the floor stays at 11 /
+   12 / 13 px respectively. Cardio toggle is held at 13 px in all bumped
+   variants so the 5 chips don't wrap at iPhone-12 width. */
+body.fs-bumped { --fs-xs:12px; --fs-sm:13px; --fs-md:16px; --fs-lg:17px; --fs-xl:22px }
+body.fs-larger { --fs-xs:13px; --fs-sm:14px; --fs-md:17px; --fs-lg:19px; --fs-xl:24px }
+body.fs-xl     { --fs-xs:15px; --fs-sm:16px; --fs-md:19px; --fs-lg:21px; --fs-xl:26px }
+/* Bumped — floors */
+body.fs-bumped .meas-stat-sub,body.fs-bumped .milestone-progress-cap,body.fs-bumped .prog-recap-chip,body.fs-bumped .ssc-h,body.fs-bumped .ex-stat-label,body.fs-bumped .ex-cat{font-size:11px !important}
+body.fs-bumped .vol-seg-btn,body.fs-bumped .aim-cap,body.fs-bumped .coach-sub{font-size:12px !important}
+body.fs-bumped .coach-line,body.fs-bumped .cardio-machine-btn{font-size:13px !important}
+body.fs-bumped .sess-lift-set,body.fs-bumped .day-bal-hint{font-size:12.5px !important}
+body.fs-bumped .prog-recap-s,body.fs-bumped .mgr-ex-count{font-size:13px !important}
+body.fs-bumped .tab{font-size:11px !important}
+body.fs-bumped .prog-tab-btn{font-size:12.5px !important}
+/* Larger — floors */
+body.fs-larger .meas-stat-sub,body.fs-larger .milestone-progress-cap,body.fs-larger .prog-recap-chip,body.fs-larger .ssc-h,body.fs-larger .ex-stat-label,body.fs-larger .ex-cat{font-size:12px !important}
+body.fs-larger .vol-seg-btn,body.fs-larger .aim-cap,body.fs-larger .coach-sub{font-size:13px !important}
+body.fs-larger .coach-line{font-size:14px !important}
+body.fs-larger .cardio-machine-btn{font-size:13px !important}
+body.fs-larger .sess-lift-set{font-size:13.5px !important}
+body.fs-larger .prog-recap-s,body.fs-larger .mgr-ex-count{font-size:14px !important}
+body.fs-larger .day-bal-hint,body.fs-larger .prog-tab-btn{font-size:13.5px !important}
+body.fs-larger .tab{font-size:12px !important}
+/* XL — floors */
+body.fs-xl .meas-stat-sub,body.fs-xl .milestone-progress-cap,body.fs-xl .prog-recap-chip,body.fs-xl .ssc-h,body.fs-xl .ex-stat-label,body.fs-xl .ex-cat{font-size:13px !important}
+body.fs-xl .vol-seg-btn,body.fs-xl .aim-cap,body.fs-xl .coach-sub{font-size:14px !important}
+body.fs-xl .coach-line,body.fs-xl .cardio-machine-btn{font-size:15px !important}
+body.fs-xl .cardio-machine-btn{font-size:13px !important}      /* held tight to fit 5 chips */
+body.fs-xl .sess-lift-set,body.fs-xl .prog-recap-s,body.fs-xl .mgr-ex-count{font-size:15px !important}
+body.fs-xl .day-bal-hint,body.fs-xl .prog-tab-btn{font-size:14.5px !important}
+body.fs-xl .tab{font-size:13px !important}
 </style>
 </head>
 <body>
@@ -1161,7 +1194,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.17</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.18</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -1371,6 +1404,16 @@ body.dark #pc-result{color:var(--text)}
       <span class="rest-seg" id="units-seg" role="group" aria-label="Weight units">
         <button type="button" data-u="lbs" onclick="setUnits('lbs')">lbs</button>
         <button type="button" data-u="kg" onclick="setUnits('kg')">kg</button>
+      </span>
+    </div>
+    <!-- v5.18: text size — per-device, defaults to "Default" (= current sizes). -->
+    <div class="set-item">
+      <span>🔠 Text size</span>
+      <span class="rest-seg" id="text-size-seg" role="group" aria-label="Text size">
+        <button type="button" data-ts="default" onclick="setTextSize('default')">A</button>
+        <button type="button" data-ts="bumped"  onclick="setTextSize('bumped')">A+</button>
+        <button type="button" data-ts="larger"  onclick="setTextSize('larger')">A++</button>
+        <button type="button" data-ts="xl"      onclick="setTextSize('xl')">A+++</button>
       </span>
     </div>
   </div>
@@ -4029,6 +4072,7 @@ function openMore(){
   try{ _syncRestModeUI(); }catch(e){}
   try{ _syncEquipUI(); }catch(e){}
   try{ _syncUnitsUI(); }catch(e){}
+  try{ _syncTextSizeUI(getTextSize()); }catch(e){}
   _setDaySelectorVisible(false);
   try{ window.scrollTo(0,0); }catch(e){}
   _syncNav();
@@ -8565,7 +8609,7 @@ function clearPendingSync(){ try{ localStorage.removeItem('gymlog_sync_pending')
 // Uses sessionStorage so a mid-test reload stays in test mode, and the
 // snapshot is persisted so it can still be discarded after a reload.
 var TEST_MODE = sessionStorage.getItem('gym_test_mode')==='1';
-var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','plate_setup_v1','units_v1','gymlog_sync_pending','darkMode'];
+var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','plate_setup_v1','units_v1','gymlog_sync_pending','darkMode','milestones_earned_at','bodyweight_goal_v1','vol_chart_mode','text_size_v1','plan_intro_dismissed_v1'];
 function _testKeys(){
   var ks=[];
   for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i);
@@ -9745,6 +9789,34 @@ function _syncDarkToggleUI(isDark){
   if(isDark) document.body.classList.add('dark');
   _syncDarkToggleUI(isDark);
 })();
+
+// ── v5.18: runtime text-size setting ──────────────────────────────────────
+// Per-device (not synced). Default leaves the app at its shipped sizes;
+// bumped/larger/xl swap a body class that scopes the CSS overrides.
+var _TEXT_SIZES=['default','bumped','larger','xl'];
+function getTextSize(){
+  try{ var v=localStorage.getItem('text_size_v1')||'default'; return _TEXT_SIZES.indexOf(v)>=0?v:'default'; }
+  catch(e){ return 'default'; }
+}
+function setTextSize(pref){
+  if(_TEXT_SIZES.indexOf(pref)<0) pref='default';
+  try{ localStorage.setItem('text_size_v1', pref); }catch(e){}
+  document.body.classList.remove('fs-bumped','fs-larger','fs-xl');
+  if(pref==='bumped') document.body.classList.add('fs-bumped');
+  else if(pref==='larger') document.body.classList.add('fs-larger');
+  else if(pref==='xl') document.body.classList.add('fs-xl');
+  _syncTextSizeUI(pref);
+  // Some surfaces bake font-derived geometry at render time (charts, muscle map);
+  // repaint Progress if it's visible.
+  try{ if(document.getElementById('p-prog') && document.getElementById('p-prog').classList.contains('show') && typeof renderProgress==='function') renderProgress(); }catch(e){}
+}
+function _syncTextSizeUI(pref){
+  var row=document.getElementById('text-size-seg'); if(!row) return;
+  [].slice.call(row.querySelectorAll('button')).forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-ts')===pref);
+  });
+}
+(function initTextSize(){ setTextSize(getTextSize()); })();
 
 // ── Haptic feedback ───────────────────────────────────────────────────────────────────
 function haptic(style){

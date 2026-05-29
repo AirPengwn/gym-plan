@@ -600,6 +600,40 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.18 · runtime text-size setting (Appearance → A / A+ / A++ / A+++) ──
+(function(){
+  const w=loadApp(makeStore({}));
+  // Default at boot
+  ok(w.getTextSize()==='default','v5.18 · default text size on boot');
+  ok(!w.document.body.classList.contains('fs-bumped'),'v5.18 · no fs-* class on default');
+  // Toggle through each size
+  w.setTextSize('bumped');
+  ok(w.getTextSize()==='bumped','v5.18 · setTextSize(bumped) persists');
+  ok(w.document.body.classList.contains('fs-bumped'),'v5.18 · body.fs-bumped applied');
+  ok(!w.document.body.classList.contains('fs-larger'),'v5.18 · prior classes cleared');
+  w.setTextSize('larger');
+  ok(w.document.body.classList.contains('fs-larger') && !w.document.body.classList.contains('fs-bumped'),'v5.18 · larger applied, bumped cleared');
+  w.setTextSize('xl');
+  ok(w.document.body.classList.contains('fs-xl') && !w.document.body.classList.contains('fs-larger'),'v5.18 · xl applied, prior cleared');
+  // localStorage persists across "reload"
+  ok(w.localStorage.getItem('text_size_v1')==='xl','v5.18 · text_size_v1 persisted in localStorage');
+  // Invalid value → falls back to default
+  w.setTextSize('garbage');
+  ok(w.getTextSize()==='default','v5.18 · invalid input falls back to default');
+  ok(!w.document.body.classList.contains('fs-bumped') && !w.document.body.classList.contains('fs-larger') && !w.document.body.classList.contains('fs-xl'),'v5.18 · invalid input clears all fs-* classes');
+  // UI: 4 buttons in the segmented control, "default" highlighted as on after init
+  var seg=w.document.getElementById('text-size-seg');
+  ok(seg && seg.querySelectorAll('button').length===4,'v5.18 · text-size control renders 4 buttons');
+  var onBtn=seg && seg.querySelector('button.on');
+  ok(onBtn && onBtn.getAttribute('data-ts')==='default','v5.18 · "default" button highlighted after reset');
+  // CSS rule presence (no visual change unless class is set)
+  var css=w.document.documentElement.innerHTML;
+  ok(/body\.fs-bumped\s*\{/.test(css),'v5.18 · body.fs-bumped CSS rule present');
+  ok(/body\.fs-larger\s*\{/.test(css),'v5.18 · body.fs-larger CSS rule present');
+  ok(/body\.fs-xl\s*\{/.test(css),'v5.18 · body.fs-xl CSS rule present');
+  w.close();
+})();
+
 // ── v5.14 · T8 Progress hierarchy (strap removed, recap chip, notice bell) ──
 (function(){
   // 1) Strap is gone — #prog-stats-row hidden in markup.
