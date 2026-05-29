@@ -227,16 +227,19 @@ body.dark .tray-ic.red{background:#3A1A1A} body.dark .tray-ic.warn{background:#3
 .tray-act{font-size:11px;font-weight:700;color:var(--primary);background:none;border:0;cursor:pointer;flex-shrink:0;padding:4px 6px}
 .tray-x{background:none;border:0;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:2px 6px;flex-shrink:0}
 /* Step 5 (audit §02): redesigned exercise card (head / sets / footer). */
-/* v5.15: the 44px checkbox used to top-align with the head, which optically
-   centered it on the eyebrow (when present) or below the name (when not).
-   Lift the eyebrow to a full-width strip via order:-1; center the checkbox
-   and right-side actions on the name/sub block so the control always pairs
-   with the bold exercise name regardless of eyebrow presence or name length. */
+/* v5.15: lift the category eyebrow to a full-width strip so the bold name
+   becomes the head's first line. v5.16: center the disk (and action buttons)
+   on the name's FIRST LINE specifically — not the name/sub block. The disk
+   anchors to row top; the head + actions are padded down by their own
+   "first-line offset" so all three vertical centers line up with the disk
+   midpoint. Works for 1- and 2-line names, with or without a subtitle. */
 .v2-card .item-top{align-items:flex-start;flex-wrap:wrap}
 .v2-card .ex-cat{display:block;order:-1;width:100%;margin:0 0 6px}
-.v2-card .checkbox,
-.v2-card .v2-actions{align-self:center}
-.v2-card .v2-head{display:flex;flex-direction:column;justify-content:center;min-height:44px}
+.v2-card .checkbox{align-self:flex-start}
+/* Push name first-line center to the disk center (disk:44px, name lh:1.3em). */
+.v2-card .v2-head{padding-top:calc((44px - 1.3em) / 2)}
+/* Action buttons (Rest 32px / ⋯ 32px) get a smaller offset to land at the same line. */
+.v2-card .v2-actions{align-self:flex-start;padding-top:calc((44px - 32px) / 2)}
 .v2-head{flex:1;min-width:0}
 .v2-head .ex-name{font-size:var(--fs-md);font-weight:600;color:var(--text);line-height:1.3}
 .v2-head .ex-sub{font-size:var(--fs-sm);color:var(--muted);margin-top:2px;line-height:1.4}
@@ -591,8 +594,12 @@ body.dark .sess-summary-card{box-shadow:0 8px 28px rgba(0,0,0,.5),0 2px 8px rgba
 .date-input{width:100%;padding:8px 10px;font-size:13px;border:1px solid var(--border-soft);border-radius:8px;background:#fff;color:#2C2C2A;outline:none;font-family:inherit}
 .date-input:focus{border-color:#7F77DD}
 .cardio-fields{padding:0 12px 10px 44px;display:flex;flex-direction:column;gap:8px}
-.cardio-machine-toggle{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:2px}
-.cardio-machine-btn{padding:9px 12px;font-size:12px;font-weight:600;border-radius:8px;border:1.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer;min-height:38px}
+/* v5.16: 5 cardio machine chips share the row equally, no wrap. Each cell
+   takes 1/5 of the toggle width with reduced horizontal padding so even
+   "Treadmill"/"Elliptical" fit at iPhone 12 width (390 px). Truncates with
+   ellipsis as a graceful fallback at extremely narrow widths. */
+.cardio-machine-toggle{display:flex;flex-wrap:nowrap;gap:4px;margin-bottom:2px}
+.cardio-machine-btn{flex:1 1 0;min-width:0;padding:9px 4px;font-size:11.5px;font-weight:600;border-radius:8px;border:1.5px solid #D3D1C7;background:#F5F5F2;color:#888780;cursor:pointer;min-height:38px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
 .cardio-machine-btn.active{background:#5B4EA8;border-color:#5B4EA8;color:#fff}
 .cardio-machine-panel{display:none;flex-direction:column;gap:6px}
 .cardio-machine-panel.show{display:flex}
@@ -1147,7 +1154,7 @@ body.dark #pc-result{color:var(--text)}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.15</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.16</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -5726,13 +5733,25 @@ function exCatMins(domId){
     if(!el) return;
     var nameEl=el.querySelector('.ex-name');
     if(!nameEl) return;
-    if(nameEl.parentNode.querySelector('.ex-cat')) return; // already injected
+    if(el.querySelector('.ex-cat')) return; // already injected anywhere in the card
     var cm=exCatMins(domId);
     if(!cm.cat) return;
     var tag=document.createElement('div');
     tag.className='ex-cat';
     tag.textContent=cm.cat+(cm.mins!=null?(' · '+cm.mins+' min'):'');
-    nameEl.parentNode.insertBefore(tag, nameEl);
+    // v5.16: on v2 cards, the eyebrow lives at .item-top level (as a flex
+    // sibling of the checkbox) so the `.v2-card .ex-cat{order:-1;width:100%}`
+    // rule can pull it onto its own full-width row above the checkbox+name+
+    // actions. On legacy .item cards, keep the original placement (inside
+    // the head div, above the name) so existing layout doesn't shift.
+    var head=nameEl.parentNode;
+    var itemTop=head && head.parentNode;
+    var isV2=head && head.classList && head.classList.contains('v2-head');
+    if(isV2 && itemTop){
+      itemTop.insertBefore(tag, itemTop.firstChild);
+    } else {
+      head.insertBefore(tag, nameEl);
+    }
   });
 })();
 
