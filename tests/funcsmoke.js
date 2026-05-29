@@ -600,6 +600,45 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.22 · cardio sessions now contribute to weekly muscle load ──
+(function(){
+  const w=loadApp(makeStore({}));
+  // Strength baseline so prior weeks exist (otherwise everything's 'moderate')
+  var now=Date.now(), DAY=86400000;
+  w.localStorage.setItem('gymlog_a', JSON.stringify([
+    {label:'D1',date:'',ts:now-21*DAY,entries:[{ex:'Lat pulldown',note:'Set 1: 100 lbs x10reps'}]}
+  ]));
+  // This week: cardio-only session — 30 min treadmill via the warmup-style fields.
+  w.localStorage.setItem('gymlog_c', JSON.stringify([
+    {label:'D3',date:'',ts:now-1*DAY,entries:[
+      {ex:'wu-c-treadmill-speed', note:'2.5 mph'},
+      {ex:'wu-c-treadmill-duration', note:'30 min'},
+      {ex:'wu-c-treadmill-distance', note:'1.2 mi'}
+    ]}
+  ]));
+  var load=w.computeWeeklyMuscleLoad();
+  ok(load.quad && load.quad!=='none','v5.22 · cardio counts toward quads (got '+load.quad+')');
+  ok(load.glute && load.glute!=='none','v5.22 · cardio counts toward glutes');
+  ok(load.calf && load.calf!=='none','v5.22 · cardio counts toward calves');
+  ok(load.hamstring && load.hamstring!=='none','v5.22 · cardio counts toward hamstrings');
+  // CARDIO_MODALITY_MUSCLES + CARDIO_VOL_PER_MINUTE present
+  ok(w.CARDIO_MODALITY_MUSCLES && w.CARDIO_MODALITY_MUSCLES.treadmill,'v5.22 · CARDIO_MODALITY_MUSCLES map defined');
+  ok(typeof w.CARDIO_VOL_PER_MINUTE==='number','v5.22 · CARDIO_VOL_PER_MINUTE calibration constant defined');
+  // Row variant exercises upper body too
+  w.localStorage.setItem('gymlog_c', JSON.stringify([
+    {label:'D3',date:'',ts:now-1*DAY,entries:[
+      {ex:'wu-c-row-duration', note:'20 min'}
+    ]}
+  ]));
+  var loadR=w.computeWeeklyMuscleLoad();
+  ok(loadR.lat && loadR.lat!=='none','v5.22 · rowing trains lats');
+  ok(loadR['upper-back'] && loadR['upper-back']!=='none','v5.22 · rowing trains upper-back');
+  // Muscle drill-down also picks up cardio
+  var info=w._muscleExercises('quad');
+  ok(info.lastEx==='Row','v5.22 · _muscleExercises shows the cardio modality as "last trained" ('+info.lastEx+')');
+  w.close();
+})();
+
 // ── v5.18 · runtime text-size setting (Appearance → A / A+ / A++ / A+++) ──
 (function(){
   const w=loadApp(makeStore({}));
