@@ -1230,7 +1230,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.21</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.22</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -7622,8 +7622,19 @@ function _muscleExercises(key){
       getSaved(d).forEach(function(s){
         var ts=sessTs(s); if(!ts) return;
         (s.entries||[]).forEach(function(e){
-          if(!e||!e.ex||!e.note||e.note.indexOf('Set ')!==0) return;
+          if(!e||!e.ex||!e.note) return;
           if(/-(rpe|pain|pr)$/.test(e.ex)) return;
+          // v5.22: cardio entries also count toward "last trained" for any
+          // muscle the modality primarily hits.
+          var cm=e.ex.match(/-(treadmill|elliptical|bike|stair|stairs|row|rowing)-duration$/i);
+          if(cm){
+            var mod=cm[1].toLowerCase();
+            var cMs=CARDIO_MODALITY_MUSCLES[mod]||[];
+            if(cMs.indexOf(key)===-1) return;
+            if(ts>out.lastTs){ out.lastTs=ts; out.lastEx=mod.charAt(0).toUpperCase()+mod.slice(1); }
+            return;
+          }
+          if(e.note.indexOf('Set ')!==0) return;
           if((_musclesForHist(e.ex)||[]).indexOf(key)===-1) return;
           if(ts>out.lastTs){ out.lastTs=ts; out.lastEx=prettyExName(normalizeEx(e.ex))||e.ex; }
         });
@@ -7690,6 +7701,22 @@ function _median(a){
 // Volume = Σ weight×reps per set (reps fall back to the exercise's target,
 // then 10). This week is bucketed against that muscle's own prior-week
 // history (median of non-zero prior weeks); sparse history → 'moderate'.
+// v5.22: muscle groups primarily trained by each cardio modality. Used by
+// computeWeeklyMuscleLoad so cardio sessions also light up the heat map
+// instead of registering as zero contribution.
+var CARDIO_MODALITY_MUSCLES={
+  treadmill:  ['quad','hamstring','glute','calf'],
+  elliptical: ['quad','hamstring','glute','calf'],
+  bike:       ['quad','hamstring','glute','calf'],
+  stair:      ['quad','glute','calf'],
+  stairs:     ['quad','glute','calf'],   // tolerate plural spelling
+  row:        ['lat','upper-back','rear-delt','bicep','quad','hamstring','glute','core-front'],
+  rowing:     ['lat','upper-back','rear-delt','bicep','quad','hamstring','glute','core-front']
+};
+// Approximate "1 minute of cardio = N vol units per primary muscle."
+// Calibrated so a 25-minute steady cardio session lands at roughly the
+// per-muscle volume of one moderate strength exercise (~2000 units).
+var CARDIO_VOL_PER_MINUTE=80;
 function computeWeeklyMuscleLoad(){
   var targets=(typeof getExerciseTargets==='function')?getExerciseTargets():{};
   var weeks={}; // weekTime -> {muscle: vol}
@@ -7698,8 +7725,26 @@ function computeWeeklyMuscleLoad(){
       var ts=sessTs(sess); if(!ts) return;
       var wk=_isoWeekKey(ts);
       (sess.entries||[]).forEach(function(e){
-        if(!e || !e.ex || !e.note || e.note.indexOf('Set ')!==0) return;
+        if(!e || !e.ex || !e.note) return;
         if(/-(rpe|pain|pr)$/.test(e.ex)) return;
+        // v5.22: cardio entries — pattern <prefix>-<modality>-duration with a
+        // minutes value in the note. Each contributes minutes × CARDIO_VOL_PER_MINUTE
+        // to every muscle the modality primarily trains.
+        var cm=e.ex.match(/-(treadmill|elliptical|bike|stair|stairs|row|rowing)-duration$/i);
+        if(cm){
+          var mod=cm[1].toLowerCase();
+          var minMatch=String(e.note||'').match(/[\d.]+/);
+          var mins=minMatch?parseFloat(minMatch[0]):0;
+          var cMs=CARDIO_MODALITY_MUSCLES[mod];
+          if(mins>0 && cMs && cMs.length){
+            var cVol=mins*CARDIO_VOL_PER_MINUTE;
+            if(!weeks[wk]) weeks[wk]={};
+            cMs.forEach(function(m){ weeks[wk][m]=(weeks[wk][m]||0)+cVol; });
+          }
+          return; // do not also try to parse as a strength entry
+        }
+        // Strength path: note must start with "Set ".
+        if(e.note.indexOf('Set ')!==0) return;
         var sets=parseSetWR(e.note); if(!sets.length) return;
         var t=targets[normalizeEx(e.ex)];
         var tRep=(t&&t.reps)?t.reps:10;
