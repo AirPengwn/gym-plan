@@ -44,8 +44,11 @@ ok(typeof st.avgDaysBetween==='number' && st.avgDaysBetween>0,'avg days between 
 // ── the activity calendar renders the last 12 weeks with a legend + day cells ──
 var heat=w.renderActivityHeatmap();
 ok(/last 12 weeks/.test(heat),'activity heatmap titled "last 12 weeks"');
-ok(/Less/.test(heat) && /More/.test(heat),'activity heatmap has the Less→More legend');
+// v5.19: legend is now explicit ("rest · 1 session · 2+ sessions") instead of "Less → More".
+ok(/rest/.test(heat) && /1 session/.test(heat) && /2\+ sessions/.test(heat),'activity heatmap legend spells out the color meanings');
 ok(/session/.test(heat),'activity heatmap cells carry session-count tooltips');
+ok(/hm-dow/.test(heat) && /hm-cell/.test(heat),'v5.19 · day-of-week labels + cell grid markup present');
+ok(/hm-cell\s+high\s+today|hm-cell\s+med\s+today|hm-cell\s+rest\s+today/.test(heat) || /hm-cell rest today|hm-cell med today|hm-cell high today/.test(heat),'v5.19 · today cell carries the .today class');
 
 // ── longestStreak chronological-sort fix: a streak straddling day 9↔10 counts ──
 // (build 3 consecutive days anchored so the block includes a single→double-digit
