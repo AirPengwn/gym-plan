@@ -546,6 +546,29 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.14 · T9 dividers + T10 token cleanups ──
+(function(){
+  const w=loadApp(makeStore({}));
+  var css=w.document.documentElement.innerHTML;
+  // T9 · "Last 21 days" line uses divider styling, no colored bg.
+  ok(/\.day-bal-hint\{[^}]*background:transparent[^}]*border-top:1px solid var\(--border-soft\)/.test(css),'v5.14 T9 · day-bal-hint uses transparent bg + top/bottom dividers');
+  // T10 · tokens added
+  ok(/--muted-2:\s*#9896C8/.test(css),'v5.14 T10 · --muted-2 token defined in dark');
+  ok(/--muted-deep:\s*#5C5A80/.test(css),'v5.14 T10 · --muted-deep token defined in dark');
+  ok(/--gold:\s*#FFD740/.test(css),'v5.14 T10 · --gold token defined');
+  // Raw hex usage of replaced shades is gone (excluding token decls themselves).
+  // We allow the hex in the :root/body.dark token declarations only.
+  var bodyOnly=css;
+  ['9896C8','9E9CC4','B4B2D8'].forEach(function(h){
+    // Count occurrences outside the line "--muted-2: #XXXXXX"
+    var rgx=new RegExp('#'+h,'gi');
+    var occurrences=(bodyOnly.match(rgx)||[]).length;
+    // Only the 1 token decl + maybe a comment line remains; 2 max is OK.
+    ok(occurrences<=2,'v5.14 T10 · raw #'+h+' nearly eliminated ('+occurrences+' left, ≤2 expected)');
+  });
+  w.close();
+})();
+
 // ── v5.14 · T8 Progress hierarchy (strap removed, recap chip, notice bell) ──
 (function(){
   // 1) Strap is gone — #prog-stats-row hidden in markup.

@@ -35,7 +35,8 @@ ok(w._streakPill(2,10)==='','Step 1 · _streakPill empty when current<50% longes
 // 1d. .delta-pb CSS uses spec colors.
 var css=D.documentElement.innerHTML;
 ok(/\.delta-pb\{background:#FBF1D6;color:#8C6500\}/.test(css),'Step 1 · .delta-pb light colors match spec (#FBF1D6 / #8C6500)');
-ok(/body\.dark \.delta-pb\{background:#3A2E00;color:#FFD740\}/.test(css),'Step 1 · .delta-pb dark colors match spec');
+// v5.14 (T10): #FFD740 → var(--gold). Color still resolves to the same hex.
+ok(/body\.dark \.delta-pb\{background:#3A2E00;color:var\(--gold\)\}/.test(css),'Step 1 · .delta-pb dark colors match spec (v5.14: var(--gold))');
 // 1e. Body-measurements summary now uses deltaPill.
 // v5.14 (T2-B5): bodyweight Change is colored ONLY when a goal is explicitly set.
 // Seed two weight entries (start 200, current 185 — loss) and goal=down.

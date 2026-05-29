@@ -35,9 +35,15 @@
   --good:           #0F6E56;
   --warn:           #E0A800;
   --bad:            #C53030;
-  /* v5.14 (T10): tokenized card surface + reusable celebratory gold. */
+  /* v5.14 (T10): tokenized card surface + reusable celebratory gold + the two
+     "lavender-gray" muted shades that were sprinkled across dark-mode rules.
+     muted-2 collapses the close trio (#9896C8/var(--muted-2)/var(--muted-2)); muted-deep is
+     the noticeably darker var(--muted-deep) kept distinct. Light-mode values are picked
+     to be benign if these tokens are ever reused outside body.dark. */
   --card:           #ffffff;
   --gold:           #FFD740;
+  --muted-2:        #8E8AAA;
+  --muted-deep:     #6E6C66;
   /* v4.20 (nit 19): radius scale (the useful slice of the deferred 5.3 token pass) */
   --r-sm:  8px;
   --r:     12px;
@@ -53,12 +59,14 @@
 body.dark{
   --surface:        #1A1A2E;
   --text:           #E8E6F8;
-  --muted:          #8B89B0;   /* nudged up from #5C5A80 for AA */
+  --muted:          #8B89B0;   /* nudged up from var(--muted-deep) for AA */
   --border:         #3C3A5C;
   --border-soft:    #3C3A5C;
   --primary-tint:   #2A2850;
   --ghost:          #A7A2CE;   /* italic prefill, dark theme — legible, italic is the cue (nit 5) */
   --card:           #252540;   /* v5.14 (T10): matches body.dark .item bg */
+  --muted-2:        #9896C8;   /* the bright lavender-gray (was sprinkled raw) */
+  --muted-deep:     #5C5A80;   /* the dark lavender-gray (deeper "muted") */
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:420px;margin:0 auto}
@@ -79,7 +87,7 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .progress-label{display:flex;justify-content:space-between;font-size:12px;color:#888780}
 .section-hdr{font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:0.07em;margin:0.5rem 0 0.4rem;padding-bottom:4px;border-bottom:0.5px solid var(--border-soft)}
 .ex-cat{display:inline-block;font-size:9px;font-weight:700;color:#534AB7;background:#EEEDFE;border-radius:4px;padding:1px 5px;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em}
-body.dark .ex-cat{background:var(--primary-tint);color:#9896C8}
+body.dark .ex-cat{background:var(--primary-tint);color:var(--muted-2)}
 .day-summary{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:0.75rem;box-shadow:0 1px 3px rgba(91,78,168,0.06)}
 .day-summary-title{font-size:10px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px}
 .day-summary-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
@@ -88,10 +96,10 @@ body.dark .ex-cat{background:var(--primary-tint);color:#9896C8}
 .day-summary-total{display:flex;align-items:center;gap:6px;border-top:1px solid #F1EFE8;padding-top:8px;font-size:12px;font-weight:700;color:#5B4EA8}
 .day-summary-total span{font-weight:400;color:#888780;font-size:11px}
 body.dark .day-summary{background:#252540;border-color:var(--border)}
-body.dark .day-summary-chip{background:var(--surface);color:#B4B2D8}
-body.dark .day-summary-title{color:#5C5A80}
-body.dark .day-summary-total{color:#9896C8;border-top-color:var(--border)}
-body.dark .day-summary-total span{color:#5C5A80}
+body.dark .day-summary-chip{background:var(--surface);color:var(--muted-2)}
+body.dark .day-summary-title{color:var(--muted-deep)}
+body.dark .day-summary-total{color:var(--muted-2);border-top-color:var(--border)}
+body.dark .day-summary-total span{color:var(--muted-deep)}
 .item{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(91,78,168,0.06)}
 .item.done{background:#F5F5F2}
 .item-top{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer}
@@ -181,7 +189,7 @@ body.timer-active.complete-ready .day-panel.show{padding-bottom:140px}
 /* Per-exercise manual rest timer button */
 .item-timer-btn{background:#EEEDFE;border:1px solid var(--border-soft);border-radius:20px;cursor:pointer;padding:3px 12px;min-height:32px;box-sizing:border-box;font-size:11px;font-weight:600;line-height:1.4;color:#5B4EA8;flex-shrink:0;display:flex;align-items:center;gap:3px;white-space:nowrap}
 .item-timer-btn:active{background:#D8D4F0}
-body.dark .item-timer-btn{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .item-timer-btn{background:#252540;border-color:var(--border);color:var(--muted-2)}
 .notes-row{display:flex;gap:6px;align-items:center}
 .notes-input{flex:1;font-size:16px;padding:5px 8px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
 .last-time{font-size:11px;color:#7F77DD;background:#EEEDFE;border-radius:6px;padding:5px 8px;margin-bottom:2px;line-height:1.5;display:none}
@@ -203,7 +211,7 @@ body.dark #notice-tray{background:#252540;border-color:var(--border)}
 .notice-bell:hover{color:var(--text)}
 .notice-bell-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--warn);border-radius:50%;border:2px solid var(--surface);display:none}
 .notice-bell[data-unread]:not([data-unread="0"]) .notice-bell-dot{display:block}
-body.dark .notice-bell{color:#9896C8}
+body.dark .notice-bell{color:var(--muted-2)}
 body.dark .notice-bell:hover{color:var(--text)}
 body.dark .notice-bell-dot{border-color:#1A1A2E}
 .tray-head{display:flex;justify-content:space-between;align-items:center;padding:8px 11px;font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;border-bottom:.5px solid var(--border-soft)}
@@ -212,7 +220,7 @@ body.dark .notice-bell-dot{border-color:#1A1A2E}
 .tray-row:last-child{border-bottom:none}
 .tray-ic{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
 .tray-ic.red{background:#FBEAEA;color:var(--bad)} .tray-ic.warn{background:#FFF6DD;color:#9A7400} .tray-ic.info{background:var(--primary-tint);color:var(--primary)}
-body.dark .tray-ic.red{background:#3A1A1A} body.dark .tray-ic.warn{background:#3A2E00;color:#FFD740} body.dark .tray-ic.info{background:var(--primary-tint);color:var(--primary-2)}
+body.dark .tray-ic.red{background:#3A1A1A} body.dark .tray-ic.warn{background:#3A2E00;color:var(--gold)} body.dark .tray-ic.info{background:var(--primary-tint);color:var(--primary-2)}
 .tray-bd{flex:1;min-width:0}
 .tray-t{font-size:12px;font-weight:700;color:var(--text);line-height:1.3}
 .tray-m{font-size:11px;color:var(--muted);line-height:1.4;margin-top:1px}
@@ -334,7 +342,7 @@ body.dark .set-dev-summary{color:var(--muted)}
 .primary-toggle-hint.pt-primary{color:var(--good)}
 .primary-toggle-hint.pt-reader{color:var(--warn)}
 body.dark .primary-toggle-hint.pt-primary{color:#5DD8A0}
-body.dark .primary-toggle-hint.pt-reader{color:#FFD740}
+body.dark .primary-toggle-hint.pt-reader{color:var(--gold)}
 #hdr-menu[hidden]{display:none}
 /* Follow-up 4: AA contrast for the expanded card footer (both themes) */
 /* v4.16 (nit 9): last-time is now always-on (above the sets), not in .v2-foot. */
@@ -344,7 +352,7 @@ body.dark .primary-toggle-hint.pt-reader{color:#FFD740}
 .v2-foot .notes-input{color:var(--text)}
 .v2-foot .notes-input::placeholder{color:var(--muted);opacity:1}
 body.dark .v2-card .last-time{background:var(--primary-tint)}
-body.dark .v2-foot .rpe-ends{color:#9E9CC4}
+body.dark .v2-foot .rpe-ends{color:var(--muted-2)}
 /* Patch-2 Step 1: inline progress badge on the card head */
 .v2-nudge{display:none;margin-top:4px}
 .v2-nudge.show{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;border-radius:8px;padding:2px 8px}
@@ -382,8 +390,11 @@ body.dark .day-ovf-btn{background:#252540;border-color:var(--border);color:var(-
 .day-ovf-menu .reset-btn:hover{background:var(--border-soft)}
 body.dark .day-ovf-menu .reset-btn{background:none;border:0;color:var(--text)}
 /* v4.9 — per-day balance hint (last-7d logged mix; distinct from the plan pill) */
-.day-bal-hint{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11px;color:var(--muted);background:var(--primary-tint,#F3F1FB);border-radius:9px;padding:7px 11px;margin:0 0 10px}
-body.dark .day-bal-hint{background:#252540}
+/* v5.14 (T9): the "Last 21 days · …" line is the only "you-are-here" cue on
+   the Workout screen. Replaces the colored chip background with thin dividers
+   above + below for breathing room. Type size unchanged. */
+.day-bal-hint{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11px;color:var(--muted);background:transparent;border-top:1px solid var(--border-soft);border-bottom:1px solid var(--border-soft);border-radius:0;padding:10px 2px;margin:14px 0}
+body.dark .day-bal-hint{background:transparent;border-top-color:var(--border-soft);border-bottom-color:var(--border-soft)}
 .day-bal-hint b{color:var(--text);font-weight:700}
 .day-bal-hint .day-bal-hint-lead{font-weight:700;color:var(--text)}
 .day-bal-hint .day-bal-hint-sep{opacity:.5}
@@ -576,56 +587,56 @@ body.dark .modal-overlay{background:rgba(0,0,0,0.4)}
 body.dark{background:var(--surface);color:var(--text)}
 body.dark .item{background:#252540;border-color:var(--border)}
 body.dark .ex-name{color:var(--text)}
-body.dark .ex-sub{color:#9896C8}
+body.dark .ex-sub{color:var(--muted-2)}
 body.dark .ex-loc{color:#7F77DD}
-body.dark .item.done .ex-name{color:#5C5A80;text-decoration:line-through}
+body.dark .item.done .ex-name{color:var(--muted-deep);text-decoration:line-through}
 body.dark .item.done .ex-sub,body.dark .item.done .ex-loc{color:#9A95C4}
 body.dark .day-selector{background:transparent;border:0}
 body.dark .day-btn{background:var(--surface);border-color:var(--border);color:#C7C4EE}
 body.dark .day-btn.active{background:#5B4EA8;color:#fff;border-color:#5B4EA8}
-body.dark .prog-tab-btn{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .prog-tab-btn{background:#252540;border-color:var(--border);color:var(--muted-2)}
 body.dark .prog-tab-btn.active{background:#5B4EA8;color:#fff}
 body.dark .prog-stats{background:transparent}
 body.dark .stat-box{background:var(--surface)}
-body.dark .stat-num{color:#B4B2D8}
+body.dark .stat-num{color:var(--muted-2)}
 body.dark .prog-day-card{background:#252540;border-color:var(--border)}
 body.dark .prog-day-title{color:var(--text)}
-body.dark .prog-day-sub{color:#9896C8}
-body.dark .prog-day-count{background:var(--primary-tint);color:#B4B2D8}
+body.dark .prog-day-sub{color:var(--muted-2)}
+body.dark .prog-day-count{background:var(--primary-tint);color:var(--muted-2)}
 body.dark .prog-day-header:hover{background:var(--primary-tint)}
 .prog-session-notes{padding:8px 14px;font-size:12px;color:#7F77DD;font-style:italic;border-top:0.5px solid #F1EFE8}
 .prog-session-dur{font-size:11px;color:#888780;font-weight:400}
 body.dark .prog-session-notes{color:#7F77DD;border-top-color:var(--border)}
-body.dark .prog-session-dur{color:#5C5A80}
-body.dark .prog-session-date{color:#9896C8}
-body.dark .prog-session-item{color:#B4B2D8}
+body.dark .prog-session-dur{color:var(--muted-deep)}
+body.dark .prog-session-date{color:var(--muted-2)}
+body.dark .prog-session-item{color:var(--muted-2)}
 body.dark .prog-session-item b{color:var(--text)}
 body.dark .prog-session-item span{color:#7F77DD}
 body.dark .sess-nav-label{color:#7F77DD}
 body.dark .prog-clear-btn{background:#2A1A1A;border-color:#7A2020;color:#FF8080}
 body.dark .prog-clear-btn:hover{background:#3A1A1A}
-body.dark .muscle-map-title{color:#9896C8}
+body.dark .muscle-map-title{color:var(--muted-2)}
 body.dark .ex-detail-panel{background:#252540;border-color:var(--border)}
 body.dark .stat-card{background:#252540}
-body.dark .stat-card-label{color:#9896C8}
-body.dark .stat-card-val{color:#B4B2D8}
+body.dark .stat-card-label{color:var(--muted-2)}
+body.dark .stat-card-val{color:var(--muted-2)}
 body.dark .meas-entry-card,.dark .meas-history-item{background:#252540;border-color:var(--border)}
 body.dark .modal{background:#252540;color:var(--text)}
 body.dark .modal-title{color:var(--text)}
-body.dark .modal-sub{color:#9E9CC4}
+body.dark .modal-sub{color:var(--muted-2)}
 #session-notes{background:#fff;color:#2C2C2A;border:1px solid var(--border-soft)}
 body.dark .date-input,body.dark #session-notes{background:var(--surface);color:var(--text);border-color:var(--border)}
 body.dark .modal-textarea{background:var(--surface);color:var(--text);border-color:var(--border)}
 body.dark .date-input-wrap{background:#252540;border-color:var(--border)}
-body.dark .date-input-label{color:#9E9CC4}
-body.dark .modal-btn-secondary{background:var(--surface-dark);color:#9E9CC4;border-color:var(--border)}
+body.dark .date-input-label{color:var(--muted-2)}
+body.dark .modal-btn-secondary{background:var(--surface-dark);color:var(--muted-2);border-color:var(--border)}
 /* Dark-mode input chrome for the three input families (set weight / cardio / notes) */
 body.dark .rep-input,body.dark .cardio-input,body.dark .notes-input{background:#1F1D38;color:var(--text);border-color:var(--border)}
 body.dark #share-modal{background:#252540}
 body.dark #share-text{background:var(--surface);color:var(--text);border-color:var(--border)}
 body.dark .sess-nav{background:#252540}
-body.dark .sess-nav-btn{background:var(--surface);border-color:var(--border);color:#B4B2D8}
-body.dark .prog-empty{color:#9896C8}
+body.dark .sess-nav-btn{background:var(--surface);border-color:var(--border);color:var(--muted-2)}
+body.dark .prog-empty{color:var(--muted-2)}
 body.dark .skip-row{background:var(--surface);border-color:var(--border)}
 body{transition:background 0.2s,color 0.2s}
 
@@ -644,13 +655,13 @@ body{transition:background 0.2s,color 0.2s}
 .checkin-done{font-size:12px;color:#888780;padding:4px 0 6px;display:flex;align-items:center;gap:6px}
 /* ── Progressive overload nudge ── */
 .overload-nudge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#085041;background:#D4F0E2;border-radius:8px;padding:2px 8px;margin-top:3px}
-body.dark .checkin-bar .checkin-label{color:#5C5A80}
+body.dark .checkin-bar .checkin-label{color:var(--muted-deep)}
 body.dark .checkin-btn{background:#252540;border-color:var(--border);color:var(--text)}
-body.dark .checkin-btn span{color:#5C5A80}
+body.dark .checkin-btn span{color:var(--muted-deep)}
 body.dark .checkin-btn.selected-great{background:#0F3A2E;border-color:#0F6E56}
 body.dark .checkin-btn.selected-great span{color:#5DD8A0}
 body.dark .checkin-btn.selected-okay{background:#3A2E00;border-color:#B8860B}
-body.dark .checkin-btn.selected-okay span{color:#FFD740}
+body.dark .checkin-btn.selected-okay span{color:var(--gold)}
 body.dark .checkin-btn.selected-tired{background:#3A1A1A;border-color:#C53030}
 body.dark .checkin-btn.selected-tired span{color:#FF8080}
 body.dark .overload-nudge{background:#0F3A2E;color:#5DD8A0}
@@ -747,8 +758,8 @@ body.dark .rpe-pill{background:var(--primary-tint);color:#C7C4EE}
 .rpe-label{display:none}
 .rpe-val{display:none}
 .rpe-desc{display:none}
-body.dark .rpe-top-label{color:#5C5A80}
-body.dark .rpe-top-val{color:#9896C8}
+body.dark .rpe-top-label{color:var(--muted-deep)}
+body.dark .rpe-top-val{color:var(--muted-2)}
 body.dark .rpe-ends{color:var(--border)}
 body.dark .rpe-slider{background:linear-gradient(to right,#7F77DD 0%,#7F77DD var(--rpe-pct,0%),var(--border) var(--rpe-pct,0%),var(--border) 100%)}
 body.dark .rpe-slider::-webkit-slider-thumb{border-color:#252540}
@@ -777,11 +788,11 @@ body.dark .rpe-slider::-webkit-slider-thumb{border-color:#252540}
 .vol-chart-title{font-size:11px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
 /* ── Dark mode additions ── */
 body.dark .quick-fill-btn{background:#252540;border-color:#6562A0;color:#B4B2E0}
-body.dark .pain-btn{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .pain-btn{background:#252540;border-color:var(--border);color:var(--muted-2)}
 body.dark .pain-btn.active-ok{background:#0F3A2E;border-color:#0F6E56;color:#5DD8A0}
 body.dark .pain-btn.active-flag{background:#3A1A1A;border-color:#C53030;color:#FF8080}
-body.dark .milestone-badge.earned{background:#3A2E00;border-color:#E0A800;color:#FFD740}
-body.dark .milestone-badge.locked{background:#252540;border-color:var(--border);color:#5C5A80}
+body.dark .milestone-badge.earned{background:#3A2E00;border-color:#E0A800;color:var(--gold)}
+body.dark .milestone-badge.locked{background:#252540;border-color:var(--border);color:var(--muted-deep)}
 /* v5.14 (T6): "Up next" + collapsed-locked variants. Up-next is wider, shows a
    tiny progress bar (var(--gold)) for milestones with a numeric target. The
    collapsed rest hides behind a small text button; dim outline, no 🔒 glyph. */
@@ -795,43 +806,43 @@ body.dark .milestone-badge.locked{background:#252540;border-color:var(--border);
 .milestone-badge.locked-dim{background:transparent;border:1px dashed var(--border);color:var(--muted);font-weight:600;padding:4px 9px}
 body.dark .milestone-badge.upnext{border-color:var(--border)}
 body.dark .milestone-progress{background:var(--border)}
-body.dark .milestone-badge.locked-dim{border-color:var(--border);color:#5C5A80}
-body.dark .mgr-day-label{color:#B4B2D8;border-bottom-color:var(--border)}
+body.dark .milestone-badge.locked-dim{border-color:var(--border);color:var(--muted-deep)}
+body.dark .mgr-day-label{color:var(--muted-2);border-bottom-color:var(--border)}
 body.dark .ex-list-btn:hover{background:var(--primary-tint);border-color:#7F77DD}
-body.dark .ex-list-btn.active{background:var(--primary-tint);border-color:#5B4EA8;color:#B4B2D8}
-body.dark .ex-session-count{background:var(--primary-tint);color:#9896C8}
+body.dark .ex-list-btn.active{background:var(--primary-tint);border-color:#5B4EA8;color:var(--muted-2)}
+body.dark .ex-session-count{background:var(--primary-tint);color:var(--muted-2)}
 body.dark .ex-detail-panel{background:#252540;border-color:var(--border)}
 body.dark .ex-history-item{border-bottom-color:var(--border)}
-body.dark .ex-history-date{color:#9896C8}
-body.dark .ex-history-sets{color:#B4B2D8}
+body.dark .ex-history-date{color:var(--muted-2)}
+body.dark .ex-history-sets{color:var(--muted-2)}
 body.dark .ex-stat-row{border-bottom-color:var(--border)}
-body.dark .ex-stat-chip{background:var(--primary-tint);color:#B4B2D8}
-body.dark .ex-stat-chip.gold{background:#3A2E00;color:#FFD740}
+body.dark .ex-stat-chip{background:var(--primary-tint);color:var(--muted-2)}
+body.dark .ex-stat-chip.gold{background:#3A2E00;color:var(--gold)}
 body.dark .ex-stat-chip.ex-stat-std{background:#2A2850;color:var(--primary-2)}
 body.dark .ex-stat-chip.green{background:#0F3A2E;color:#5DD8A0}
 body.dark .chart-wrap{background:#1E1E38;border-top-color:var(--border)}
-body.dark .chart-title{color:#9896C8}
+body.dark .chart-title{color:var(--muted-2)}
 body.dark .vol-chart-wrap{background:#252540;border-color:var(--border)}
 body.dark .reps-actual-input{background:var(--surface);border-color:var(--border);color:var(--text)}
-body.dark .reps-col-label{color:#5C5A80}
-body.dark .session-timer-badge{background:#252540;color:#B4B2D8}
+body.dark .reps-col-label{color:var(--muted-deep)}
+body.dark .session-timer-badge{background:#252540;color:var(--muted-2)}
 /* Bottom-of-panel + sweep: surfaces that lacked dark variants */
-body.dark .tip{background:var(--primary-tint);border-left-color:var(--primary-2);color:#B4B2D8}
+body.dark .tip{background:var(--primary-tint);border-left-color:var(--primary-2);color:var(--muted-2)}
 body.dark .reset-btn{background:#252540;border-color:var(--border);color:var(--muted)}
 body.dark .item.done{background:#1F1D38}
-body.dark #share-close-btn{background:#252540;color:#B4B2D8}
+body.dark #share-close-btn{background:#252540;color:var(--muted-2)}
 body.dark .day-since-card{background:#252540}
-body.dark .meas-sub-btn{background:#252540;border-color:var(--border);color:#9896C8}
-body.dark .meas-unit-btn{background:#252540;border-color:var(--border);color:#9896C8}
-body.dark .cardio-machine-btn{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .meas-sub-btn{background:#252540;border-color:var(--border);color:var(--muted-2)}
+body.dark .meas-unit-btn{background:#252540;border-color:var(--border);color:var(--muted-2)}
+body.dark .cardio-machine-btn{background:#252540;border-color:var(--border);color:var(--muted-2)}
 body.dark .mgr-reorder-btn{background:#252540;border-color:var(--border);color:var(--text)}
-body.dark .unit-btn{background:var(--surface);color:#9896C8}
+body.dark .unit-btn{background:var(--surface);color:var(--muted-2)}
 body.dark .ex-list-btn{background:#252540;color:var(--text)}
 body.dark .mgr-ex-row{background:#252540;border-color:var(--border)}
 body.dark .mgr-ex-row.archived{background:#1F1D38;border-color:var(--border)}
 body.dark .mgr-ex-name{color:var(--text)}
 body.dark .mgr-ex-name.archived{color:var(--muted)}
-body.dark .mgr-archived-title{color:#9896C8}
+body.dark .mgr-archived-title{color:var(--muted-2)}
 body.dark .mgr-archived-section{border-top-color:var(--border)}
 body.dark .mgr-archive-btn{background:#3A1A1A;border-color:#7A2020;color:#FF8080}
 .mgr-edit-btn{background:#EEEDFE;border-color:var(--border-soft);color:#3C3489;margin-right:5px}
@@ -947,9 +958,9 @@ body.dark .sess-card mark,body.dark .sess-notes mark{background:#7A5A00;color:#F
 .sess-filter.empty{opacity:.35;pointer-events:none}
 .sess-cnt{font-size:10px;font-weight:700;color:var(--primary);background:#fff;border-radius:8px;padding:1px 6px;min-width:14px;text-align:center}
 .sess-filter.on .sess-cnt{color:var(--primary);background:#fff}
-body.dark .sess-filter{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .sess-filter{background:#252540;border-color:var(--border);color:var(--muted-2)}
 body.dark .sess-filter.on{background:var(--primary);border-color:var(--primary);color:#fff}
-body.dark .sess-cnt{background:var(--surface);color:#9896C8}
+body.dark .sess-cnt{background:var(--surface);color:var(--muted-2)}
 body.dark .sess-filter.on .sess-cnt{background:#fff;color:var(--primary)}
 .sess-day-clear{font-size:11px;font-weight:600;padding:4px 10px;background:transparent;border:1px solid var(--bad);border-radius:6px;color:var(--bad);cursor:pointer}
 body.dark .sess-day-clear{border-color:#7A2020;color:#FF8080}
@@ -975,8 +986,8 @@ body.dark .sess-ovf-danger{color:#FF8080}
 .sess-card-chips{display:flex;gap:5px;flex-wrap:wrap}
 .sess-meta-chip{font-size:11px;font-weight:600;color:var(--muted);background:var(--border-soft);border-radius:7px;padding:2px 7px;white-space:nowrap}
 .sess-meta-chip.sess-pr{background:#FFF8E1;color:#7A5A00}
-body.dark .sess-meta-chip{background:#1F1D38;color:#9896C8}
-body.dark .sess-meta-chip.sess-pr{background:#3A2E00;color:#FFD740}
+body.dark .sess-meta-chip{background:#1F1D38;color:var(--muted-2)}
+body.dark .sess-meta-chip.sess-pr{background:#3A2E00;color:var(--gold)}
 .sess-card-body{font-size:12px;color:var(--text);line-height:1.5}
 .sess-lift{display:flex;flex-direction:column;gap:2px;padding:4px 0;border-top:.5px solid var(--border-soft)}
 .sess-lift:first-child{border-top:0;padding-top:0}
@@ -987,7 +998,7 @@ body.dark .sess-lift{border-top-color:var(--border)}
    (e.g. "1 · On step") gracefully wrap inside their cell. */
 .sess-lift-sets{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:2px}
 .sess-lift-set{font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border-soft);border-radius:5px;padding:2px 8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-align:center}
-body.dark .sess-lift-set{background:var(--surface);border-color:var(--border);color:#B4B2D8}
+body.dark .sess-lift-set{background:var(--surface);border-color:var(--border);color:var(--muted-2)}
 .sess-lift-empty{font-style:italic;color:var(--muted)}
 /* v3.10: a note folded under its exercise + collapsible cardio bundle */
 .sess-lift-note{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45}
@@ -1002,12 +1013,12 @@ body.dark .sess-lift-set{background:var(--surface);border-color:var(--border);co
 body.dark .sess-cardio{border-color:var(--border)}
 body.dark .sess-cardio-line{border-top-color:var(--border)}
 .sess-notes{margin-top:6px;font-size:11.5px;color:var(--muted);background:var(--primary-tint);border-radius:6px;padding:6px 8px;line-height:1.5}
-body.dark .sess-notes{background:var(--primary-tint);color:#B4B2D8}
+body.dark .sess-notes{background:var(--primary-tint);color:var(--muted-2)}
 /* Step 6 — Lifts sort chips + inline sparklines */
 .lifts-sort-row{display:flex;gap:5px;margin-bottom:0.6rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .lifts-sort-chip{flex:0 0 auto;padding:6px 11px;font-size:11.5px;font-weight:600;color:var(--muted);background:#F5F5F2;border:1px solid var(--border);border-radius:14px;cursor:pointer;white-space:nowrap}
 .lifts-sort-chip.on{background:var(--primary);border-color:var(--primary);color:#fff}
-body.dark .lifts-sort-chip{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .lifts-sort-chip{background:#252540;border-color:var(--border);color:var(--muted-2)}
 body.dark .lifts-sort-chip.on{background:var(--primary);border-color:var(--primary);color:#fff}
 .lift-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lift-trail{display:flex;align-items:center;gap:6px;flex-shrink:0}
@@ -1018,14 +1029,14 @@ body.dark .lifts-sort-chip.on{background:var(--primary);border-color:var(--prima
 .lift-pill-flat{background:var(--border-soft);color:var(--muted)}
 body.dark .lift-pill-up{background:#0F3A2E;color:#5DD8A0}
 body.dark .lift-pill-down{background:#3A1A1A;color:#FF8080}
-body.dark .lift-pill-flat{background:#1F1D38;color:#9896C8}
+body.dark .lift-pill-flat{background:#1F1D38;color:var(--muted-2)}
 .ex-list-btn{gap:8px}
 /* Step 7 — Lift detail single-chart-three-metrics toggle */
 .lift-chart-panel{padding:12px}
 .lift-metric-row{display:flex;gap:5px;margin-bottom:10px}
 .lift-metric-pill{flex:1;padding:6px 8px;font-size:11px;font-weight:600;color:var(--muted);background:#F5F5F2;border:1px solid var(--border);border-radius:7px;cursor:pointer}
 .lift-metric-pill.on{background:var(--primary);border-color:var(--primary);color:#fff}
-body.dark .lift-metric-pill{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .lift-metric-pill{background:#252540;border-color:var(--border);color:var(--muted-2)}
 body.dark .lift-metric-pill.on{background:var(--primary);border-color:var(--primary);color:#fff}
 .ex-history-delta{margin-top:3px}
 /* Step 9 — Trend delta pills (unified visual) */
@@ -1036,8 +1047,8 @@ body.dark .lift-metric-pill.on{background:var(--primary);border-color:var(--prim
 .delta-pb{background:#FBF1D6;color:#8C6500}
 body.dark .delta-up{background:#0F3A2E;color:#5DD8A0}
 body.dark .delta-down{background:#3A1A1A;color:#FF8080}
-body.dark .delta-flat{background:#1F1D38;color:#9896C8}
-body.dark .delta-pb{background:#3A2E00;color:#FFD740}
+body.dark .delta-flat{background:#1F1D38;color:var(--muted-2)}
+body.dark .delta-pb{background:#3A2E00;color:var(--gold)}
 /* v2.41 dark-mode finish — focus states, refactored chip/tab classes */
 body.dark .rep-input:focus,body.dark .reps-actual-input:focus,body.dark .notes-input:focus,body.dark .cardio-input:focus{background:#26244D}
 body.dark .edit-date-input{background:var(--surface);color:var(--text);border-color:var(--border)}
@@ -1050,18 +1061,18 @@ body.dark .meas-in{background:var(--surface);border-color:var(--border);color:va
 .tab-btn{flex:1;padding:9px;font-size:13px;font-weight:600;border-radius:8px;border:1.5px solid;cursor:pointer}
 .tab-btn.on{border-color:#5B4EA8;background:#5B4EA8;color:#fff}
 .tab-btn.off{border-color:var(--border);background:#F5F5F2;color:var(--muted)}
-body.dark .tab-btn.off{background:#252540;border-color:var(--border);color:#9896C8}
+body.dark .tab-btn.off{background:#252540;border-color:var(--border);color:var(--muted-2)}
 /* Lift-detail stat row (refactored from inline in JS template) */
 .lift-stat-row{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#F5F5F2;border-radius:7px;padding:7px 10px;font-size:12px}
 .lift-stat-row>.k{font-weight:600;color:#3C3489;flex-shrink:0}
 .lift-stat-row>.v{color:#5F5E5A;text-align:right}
 body.dark .lift-stat-row{background:#252540}
-body.dark .lift-stat-row>.k{color:#B4B2D8}
-body.dark .lift-stat-row>.v{color:#9896C8}
+body.dark .lift-stat-row>.k{color:var(--muted-2)}
+body.dark .lift-stat-row>.v{color:var(--muted-2)}
 /* Builder/multi-day chips (refactored from inline + toggleMuscleChip JS) */
 .chip{padding:5px 9px;font-size:11px;font-weight:600;border-radius:14px;cursor:pointer;border:1px solid var(--border-soft);background:#FAFAF8;color:#5B4EA8}
 .chip.on{border-color:#5B4EA8;background:#5B4EA8;color:#fff}
-body.dark .chip{background:var(--surface);border-color:var(--border);color:#9896C8}
+body.dark .chip{background:var(--surface);border-color:var(--border);color:var(--muted-2)}
 body.dark .chip.on{background:#5B4EA8;border-color:#5B4EA8;color:#fff}
 /* Plate Calc inputs (refactored from inline) */
 #pc-target,#pc-bar{background:#FAFAF8;color:var(--text);border:1px solid var(--border-soft)}
@@ -5493,7 +5504,7 @@ function drawChartV2(canvas, dataPoints, opts){
   var fillTop=isDark?'rgba(159,151,224,0.22)':'rgba(91,78,168,0.22)';
   var fillBot=isDark?'rgba(159,151,224,0)':'rgba(91,78,168,0)';
   var grid=isDark?'#3C3A5C':'#F1EFE8';
-  var axis=isDark?'#9896C8':'#888780';
+  var axis=isDark?'var(--muted-2)':'#888780';
   var dotStroke=isDark?'#252540':'#FFFFFF';
 
   var pad={t:20,r:16,b:22,l:16};
@@ -6902,7 +6913,7 @@ function getPlateSetup(){
   return {barWeight:45, plates:[45,25,10,5,2.5]};
 }
 function savePlateSetup(o){ try{ localStorage.setItem('plate_setup_v1', JSON.stringify({barWeight:o.barWeight, plates:o.plates})); }catch(e){} }
-var PLATE_COLORS={45:'#1E5BAF',25:'#0F6E56',10:'#7A5A00',5:'#5B4EA8',2.5:'#9896C8',35:'#3A3A3A',1.25:'#777'};
+var PLATE_COLORS={45:'#1E5BAF',25:'#0F6E56',10:'#7A5A00',5:'#5B4EA8',2.5:'var(--muted-2)',35:'#3A3A3A',1.25:'#777'};
 // Greedy plate breakdown per side for a target weight using the user's setup.
 function platesPerSide(target){
   var s=getPlateSetup(), bar=s.barWeight||45;
@@ -10060,7 +10071,7 @@ function showPRToast(prs){
       .bld-grp{margin-bottom:11px}
       .bld-mode{flex:1;padding:8px 6px;border:1px solid var(--border-soft);border-radius:8px;background:#FAFAF8;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer}
       .bld-mode.on{background:var(--primary);border-color:var(--primary);color:#fff}
-      body.dark .bld-mode{background:var(--surface);color:#9E9CC4;border-color:var(--border)}
+      body.dark .bld-mode{background:var(--surface);color:var(--muted-2);border-color:var(--border)}
       body.dark .bld-mode.on{background:#5B4EA8;color:#fff}
       .bld-lib-list{max-height:210px;overflow-y:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border-soft);border-radius:8px}
       .bld-lib-item{display:flex;align-items:center;gap:6px;padding:9px 10px;border-bottom:1px solid var(--border-soft);cursor:pointer;font-size:13px;color:#2C2C2A}
@@ -10094,7 +10105,7 @@ function showPRToast(prs){
       .bld-lbl{font-size:12px;font-weight:700;color:#3C3489;display:block;margin-bottom:2px}
       .bld-hint{font-size:10.5px;color:#888780;font-weight:400;display:block;margin-bottom:5px;line-height:1.4}
       .bld-in{width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border-soft);border-radius:8px;font-size:13px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
-      body.dark .bld-lbl{color:#C7C4EE} body.dark .bld-hint{color:#9E9CC4}
+      body.dark .bld-lbl{color:#C7C4EE} body.dark .bld-hint{color:var(--muted-2)}
       body.dark .bld-in{background:var(--surface);color:var(--text);border-color:var(--border)}
       .bld-sec{padding-top:12px;margin-top:12px;border-top:1px solid var(--border-soft)}
       .bld-sec:first-of-type{border-top:0;margin-top:4px;padding-top:0}
