@@ -82,10 +82,10 @@ body.dark{
 body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:420px;margin:0 auto}
 .day-selector{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem}
 /* L3 (v5.1): "Up next" caption above the day chips when auto-advanced */
-.upnext-cap{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin:0 2px 5px}
-.day-btn{flex:1;min-width:44px;min-height:44px;padding:6px 8px;border:1px solid var(--border-soft);border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;text-align:center;background:#fff;color:var(--text);transition:all 0.15s;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upnext-cap{font-size:var(--fs-xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin:0 2px 5px}
+.day-btn{flex:1;min-width:44px;min-height:44px;padding:6px 8px;border:1px solid var(--border-soft);border-radius:10px;font-size:var(--fs-11);font-weight:700;cursor:pointer;text-align:center;background:#fff;color:var(--text);transition:all 0.15s;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .day-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 2px 8px rgba(91,78,168,.25)}
-.day-btn.progress-tab{font-size:12px;padding:12px 6px}
+.day-btn.progress-tab{font-size:var(--fs-sm);padding:12px 6px}
 .day-panel{display:none}
 .day-panel.show{display:block}
 .progress-wrap{margin-bottom:1rem}
@@ -99,12 +99,12 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .ex-cat{display:inline-block;font-size:9px;font-weight:700;color:#534AB7;background:#EEEDFE;border-radius:4px;padding:1px 5px;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em}
 body.dark .ex-cat{background:var(--primary-tint);color:var(--muted-2)}
 .day-summary{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:0.75rem;box-shadow:0 1px 3px rgba(91,78,168,0.06)}
-.day-summary-title{font-size:10px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px}
+.day-summary-title{font-size:var(--fs-xs);font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px}
 .day-summary-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
-.day-summary-chip{display:flex;align-items:center;gap:5px;background:#F5F5F2;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:#3C3489}
+.day-summary-chip{display:flex;align-items:center;gap:5px;background:#F5F5F2;border-radius:20px;padding:4px 10px;font-size:var(--fs-11);font-weight:600;color:#3C3489}
 .day-summary-chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.day-summary-total{display:flex;align-items:center;gap:6px;border-top:1px solid #F1EFE8;padding-top:8px;font-size:12px;font-weight:700;color:#5B4EA8}
-.day-summary-total span{font-weight:400;color:#888780;font-size:11px}
+.day-summary-total{display:flex;align-items:center;gap:6px;border-top:1px solid #F1EFE8;padding-top:8px;font-size:var(--fs-sm);font-weight:700;color:#5B4EA8}
+.day-summary-total span{font-weight:400;color:#888780;font-size:var(--fs-11)}
 body.dark .day-summary{background:#252540;border-color:var(--border)}
 body.dark .day-summary-chip{background:var(--surface);color:var(--muted-2)}
 body.dark .day-summary-title{color:var(--muted-deep)}
@@ -283,7 +283,7 @@ body.dark .tray-ic.red{background:#3A1A1A} body.dark .tray-ic.warn{background:#3
 /* v3.30 — bottom tab bar (primary navigation) */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:flex;max-width:600px;margin:0 auto;background:var(--surface,#fff);border-top:1px solid var(--border,#E6E4DD);padding:6px 4px;padding-bottom:calc(6px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(31,29,56,.06)}
 body.dark .tabbar{background:#1C1B30;border-top-color:var(--border)}
-.tabbar .tab{flex:1;border:0;background:none;cursor:pointer;padding:5px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font-size:11px;font-weight:600;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.tabbar .tab{flex:1;border:0;background:none;cursor:pointer;padding:5px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font-size:var(--fs-11);font-weight:600;font-family:inherit;-webkit-tap-highlight-color:transparent}
 .tabbar .tab .tab-ic{font-size:21px;line-height:1}
 .tabbar .tab.active{color:var(--primary)}
 body.dark .tabbar .tab{color:#8F8DB8}
@@ -312,7 +312,7 @@ body.dark .set-group{background:#252540;border-color:var(--border)}
 .set-note{font-size:var(--fs-sm);color:var(--muted);line-height:1.5;padding:11px 0}
 .set-about{font-size:var(--fs-11);color:var(--muted);text-align:center;margin-top:16px}
 /* Header overflow menu */
-.hdr-mi{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;border-bottom:.5px solid var(--border-soft);padding:11px 14px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;text-align:left}
+.hdr-mi{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;border-bottom:.5px solid var(--border-soft);padding:11px 14px;font-size:var(--fs-13);font-weight:600;color:var(--text);cursor:pointer;text-align:left}
 .hdr-mi:last-child{border-bottom:0}
 .hdr-mi:hover{background:var(--primary-tint)}
 .hdr-mi svg{flex-shrink:0}
@@ -1230,7 +1230,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.20</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.21</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
