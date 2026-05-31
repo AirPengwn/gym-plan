@@ -98,13 +98,18 @@ ok(n2 && n2.kind==='hold','F1 · flat top weight, hard RPE (avg ≥8) → hold (
 var wP3=app(store({gym_primary_device:'1'}));
 ok(wP3.progressionNudge(K, wP3.exerciseMeta(K))===null,'F1 · no history → null (no nudge)');
 
-// ── F2 (v5.1) · countNewEstPRs: new est-1RM beats prior completed sessions ──
-// index 0 = "just saved" (excluded from baseline); est1RM Epley = w*(1+r/30).
+// ── countNewEstPRs: PR = raw top weight > all-time previous max ──
+// v5.26 unified all three PR counters (save toast, per-ex 🏆, Sessions
+// badge) to this definition. First-time exercises don't count as PRs
+// (you haven't beaten anything). index 0 = "just saved" → excluded.
 var wF2a=withHist([ sess(2000,'Set 1: 140 lbs x5reps'), sess(1000,'Set 1: 100 lbs x5reps') ]);
-ok(wF2a.countNewEstPRs('a', [{ex:K,note:'Set 1: 140 lbs x5reps'}])===1,'F2 · new est-1RM beats history → 1 PR');
+ok(wF2a.countNewEstPRs('a', [{ex:K,note:'Set 1: 140 lbs x5reps'}])===1,'F2 · new top weight beats history → 1 PR');
 var wF2b=withHist([ sess(2000,'Set 1: 90 lbs x5reps'), sess(1000,'Set 1: 100 lbs x5reps') ]);
 ok(wF2b.countNewEstPRs('a', [{ex:K,note:'Set 1: 90 lbs x5reps'}])===0,'F2 · below prior best → 0 PRs');
-ok(wF2a.est1RM(140,5)>wF2a.est1RM(100,5),'F2 · est1RM monotonic in weight (Epley reused, not reinvented)');
+ok(wF2a.est1RM(140,5)>wF2a.est1RM(100,5),'F2 · est1RM still available (used elsewhere) and monotonic in weight');
+// v5.26: first-time exercise must NOT count as a PR (you have nothing to beat).
+var wF2c=app(store({gym_primary_device:'1'}));
+ok(wF2c.countNewEstPRs('a', [{ex:K,note:'Set 1: 100 lbs x5reps'}])===0,'F2 (v5.26) · first-time exercise is NOT a PR');
 
 console.log('\n'+(fail?('PROGRESSION SPOT-CHECK: '+fail+' FAILED'):'PROGRESSION SPOT-CHECK: ALL PASS'));
 process.exit(fail?1:0);
