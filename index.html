@@ -1230,7 +1230,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.24</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.25</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -4245,8 +4245,10 @@ function checkinBtnHTML(day){
 }
 
 function setCheckin(day, feeling){
+  // v5.25: per-session check-in (no 7-day cooldown). The check-in is captured
+  // when the session is saved; after save, confirmSave re-renders the bar
+  // back to fresh buttons for the next session.
   checkinState[day]=feeling;
-  try{ localStorage.setItem('gymlog_checkin_ts', String(Date.now())); }catch(e){}  // v4.15 (nit 6): cadence stamp
   var bar=document.getElementById('checkin-bar-'+day);
   if(!bar) return;
   var emoji={great:'💪',okay:'😐',tired:'😴'};
@@ -4270,11 +4272,10 @@ function setCheckin(day, feeling){
 })();
 
 (function injectCheckinBars(){
-  // v4.15 (nit 6): only prompt if no check-in was logged in the last 7 days —
-  // otherwise it becomes furniture. (Local UI cadence; not part of the synced payload.)
-  var recent=false;
-  try{ var ts=parseInt(localStorage.getItem('gymlog_checkin_ts')||'0',10); recent = ts>0 && (Date.now()-ts < 7*86400000); }catch(e){}
-  if(recent) return;
+  // v5.25: per-session prompt — appears on every workout day until the user
+  // taps a feeling for THIS session. confirmSave re-renders fresh buttons
+  // after each save so the next session starts clean. (Pre-v5.25 had a
+  // 7-day cooldown via gymlog_checkin_ts; the key is harmless if leftover.)
   getDays().forEach(function(day){
     var p=document.getElementById('p-'+day);
     if(!p) return;
