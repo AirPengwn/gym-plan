@@ -1230,7 +1230,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.26</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.27</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -4810,6 +4810,86 @@ function coachState(exKey, meta){
   }
   return null;
 }
+// v5.27: build a "Last session:" summary for a cardio card. Looks back
+// through this day's saved sessions for the most recent one that has any
+// `{prefix}-{machine}-{field}` entries (default prefix is 'wu-{day}'), then
+// summarizes that machine's logged fields. Returns {text, ts} or null.
+function _cardioLastSummary(day, prefix){
+  var saved=getSaved(day); if(!saved.length) return null;
+  prefix = prefix || ('wu-' + day);
+  for(var s=0; s<saved.length; s++){
+    var sess=saved[s];
+    var byMachine={};
+    (sess.entries||[]).forEach(function(e){
+      var ex=String(e.ex||'');
+      if(ex.indexOf(prefix+'-')!==0) return;
+      var rest=ex.slice(prefix.length+1);   // e.g. "treadmill-duration"
+      var dash=rest.lastIndexOf('-');
+      if(dash<=0) return;
+      var machine=rest.slice(0,dash), field=rest.slice(dash+1);
+      if(!byMachine[machine]) byMachine[machine]={};
+      byMachine[machine][field]=e.note;
+    });
+    var machines=Object.keys(byMachine);
+    if(!machines.length) continue;
+    // Pick the machine with the most logged fields (best summary).
+    var pick=machines[0];
+    machines.forEach(function(m){
+      if(Object.keys(byMachine[m]).length > Object.keys(byMachine[pick]).length) pick=m;
+    });
+    var f=byMachine[pick];
+    var name=pick.charAt(0).toUpperCase()+pick.slice(1);
+    var parts=[name];
+    if(f.duration) parts.push(f.duration);
+    if(f.speed)    parts.push(f.speed);
+    if(f.incline)  parts.push('incl '+f.incline);
+    if(f.distance) parts.push(f.distance);
+    if(f.calories) parts.push(f.calories+' cal');
+    return { text: parts.join(' · '), ts: sessTs(sess) };
+  }
+  return null;
+}
+// Inject (if missing) and fill the Last-session line for cardio cards.
+// Cardio cards use the legacy .item markup which doesn't ship a .last-time
+// element, so we add one at runtime and synthesize a summary from the saved
+// session entries. Day key is derived from the card's .day-panel ancestor.
+function _updateCardioLastTimes(panel){
+  if(!panel) return;
+  var panelEl=panel.id && panel.id.indexOf('p-')===0 ? panel : null;
+  var dayKey=panelEl ? panelEl.id.slice(2) : null;
+  if(!dayKey) return;
+  panel.querySelectorAll('.item:not(.v2-card)').forEach(function(item){
+    if(!item.querySelector('.cardio-fields')) return;
+    // Derive the data-ex prefix from the first cardio input so non-warmup
+    // cardio cards (if any) work the same way as 'wu-{day}'.
+    var firstInp=item.querySelector('.cardio-input[data-ex]');
+    if(!firstInp) return;
+    var dx=firstInp.getAttribute('data-ex')||'';
+    var parts=dx.split('-');
+    var prefix=(parts.length>=2)?(parts[0]+'-'+parts[1]):('wu-'+dayKey);
+    // Ensure the .last-time stub exists inside the head div.
+    var lt=item.querySelector('.last-time');
+    if(!lt){
+      var head=item.querySelector('.item-top > div:not(.checkbox):not(.ex-cat):not(.v2-actions)');
+      if(!head) return;
+      lt=document.createElement('div');
+      lt.className='last-time';
+      lt.innerHTML='<span class="last-time-label">Last session:</span> <span class="last-time-vals"></span>';
+      head.appendChild(lt);
+    }
+    var vals=lt.querySelector('.last-time-vals');
+    var summary=_cardioLastSummary(dayKey, prefix);
+    if(summary && summary.text){
+      vals.textContent=summary.text+' ('+fmtDate(summary.ts,'rel')+')';
+      lt.setAttribute('title', fmtDateISO(summary.ts));
+      lt.classList.add('has-data');
+    } else {
+      vals.textContent='';
+      lt.removeAttribute('title');
+      lt.classList.remove('has-data');
+    }
+  });
+}
 // Paint the single coach line onto each v2 strength card in a panel.
 function _applyCoachLine(panel){
   if(!panel) return;
@@ -5063,6 +5143,10 @@ function loadLastTimes(){
 
     // Render progression badges
     renderProgressBadges(day);
+    // v5.27: inject + fill the cardio "Last session:" line (warm-up + any
+    // other cardio cards on this day). Was missing entirely on legacy .item
+    // cards — only strength v2-cards had .last-time markup.
+    try{ _updateCardioLastTimes(panel); }catch(e){}
     // v5.13: single adaptive coach line (replaces the v5.1 pill/hold, the legacy
     // overload-nudge, and the v5.9 aim caption — one row, picks the state).
     try{ _applyCoachLine(panel); }catch(e){}
