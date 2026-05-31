@@ -1230,7 +1230,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.23</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.24</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -10056,7 +10056,17 @@ var _restCtx=null;            // {key,name,seconds,override} for the active rest
 function getRestOverrides(){ try{ var o=JSON.parse(localStorage.getItem('rest_overrides_v1')); return (o&&typeof o==='object'&&!Array.isArray(o))?o:{}; }catch(e){ return {}; } }
 function saveRestOverrides(o){ try{ localStorage.setItem('rest_overrides_v1', JSON.stringify(o||{})); }catch(e){} }
 function getRestMode(){ var m=getRestOverrides()._mode; return (m==='long'||m==='short')?m:'auto'; }
-function setRestMode(m){ var o=getRestOverrides(); if(m==='long'||m==='short') o._mode=m; else delete o._mode; saveRestOverrides(o); try{markPendingSync();}catch(e){} try{_syncRestModeUI();}catch(e){} }
+// v5.24: ALWAYS store the mode (including 'auto'), never delete the key.
+// Old behavior deleted `_mode` for Auto, so the union merge couldn't tell
+// "user picked Auto" from "this device hasn't set anything yet" — the next
+// sync pulled cloud's `_mode:'long'` back in, silently undoing the Auto pick.
+function setRestMode(m){
+  var o=getRestOverrides();
+  o._mode = (m==='long'||m==='short')?m:'auto';
+  saveRestOverrides(o);
+  try{markPendingSync();}catch(e){}
+  try{_syncRestModeUI();}catch(e){}
+}
 function _isCompoundEquip(meta){ return String((meta&&meta.equipment)||'').toLowerCase()==='barbell'; }
 function smartRestSeconds(meta){
   var p=(meta&&meta.pattern)||'';

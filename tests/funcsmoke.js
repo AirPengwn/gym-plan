@@ -639,6 +639,27 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.24 · rest-timer Auto picks survives cloud merge (regression guard) ──
+(function(){
+  const w=loadApp(makeStore({}));
+  // Simulate user previously picked Long (so cloud has it).
+  w.setRestMode('long');
+  ok(w.getRestMode()==='long','v5.24 · Long persists after set');
+  // Simulate a sync that brought down a cloud copy with _mode:'long'.
+  // Now user picks Auto.
+  w.setRestMode('auto');
+  ok(w.getRestMode()==='auto','v5.24 · setRestMode(auto) reads back as auto');
+  // The fix: Auto is stored explicitly, not deleted, so the merge can preserve it.
+  var stored=JSON.parse(w.localStorage.getItem('rest_overrides_v1')||'{}');
+  ok(stored._mode==='auto','v5.24 · _mode explicitly stored as "auto" (not deleted)');
+  // Simulate the merge: cloud has _mode:'long', local has _mode:'auto'.
+  // _mergeRestOverrides should prefer local ("a wins"), keeping Auto.
+  var merged=w._mergeRestOverrides({_mode:'auto'}, {_mode:'long', 'Lat pulldown':60});
+  ok(merged._mode==='auto','v5.24 · merge keeps the local Auto pick over cloud Long');
+  ok(merged['Lat pulldown']===60,'v5.24 · merge still unions per-exercise overrides');
+  w.close();
+})();
+
 // ── v5.18 · runtime text-size setting (Appearance → A / A+ / A++ / A+++) ──
 (function(){
   const w=loadApp(makeStore({}));
