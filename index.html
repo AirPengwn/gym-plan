@@ -1230,7 +1230,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.25</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.26</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -5546,25 +5546,18 @@ document.addEventListener('focusout',function(e){
 });
 // Count exercises that set a NEW est-1RM PR in a just-saved session (the saved
 // session is index 0 of its day and is excluded from the historical baseline).
+// v5.26: PR counting is now UNIFIED across the three call sites:
+//   - save-toast count (this fn)
+//   - per-exercise "🏆 PR" toasts (checkForPRs)
+//   - Sessions tab "🏆 N PR" badge (_sessionPRCount)
+// All three now use the SAME definition: a PR is when the session's max
+// raw weight on an exercise EXCEEDS that exercise's all-time previous max,
+// and there must be a previous max (first-time exercises do NOT count —
+// you haven't beaten anything yet). Previously this counter used est-1RM
+// AND credited first-time exercises, so a cardio/core day could show "6
+// new PRs" in the save toast while the Sessions card showed 1.
 function countNewEstPRs(day, entries){
-  var n=0;
-  (entries||[]).forEach(function(e){
-    if(!e.note || e.note.indexOf('Set ')!==0) return;
-    var cur=bestEst1RM(e.note); if(!(cur>0)) return;
-    var prevBest=0;
-    getDays().forEach(function(d){
-      var saved=getSaved(d), start=(d===day)?1:0;
-      for(var i=start;i<saved.length;i++){
-        saved[i].entries.forEach(function(en){
-          if(en.ex===e.ex && en.note && en.note.indexOf('Set ')===0){
-            var est=bestEst1RM(en.note); if(est>prevBest) prevBest=est;
-          }
-        });
-      }
-    });
-    if(cur > prevBest + 1e-4) n++;
-  });
-  return n;
+  try { return (checkForPRs(day, entries) || []).length; } catch(e){ return 0; }
 }
 
 // v5.14 (T1): unified date formatting. Replaces ad-hoc new Date(ts).toString()

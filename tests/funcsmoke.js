@@ -639,6 +639,29 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.26 · unified PR counters (save toast / 🏆 toast / Sessions badge agree) ──
+(function(){
+  var DAY=86400000, now=Date.now();
+  var prior = {label:'D1', date:'old', ts:now-7*DAY, entries:[
+    {ex:'Lat pulldown', note:'Set 1: 100 lbs x10reps'}
+  ]};
+  var todayEntries = [
+    {ex:'Lat pulldown', note:'Set 1: 110 lbs x8reps'},      // raw PR (110 > 100)
+    {ex:'Cable row',    note:'Set 1: 80 lbs x10reps'}        // first-time → NOT a PR
+  ];
+  var todaySess = {label:'D1', date:'today', ts:now, entries:todayEntries};
+  const w=loadApp(makeStore({ 'gymlog_a': JSON.stringify([todaySess, prior]) }));
+  var toastCount = w.countNewEstPRs('a', todayEntries);
+  var prList     = w.checkForPRs('a', todayEntries);
+  var badgeCount = w._sessionPRCount('a', now, todaySess);
+  ok(toastCount===1,'v5.26 · save-toast count = 1 PR (was inflated under old est-1RM logic)');
+  ok(prList.length===1,'v5.26 · per-exercise PR list also = 1');
+  ok(prList[0] && prList[0].ex==='Lat pulldown','v5.26 · the PR is the exercise that actually beat its prior best');
+  ok(badgeCount===1,'v5.26 · Sessions tab badge count also = 1');
+  ok(toastCount===badgeCount && badgeCount===prList.length,'v5.26 · all three counters agree on the same session');
+  w.close();
+})();
+
 // ── v5.24 · rest-timer Auto picks survives cloud merge (regression guard) ──
 (function(){
   const w=loadApp(makeStore({}));
