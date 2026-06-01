@@ -1230,7 +1230,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.32</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.33</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -6570,10 +6570,9 @@ function editSessionDate(day,idx){
   var saved=getSaved(day); if(!saved[idx]) return;
   var current=saved[idx].date;
   // v5.32: the stored format "Mon, Jun 1, 2026 at 6:00 PM" doesn't parse with
-  // plain new Date() on Safari (it bails on the " at " separator). Prefer the
-  // session's ts (always written at save time) and fall back to the Safari-safe
-  // _sessWhen() regex parser. Pre-v5.32 Safari users saw an empty picker and
-  // the change never landed.
+  // plain new Date() on Safari (the " at " separator). Prefer the session's
+  // ts (always written at save time); fall back to the Safari-safe _sessWhen
+  // regex parser.
   var tsMs=(saved[idx].ts!=null && saved[idx].ts>0) ? saved[idx].ts : _sessWhen(saved[idx]);
   var defaultVal='';
   if(tsMs>0){
@@ -6582,10 +6581,24 @@ function editSessionDate(day,idx){
     defaultVal=new Date(tsMs - offset*60000).toISOString().slice(0,16);
   }
   var span=document.getElementById('pdate-'+day+'-'+idx); if(!span) return;
-  span.innerHTML="<input class='edit-date-input' type='datetime-local' value='"+defaultVal+"' "
-    +"onblur='saveEditDate(\""+day+"\","+idx+",this,\""+_esc(current)+"\")' "
-    +"onkeydown='if(event.key===\"Enter\")this.blur()'/>";
-  var inp=span.querySelector('input'); if(inp) inp.focus();
+  // v5.33: switch to programmatic event listeners. iOS Safari sometimes
+  // skips firing 'blur' after the datetime-local picker dismisses (the
+  // picker closes without moving focus to a blurrable element). Listen to
+  // BOTH 'change' (fires reliably on iOS picker close) and 'blur', with a
+  // committed-once flag to dedupe. Also avoids the inline-handler string
+  // building that was prone to escaping issues with the stored date format.
+  span.innerHTML='<input class="edit-date-input" type="datetime-local" value="'+_esc(defaultVal)+'">';
+  var inp=span.querySelector('input'); if(!inp) return;
+  var committed=false;
+  function commit(){
+    if(committed) return;
+    committed=true;
+    saveEditDate(day, idx, inp, current);
+  }
+  inp.addEventListener('change', commit);
+  inp.addEventListener('blur',   commit);
+  inp.addEventListener('keydown', function(ev){ if(ev.key==='Enter') inp.blur(); });
+  inp.focus();
 }
 
 function saveEditDate(day,idx,inp,originalDate){var val=inp.value;var saved=getSaved(day);if(!saved[idx])return;if(val){var dt=new Date(val);if(!isNaN(dt.getTime())){var dateStr=dt.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});var timeStr=dt.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});saved[idx].date=dateStr+" at "+timeStr;saved[idx].ts=dt.getTime();}}localStorage.setItem("gymlog_"+day,JSON.stringify(saved));renderProgress();showToast("Date updated!");syncToJbin(function(){});}
