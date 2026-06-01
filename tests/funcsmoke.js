@@ -639,6 +639,39 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.35 · mergeSessions collapses date-edit duplicates ──
+(function(){
+  var DAY=86400000, now=Date.now();
+  const w=loadApp(makeStore({}));
+  // Two sessions with identical label/entries/duration but different ts.
+  // Pre-v5.35: sessKey embedded ts, so both ended up in the merged result.
+  // v5.35: content-fingerprint collapse keeps only the most-recent-ts one.
+  var origTs=now-3*DAY, editedTs=now-1*DAY;
+  var sessOriginal={
+    label:'D1', date:'three days ago', ts:origTs, duration:45,
+    entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x10reps'}]
+  };
+  var sessEdited={
+    label:'D1', date:'yesterday', ts:editedTs, duration:45,
+    entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x10reps'}]
+  };
+  var merged=w.mergeSessions([sessOriginal], [sessEdited]);
+  ok(merged.length===1,'v5.35 · two same-content sessions with different ts collapse to one ('+merged.length+')');
+  ok(merged[0].ts===editedTs,'v5.35 · the most-recent-ts (edited) version is kept');
+  ok(merged[0].date==='yesterday','v5.35 · edited date is preserved');
+  // Same-day sessions with different label OR different entries do NOT collapse
+  var sessDifferentEntries={
+    label:'D1', date:'today', ts:now, duration:45,
+    entries:[{ex:'Lat pulldown',note:'Set 1: 130 lbs x10reps'}]   // different weight
+  };
+  var merged2=w.mergeSessions([sessEdited], [sessDifferentEntries]);
+  ok(merged2.length===2,'v5.35 · different entries → both kept ('+merged2.length+')');
+  // Idempotent: running merge on an already-deduped list doesn't change anything
+  var merged3=w.mergeSessions(merged, []);
+  ok(merged3.length===1 && merged3[0].ts===editedTs,'v5.35 · re-merging is idempotent');
+  w.close();
+})();
+
 // ── v5.32 · calendar-day rel-date + Safari-safe editSessionDate ──
 (function(){
   const w=loadApp(makeStore({}));

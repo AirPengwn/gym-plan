@@ -1237,7 +1237,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.34</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.35</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -8534,6 +8534,29 @@ function mergeSessions(a,b){
   }
   a.forEach(add); b.forEach(add);
   var out=order.map(function(k){return map[k];});
+  // v5.35: collapse "edit-of-the-same-session" near-duplicates. Because
+  // sessKey embeds ts, editing a session's date locally produces a new
+  // key that doesn't match the cloud's original-ts version — the merge
+  // kept BOTH copies, so repeated edits accumulated clones. Fingerprint
+  // sessions by everything EXCEPT date/ts; within a fingerprint group,
+  // keep the most-recent-ts session (the one the user most recently
+  // edited to). Same-workout-on-different-days collision is possible
+  // but rare; if it ever happens the user can re-log.
+  var byFp={};
+  out.forEach(function(s){
+    var fp=JSON.stringify({
+      label: s.label||'',
+      entries: s.entries||[],
+      duration: s.duration!=null?s.duration:null,
+      notes: s.notes||null,
+      checkin: s.checkin||null
+    });
+    var prev=byFp[fp];
+    if(!prev || sessTs(s) > sessTs(prev)) byFp[fp]=s;
+  });
+  var collapsed=[];
+  for(var fpk in byFp){ if(Object.prototype.hasOwnProperty.call(byFp,fpk)) collapsed.push(byFp[fpk]); }
+  out=collapsed;
   out.sort(function(x,y){return sessTs(y)-sessTs(x);});
   return out;
 }
