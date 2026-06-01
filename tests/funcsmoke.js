@@ -639,6 +639,34 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.37 · backward date edit wins over cloud's stale newer-ts copy ──
+(function(){
+  var DAY=86400000, now=Date.now();
+  const w=loadApp(makeStore({}));
+  // Reproduction: cloud holds session at May 31 (ts_cloud). User edits to
+  // May 30 (ts_new < ts_cloud) but stamps modifiedAt=now. The collapse
+  // should keep the EDITED one (May 30), not the cloud version.
+  var ts_cloud = now - 1*DAY;            // cloud's stale May-31-ish version
+  var ts_edited = now - 2*DAY;           // user's edit pushes it backward
+  var sessCloud  = {label:'D4', date:'May 31', ts:ts_cloud,  duration:30,
+                    entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x10reps'}]};
+  var sessEdited = {label:'D4', date:'May 30', ts:ts_edited, duration:30,
+                    modifiedAt: now,
+                    entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x10reps'}]};
+  var merged=w.mergeSessions([sessEdited], [sessCloud]);
+  ok(merged.length===1,'v5.37 · backward edit + cloud copy collapse to one ('+merged.length+')');
+  ok(merged[0].date==='May 30','v5.37 · the EDITED (backward) version wins ('+merged[0].date+')');
+  ok(merged[0].ts===ts_edited,'v5.37 · ts reflects the edit, not the original');
+  ok(merged[0].modifiedAt===now,'v5.37 · modifiedAt preserved through merge');
+  // Without modifiedAt on either side: falls back to ts-max (legacy v5.35
+  // behavior). Two stale cloud copies → newest ts wins.
+  var stale1={label:'D1', date:'A', ts:now-3*DAY, entries:[{ex:'X',note:'Set 1: 100 lbs x5reps'}]};
+  var stale2={label:'D1', date:'B', ts:now-1*DAY, entries:[{ex:'X',note:'Set 1: 100 lbs x5reps'}]};
+  var legacy=w.mergeSessions([stale1], [stale2]);
+  ok(legacy.length===1 && legacy[0].ts===now-1*DAY,'v5.37 · no modifiedAt anywhere → falls back to latest-ts');
+  w.close();
+})();
+
 // ── v5.35 · mergeSessions collapses date-edit duplicates ──
 (function(){
   var DAY=86400000, now=Date.now();
