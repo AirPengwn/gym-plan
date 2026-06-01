@@ -1069,6 +1069,12 @@ body.dark .sess-ovf-danger{color:#FF8080}
 .ese-w,.ese-r{width:64px;padding:6px 8px;font-size:var(--fs-sm);font-weight:600;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:6px;outline:none;font-family:inherit;text-align:center}
 .ese-w:focus,.ese-r:focus{border-color:var(--primary-2)}
 .ese-x,.ese-rl{font-size:var(--fs-11);color:var(--muted);font-weight:600}
+/* v5.40: notes section inside the edit-entries modal. */
+.ese-section-head{font-size:var(--fs-11);font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+.ese-note-row{padding:6px 0 8px;border-bottom:1px dashed var(--border-soft)}
+.ese-note-row:last-of-type{border-bottom:0}
+.ese-note-txt{width:100%;box-sizing:border-box;padding:8px 10px;font-size:var(--fs-sm);font-family:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:6px;outline:none;resize:vertical;min-height:38px}
+.ese-note-txt:focus{border-color:var(--primary-2)}
 .ese-foot{padding:12px 14px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border-soft);background:var(--surface)}
 .ese-cancel,.ese-save{padding:10px 18px;font-size:var(--fs-sm);font-weight:700;font-family:inherit;border-radius:8px;cursor:pointer;border:1.5px solid var(--border)}
 .ese-cancel{background:transparent;color:var(--text)}
@@ -1259,7 +1265,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.39</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.40</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -8231,16 +8237,25 @@ function openEditSessionEntries(day, idx){
   var saved=getSaved(day); if(!saved[idx]) return;
   var sess=saved[idx];
   var order=[], byEx={};
+  // v5.40: also collect per-exercise notes so the editor can edit or
+  // delete them. Notes entries have ex like "Lat pulldown-notes" and
+  // a free-text note. Empty text on save deletes the note entry.
+  var notesByEx={}; var noteOrder=[];
   (sess.entries||[]).forEach(function(e){
-    if(!e.note || e.note.indexOf('Set ')!==0) return;
-    var sets=[];
-    String(e.note).split('|').forEach(function(s){
-      var m=s.trim().match(/Set\s*\d+\s*:\s*([\d.]+)\s*(?:lbs|kg)?\s*(?:x\s*(\d+)\s*reps?)?/i);
-      if(m) sets.push({ w: parseFloat(m[1])||0, r: m[2]?parseInt(m[2],10):null });
-    });
-    if(sets.length && !byEx[e.ex]){ byEx[e.ex]=sets; order.push(e.ex); }
+    var ex=String(e.ex||'');
+    if(e.note && e.note.indexOf('Set ')===0){
+      var sets=[];
+      String(e.note).split('|').forEach(function(s){
+        var m=s.trim().match(/Set\s*\d+\s*:\s*([\d.]+)\s*(?:lbs|kg)?\s*(?:x\s*(\d+)\s*reps?)?/i);
+        if(m) sets.push({ w: parseFloat(m[1])||0, r: m[2]?parseInt(m[2],10):null });
+      });
+      if(sets.length && !byEx[ex]){ byEx[ex]=sets; order.push(ex); }
+    } else if(/-notes$/.test(ex) && e.note){
+      // Per-exercise note (the inline notes-input value).
+      if(!notesByEx[ex]){ notesByEx[ex]=e.note; noteOrder.push(ex); }
+    }
   });
-  if(!order.length){ showToast('No strength sets to edit on this session'); return; }
+  if(!order.length && !noteOrder.length){ showToast('Nothing to edit on this session'); return; }
   // Build modal overlay
   var prev=document.getElementById('ese-overlay'); if(prev) prev.remove();
   var ov=document.createElement('div');
@@ -8266,6 +8281,21 @@ function openEditSessionEntries(day, idx){
     });
     h+='</div>';
   });
+  // v5.40: per-exercise notes section. Each row: parent name + textarea
+  // pre-filled with current note. Empty on save → entry deleted.
+  if(noteOrder.length){
+    h+='<div class="ese-section-head">📝 Notes</div>';
+    noteOrder.forEach(function(ex){
+      var parent=ex.replace(/-notes$/,'');
+      h+='<div class="ese-note-row" data-note-ex="'+_esc(ex)+'">'
+        + '<div class="ese-ex">'+_esc(parent)+'</div>'
+        + '<textarea class="ese-note-txt" rows="2" placeholder="(empty to delete)">'+_esc(notesByEx[ex])+'</textarea>'
+        + '</div>';
+    });
+  }
+  // v5.40: session-level notes (sess.notes). Editable / clearable too.
+  h+='<div class="ese-section-head">Session notes</div>'
+    +'<textarea id="ese-session-notes" class="ese-note-txt" rows="2" placeholder="Session notes (empty to clear)">'+_esc(sess.notes||'')+'</textarea>';
   h+='</div>'
     +'<div class="ese-foot">'
     +  '<button type="button" class="ese-cancel" onclick="closeEditSessionEntries()">Cancel</button>'
@@ -8299,9 +8329,27 @@ function saveEditSessionEntries(day, idx){
     });
     if(sets.length) groupsByEx[ex]=sets;
   });
+  // v5.40: collect per-exercise notes edits. Empty = mark for deletion.
+  var noteEdits={};   // ex → string ('' means delete)
+  ov.querySelectorAll('.ese-note-row').forEach(function(row){
+    var ex=row.getAttribute('data-note-ex'); if(!ex) return;
+    var ta=row.querySelector('.ese-note-txt');
+    noteEdits[ex]=ta ? ta.value.trim() : '';
+  });
   // Rewrite each strength entry's note (and structured .sets) from the
   // edited values. Other entries (cardio fields, RPE, pain flags) untouched.
-  (sess.entries||[]).forEach(function(e){
+  // Per-exercise notes are updated to the edited value or removed when empty.
+  sess.entries = (sess.entries||[]).filter(function(e){
+    if(!e || !e.ex) return true;
+    if(/-notes$/.test(String(e.ex)) && Object.prototype.hasOwnProperty.call(noteEdits, e.ex)){
+      var v=noteEdits[e.ex];
+      if(!v) return false;   // empty → drop the entry
+      e.note=v;
+      return true;
+    }
+    return true;
+  });
+  sess.entries.forEach(function(e){
     if(!e.note || e.note.indexOf('Set ')!==0) return;
     var sets=groupsByEx[e.ex]; if(!sets) return;
     var parts=sets.map(function(set,si){
@@ -8314,6 +8362,13 @@ function saveEditSessionEntries(day, idx){
       e.sets=sets.map(function(set){ return { w:set.w||0, u:'lbs', r:set.r!=null?set.r:null }; });
     }
   });
+  // Session-level notes (sess.notes) — empty clears it.
+  var snTA=ov.querySelector('#ese-session-notes');
+  if(snTA){
+    var sn=(snTA.value||'').trim();
+    if(sn) sess.notes=sn;
+    else if(sess.notes!=null) delete sess.notes;
+  }
   sess.modifiedAt=Date.now();
   localStorage.setItem('gymlog_'+day, JSON.stringify(saved));
   closeEditSessionEntries();
