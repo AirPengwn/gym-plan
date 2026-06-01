@@ -1237,7 +1237,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.35</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.36</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -6618,7 +6618,42 @@ function editSessionDate(day,idx){
   inp.focus();
 }
 
-function saveEditDate(day,idx,inp,originalDate){var val=inp.value;var saved=getSaved(day);if(!saved[idx])return;if(val){var dt=new Date(val);if(!isNaN(dt.getTime())){var dateStr=dt.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});var timeStr=dt.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});saved[idx].date=dateStr+" at "+timeStr;saved[idx].ts=dt.getTime();}}localStorage.setItem("gymlog_"+day,JSON.stringify(saved));renderProgress();showToast("Date updated!");syncToJbin(function(){});}
+function saveEditDate(day,idx,inp,originalDate){
+  var val=inp.value;
+  var saved=getSaved(day); if(!saved[idx]) return;
+  if(val){
+    var dt=new Date(val);
+    if(!isNaN(dt.getTime())){
+      var dateStr=dt.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+      var timeStr=dt.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+      saved[idx].date=dateStr+" at "+timeStr;
+      saved[idx].ts=dt.getTime();
+    }
+  }
+  localStorage.setItem("gymlog_"+day,JSON.stringify(saved));
+  renderProgress();
+  // v5.36: be honest about the cloud push. Pre-v5.36 always toasted
+  // "Date updated!" and dropped the syncToJbin callback, so reader-mode
+  // devices (cloudPUT no-ops session writes on those) silently failed
+  // to push. The user saw the local edit land but the cloud never
+  // changed. Now: distinguish the three real states.
+  if(TEST_MODE){
+    showToast('Date updated · 🧪 test mode (no cloud push)');
+    return;
+  }
+  if(typeof isPrimaryDevice==='function' && !isPrimaryDevice()){
+    showToast('Date updated locally · 📖 reader mode — set this device as Primary in More → Backup to push to cloud', {sticky:true});
+    return;
+  }
+  showToast('Date updated ✓ · syncing…', 2500);
+  syncToJbin(function(ok){
+    if(ok){ showToast('Synced to cloud ☁ ✓', 2500); }
+    else  {
+      var err=(window._lastSyncErr||'unknown').slice(0,80);
+      showToast('⚠️ Cloud sync failed — saved locally · '+err, {sticky:true});
+    }
+  });
+}
 
 function setUnit(btn, uid){
   var wrap=btn.parentNode;
