@@ -639,6 +639,43 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.32 · calendar-day rel-date + Safari-safe editSessionDate ──
+(function(){
+  const w=loadApp(makeStore({}));
+  // Construct a timestamp that's "yesterday at 22:00 local" relative to a
+  // "today at 02:00 local" reference. Old code: ageDays=floor(4h/24h)=0
+  // → "Today". Fixed: calendar diff = 1 → "Yesterday".
+  // We compare against w's clock, which uses real Date.now(). Use a delta
+  // that crosses local midnight: build today-at-2am and yesterday-at-10pm.
+  var todayAt2am = new Date(); todayAt2am.setHours(2,0,0,0);
+  var yesterdayAt10pm = new Date(todayAt2am.getTime() - 4*3600000);
+  // mock Date.now() temporarily via a small shim: instead, just exercise
+  // fmtDate with explicit ts values relative to NOW.
+  // Easier: pick a ts that's local-midnight-of-yesterday plus 22h.
+  var now=new Date();
+  var midnight=new Date(now); midnight.setHours(0,0,0,0);
+  var yesterdayLate = midnight.getTime() - 2*3600000;  // 22:00 yesterday local
+  var earlyToday    = midnight.getTime() + 2*3600000;  // 02:00 today local
+  // Only meaningful when "now" is post-midnight today (this test runs at
+  // whatever the system clock says — verify the comparator behavior with
+  // explicit numbers regardless of when it runs).
+  // The "yesterday late" ts should ALWAYS read "Yesterday" no matter what
+  // hour the test runs.
+  var rel = w.fmtDate(yesterdayLate, 'rel');
+  ok(/Yesterday/.test(rel),'v5.32 · session at 22:00 yesterday reads "Yesterday" not "Today" ('+rel+')');
+  // And a same-day morning ts always reads "Today".
+  var sameDay = w.fmtDate(midnight.getTime() + 1*3600000, 'rel');
+  ok(/Today/.test(sameDay),'v5.32 · same-day reads "Today" ('+sameDay+')');
+  // 2 days back is "2 days ago".
+  var twoBack = w.fmtDate(midnight.getTime() - 2*86400000 + 10*3600000, 'rel');
+  ok(/2 days ago/.test(twoBack),'v5.32 · 2 calendar days back reads "2 days ago" ('+twoBack+')');
+  // editSessionDate uses _sessWhen → falls back to regex parse, so a session
+  // with only a Safari-unfriendly date string (no ts) still gets a valid ts.
+  ok(typeof w._sessWhen({date:'Mon, Jun 1, 2026 at 6:00 PM'})==='number','v5.32 · _sessWhen parses the stored "X at Y" format');
+  ok(w._sessWhen({date:'Mon, Jun 1, 2026 at 6:00 PM'})>0,'v5.32 · _sessWhen returns >0 for that format');
+  w.close();
+})();
+
 // ── v5.31 · Lifts chart chronology (multi-day exercises sort correctly) ──
 (function(){
   var DAY=86400000, now=Date.now();
