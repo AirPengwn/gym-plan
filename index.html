@@ -1265,7 +1265,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.43</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.44</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -7400,26 +7400,50 @@ function selectBackupCode(){
   var ta=document.getElementById('export-text');
   if(!ta || !ta.value){ showToast('Nothing to select yet'); return; }
   try{
-    // v5.42 · iOS Safari fix — on a long readonly textarea, plain .select()
-    // (and even setSelectionRange) often highlights only the visible portion.
-    // Workaround: temporarily drop readonly so iOS treats the field as
-    // user-editable, scroll to the top, then run THREE selection strategies
-    // back-to-back (.select() / execCommand('selectAll') / setSelectionRange)
-    // and re-apply the range on a microtask so iOS actually paints the full
-    // highlight. Readonly is restored once selection is committed so the
-    // user can't edit the backup code.
+    // v5.44 · v5.42's multi-strategy select wasn't enough — iOS Safari only
+    // PAINTS the highlight on the visible viewport portion of a scrollable
+    // readonly textarea, so on a multi-KB backup code the user still saw the
+    // selection cut off mid-content even though setSelectionRange was setting
+    // the full range programmatically.
+    //
+    // Two-part fix:
+    //   (a) expand the textarea to its full scrollHeight (capped at 70vh so
+    //       the close button stays on screen) so there's no clipped region
+    //       for iOS to truncate the paint on. Height is restored when the
+    //       modal closes.
+    //   (b) write the value to the clipboard in the SAME tap — so even on a
+    //       device where the highlight UI still misbehaves, the backup is
+    //       already on the clipboard and the user can paste straight into
+    //       Notes without a manual Copy step.
+    if(ta.dataset.origH==null) ta.dataset.origH=ta.style.height||'';
+    ta.style.height='auto';
+    var fullH=Math.min((window.innerHeight||640)*0.7, ta.scrollHeight+8);
+    if(fullH>140) ta.style.height=fullH+'px';
+    ta.scrollTop=0; ta.scrollLeft=0;
+
     var hadReadonly=ta.hasAttribute('readonly');
     if(hadReadonly) ta.removeAttribute('readonly');
-    ta.scrollTop=0; ta.scrollLeft=0;
     ta.focus();
     try{ ta.select(); }catch(e){}
     try{ document.execCommand('selectAll', false, null); }catch(e){}
     try{ ta.setSelectionRange(0, ta.value.length); }catch(e){}
     setTimeout(function(){
       try{ ta.setSelectionRange(0, ta.value.length); }catch(e){}
-      if(hadReadonly) try{ ta.setAttribute('readonly', ''); }catch(e){}
+      if(hadReadonly) try{ ta.setAttribute('readonly',''); }catch(e){}
     }, 30);
-    showToast('Selected — long-press to Copy');
+
+    // Belt-and-suspenders: also write the full value to the clipboard.
+    var copied=false;
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(function(){ copied=true; }).catch(function(){});
+      }
+    }catch(e){}
+    // Same-tick execCommand fallback for the OLD clipboard path (works inside
+    // the user gesture even when the async writeText is gated).
+    try{ document.execCommand('copy'); copied=true; }catch(e){}
+
+    showToast(copied?'Selected & copied — paste into Notes':'Selected — long-press to Copy');
     try{ haptic('light'); }catch(e){}
   } catch(e){
     showToast('Select failed — long-press the box manually');
@@ -7698,6 +7722,13 @@ function computePlates(){
 
 function closeModal(){
   document.getElementById('modal-overlay').classList.remove('show');
+  // v5.44 · restore the backup-code textarea's compact height so the next
+  // open of the Backup modal doesn't show a stretched-out box. selectBackupCode
+  // expanded it to fit the entire code for an iOS-friendly Select All.
+  try{
+    var ta=document.getElementById('export-text');
+    if(ta && ta.dataset && ta.dataset.origH!=null){ ta.style.height=ta.dataset.origH||''; delete ta.dataset.origH; }
+  }catch(e){}
 }
 
 function closeModalOverlay(e){
