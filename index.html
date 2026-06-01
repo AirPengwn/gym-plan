@@ -1237,7 +1237,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.37</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.38</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -9795,11 +9795,24 @@ function renderRecoverySection(){
   // Step 3: the deload-suggested banner was promoted to the "Now" zone at the
   // top of Trends — see renderDeloadCard(). This section keeps only the
   // per-exercise progression rows.
+  // v5.38: also include the "aim" calm-state for exercises with steady
+  // history but no urgent signal — matches the calm aim line on the workout
+  // cards, so the review list isn't silent when nothing's stalled or pending.
   var targets=getExerciseTargets();
   var rows=[];
   Object.keys(targets).forEach(function(k){
     var s=getOverloadSuggestion(k);
-    if(s && s.text) rows.push({name:prettyExName(k), text:s.text});
+    var text=null;
+    if(s && s.text){
+      text=s.text;
+    } else {
+      var meta=null; try{ meta=exerciseMeta(k); }catch(e){}
+      var st=null;   try{ st=coachState(k, meta); }catch(e){}
+      if(st && st.kind==='aim'){
+        text='🎯 Aim ~'+st.aim+' lbs · '+st.pct+'% of e1RM '+st.best;
+      }
+    }
+    if(text) rows.push({name:prettyExName(k), text:text});
   });
   if(!rows.length) return '';
   rows.sort(function(a,b){ return a.name.localeCompare(b.name); });
