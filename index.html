@@ -1230,7 +1230,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.30</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.31</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -5332,20 +5332,28 @@ function getAllExercises(){
   // Phase B: getAllDayKeys so the Lifts tab keeps showing an exercise's
   // history even after the day it lived on is removed from the active cycle.
   // v3.9: memoized via _gymlogSig (self-invalidating on any data change).
+  // v5.31: include ts on every entry and sort each list newest-first so
+  // callers no longer rely on day-major iteration order. Multi-day exercises
+  // (e.g. Lat pulldown on Day 1 + Day 4) previously came back interleaved,
+  // which broke the Lifts chart's chronology assumption.
   var _sig=_gymlogSig();
   if(_exCache && _sig!==null && _sig===_exSig) return _exCache;
   var exMap={};
   getAllDayKeys().forEach(function(day){
     var saved=getSaved(day);
     saved.forEach(function(session){
+      var ts=sessTs(session);
       session.entries.forEach(function(e){
         if(e.note && e.note.indexOf('Set ')===0){
           var key=e.ex;
           if(!exMap[key]) exMap[key]=[];
-          exMap[key].push({date:session.date, note:e.note});
+          exMap[key].push({date:session.date, note:e.note, ts:ts});
         }
       });
     });
+  });
+  Object.keys(exMap).forEach(function(k){
+    exMap[k].sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
   });
   _exCache=exMap; _exSig=_sig;
   return exMap;
@@ -5388,9 +5396,16 @@ function _liftSparkSVG(weights, delta){
     +'</svg>';
 }
 function _liftStats(sessions){
-  // sessions: newest-first chronology (getAllExercises returns them in iteration order — we re-sort here for safety).
+  // v5.31: sort by ts (now populated by getAllExercises) so the comparator
+  // is actually a number. The previous Date.parse(...)||0 - (Date.parse(...)||0)
+  // expression had wrong operator precedence — `||` binds looser than `-`,
+  // so it evaluated as `Date.parse(b)||(0 - Date.parse(a))`. Result: not a
+  // valid sort comparator; the chart's chronological order was effectively
+  // undefined for multi-day exercises.
   var sorted=sessions.slice().sort(function(a,b){
-    return Date.parse((b.date||'').replace(' at ',' '))||0 - (Date.parse((a.date||'').replace(' at ',' '))||0);
+    var bt=(b.ts!=null)?b.ts:(Date.parse((b.date||'').replace(' at ',' '))||0);
+    var at=(a.ts!=null)?a.ts:(Date.parse((a.date||'').replace(' at ',' '))||0);
+    return bt - at;   // newest first
   });
   // weights chronological (oldest→newest) for sparkline
   var chrono=sorted.slice().reverse();
@@ -5535,8 +5550,11 @@ function renderExerciseList(){
       exStatChips+='</div>';
       // Step 7 — single chart with metric toggle (Weight / Est. 1RM / Volume), stat chips become the chart caption.
       // Step 9 — per-history-row delta pill comparing each session's max weight to the previous session's.
+      // v5.31: prefer ts (now populated by getAllExercises) over date-string parsing.
       var sortedSess=sessions.slice().sort(function(a,b){
-        return (Date.parse((b.date||'').replace(' at ',' '))||0)-(Date.parse((a.date||'').replace(' at ',' '))||0);
+        var bt=(b.ts!=null)?b.ts:(Date.parse((b.date||'').replace(' at ',' '))||0);
+        var at=(a.ts!=null)?a.ts:(Date.parse((a.date||'').replace(' at ',' '))||0);
+        return bt - at;
       });
       var histHTMLrows=sortedSess.map(function(s,si){
         var ws=parseSetWeights(s.note||'');
@@ -5586,8 +5604,14 @@ function _redrawLiftChart(){
   var sessions=exMap[selectedEx]||[];
   var canvas=document.getElementById('lift-chart-canvas');
   if(!canvas) return;
-  // chronological oldest→newest (history is stored newest-first inside getAllExercises)
-  var chrono=sessions.slice().reverse();
+  // v5.31: re-sort by ts (oldest→newest) explicitly. Pre-v5.31 this relied
+  // on getAllExercises returning newest-first, which was only true within a
+  // single day's history — cross-day exercises came back interleaved.
+  var chrono=sessions.slice().sort(function(a,b){
+    var at=(a.ts!=null)?a.ts:(Date.parse((a.date||'').replace(' at ',' '))||0);
+    var bt=(b.ts!=null)?b.ts:(Date.parse((b.date||'').replace(' at ',' '))||0);
+    return at - bt;
+  });
   var pts;
   if(_currentLiftMetric==='1rm'){
     pts=chrono.map(function(s){

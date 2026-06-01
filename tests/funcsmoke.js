@@ -639,6 +639,39 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.31 · Lifts chart chronology (multi-day exercises sort correctly) ──
+(function(){
+  var DAY=86400000, now=Date.now();
+  // Lat pulldown on two different days, interleaved in time:
+  //   Day 1 sessions: 30d ago, 10d ago
+  //   Day 4 sessions: 20d ago, 5d ago
+  // Pre-v5.31, getAllExercises returned them in day-major order:
+  //   [day1_10, day1_30, day4_5, day4_20]  (each day newest-first, days iterated alphabetically)
+  // Now it sorts globally newest-first via ts.
+  var w=loadApp(makeStore({
+    'gymlog_a': JSON.stringify([
+      {label:'D1',date:'',ts:now-10*DAY,entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x10reps'}]},
+      {label:'D1',date:'',ts:now-30*DAY,entries:[{ex:'Lat pulldown',note:'Set 1: 100 lbs x10reps'}]}
+    ]),
+    'gymlog_d': JSON.stringify([
+      {label:'D4',date:'',ts:now-5*DAY,entries:[{ex:'Lat pulldown',note:'Set 1: 130 lbs x10reps'}]},
+      {label:'D4',date:'',ts:now-20*DAY,entries:[{ex:'Lat pulldown',note:'Set 1: 110 lbs x10reps'}]}
+    ])
+  }));
+  var ex=w.getAllExercises();
+  var sessions=ex['Lat pulldown']||[];
+  ok(sessions.length===4,'v5.31 · all 4 Lat pulldown sessions collected across Day 1 + Day 4');
+  // Should be newest-first by ts
+  var ages=sessions.map(function(s){ return Math.round((now-s.ts)/DAY); });
+  ok(JSON.stringify(ages)===JSON.stringify([5,10,20,30]),'v5.31 · newest-first global order (got '+JSON.stringify(ages)+')');
+  // Each entry carries ts
+  ok(sessions.every(function(s){ return typeof s.ts==='number' && s.ts>0; }),'v5.31 · every entry has a numeric ts');
+  // _liftStats no longer has the precedence bug — its sorted array is comparator-correct
+  var stats=w._liftStats(sessions);
+  ok(stats && typeof stats==='object','v5.31 · _liftStats runs without error');
+  w.close();
+})();
+
 // ── v5.30 · cross-day cardio prefill + Last summary ──
 (function(){
   var DAY=86400000, now=Date.now();
