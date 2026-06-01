@@ -1265,7 +1265,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.42</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.43</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -5982,13 +5982,17 @@ function drawChartV2(canvas, dataPoints, opts){
   var fillTop=isDark?'rgba(159,151,224,0.22)':'rgba(91,78,168,0.22)';
   var fillBot=isDark?'rgba(159,151,224,0)':'rgba(91,78,168,0)';
   var grid=isDark?'#3C3A5C':'#F1EFE8';
-  var axis=isDark?'var(--muted-2)':'#888780';
+  // v5.43 · canvas fillStyle does NOT resolve CSS variables — passing
+  // 'var(--muted-2)' silently fell back to (near-)invisible, which is why
+  // the dark-mode x-axis dates ("Dec 1", "Jan 26"…) read as nearly black
+  // on the dark background. Use a literal, AA-ish color instead.
+  var axis=isDark?'#C9C7E8':'#6E6C66';
   var dotStroke=isDark?'#252540':'#FFFFFF';
 
   // v5.42 · roomier top so the inline value label never crosses the data
   // line, and a slightly wider gutter so the rightmost axis date doesn't sit
   // flush against the chart edge.
-  var pad={t:opts.padTop||26,r:opts.padRight||20,b:22,l:opts.padLeft||14};
+  var pad={t:opts.padTop||26,r:opts.padRight||20,b:opts.padBot||26,l:opts.padLeft||14};
   var cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
 
   // Empty / single-point handling.
@@ -6020,11 +6024,13 @@ function drawChartV2(canvas, dataPoints, opts){
   // v5.14 (T2-B1): opt-in multi-label mode for per-exercise charts. opts.labelCount
   // up to 4 evenly distributed indices; rotate −25° if combined label width would
   // exceed ~85% of the available track. Uses each point's `label` as-is.
-  ctx.fillStyle=axis; ctx.font='10px system-ui';
+  // v5.43 · bumped 10 → 11.5 + weight 500 so the dates are actually legible on
+  // a phone (mobile DPR + low-contrast background ate the 10px ones whole).
+  ctx.fillStyle=axis; ctx.font='500 11px system-ui';
   var labelCount=Math.max(2, Math.min(4, opts.labelCount||2));
   if(labelCount<=2 || dataPoints.length<=2){
-    if(dataPoints[0]){ ctx.textAlign='left'; ctx.fillText(dataPoints[0].label||'', pad.l, h-4); }
-    if(dataPoints.length>1){ ctx.textAlign='right'; ctx.fillText(dataPoints[dataPoints.length-1].label||'', pad.l+cw, h-4); }
+    if(dataPoints[0]){ ctx.textAlign='left'; ctx.fillText(dataPoints[0].label||'', pad.l, h-8); }
+    if(dataPoints.length>1){ ctx.textAlign='right'; ctx.fillText(dataPoints[dataPoints.length-1].label||'', pad.l+cw, h-8); }
   } else {
     var step=(dataPoints.length-1)/(labelCount-1);
     var idxs=[]; for(var li=0;li<labelCount;li++){ idxs.push(Math.round(li*step)); }
@@ -6038,10 +6044,10 @@ function drawChartV2(canvas, dataPoints, opts){
       // Edge alignment: first → left, last → right, middle → center.
       ctx.textAlign=(ii===0)?'left':(ii===idxs.length-1)?'right':'center';
       if(rotate){
-        ctx.save(); ctx.translate(x, h-4); ctx.rotate(-25*Math.PI/180);
+        ctx.save(); ctx.translate(x, h-8); ctx.rotate(-25*Math.PI/180);
         ctx.textAlign='right'; ctx.fillText(p.label||'', 0, 0); ctx.restore();
       } else {
-        ctx.fillText(p.label||'', x, h-4);
+        ctx.fillText(p.label||'', x, h-8);
       }
     });
   }
