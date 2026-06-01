@@ -1230,7 +1230,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.29</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.30</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -4835,23 +4835,85 @@ function coachState(exKey, meta){
   }
   return null;
 }
-// v5.27: build a "Last session:" summary for a cardio card. Looks back
-// through this day's saved sessions for the most recent one that has any
-// `{prefix}-{machine}-{field}` entries (default prefix is 'wu-{day}'), then
-// summarizes that machine's logged fields. Returns {text, ts} or null.
+// v5.30: cardio data-ex strings carry a day prefix (e.g. "wu-a-treadmill-speed"
+// or "d3cardio-treadmill-speed") that makes the same physical exercise look
+// like a different key per day. Strip it to the "family + machine + field"
+// so prefill + Last-session lookups span all days, matching the way strength
+// already works (exercise name is the key, day doesn't matter).
+//   "wu-a-treadmill-speed"    → "wu-treadmill-speed"
+//   "wu-d-bike-rpm"           → "wu-bike-rpm"
+//   "d3cardio-treadmill-speed"→ "cardio-treadmill-speed"
+//   "d5cardio-rowing-pace"    → "cardio-rowing-pace"
+// Returns the original string when no day prefix is present (strength + notes
+// already use exercise-name keys, no normalization needed).
+function _cardioNormalizeKey(dx){
+  dx=String(dx||'');
+  if(/^wu-[a-z]-/.test(dx))      return 'wu-'    + dx.slice(5);
+  if(/^d\d+cardio-/.test(dx))    return 'cardio-'+ dx.replace(/^d\d+cardio-/,'');
+  return dx;
+}
+// Returns 'wu' / 'cardio' / null based on a cardio data-ex.
+function _cardioFamily(dx){
+  dx=String(dx||'');
+  if(/^wu-/.test(dx))            return 'wu';
+  if(/^d\d+cardio-|^cardio-/.test(dx)) return 'cardio';
+  return null;
+}
+// Build a map of normalized-cardio-key → latest entry across ALL days/sessions.
+// Cached per render via the same signature as buildGlobalRepMap.
+var _crmCache=null, _crmSig=null;
+function buildCardioMap(){
+  var _sig=''; try{ getAllDayKeys().forEach(function(d){ _sig+=d+':'+(localStorage.getItem('gymlog_'+d)||'').length+'|'; }); }catch(e){}
+  if(_crmCache && _sig===_crmSig) return _crmCache;
+  var map={};
+  getAllDayKeys().forEach(function(day){
+    (getSaved(day)||[]).forEach(function(sess){
+      var ts=sessTs(sess);
+      (sess.entries||[]).forEach(function(e){
+        if(!e.note) return;
+        var nk=_cardioNormalizeKey(e.ex);
+        if(nk===e.ex) return;  // not a cardio key, skip
+        if(!map[nk] || ts > map[nk].ts){
+          map[nk]={note:e.note, date:sess.date, ts:ts};
+        }
+      });
+    });
+  });
+  _crmCache=map; _crmSig=_sig;
+  return map;
+}
+// v5.27→v5.30: "Last session:" summary for a cardio card. Now cross-day:
+// iterates all sessions across all days, finds the most recent one with any
+// entry in this card's family ('wu' for warm-ups, 'cardio' for dedicated
+// blocks), and summarizes that session's most-detailed machine. The 'day'
+// + 'prefix' arguments are retained for backward compat but no longer
+// constrain the lookup.
 function _cardioLastSummary(day, prefix){
-  var saved=getSaved(day); if(!saved.length) return null;
-  prefix = prefix || ('wu-' + day);
-  for(var s=0; s<saved.length; s++){
-    var sess=saved[s];
+  var family=null;
+  if(prefix){
+    if(prefix.indexOf('wu-')===0) family='wu';
+    else if(/^d\d+cardio$/.test(prefix) || prefix==='cardio') family='cardio';
+  }
+  if(!family) family='wu'; // safe default for legacy callers
+  var candidates=[];
+  getAllDayKeys().forEach(function(d){
+    (getSaved(d)||[]).forEach(function(sess){
+      var ts=sessTs(sess); if(!ts) return;
+      var hit=(sess.entries||[]).some(function(e){ return _cardioFamily(e.ex)===family; });
+      if(hit) candidates.push({sess:sess, ts:ts});
+    });
+  });
+  candidates.sort(function(a,b){ return b.ts-a.ts; });
+  for(var i=0;i<candidates.length;i++){
+    var sess=candidates[i].sess;
     var byMachine={};
     (sess.entries||[]).forEach(function(e){
-      var ex=String(e.ex||'');
-      if(ex.indexOf(prefix+'-')!==0) return;
-      var rest=ex.slice(prefix.length+1);   // e.g. "treadmill-duration"
-      var dash=rest.lastIndexOf('-');
+      if(_cardioFamily(e.ex)!==family) return;
+      var nk=_cardioNormalizeKey(e.ex);             // e.g. "wu-treadmill-speed"
+      var stripped=nk.replace(/^(wu|cardio)-/,'');   // "treadmill-speed"
+      var dash=stripped.lastIndexOf('-');
       if(dash<=0) return;
-      var machine=rest.slice(0,dash), field=rest.slice(dash+1);
+      var machine=stripped.slice(0,dash), field=stripped.slice(dash+1);
       if(!byMachine[machine]) byMachine[machine]={};
       byMachine[machine][field]=e.note;
     });
@@ -4870,7 +4932,7 @@ function _cardioLastSummary(day, prefix){
     if(f.incline)  parts.push('incl '+f.incline);
     if(f.distance) parts.push(f.distance);
     if(f.calories) parts.push(f.calories+' cal');
-    return { text: parts.join(' · '), ts: sessTs(sess) };
+    return { text: parts.join(' · '), ts: candidates[i].ts };
   }
   return null;
 }
@@ -5142,11 +5204,17 @@ function loadLastTimes(){
       }
     });
 
-    // Pre-populate cardio input fields with last known values
+    // Pre-populate cardio input fields with last known values.
+    // v5.30: lookup is now cross-day via the normalized cardio key
+    // (e.g. "wu-treadmill-speed" matches the latest treadmill-speed entry
+    // from any day's warmup). Falls back to the exact-key globalMap match
+    // for any legacy data that doesn't fit the prefix pattern.
+    var _cardioMap=buildCardioMap();
     panel.querySelectorAll('.cardio-input').forEach(function(inp){
       if(inp.value) return;
-      var ex=normalizeEx(inp.getAttribute('data-ex')||'');
-      var match=globalMap[ex] || null;
+      var dx=inp.getAttribute('data-ex')||'';
+      var nk=_cardioNormalizeKey(dx);
+      var match=_cardioMap[nk] || globalMap[normalizeEx(dx)] || null;
       if(match){
         inp.value=match.note;
         inp.style.color='var(--ghost)';

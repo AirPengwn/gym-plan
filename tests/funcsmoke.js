@@ -639,6 +639,27 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.30 · cross-day cardio prefill + Last summary ──
+(function(){
+  var DAY=86400000, now=Date.now();
+  var d1Sess = {label:'D1', date:'yesterday', ts:now-DAY, entries:[
+    {ex:'wu-a-treadmill-speed',    note:'2.5 mph'},
+    {ex:'wu-a-treadmill-duration', note:'5 min'}
+  ]};
+  const w=loadApp(makeStore({ 'gymlog_a': JSON.stringify([d1Sess]) }));
+  ok(w._cardioNormalizeKey('wu-a-treadmill-speed')==='wu-treadmill-speed','v5.30 · normalizes wu-a-* → wu-*');
+  ok(w._cardioNormalizeKey('wu-d-bike-rpm')==='wu-bike-rpm','v5.30 · normalizes wu-d-* → wu-*');
+  ok(w._cardioNormalizeKey('d3cardio-treadmill-speed')==='cardio-treadmill-speed','v5.30 · normalizes d3cardio-* → cardio-*');
+  ok(w._cardioNormalizeKey('Lat pulldown')==='Lat pulldown','v5.30 · non-cardio keys pass through');
+  var crm=w.buildCardioMap();
+  ok(crm['wu-treadmill-speed'] && crm['wu-treadmill-speed'].note==='2.5 mph','v5.30 · cardioMap built across days');
+  var nk2=w._cardioNormalizeKey('wu-d-treadmill-speed');
+  ok(crm[nk2] && crm[nk2].note==='2.5 mph','v5.30 · Day 4 input data-ex "wu-d-*" finds Day 1\'s "wu-a-*" entry');
+  var lastSum=w._cardioLastSummary('d', 'wu-d');
+  ok(lastSum && /Treadmill/.test(lastSum.text) && /2\.5 mph/.test(lastSum.text),'v5.30 · Last-session summary is cross-day ('+(lastSum?lastSum.text:'none')+')');
+  w.close();
+})();
+
 // ── v5.29 · auto-start rest on check (opt-in) + Auto→Default label ──
 (function(){
   const w=loadApp(makeStore({}));
