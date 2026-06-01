@@ -627,6 +627,13 @@ body.dark .sess-summary-card{box-shadow:0 8px 28px rgba(0,0,0,.5),0 2px 8px rgba
 .cardio-input::placeholder{color:var(--muted);font-size:11px;opacity:1}
 .edit-date-btn{background:none;border:none;cursor:pointer;padding:2px 4px;font-size:13px;vertical-align:middle;line-height:1}
 .edit-date-input{font-size:11px;padding:3px 6px;border:1px solid #7F77DD;border-radius:5px;color:#2C2C2A;background:#fff;font-family:inherit;outline:none}
+/* v5.34: inline Save / Cancel buttons next to the datetime-local input.
+   User must explicitly commit — no more auto-save on iOS picker change. */
+.edit-date-ok,.edit-date-cancel{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-size:13px;line-height:1;margin-left:4px;font-family:inherit;padding:0;vertical-align:middle}
+.edit-date-ok{color:var(--good);border-color:var(--good)}
+.edit-date-ok:hover{background:rgba(15,110,86,.12)}
+.edit-date-cancel{color:var(--bad)}
+.edit-date-cancel:hover{background:rgba(197,48,48,.10);border-color:var(--bad)}
 .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:1rem}
 body.dark .modal-overlay{background:rgba(0,0,0,0.4)}
 /* v4.18 (nit 15): templates open as a full-screen sheet (a "screen" push), not an 84vh float */
@@ -1230,7 +1237,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.33</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.34</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -6569,10 +6576,8 @@ function initCardioPanels(){document.querySelectorAll(".cardio-machine-toggle").
 function editSessionDate(day,idx){
   var saved=getSaved(day); if(!saved[idx]) return;
   var current=saved[idx].date;
-  // v5.32: the stored format "Mon, Jun 1, 2026 at 6:00 PM" doesn't parse with
-  // plain new Date() on Safari (the " at " separator). Prefer the session's
-  // ts (always written at save time); fall back to the Safari-safe _sessWhen
-  // regex parser.
+  // v5.32: prefer session.ts; fall back to _sessWhen (Safari-safe regex of
+  // "X at Y" stored format) for legacy entries.
   var tsMs=(saved[idx].ts!=null && saved[idx].ts>0) ? saved[idx].ts : _sessWhen(saved[idx]);
   var defaultVal='';
   if(tsMs>0){
@@ -6581,23 +6586,35 @@ function editSessionDate(day,idx){
     defaultVal=new Date(tsMs - offset*60000).toISOString().slice(0,16);
   }
   var span=document.getElementById('pdate-'+day+'-'+idx); if(!span) return;
-  // v5.33: switch to programmatic event listeners. iOS Safari sometimes
-  // skips firing 'blur' after the datetime-local picker dismisses (the
-  // picker closes without moving focus to a blurrable element). Listen to
-  // BOTH 'change' (fires reliably on iOS picker close) and 'blur', with a
-  // committed-once flag to dedupe. Also avoids the inline-handler string
-  // building that was prone to escaping issues with the stored date format.
-  span.innerHTML='<input class="edit-date-input" type="datetime-local" value="'+_esc(defaultVal)+'">';
-  var inp=span.querySelector('input'); if(!inp) return;
-  var committed=false;
+  // v5.34: explicit Save / Cancel buttons instead of auto-commit on change/blur.
+  // v5.33 fired 'change' on iOS too eagerly — the picker commits the date pick
+  // before the user touches the time wheels, and the input dismisses with a
+  // partial value (sometimes the unchanged default). Saving doesn't visibly
+  // update but the user can't finish editing the time either. Explicit ✓ / ✕
+  // gives the user full control over when the edit commits.
+  span.innerHTML=
+    '<input class="edit-date-input" type="datetime-local" value="'+_esc(defaultVal)+'">'+
+    '<button type="button" class="edit-date-ok" aria-label="Save date">✓</button>'+
+    '<button type="button" class="edit-date-cancel" aria-label="Cancel">✕</button>';
+  var inp=span.querySelector('input');
+  var okBtn=span.querySelector('.edit-date-ok');
+  var cancelBtn=span.querySelector('.edit-date-cancel');
+  if(!inp||!okBtn||!cancelBtn) return;
+  var settled=false;
   function commit(){
-    if(committed) return;
-    committed=true;
+    if(settled) return; settled=true;
     saveEditDate(day, idx, inp, current);
   }
-  inp.addEventListener('change', commit);
-  inp.addEventListener('blur',   commit);
-  inp.addEventListener('keydown', function(ev){ if(ev.key==='Enter') inp.blur(); });
+  function cancel(){
+    if(settled) return; settled=true;
+    try{ renderProgress(); }catch(e){}   // restore the read-only label
+  }
+  okBtn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); commit(); });
+  cancelBtn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); cancel(); });
+  inp.addEventListener('keydown', function(ev){
+    if(ev.key==='Enter'){ ev.preventDefault(); commit(); }
+    else if(ev.key==='Escape'){ ev.preventDefault(); cancel(); }
+  });
   inp.focus();
 }
 
