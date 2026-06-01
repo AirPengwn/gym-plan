@@ -1265,7 +1265,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.41</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.42</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -1376,7 +1376,7 @@ body.dark .hm-sw.med{background:#7F77DD}
         <button onclick="saveMeasurement()" style="padding:10px 18px;background:#7F77DD;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Add</button>
       </div>
     </div>
-    <div id="meas-chart-wrap" style="margin:12px 0 4px"><canvas id="meas-chart" height="180"></canvas></div>
+    <div id="meas-chart-wrap" style="margin:12px 0 4px;text-align:center"><canvas style="display:block;margin:0 auto;max-width:100%" id="meas-chart" height="180"></canvas></div>
     <div id="meas-summary" style="display:flex;gap:8px;margin-bottom:12px"></div>
     <div id="meas-history"></div>
     </div><!-- end meas-tab-weight -->
@@ -1392,7 +1392,7 @@ body.dark .hm-sw.med{background:#7F77DD}
         <button onclick="saveGenericMeas('waist','meas-waist-val','meas-waist-date','in')" style="padding:10px 18px;background:#7F77DD;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Add</button>
       </div>
     </div>
-    <div id="meas-chart-wrap-waist" style="margin:12px 0 4px"><canvas id="meas-chart-waist" height="180"></canvas></div>
+    <div id="meas-chart-wrap-waist" style="margin:12px 0 4px;text-align:center"><canvas style="display:block;margin:0 auto;max-width:100%" id="meas-chart-waist" height="180"></canvas></div>
     <div id="meas-summary-waist" style="display:flex;gap:8px;margin-bottom:12px"></div>
     <div id="meas-history-waist"></div>
     </div><!-- end meas-tab-waist -->
@@ -1408,7 +1408,7 @@ body.dark .hm-sw.med{background:#7F77DD}
         <button onclick="saveGenericMeas('bodyfat','meas-bodyfat-val','meas-bodyfat-date','%')" style="padding:10px 18px;background:#7F77DD;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Add</button>
       </div>
     </div>
-    <div id="meas-chart-wrap-bodyfat" style="margin:12px 0 4px"><canvas id="meas-chart-bodyfat" height="180"></canvas></div>
+    <div id="meas-chart-wrap-bodyfat" style="margin:12px 0 4px;text-align:center"><canvas style="display:block;margin:0 auto;max-width:100%" id="meas-chart-bodyfat" height="180"></canvas></div>
     <div id="meas-summary-bodyfat" style="display:flex;gap:8px;margin-bottom:12px"></div>
     <div id="meas-history-bodyfat"></div>
     </div><!-- end meas-tab-bodyfat -->
@@ -5985,7 +5985,10 @@ function drawChartV2(canvas, dataPoints, opts){
   var axis=isDark?'var(--muted-2)':'#888780';
   var dotStroke=isDark?'#252540':'#FFFFFF';
 
-  var pad={t:20,r:16,b:22,l:16};
+  // v5.42 · roomier top so the inline value label never crosses the data
+  // line, and a slightly wider gutter so the rightmost axis date doesn't sit
+  // flush against the chart edge.
+  var pad={t:opts.padTop||26,r:opts.padRight||20,b:22,l:opts.padLeft||14};
   var cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
 
   // Empty / single-point handling.
@@ -6062,20 +6065,46 @@ function drawChartV2(canvas, dataPoints, opts){
     ctx.stroke();
   }
 
-  // Highlighted last point + inline value label above.
+  // v5.42 · optional first-point highlight + value label (for body charts —
+  // user gets to see start AND current at a glance, not just current). Drawn
+  // BEFORE the last-point highlight so the last dot's bolder ring wins z-order
+  // on rare overlap.
+  var unit=opts.unit||'';
   var lastIdx=dataPoints.length-1;
-  var lpx=xAt(lastIdx), lpy=yAt(dataPoints[lastIdx].val);
+  var firstVal=Number(dataPoints[0].val)||0;
+  var lastVal=Number(dataPoints[lastIdx].val)||0;
+  // Direction-aware label placement: descending data has the line entering
+  // each point from above-left, so a label drawn above-left would CROSS the
+  // line. Drop labels BELOW the point for descending trends, ABOVE for
+  // ascending. (Body weight loss is the canonical descending case.)
+  var descending=lastVal<firstVal;
+  if(opts.highlightFirst && dataPoints.length>=2){
+    var fpx=xAt(0), fpy=yAt(firstVal);
+    ctx.beginPath(); ctx.arc(fpx,fpy,3.5,0,Math.PI*2);
+    ctx.fillStyle=stroke; ctx.globalAlpha=0.7; ctx.fill(); ctx.globalAlpha=1;
+    ctx.strokeStyle=dotStroke; ctx.lineWidth=1.5; ctx.stroke();
+    var fTxt=Math.round(firstVal)+(unit?' '+unit:'');
+    ctx.fillStyle=stroke; ctx.font='600 10px system-ui';
+    ctx.textAlign='left';
+    // Start label sits on the side opposite the last-label (so neither crosses
+    // the line on a steep slope): descending → start ABOVE, ascending → BELOW.
+    var fy=descending?(fpy-7):(fpy+14);
+    ctx.fillText(fTxt, fpx+5, fy);
+  }
+  // Highlighted last point + inline value label.
+  var lpx=xAt(lastIdx), lpy=yAt(lastVal);
   ctx.beginPath(); ctx.arc(lpx,lpy,4,0,Math.PI*2);
   ctx.fillStyle=stroke; ctx.fill();
   ctx.strokeStyle=dotStroke; ctx.lineWidth=2; ctx.stroke();
-  var unit=opts.unit||'';
-  var lblTxt=Math.round(dataPoints[lastIdx].val)+(unit?' '+unit:'');
+  var lblTxt=Math.round(lastVal)+(unit?' '+unit:'');
   ctx.fillStyle=stroke; ctx.font='bold 11px system-ui';
   // Right-align when the dot is near the right edge; centre otherwise.
   var nearRight=(pad.l+cw - lpx) < 40;
   ctx.textAlign=nearRight?'right':'center';
   var labelX=nearRight?(lpx-6):lpx;
-  ctx.fillText(lblTxt, labelX, lpy-8);
+  // Last-label placement matches the descending/ascending rule above.
+  var labelY=descending?(lpy+16):(lpy-8);
+  ctx.fillText(lblTxt, labelX, labelY);
 }
 
 // Per-exercise weight chart — now delegates to drawChartV2 for the unified style.
@@ -7365,10 +7394,26 @@ function selectBackupCode(){
   var ta=document.getElementById('export-text');
   if(!ta || !ta.value){ showToast('Nothing to select yet'); return; }
   try{
+    // v5.42 · iOS Safari fix — on a long readonly textarea, plain .select()
+    // (and even setSelectionRange) often highlights only the visible portion.
+    // Workaround: temporarily drop readonly so iOS treats the field as
+    // user-editable, scroll to the top, then run THREE selection strategies
+    // back-to-back (.select() / execCommand('selectAll') / setSelectionRange)
+    // and re-apply the range on a microtask so iOS actually paints the full
+    // highlight. Readonly is restored once selection is committed so the
+    // user can't edit the backup code.
+    var hadReadonly=ta.hasAttribute('readonly');
+    if(hadReadonly) ta.removeAttribute('readonly');
+    ta.scrollTop=0; ta.scrollLeft=0;
     ta.focus();
-    ta.select();
-    ta.setSelectionRange(0, ta.value.length);
-    showToast('Selected — long-press the highlight to Copy');
+    try{ ta.select(); }catch(e){}
+    try{ document.execCommand('selectAll', false, null); }catch(e){}
+    try{ ta.setSelectionRange(0, ta.value.length); }catch(e){}
+    setTimeout(function(){
+      try{ ta.setSelectionRange(0, ta.value.length); }catch(e){}
+      if(hadReadonly) try{ ta.setAttribute('readonly', ''); }catch(e){}
+    }, 30);
+    showToast('Selected — long-press to Copy');
     try{ haptic('light'); }catch(e){}
   } catch(e){
     showToast('Select failed — long-press the box manually');
@@ -7383,7 +7428,18 @@ function copyBackupCode(){
   // still write to the clipboard via the modern API (or execCommand fallback)
   // in the same tap. Selection persists after copy so the user can also
   // verify by sight.
-  try{ ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); }catch(e){}
+  // v5.42 · same iOS-safe multi-strategy selection so the highlight on Copy
+  // actually covers the entire payload (matches selectBackupCode's path).
+  try{
+    var hadReadonly=ta.hasAttribute('readonly');
+    if(hadReadonly) ta.removeAttribute('readonly');
+    ta.scrollTop=0; ta.scrollLeft=0;
+    ta.focus();
+    try{ ta.select(); }catch(e){}
+    try{ document.execCommand('selectAll', false, null); }catch(e){}
+    try{ ta.setSelectionRange(0, ta.value.length); }catch(e){}
+    if(hadReadonly) setTimeout(function(){ try{ ta.setAttribute('readonly',''); }catch(e){} }, 30);
+  }catch(e){}
   var txt=ta.value;
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(txt).then(_copyOk, function(){ _copyFallback(ta); });
@@ -10515,7 +10571,10 @@ function drawMeasChartGeneric(data, canvas, wrap){
     return {label:fmtDate(d,'short'), val:m.value, ts:d.getTime()};
   });
   var unit=(data[0]&&data[0].unit)||'';
-  drawChartV2(canvas, pts, {unit:unit, height:180});
+  // v5.42 · body charts get the richer rendering: 4 x-axis labels, both
+  // endpoints highlighted with their value, taller canvas so the trend is
+  // actually visible.
+  drawChartV2(canvas, pts, {unit:unit, height:200, labelCount:4, highlightFirst:true});
 }
 
 // ── Dark mode ──────────────────────────────────────────────────────────────────
