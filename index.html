@@ -1052,6 +1052,28 @@ body.dark .sess-ovf-menu{background:#252540;border-color:var(--border)}
 .sess-ovf-mi:hover{background:var(--border-soft)}
 .sess-ovf-danger{color:var(--bad)}
 body.dark .sess-ovf-danger{color:#FF8080}
+/* v5.39: edit-session-entries modal — list each strength exercise's sets
+   with editable weight + reps inputs. Useful for backfilling reps on older
+   sessions logged before reps were tracked. */
+.ese-overlay{position:fixed;inset:0;background:rgba(15,15,30,.55);z-index:1100;display:flex;align-items:flex-end;justify-content:center;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.ese-card{background:var(--card);border:1px solid var(--border);border-radius:14px;width:100%;max-width:420px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.ese-head{padding:14px 16px 8px;border-bottom:1px solid var(--border-soft)}
+.ese-title{font-size:var(--fs-lg);font-weight:800;color:var(--text);margin:0}
+.ese-sub{font-size:var(--fs-11);color:var(--muted);margin-top:2px}
+.ese-body{padding:8px 14px;overflow-y:auto;flex:1}
+.ese-group{border-bottom:1px dashed var(--border-soft);padding:10px 0}
+.ese-group:last-child{border-bottom:0}
+.ese-ex{font-size:var(--fs-md);font-weight:700;color:var(--text);margin-bottom:6px}
+.ese-row{display:flex;align-items:center;gap:6px;padding:4px 0;flex-wrap:wrap}
+.ese-lbl{font-size:var(--fs-11);font-weight:700;color:var(--muted);min-width:38px}
+.ese-w,.ese-r{width:64px;padding:6px 8px;font-size:var(--fs-sm);font-weight:600;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:6px;outline:none;font-family:inherit;text-align:center}
+.ese-w:focus,.ese-r:focus{border-color:var(--primary-2)}
+.ese-x,.ese-rl{font-size:var(--fs-11);color:var(--muted);font-weight:600}
+.ese-foot{padding:12px 14px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border-soft);background:var(--surface)}
+.ese-cancel,.ese-save{padding:10px 18px;font-size:var(--fs-sm);font-weight:700;font-family:inherit;border-radius:8px;cursor:pointer;border:1.5px solid var(--border)}
+.ese-cancel{background:transparent;color:var(--text)}
+.ese-save{background:var(--primary);border-color:var(--primary);color:#fff}
+.ese-save:active{filter:brightness(.92)}
 .sess-card-meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-bottom:8px;gap:8px;flex-wrap:wrap}
 .sess-card-chips{display:flex;gap:5px;flex-wrap:wrap}
 .sess-meta-chip{font-size:var(--fs-11);font-weight:600;color:var(--muted);background:var(--border-soft);border-radius:7px;padding:2px 7px;white-space:nowrap}
@@ -1237,7 +1259,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.38</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.39</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -8189,6 +8211,7 @@ function sessOverflow(day, idx, ev){
   menu.setAttribute('role','menu');
   menu.innerHTML=
     '<button role="menuitem" class="sess-ovf-mi" onclick="editSessionDate(\''+day+'\','+idx+');_closeSessOvf()">✏️ Edit date</button>'
+   +'<button role="menuitem" class="sess-ovf-mi" onclick="openEditSessionEntries(\''+day+'\','+idx+');_closeSessOvf()">🔢 Edit entries</button>'
    +'<button role="menuitem" class="sess-ovf-mi sess-ovf-danger" onclick="confirmDeleteSession(\''+day+'\','+idx+')"><svg class="ic ic-sm" style="margin-right:7px" aria-hidden="true"><use href="#ic-trash"/></svg>Delete this session</button>';
   btn.parentNode.appendChild(menu);
   // Close on outside click.
@@ -8199,6 +8222,119 @@ function sessOverflow(day, idx, ev){
 }
 function _closeSessOvf(){
   document.querySelectorAll('.sess-ovf-menu').forEach(function(m){ m.parentNode.removeChild(m); });
+}
+// v5.39: open a modal that lets the user edit the weight + reps for each
+// set in a saved session. Useful for backfilling reps on older sessions
+// logged before reps were tracked. Cardio / RPE / pain entries are left
+// alone — only entries whose note starts with "Set " show up.
+function openEditSessionEntries(day, idx){
+  var saved=getSaved(day); if(!saved[idx]) return;
+  var sess=saved[idx];
+  var order=[], byEx={};
+  (sess.entries||[]).forEach(function(e){
+    if(!e.note || e.note.indexOf('Set ')!==0) return;
+    var sets=[];
+    String(e.note).split('|').forEach(function(s){
+      var m=s.trim().match(/Set\s*\d+\s*:\s*([\d.]+)\s*(?:lbs|kg)?\s*(?:x\s*(\d+)\s*reps?)?/i);
+      if(m) sets.push({ w: parseFloat(m[1])||0, r: m[2]?parseInt(m[2],10):null });
+    });
+    if(sets.length && !byEx[e.ex]){ byEx[e.ex]=sets; order.push(e.ex); }
+  });
+  if(!order.length){ showToast('No strength sets to edit on this session'); return; }
+  // Build modal overlay
+  var prev=document.getElementById('ese-overlay'); if(prev) prev.remove();
+  var ov=document.createElement('div');
+  ov.id='ese-overlay'; ov.className='ese-overlay';
+  var dt=''; try{ dt=fmtDate(_sessWhen(sess)||sess.date, 'med'); }catch(e){}
+  var h='<div class="ese-card" role="dialog" aria-labelledby="ese-title">'
+       +'<div class="ese-head">'
+       +  '<div id="ese-title" class="ese-title">Edit session</div>'
+       +  '<div class="ese-sub">'+_esc(dt||sess.date||'')+'</div>'
+       +'</div>'
+       +'<div class="ese-body">';
+  order.forEach(function(ex, gi){
+    h+='<div class="ese-group" data-ex="'+_esc(ex)+'">'
+      + '<div class="ese-ex">'+_esc(ex)+'</div>';
+    byEx[ex].forEach(function(set, si){
+      h+='<div class="ese-row">'
+        + '<span class="ese-lbl">Set '+(si+1)+'</span>'
+        + '<input class="ese-w" type="number" inputmode="decimal" step="0.5" placeholder="weight" value="'+(set.w||'')+'">'
+        + '<span class="ese-x">lbs ×</span>'
+        + '<input class="ese-r" type="number" inputmode="numeric" min="0" placeholder="reps" value="'+(set.r!=null?set.r:'')+'">'
+        + '<span class="ese-rl">reps</span>'
+        + '</div>';
+    });
+    h+='</div>';
+  });
+  h+='</div>'
+    +'<div class="ese-foot">'
+    +  '<button type="button" class="ese-cancel" onclick="closeEditSessionEntries()">Cancel</button>'
+    +  '<button type="button" class="ese-save" onclick="saveEditSessionEntries(\''+day+'\','+idx+')">Save</button>'
+    +'</div>'
+    +'</div>';
+  ov.innerHTML=h;
+  ov.addEventListener('click', function(ev){ if(ev.target===ov) closeEditSessionEntries(); });
+  document.body.appendChild(ov);
+}
+function closeEditSessionEntries(){
+  var ov=document.getElementById('ese-overlay'); if(ov) ov.remove();
+}
+function saveEditSessionEntries(day, idx){
+  var ov=document.getElementById('ese-overlay'); if(!ov) return;
+  var saved=getSaved(day); if(!saved[idx]) return;
+  var sess=saved[idx];
+  // Collect edits per exercise from the modal inputs
+  var groupsByEx={};
+  ov.querySelectorAll('.ese-group').forEach(function(g){
+    var ex=g.getAttribute('data-ex');
+    var sets=[];
+    g.querySelectorAll('.ese-row').forEach(function(row){
+      var wRaw=(row.querySelector('.ese-w').value||'').trim();
+      var rRaw=(row.querySelector('.ese-r').value||'').trim();
+      if(!wRaw) return; // skip set with no weight
+      var w=parseFloat(wRaw); if(!(w>0)) return;
+      var r=rRaw?parseInt(rRaw,10):null;
+      if(r!=null && (isNaN(r) || r<0)) r=null;
+      sets.push({w:w, r:r});
+    });
+    if(sets.length) groupsByEx[ex]=sets;
+  });
+  // Rewrite each strength entry's note (and structured .sets) from the
+  // edited values. Other entries (cardio fields, RPE, pain flags) untouched.
+  (sess.entries||[]).forEach(function(e){
+    if(!e.note || e.note.indexOf('Set ')!==0) return;
+    var sets=groupsByEx[e.ex]; if(!sets) return;
+    var parts=sets.map(function(set,si){
+      var p='Set '+(si+1)+': '+set.w+' lbs';
+      if(set.r!=null) p+=' x'+set.r+'reps';
+      return p;
+    });
+    e.note=parts.join(' | ');
+    if(Array.isArray(e.sets)){
+      e.sets=sets.map(function(set){ return { w:set.w||0, u:'lbs', r:set.r!=null?set.r:null }; });
+    }
+  });
+  sess.modifiedAt=Date.now();
+  localStorage.setItem('gymlog_'+day, JSON.stringify(saved));
+  closeEditSessionEntries();
+  try{ renderProgress(); }catch(e){}
+  // v5.36-style honest sync feedback
+  if(typeof TEST_MODE!=='undefined' && TEST_MODE){
+    showToast('Session updated · 🧪 test mode (no cloud push)');
+    return;
+  }
+  if(typeof isPrimaryDevice==='function' && !isPrimaryDevice()){
+    showToast('Session updated locally · 📖 reader mode — set this device as Primary in More → Backup to push to cloud', {sticky:true});
+    return;
+  }
+  showToast('Session updated ✓ · syncing…', 2500);
+  syncToJbin(function(ok){
+    if(ok){ showToast('Synced to cloud ☁ ✓', 2500); }
+    else  {
+      var err=(window._lastSyncErr||'unknown').slice(0,80);
+      showToast('⚠️ Cloud sync failed — saved locally · '+err, {sticky:true});
+    }
+  });
 }
 var _pendingDelete=null;
 function confirmDeleteSession(day, idx){
