@@ -1230,7 +1230,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.28</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.29</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -1430,7 +1430,9 @@ body.dark .hm-sw.med{background:#7F77DD}
     <div class="set-item">
       <span>⏱ Rest timer</span>
       <span class="rest-seg" id="rest-seg" role="group" aria-label="Rest timer default">
-        <button type="button" data-m="auto" onclick="setRestMode('auto')">Auto</button>
+        <!-- v5.29: relabeled "Auto" → "Default" for clarity. Stored value
+             stays 'auto' so the sync payload + getRestMode are unchanged. -->
+        <button type="button" data-m="auto" onclick="setRestMode('auto')">Default</button>
         <button type="button" data-m="long" onclick="setRestMode('long')">Long</button>
         <button type="button" data-m="short" onclick="setRestMode('short')">Short</button>
       </span>
@@ -1450,6 +1452,14 @@ body.dark .hm-sw.med{background:#7F77DD}
         <button type="button" data-ts="bumped"  onclick="setTextSize('bumped')">A+</button>
         <button type="button" data-ts="larger"  onclick="setTextSize('larger')">A++</button>
         <button type="button" data-ts="xl"      onclick="setTextSize('xl')">A+++</button>
+      </span>
+    </div>
+    <!-- v5.29: auto-start rest timer when an exercise is checked. Off by default. -->
+    <div class="set-item">
+      <span>⚡ Auto-start rest on ✓</span>
+      <span class="rest-seg" id="auto-rest-seg" role="group" aria-label="Auto-start rest timer on exercise check">
+        <button type="button" data-ar="off" onclick="setAutoStartRest(false)">Off</button>
+        <button type="button" data-ar="on"  onclick="setAutoStartRest(true)">On</button>
       </span>
     </div>
   </div>
@@ -3835,7 +3845,21 @@ function tog(id,day,total){
     _cb.setAttribute('aria-checked', _done?'true':'false');
   }
   // Mark session start on first exercise checked
-  if(el.classList.contains('done')) markSessionStart(day);
+  if(el.classList.contains('done')){
+    markSessionStart(day);
+    // v5.29: auto-start the rest timer on check (strength cards only, opt-in
+    // via More → Appearance → "Auto-start rest on ✓"). Skips legacy cardio
+    // cards. Uses the existing smart-rest plumbing so Long/Short still apply.
+    if(typeof getAutoStartRest==='function' && getAutoStartRest() && el.classList.contains('v2-card')){
+      try{
+        var sugg=restForItem(el);
+        if(sugg && sugg.seconds>0){
+          _pendingSmartRest={key:sugg.key, name:sugg.name, seconds:sugg.seconds, override:sugg.override};
+          startRestTimer(sugg.seconds);
+        }
+      }catch(e){}
+    }
+  }
   var p=document.getElementById('p-'+day);
   var d=p.querySelectorAll('.item.done').length;
   document.getElementById('cnt-'+day).textContent=d+' / '+total;
@@ -4109,6 +4133,7 @@ function openMore(){
   try{ _syncEquipUI(); }catch(e){}
   try{ _syncUnitsUI(); }catch(e){}
   try{ _syncTextSizeUI(getTextSize()); }catch(e){}
+  try{ _syncAutoStartRestUI(getAutoStartRest()); }catch(e){}
   _setDaySelectorVisible(false);
   try{ window.scrollTo(0,0); }catch(e){}
   _syncNav();
@@ -8781,7 +8806,7 @@ function clearPendingSync(){ try{ localStorage.removeItem('gymlog_sync_pending')
 // Uses sessionStorage so a mid-test reload stays in test mode, and the
 // snapshot is persisted so it can still be discarded after a reload.
 var TEST_MODE = sessionStorage.getItem('gym_test_mode')==='1';
-var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','plate_setup_v1','units_v1','gymlog_sync_pending','darkMode','milestones_earned_at','bodyweight_goal_v1','vol_chart_mode','text_size_v1','plan_intro_dismissed_v1'];
+var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','plate_setup_v1','units_v1','gymlog_sync_pending','darkMode','milestones_earned_at','bodyweight_goal_v1','vol_chart_mode','text_size_v1','plan_intro_dismissed_v1','rest_autostart_v1'];
 function _testKeys(){
   var ks=[];
   for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i);
@@ -10017,6 +10042,25 @@ function _syncTextSizeUI(pref){
   });
 }
 (function initTextSize(){ setTextSize(getTextSize()); })();
+
+// ── v5.29: auto-start rest timer when an exercise is checked ──────────────
+// Per-device opt-in (default OFF) so existing users see no change. When ON,
+// checking a strength card kicks off the smart rest for that exercise. The
+// existing Rest button + Auto/Long/Short mode are unaffected.
+function getAutoStartRest(){
+  try{ return localStorage.getItem('rest_autostart_v1')==='1'; }catch(e){ return false; }
+}
+function setAutoStartRest(on){
+  try{ localStorage.setItem('rest_autostart_v1', on?'1':'0'); }catch(e){}
+  _syncAutoStartRestUI(!!on);
+}
+function _syncAutoStartRestUI(on){
+  var seg=document.getElementById('auto-rest-seg'); if(!seg) return;
+  [].slice.call(seg.querySelectorAll('button')).forEach(function(b){
+    b.classList.toggle('on', (b.getAttribute('data-ar')==='on') === !!on);
+  });
+}
+(function initAutoStartRest(){ _syncAutoStartRestUI(getAutoStartRest()); })();
 
 // ── Haptic feedback ───────────────────────────────────────────────────────────────────
 function haptic(style){
