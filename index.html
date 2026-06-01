@@ -1265,7 +1265,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.40</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.41</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -2032,6 +2032,106 @@ function pushPlanToCloud(){
     showToast('⚠️ Plan push failed — '+(((err&&err.message)||'unknown')).slice(0,80));
   });
 }
+
+// ── v5.41 · Auto-push plan/day/library edits + boot auto-pull for readers ─
+// Auto-push: any localStorage.setItem of a plan/day/library/settings key on a
+// primary device with cloud-sync enabled triggers a debounced silent push,
+// overlaying the local plan onto the cloud bin. Sessions stay on their own
+// merge path — only plan-shape keys are pushed here. Reader devices and Test
+// Mode short-circuit, so a Reader PC never overwrites the iPhone's cloud.
+// Boot auto-pull: a Reader device cloudGETs once per app open and applies the
+// payload locally so it always sees the latest plan/days/library/sessions the
+// primary pushed — same effect as tapping "Pull from cloud" without the prompt.
+var _PLAN_KEYS_SYNC=['plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','plate_setup_v1','units_v1'];
+function _silentPushPlan(){
+  try{
+    if(typeof TEST_MODE!=='undefined' && TEST_MODE) return;
+    if(typeof isPrimaryDevice==='function' && !isPrimaryDevice()) return;
+    if(!getPlanSyncEnabled()) return;
+  }catch(e){ return; }
+  _serializeCloudWrite(function(){ return cloudGET().then(function(cloud){
+    cloud=(cloud && typeof cloud==='object')?cloud:{};
+    // Overlay-local-wins on plan-shape keys ONLY. Sessions / gymlog_* untouched.
+    // Unlike pushPlanToCloud (which library-merges so any device can push), the
+    // silent push is primary-only, so a flat overlay is safe and avoids the
+    // saveUserLibrary write-back that would re-trigger this hook.
+    try{ var pv=JSON.parse(localStorage.getItem('plan_v2')); if(pv) cloud['plan_v2']=pv; else delete cloud['plan_v2']; }catch(e){}
+    try{ var dc=JSON.parse(localStorage.getItem('days_config_v1')); if(Array.isArray(dc)) cloud['days_config_v1']=dc; }catch(e){}
+    try{ var lb=JSON.parse(localStorage.getItem('exercise_library_v1')); if(Array.isArray(lb)) cloud['exercise_library_v1']=lb; }catch(e){}
+    try{ var hl=JSON.parse(localStorage.getItem('library_hidden_v1')); if(Array.isArray(hl)) cloud['library_hidden_v1']=hl; }catch(e){}
+    try{ var ct=JSON.parse(localStorage.getItem('plan_templates_v1')); if(Array.isArray(ct)) cloud['plan_templates_v1']=ct; }catch(e){}
+    try{ var ro=JSON.parse(localStorage.getItem('rest_overrides_v1')); if(ro && typeof ro==='object' && !Array.isArray(ro)) cloud['rest_overrides_v1']=ro; }catch(e){}
+    try{ var ps=JSON.parse(localStorage.getItem('plate_setup_v1')); if(ps && typeof ps==='object' && !Array.isArray(ps)) cloud['plate_setup_v1']=ps; }catch(e){}
+    try{ var un=localStorage.getItem('units_v1'); if(un==='lbs'||un==='kg') cloud['units_v1']=un; }catch(e){}
+    if(!cloud.__schema) cloud.__schema=SCHEMA_VERSION;
+    return _rawCloudPUT(cloud);
+  }); }).then(function(){
+    // plan_last_pushed is NOT in _PLAN_KEYS_SYNC → setting it doesn't re-fire the hook.
+    try{ localStorage.setItem('plan_last_pushed', String(Date.now())); }catch(e){}
+    try{ if(typeof renderSync==='function') renderSync(); }catch(e){}
+  }).catch(function(){ /* silent — manual "Push plan to cloud now" still works */ });
+}
+var _autoPushPlanTimer=null;
+function _scheduleAutoPushPlan(){
+  try{
+    if(typeof TEST_MODE!=='undefined' && TEST_MODE) return;
+    if(typeof isPrimaryDevice==='function' && !isPrimaryDevice()) return;
+    if(!getPlanSyncEnabled()) return;
+  }catch(e){ return; }
+  if(_autoPushPlanTimer) clearTimeout(_autoPushPlanTimer);
+  _autoPushPlanTimer=setTimeout(function(){ _autoPushPlanTimer=null; _silentPushPlan(); }, 1200);
+}
+// Hook localStorage.setItem so EVERY plan-shape mutation flows through the
+// debounced push — no need to instrument each save site (addDay, removeDay,
+// editDayMeta, planReorder, openBuilder save, library/template/rest writes…).
+(function _hookPlanWritesForAutoPush(){
+  try{
+    if(typeof Storage==='undefined' || !Storage.prototype) return;
+    var orig=Storage.prototype.setItem;
+    if(!orig || orig.__myfitPlanHooked) return;
+    var hooked=function(k, v){
+      var ret=orig.call(this, k, v);
+      try{
+        // Only react on localStorage writes (sessionStorage stays untouched).
+        if(this===window.localStorage && _PLAN_KEYS_SYNC.indexOf(k)>=0) _scheduleAutoPushPlan();
+      }catch(e){}
+      return ret;
+    };
+    hooked.__myfitPlanHooked=true;
+    Storage.prototype.setItem=hooked;
+  }catch(e){}
+})();
+// Boot auto-pull for Reader devices — silent, once per app open.
+function _maybeBootPullForReader(){
+  try{
+    if(typeof TEST_MODE!=='undefined' && TEST_MODE) return;
+    if(typeof isPrimaryDevice==='function' && isPrimaryDevice()) return;
+    if(!getPlanSyncEnabled()) return;
+    if(sessionStorage.getItem('myfit_boot_pulled')==='1') return;
+    sessionStorage.setItem('myfit_boot_pulled','1');
+  }catch(e){ return; }
+  setTimeout(function(){
+    try{
+      cloudGET().then(function(cloud){
+        if(!cloud || typeof cloud!=='object') return;
+        // Snapshot local first (same slot importData uses) so the user can undo.
+        try{ localStorage.setItem('gymlog_import_undo', btoa(unescape(encodeURIComponent(JSON.stringify(buildBinPayload()))))); }catch(e){}
+        // Mirror manual pullFromCloud's clear-then-apply so cloud-empty days
+        // overwrite local-non-empty (applyPayloadToLocal only SETs present keys).
+        try{ getDays().forEach(function(day){
+          localStorage.removeItem('gymlog_'+day);
+          localStorage.removeItem('gymlog_draft_'+day);
+        }); }catch(e){}
+        applyPayloadToLocal(cloud);
+        try{ localStorage.removeItem('sessions_migrated_v1'); }catch(e){}
+        try{ refreshDayCycle(); }catch(e){}
+        try{ if(typeof renderProgress==='function') renderProgress(); }catch(e){}
+        try{ if(typeof renderSync==='function') renderSync(); }catch(e){}
+      }).catch(function(){ /* silent — manual Pull button still works */ });
+    }catch(e){}
+  }, 1500);
+}
+
 // Union of active days + any orphaned gymlog_<key> still in localStorage.
 // Used for sync/persistence/restore loops so a day that was REMOVED from the
 // active cycle (Phase B) but still has logged history is never dropped from a
@@ -8654,7 +8754,7 @@ renderDaySummaries();
 // Legacy exercise_order no longer drives the DOM (kept only for old backups).
 setTimeout(checkMilestones, 500);
 // Step 3: apply a11y attrs once the cards + injected fields exist.
-setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} try{ _renderPrimaryBadge(); }catch(e){} try{ refreshSyncBanner(); }catch(e){} try{ _syncNav(); }catch(e){} }, 0);
+setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} try{ _renderPrimaryBadge(); }catch(e){} try{ refreshSyncBanner(); }catch(e){} try{ _syncNav(); }catch(e){} try{ _maybeBootPullForReader(); }catch(e){} }, 0);
 // After a builder save+reload, return to the Manage tab (not Day 1).
 (function returnToManageAfterPlan(){
   try{ if(sessionStorage.getItem('gym_after_plan')!=='manage') return;
