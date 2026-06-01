@@ -639,6 +639,26 @@ function domIdByDataEx(doc, day, ex){
   w.close();
 })();
 
+// ── v5.29 · auto-start rest on check (opt-in) + Auto→Default label ──
+(function(){
+  const w=loadApp(makeStore({}));
+  ok(w.getAutoStartRest()===false,'v5.29 · auto-start rest defaults to OFF');
+  w.setAutoStartRest(true);
+  ok(w.getAutoStartRest()===true,'v5.29 · setAutoStartRest(true) persists');
+  ok(w.localStorage.getItem('rest_autostart_v1')==='1','v5.29 · localStorage key written');
+  var seg=w.document.getElementById('auto-rest-seg');
+  ok(seg && seg.querySelectorAll('button').length===2,'v5.29 · Off/On segmented control rendered');
+  try{ w.openMore(); }catch(e){}
+  var onBtn=seg.querySelector('button.on');
+  ok(onBtn && onBtn.getAttribute('data-ar')==='on','v5.29 · "On" button highlighted when enabled');
+  w.setAutoStartRest(false);
+  ok(w.getAutoStartRest()===false,'v5.29 · setAutoStartRest(false) persists');
+  var restSeg=w.document.getElementById('rest-seg');
+  var defaultBtn=[].slice.call(restSeg.querySelectorAll('button')).filter(function(b){return b.getAttribute('data-m')==='auto';})[0];
+  ok(defaultBtn && /Default/.test(defaultBtn.textContent),'v5.29 · Rest-timer "Auto" button now labeled "Default" (data-m="auto" intact)');
+  w.close();
+})();
+
 // ── v5.26 · unified PR counters (save toast / 🏆 toast / Sessions badge agree) ──
 (function(){
   var DAY=86400000, now=Date.now();
