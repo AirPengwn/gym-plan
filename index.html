@@ -1230,7 +1230,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.27</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.28</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -6419,7 +6419,15 @@ function applyArchivedToChecklist(){
 function switchCardio(btn,prefix,key){
   var wrap=btn.parentNode;
   var parent=wrap.parentNode;
-  var panel=document.getElementById("panel-"+prefix+"-"+key);
+  // v5.28: scope the panel lookup to THIS card's .cardio-fields. The
+  // EXERCISE_DATA blob duplicates the 'wu-d' prefix on Day 5's warm-up
+  // (a copy-paste from Day 4), so getElementById('panel-wu-d-bike')
+  // would grab Day 4's bike panel (not visible from Day 5) — the user
+  // saw all panels hide and nothing replace them ("collapsed"). The
+  // scoped query finds Day 5's local copy; fallback to global ID for
+  // any future cardio card whose panel is structured differently.
+  var panel = parent.querySelector('#panel-'+prefix+'-'+key)
+           || document.getElementById('panel-'+prefix+'-'+key);
   // If already active, toggle off
   if(btn.classList.contains("active")){
     btn.classList.remove("active");
@@ -10098,7 +10106,12 @@ function _restComplete(){
   clearInterval(restInterval); restInterval=null; restEndTs=0;
   var bar=document.getElementById('rest-timer-bar'); if(bar) bar.classList.remove('show');
   document.body.classList.remove('timer-active');
-  showToast('Rest done — next set! 💪');
+  // v5.28: sticky toast so the "rest done" alert is still visible if the
+  // timer completed while the phone was locked. Auto-dismissing the toast
+  // meant returning users would find the bar gone and no notification —
+  // looked like the timer silently vanished. The ✕ on the sticky toast
+  // dismisses when you've acknowledged it.
+  showToast('Rest done — next set! 💪', {sticky:true});
   haptic('success');
   _restBeep();
 }

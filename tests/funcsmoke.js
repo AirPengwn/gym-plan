@@ -725,11 +725,17 @@ function domIdByDataEx(doc, day, ex){
   ok(statsRow && statsRow.hidden,'v5.14 T8 · prog-stats-row strap is hidden (deleted)');
   // 2) Recap header shows 🔥 chip when month1 was earned ≤7d ago.
   var now=Date.now();
+  // v5.28: anchor session timestamps to "this calendar month" so the test
+  // doesn't break when a real date crosses a month boundary. Spreading them
+  // 1d apart from today inside the same month works whether we're on the
+  // 1st or 15th — clamps to month start if today is too early.
+  var _mStart=new Date(now); _mStart.setDate(1); _mStart.setHours(0,0,0,0);
+  function _inMonth(daysAgo){ var t=now-daysAgo*86400000; return Math.max(t, _mStart.getTime()+1); }
   w.localStorage.setItem('gymlog_a', JSON.stringify([
-    {label:'D1',date:'',ts:now-1*86400000,entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]},
-    {label:'D1',date:'',ts:now-3*86400000,entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]},
-    {label:'D1',date:'',ts:now-5*86400000,entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]},
-    {label:'D1',date:'',ts:now-7*86400000,entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]}
+    {label:'D1',date:'',ts:_inMonth(1),entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]},
+    {label:'D1',date:'',ts:_inMonth(3),entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]},
+    {label:'D1',date:'',ts:_inMonth(5),entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]},
+    {label:'D1',date:'',ts:_inMonth(7),entries:[{ex:'Lat pulldown',note:'Set 1: 120 lbs x12reps'}]}
   ]));
   w.localStorage.setItem('earned_milestones', JSON.stringify(['month1']));
   w.localStorage.setItem('milestones_earned_at', JSON.stringify({month1:now-86400000}));
@@ -836,9 +842,15 @@ function domIdByDataEx(doc, day, ex){
 (function(){
   var now=Date.now();
   var d=new Date(); var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  // v5.28: both timestamps must land in the current calendar month. Anchor
+  // them at the start of the current month + a few hours so they're safe
+  // regardless of what day-of-month the test runs.
+  var _mStart11=new Date(now); _mStart11.setDate(1); _mStart11.setHours(12,0,0,0);
+  var _ts1=_mStart11.getTime()+3600000;
+  var _ts2=_mStart11.getTime()+7200000;
   const store=makeStore({ 'gymlog_a': JSON.stringify([
-    {label:'D1',date:'this month',ts:now,entries:[{ex:'Barbell bench press',note:'Set 1: 225 lbs x5reps'}]},
-    {label:'D1',date:'this month',ts:now-86400000,entries:[{ex:'Barbell bench press',note:'Set 1: 200 lbs x5reps'}]}
+    {label:'D1',date:'this month',ts:_ts2,entries:[{ex:'Barbell bench press',note:'Set 1: 225 lbs x5reps'}]},
+    {label:'D1',date:'this month',ts:_ts1,entries:[{ex:'Barbell bench press',note:'Set 1: 200 lbs x5reps'}]}
   ]),
     'body_measurements': JSON.stringify([{type:'weight',date:iso,value:201,unit:'lbs',ts:now}]) });
   const w=loadApp(store);
