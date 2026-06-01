@@ -1237,7 +1237,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.36</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.37</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -6628,6 +6628,12 @@ function saveEditDate(day,idx,inp,originalDate){
       var timeStr=dt.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
       saved[idx].date=dateStr+" at "+timeStr;
       saved[idx].ts=dt.getTime();
+      // v5.37: stamp the wall-clock time the user made this edit. mergeSessions
+      // uses (modifiedAt || ts) to decide the collapse winner so a BACKWARD
+      // date edit (May 31 → May 30 — new ts < original ts) still wins over
+      // the cloud's stale May-31 copy. Pre-v5.37, the collapse picked the
+      // session with the highest ts and the edit silently reverted.
+      saved[idx].modifiedAt=Date.now();
     }
   }
   localStorage.setItem("gymlog_"+day,JSON.stringify(saved));
@@ -8574,9 +8580,16 @@ function mergeSessions(a,b){
   // key that doesn't match the cloud's original-ts version — the merge
   // kept BOTH copies, so repeated edits accumulated clones. Fingerprint
   // sessions by everything EXCEPT date/ts; within a fingerprint group,
-  // keep the most-recent-ts session (the one the user most recently
-  // edited to). Same-workout-on-different-days collision is possible
-  // but rare; if it ever happens the user can re-log.
+  // keep the session the user most-recently EDITED (not the session
+  // with the latest displayed date).
+  // v5.37: use `modifiedAt` as the collapse tiebreaker, falling back to
+  // ts only when no edit has happened. A BACKWARD date edit (e.g.
+  // May 31 → May 30) produces a smaller ts than the original, so the
+  // pre-v5.37 ts-only collapse picked the cloud's stale original as
+  // "winner" and silently reverted the edit on the next sync.
+  function _editRank(s){
+    return (s && s.modifiedAt!=null && s.modifiedAt>0) ? s.modifiedAt : sessTs(s);
+  }
   var byFp={};
   out.forEach(function(s){
     var fp=JSON.stringify({
@@ -8587,7 +8600,7 @@ function mergeSessions(a,b){
       checkin: s.checkin||null
     });
     var prev=byFp[fp];
-    if(!prev || sessTs(s) > sessTs(prev)) byFp[fp]=s;
+    if(!prev || _editRank(s) > _editRank(prev)) byFp[fp]=s;
   });
   var collapsed=[];
   for(var fpk in byFp){ if(Object.prototype.hasOwnProperty.call(byFp,fpk)) collapsed.push(byFp[fpk]); }
