@@ -337,7 +337,12 @@ function domIdByDataEx(doc, day, ex){
   ok(!!w.document.getElementById('complete-bar'),'v4.10 · complete-bar element present');
   ok(/\.complete-bar\{[^}]*z-index:1002/.test(src),'v4.10 · complete-bar stacks above the timer (z-index 1002 > 1001)');
   ok(/\.complete-bar\.show\{transform:translateX\(-50%\) translateY\(0\)\}/.test(src),'v4.10 · complete-bar reveals via .show');
-  ok(/body\.timer-active \.complete-bar\{[^}]*118px/.test(src),'v4.10 · complete-bar lifts above the timer when both show');
+  // v5.52: the rest timer no longer floats at the bottom — it renders INLINE
+  // inside the active card (added .rest-timer-inline class moves it into the
+  // card and overrides position:static). The complete-bar therefore doesn't
+  // need to lift above a fixed timer any more. Lock the new contract.
+  ok(/\.rest-timer-bar\.rest-timer-inline\{[^}]*position:static/.test(src),'v5.52 · rest timer inline mode uses position:static (no more iOS visual-viewport drift)');
+  ok(/\.rest-timer-bar\.rest-timer-inline\.show\{[^}]*max-height/.test(src),'v5.52 · inline rest timer reveals via max-height expand');
   ok(/\.rest-timer-bar\{[^}]*var\(--kb-offset,0px\)/.test(src) && /\.complete-bar\{[^}]*var\(--kb-offset,0px\)/.test(src),'v4.10 · both floating bars ride above the keyboard via --kb-offset');
   ok(typeof w.updateCompleteBar==='function' && typeof w.hideCompleteBar==='function' && typeof w.triggerCompleteFromBar==='function','v4.10 · complete-bar JS present');
   // >=80% of a day done → pill shows; reset/under-threshold → hidden
