@@ -83,6 +83,15 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .day-selector{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem}
 /* L3 (v5.1): "Up next" caption above the day chips when auto-advanced */
 .upnext-cap{font-size:var(--fs-xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin:0 2px 5px}
+/* v5.46 (P2-B): single "today" header above the day panels — "{day} · last
+   done {rel} · {one cue}". Muted, dismissible (session-only snooze). */
+.day-today-header{display:flex;align-items:center;gap:8px;font-size:var(--fs-xs);font-weight:600;color:var(--muted);background:var(--bg);border:1px solid var(--border-soft);border-radius:10px;padding:8px 10px;margin:8px 0 10px}
+.day-today-header[hidden]{display:none}
+.day-today-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.4}
+.day-today-text b{color:var(--text);font-weight:700}
+.day-today-dismiss{flex-shrink:0;background:transparent;border:none;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:2px 6px;border-radius:6px;font-family:inherit}
+.day-today-dismiss:hover,.day-today-dismiss:focus-visible{background:var(--border-soft);color:var(--text);outline:none}
+body.dark .day-today-header{background:var(--surface);border-color:var(--border)}
 .day-btn{flex:1;min-width:44px;min-height:44px;padding:6px 8px;border:1px solid var(--border-soft);border-radius:10px;font-size:var(--fs-11);font-weight:700;cursor:pointer;text-align:center;background:#fff;color:var(--text);transition:all 0.15s;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .day-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 2px 8px rgba(91,78,168,.25)}
 .day-btn.progress-tab{font-size:var(--fs-sm);padding:12px 6px}
@@ -1288,7 +1297,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.45</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.46</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -1324,6 +1333,12 @@ body.dark .hm-sw.med{background:#7F77DD}
      First day active by default to match the boot panel (#p-a has 'show'). -->
 <div class="upnext-cap" id="upnext-cap" hidden></div>
 <div class="day-selector" id="day-selector" role="tablist" aria-label="Day selector"></div>
+<!-- v5.46 (P2-B): one-line "today" header — "{day} · last done {rel} · {cue}".
+     Sits above all day-panels (true peer of #upnext-cap); content is the
+     active day's. Snooze flag is sessionStorage-only (per app open), local,
+     never synced. NOT a per-card line — the single-coach-line architecture
+     in _applyCoachLine stays as-is. -->
+<div class="day-today-header" id="day-today-header" hidden></div>
 
 <!-- ═══ PROGRESS ═══ -->
 <div class="day-panel" id="p-prog">
@@ -4196,6 +4211,11 @@ function sw(day,btn){
   initCardioPanels();
   applyArchivedToChecklist();
   try{ updateProgressBadges(); }catch(e){}
+  // v5.46 (P2-B): refresh the single "today" header for the active day —
+  // hidden on Progress / when snoozed; otherwise renders "{day} · last done
+  // {rel} · {cue}". Called after loadLastTimes so the .item DOM (which the
+  // header reads for coachState fallbacks) is up to date.
+  try{ _renderDayTodayHeader(day==='prog'?null:day); }catch(e){}
   try{ updateSwipeHints(); _dismissSwipeTip(); }catch(e){}
   try{ _syncNav(); }catch(e){}
 }
@@ -4254,6 +4274,90 @@ function _showUpNext(day){
   cap.hidden=false;
 }
 function _hideUpNext(){ var cap=document.getElementById('upnext-cap'); if(cap) cap.hidden=true; }
+// v5.46 (P2-B) — single muted "today" header line above the active day panel.
+// Format: "{dayLabel} · last done {rel} · {one actionable cue}". Derives from
+// existing data (no new key): _sessWhen on this day's saved sessions for the
+// "last done" rel-date, and the highest-priority coachState across the
+// rendered strength cards for the cue. Falls back to "{N} exercises · {focus}"
+// when no coachState fires. Dismissible per app open (sessionStorage flag);
+// local, never synced. Strict: this is the DAY-LEVEL header, NOT a per-card
+// coach line — _applyCoachLine's one-line-per-card contract is untouched.
+function _isDayTodaySnoozed(){
+  try{ return sessionStorage.getItem('day_today_snoozed')==='1'; }catch(e){ return false; }
+}
+function _dismissDayTodayHeader(){
+  try{ sessionStorage.setItem('day_today_snoozed','1'); }catch(e){}
+  var el=document.getElementById('day-today-header'); if(el){ el.hidden=true; el.innerHTML=''; }
+}
+function _renderDayTodayHeader(day){
+  var el=document.getElementById('day-today-header'); if(!el) return;
+  if(!day || day==='prog'){ el.hidden=true; el.innerHTML=''; return; }
+  if(_isDayTodaySnoozed()){ el.hidden=true; el.innerHTML=''; return; }
+  var panel=document.getElementById('p-'+day);
+  if(!panel){ el.hidden=true; el.innerHTML=''; return; }
+
+  var dayLabel='';
+  try{ dayLabel=getDayName(day)||''; }catch(_e){}
+
+  // "Last done" relative to THIS day (its own session history, not a global
+  // last-trained — the header speaks to "next time I do THIS day").
+  var lastTs=-1;
+  try{ (getSaved(day)||[]).forEach(function(s){ var t=_sessWhen(s); if(t>lastTs) lastTs=t; }); }catch(_e){}
+  var lastDoneTxt='never';
+  if(lastTs>0){
+    var ago=Math.floor((Date.now()-lastTs)/86400000);
+    lastDoneTxt = ago===0?'today':ago===1?'yesterday':(ago+' days ago');
+  }
+
+  // Cue: pick the highest-priority coachState across the day's strength
+  // cards (priority ladder mirrors the per-card one: ready > hold > build > aim).
+  // Read from the rendered DOM so we reuse the exact same exKey + meta plumbing
+  // _applyCoachLine uses, with no second source of truth.
+  var rank={ready:0, hold:1, build:2, aim:3};
+  var seen={}, top=null;
+  try{
+    panel.querySelectorAll('.item.v2-card .rep-input[data-ex]').forEach(function(dx){
+      var raw=dx.getAttribute('data-ex')||''; var exKey=normalizeEx(raw);
+      if(!exKey || seen[exKey]) return;
+      seen[exKey]=true;
+      var st=null; try{ st=coachState(exKey, exerciseMeta(raw)); }catch(_e){}
+      if(!st || rank[st.kind]==null) return;
+      if(!top || rank[st.kind]<top.r){ top={r:rank[st.kind], st:st, ex:raw}; }
+    });
+  }catch(_e){}
+
+  var unit='lbs'; try{ if(typeof getUnits==='function') unit=getUnits(); }catch(_e){}
+  var cue='';
+  if(top){
+    if(top.st.kind==='ready')      cue=top.ex+' ready → '+top.st.target+' '+unit;
+    else if(top.st.kind==='hold')  cue=top.ex+' · hold '+top.st.W+' '+unit;
+    else if(top.st.kind==='build') cue=top.ex+' · build to '+top.st.sets+'×'+top.st.reps;
+    else if(top.st.kind==='aim')   cue='Aim ~'+top.st.aim+' '+unit+' on '+top.ex;
+  } else {
+    // Fallback: count rendered items + top 1–2 muscle groups (focus).
+    var items=panel.querySelectorAll('.item');
+    var exCount=items.length;
+    var muscleCounts={};
+    items.forEach(function(item){
+      var nameEl=item.querySelector('.ex-name');
+      if(!nameEl) return;
+      var name=String(nameEl.textContent||'').trim();
+      var muscles=[]; try{ muscles=_musclesByName(name)||[]; }catch(_e){}
+      muscles.forEach(function(m){ muscleCounts[m]=(muscleCounts[m]||0)+1; });
+    });
+    var sorted=Object.keys(muscleCounts).sort(function(a,b){return muscleCounts[b]-muscleCounts[a];});
+    var focus=sorted.slice(0,2).join(' / ');
+    if(exCount>0){
+      cue=exCount+' exercise'+(exCount===1?'':'s')+(focus?(' · '+focus):'');
+    }
+  }
+
+  var parts=['<b>'+_esc(dayLabel)+'</b>', 'last done '+_esc(lastDoneTxt)];
+  if(cue) parts.push(_esc(cue));
+  el.innerHTML='<span class="day-today-text">'+parts.join(' · ')+'</span>'
+    +'<button type="button" class="day-today-dismiss" onclick="_dismissDayTodayHeader()" aria-label="Hide for this session">×</button>';
+  el.hidden=false;
+}
 // A real day-chip tap opts out of auto-advance for the rest of the page-load.
 document.addEventListener('click',function(e){
   var t=e.target;
@@ -5319,9 +5423,24 @@ function loadLastTimes(){
       if(existingNudge) existingNudge.parentNode.removeChild(existingNudge);
       if(match){
         // v5.14 (T1): friendlier relative date — "2 days ago · May 25" — with ISO in title.
+        // v5.46 (P2-A): condense the stored "Set 1: …" note via _condenseLastNote()
+        // so the hot-path workout card reads "3 × 90 × 12" instead of repeating
+        // the full per-set string. The original is preserved as title= AND on a
+        // ≥500ms long-press → toast, mirroring the coach-line math-tooltip pattern.
         var _vals=el.querySelector('.last-time-vals');
-        _vals.textContent=match.note+' ('+fmtDate(match.ts||match.date,'rel')+')';
-        _vals.setAttribute('title', fmtDateISO(match.ts||match.date));
+        var _condensed=_condenseLastNote(match.note);
+        _vals.textContent=_condensed+' ('+fmtDate(match.ts||match.date,'rel')+')';
+        var _full=match.note+'\n'+fmtDateISO(match.ts||match.date);
+        _vals.setAttribute('title', _full);
+        try{
+          var _lpT=null;
+          var _start=function(){ _lpT=setTimeout(function(){ _lpT=null; try{ showToast(_full); }catch(_e){} }, 500); };
+          var _cancel=function(){ if(_lpT){ clearTimeout(_lpT); _lpT=null; } };
+          _vals.addEventListener('pointerdown', _start);
+          _vals.addEventListener('pointerup', _cancel);
+          _vals.addEventListener('pointercancel', _cancel);
+          _vals.addEventListener('pointermove', _cancel);
+        }catch(_e){}
         el.classList.add('has-data');
         // v5.13: the progressive-overload cue now lives in the consolidated
         // coach line (_applyCoachLine), not a separate nudge under last-time.
@@ -5860,6 +5979,39 @@ function fmtSet(rawStr, idx){
   var wTxt=(w%1===0)?String(w):String(Math.round(w*10)/10);
   return prefix+' · '+wTxt+(reps?'×'+reps:'')+sfx;
 }
+// v5.46 (P2-A) · condense a stored last-session note ("Set 1: 90 lbs x12reps |
+// Set 2: 90 lbs x12reps | Set 3: 90 lbs x12reps") into the workout card's
+// hot-path .last-time line:
+//   • all sets equal       → "3 × 90 × 12"
+//   • all weights equal,
+//     reps mostly equal     → "3 × 90 × 12 (last set 10)" – not implemented;
+//                              we fall to the comma list for any reps differ
+//   • sets differ          → "90×12, 90×12, 95×10"
+// The stored .note is never rewritten — this runs purely at render. Falls back
+// to the original string for non-strength formats (cardio, bodyweight notes,
+// freeform) so the cardio "Last session:" line stays untouched.
+function _condenseLastNote(note){
+  var parts=parseSetWR(note);
+  if(!parts.length) return note;
+  // Surface unit only when it differs from the global preference (mirrors fmtSet).
+  var pref='lbs'; try{ if(typeof getUnits==='function') pref=getUnits(); }catch(_e){}
+  var unit='';
+  var um=String(note).match(/\b(lbs|lb|kg|kgs)\b/i);
+  if(um){
+    var u=um[1].toLowerCase();
+    if(u==='lb') u='lbs'; else if(u==='kgs') u='kg';
+    if(u!==pref) unit=' '+u;
+  }
+  function _w(x){ return (x%1===0)?String(x):String(Math.round(x*10)/10); }
+  var first=parts[0];
+  var allEqual=parts.every(function(p){ return p.w===first.w && p.r===first.r; });
+  if(allEqual){
+    var head=parts.length+' × '+_w(first.w);
+    return head+(first.r?(' × '+first.r):'')+unit;
+  }
+  return parts.map(function(p){ return _w(p.w)+(p.r?'×'+p.r:''); }).join(', ')+unit;
+}
+
 // Epley estimated one-rep max. Needs reps; 1 rep == the weight itself.
 function est1RM(w,r){
   if(!w||!r||r<1) return 0;
@@ -8885,7 +9037,7 @@ renderDaySummaries();
 // Legacy exercise_order no longer drives the DOM (kept only for old backups).
 setTimeout(checkMilestones, 500);
 // Step 3: apply a11y attrs once the cards + injected fields exist.
-setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} try{ _renderPrimaryBadge(); }catch(e){} try{ refreshSyncBanner(); }catch(e){} try{ _syncNav(); }catch(e){} try{ _maybeBootPullForReader(); }catch(e){} }, 0);
+setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} try{ _renderPrimaryBadge(); }catch(e){} try{ refreshSyncBanner(); }catch(e){} try{ _syncNav(); }catch(e){} try{ _maybeBootPullForReader(); }catch(e){} try{ var _bootShown=document.querySelector('.day-panel.show'); var _bd=_bootShown?_bootShown.id.replace(/^p-/,''):null; if(_bd && _bd!=='prog' && _bd!=='more') _renderDayTodayHeader(_bd); }catch(e){} }, 0);
 // After a builder save+reload, return to the Manage tab (not Day 1).
 (function returnToManageAfterPlan(){
   try{ if(sessionStorage.getItem('gym_after_plan')!=='manage') return;
