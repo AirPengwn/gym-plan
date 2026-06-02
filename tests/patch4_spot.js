@@ -126,14 +126,16 @@ return Promise.resolve().then(function(){
   w.generateExport();
   ok(selBtn.style.display!=='none','v2.58 · Select All visible after Generate');
   ok(typeof w.selectBackupCode==='function','v2.58 · selectBackupCode() defined');
-  // Tap Select All → textarea selected end-to-end, no clipboard write attempted.
+  // Tap Select All → textarea selected end-to-end + (v5.44) clipboard write
+  // so iOS users whose visual highlight UI misbehaves on long readonly
+  // textareas still get the backup onto their clipboard in the same tap.
   var toasted='';
   var origToast2=w.showToast; w.showToast=function(m){ toasted=m; };
-  var clipboardCalled=false;
-  w.navigator.clipboard={writeText:function(){ clipboardCalled=true; return Promise.resolve(); }};
+  var clipboardCalled=false, clipboardArg='';
+  w.navigator.clipboard={writeText:function(t){ clipboardCalled=true; clipboardArg=t; return Promise.resolve(); }};
   w.selectBackupCode();
   ok(ta.selectionStart===0 && ta.selectionEnd===ta.value.length,'v2.58 · Select All selects full textarea');
-  ok(!clipboardCalled,'v2.58 · Select All does NOT write to clipboard (just selects)');
+  ok(clipboardCalled && clipboardArg===ta.value,'v5.44 · Select All ALSO writes the full backup to the clipboard (iOS highlight-paint fallback)');
   ok(/Selected/i.test(toasted),'v2.58 · Select All shows toast confirmation');
   w.showToast=origToast2;
   // Reopen → Select All hidden again (pristine reset).
