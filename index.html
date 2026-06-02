@@ -182,11 +182,11 @@ button.checkbox{background:transparent;border:0;-webkit-appearance:none;appearan
 /* v4.2: a slim floating pill docked ABOVE the bottom tab bar (z-index 1001 > the
    bar's 1000, lifted ~66px so it's never clipped) — the iOS "mini-bar above tabs"
    pattern, replacing the old full-width bottom bar that slid under the tab bar. */
-.rest-timer-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px + var(--kb-offset,0px));transform:translateX(-50%) translateY(calc(100% + 74px + env(safe-area-inset-bottom)));max-width:calc(100% - 20px);background:rgba(60,52,137,0.96);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 14px;font-size:14px;font-weight:600;z-index:1001;border-radius:14px;box-shadow:0 6px 22px rgba(31,29,56,0.3);transition:transform 0.25s,bottom 0.2s}
+.rest-timer-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px + var(--kb-offset,0px));transform:translateX(-50%) translateY(calc(100% + 74px + env(safe-area-inset-bottom)));max-width:calc(100% - 20px);background:rgba(60,52,137,0.96);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 14px;font-size:14px;font-weight:600;z-index:1001;border-radius:14px;box-shadow:0 6px 22px rgba(31,29,56,0.3);transition:transform 0.25s,bottom 0.2s;will-change:transform,bottom;-webkit-backface-visibility:hidden}
 /* v4.10 (Step 4B): floating Complete pill — docked above the tab bar like the timer.
    Shows at >=80% of the day's exercises done; stacks ABOVE the timer when both show.
    Both bars ride above the on-screen keyboard via --kb-offset (set from visualViewport). */
-.complete-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px + var(--kb-offset,0px));transform:translateX(-50%) translateY(calc(100% + 130px + env(safe-area-inset-bottom)));z-index:1002;transition:transform 0.25s,bottom 0.2s}
+.complete-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px + var(--kb-offset,0px));transform:translateX(-50%) translateY(calc(100% + 130px + env(safe-area-inset-bottom)));z-index:1002;transition:transform 0.25s,bottom 0.2s;will-change:transform,bottom;-webkit-backface-visibility:hidden}
 .complete-bar.show{transform:translateX(-50%) translateY(0)}
 body.timer-active .complete-bar{bottom:calc(env(safe-area-inset-bottom) + 118px + var(--kb-offset,0px))}
 .complete-bar button{display:flex;align-items:center;gap:8px;background:#5B4EA8;color:#fff;border:0;border-radius:14px;padding:13px 26px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 6px 22px rgba(91,78,168,0.45)}
@@ -326,7 +326,12 @@ body.dark .tray-ic.red{background:#3A1A1A} body.dark .tray-ic.warn{background:#3
 .v2-card.item.done .v2-head .ex-name{color:var(--muted);text-decoration:line-through}
 /* Header icon cluster: 🌙 📊 ⋯ — all three identical 40×40, centered, same shape */
 /* v3.30 — bottom tab bar (primary navigation) */
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:flex;max-width:600px;margin:0 auto;background:var(--surface,#fff);border-top:1px solid var(--border,#E6E4DD);padding:6px 4px;padding-bottom:calc(6px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(31,29,56,.06)}
+/* v5.50 fix: transform:translateZ(0) + will-change:transform put the tabbar
+   on its own compositing layer. iOS Safari otherwise reflows position:fixed
+   elements during page scroll / address-bar collapse / keyboard animation,
+   which makes the bar visibly drift up & down. Same hint applied to the
+   rest-timer-bar and complete-bar below. */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:flex;max-width:600px;margin:0 auto;background:var(--surface,#fff);border-top:1px solid var(--border,#E6E4DD);padding:6px 4px;padding-bottom:calc(6px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(31,29,56,.06);transform:translateZ(0);will-change:transform;-webkit-backface-visibility:hidden}
 body.dark .tabbar{background:#1C1B30;border-top-color:var(--border)}
 .tabbar .tab{flex:1;border:0;background:none;cursor:pointer;padding:5px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font-size:var(--fs-11);font-weight:600;font-family:inherit;-webkit-tap-highlight-color:transparent}
 .tabbar .tab .tab-ic{font-size:21px;line-height:1}
@@ -1340,7 +1345,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.49</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.50</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
