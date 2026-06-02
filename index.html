@@ -436,6 +436,13 @@ body.dark .primary-toggle-hint.pt-reader{color:var(--gold)}
 .v2-foot .notes-input{color:var(--text)}
 .v2-foot .notes-input::placeholder{color:var(--muted);opacity:1}
 body.dark .v2-card .last-time{background:var(--primary-tint)}
+/* v5.53: cardio cards still use the LEGACY .item markup (no .v2-card
+   ancestor), so v5.14's dark-mode .last-time override never reached them —
+   warm-up showed a light-mode "Last session:" pill (purple text on a
+   near-white tint) sitting in the middle of a dark UI. Match the v2-card
+   treatment here so cardio cards read the same in both themes. */
+body.dark .last-time{background:var(--primary-tint);color:var(--text)}
+body.dark .last-time .last-time-label,body.dark .last-time .last-time-vals{color:var(--text)}
 body.dark .v2-foot .rpe-ends{color:var(--muted-2)}
 /* Patch-2 Step 1: inline progress badge on the card head */
 .v2-nudge{display:none;margin-top:4px}
@@ -1350,7 +1357,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.52</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.53</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
