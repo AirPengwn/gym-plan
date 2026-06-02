@@ -182,11 +182,11 @@ button.checkbox{background:transparent;border:0;-webkit-appearance:none;appearan
 /* v4.2: a slim floating pill docked ABOVE the bottom tab bar (z-index 1001 > the
    bar's 1000, lifted ~66px so it's never clipped) — the iOS "mini-bar above tabs"
    pattern, replacing the old full-width bottom bar that slid under the tab bar. */
-.rest-timer-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px + var(--kb-offset,0px));transform:translateX(-50%) translateY(calc(100% + 74px + env(safe-area-inset-bottom)));max-width:calc(100% - 20px);background:rgba(60,52,137,0.96);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 14px;font-size:14px;font-weight:600;z-index:1001;border-radius:14px;box-shadow:0 6px 22px rgba(31,29,56,0.3);transition:transform 0.25s,bottom 0.2s;will-change:transform,bottom;-webkit-backface-visibility:hidden}
+.rest-timer-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px + var(--kb-offset,0px));transform:translateX(-50%) translateY(calc(100% + 74px + env(safe-area-inset-bottom)));max-width:calc(100% - 20px);background:rgba(60,52,137,0.96);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 14px;font-size:14px;font-weight:600;z-index:1001;border-radius:14px;box-shadow:0 6px 22px rgba(31,29,56,0.3);transition:transform 0.25s;will-change:transform;-webkit-backface-visibility:hidden}
 /* v4.10 (Step 4B): floating Complete pill — docked above the tab bar like the timer.
    Shows at >=80% of the day's exercises done; stacks ABOVE the timer when both show.
    Both bars ride above the on-screen keyboard via --kb-offset (set from visualViewport). */
-.complete-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px + var(--kb-offset,0px));transform:translateX(-50%) translateY(calc(100% + 130px + env(safe-area-inset-bottom)));z-index:1002;transition:transform 0.25s,bottom 0.2s;will-change:transform,bottom;-webkit-backface-visibility:hidden}
+.complete-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px + var(--kb-offset,0px));transform:translateX(-50%) translateY(calc(100% + 130px + env(safe-area-inset-bottom)));z-index:1002;transition:transform 0.25s;will-change:transform;-webkit-backface-visibility:hidden}
 .complete-bar.show{transform:translateX(-50%) translateY(0)}
 body.timer-active .complete-bar{bottom:calc(env(safe-area-inset-bottom) + 118px + var(--kb-offset,0px))}
 .complete-bar button{display:flex;align-items:center;gap:8px;background:#5B4EA8;color:#fff;border:0;border-radius:14px;padding:13px 26px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 6px 22px rgba(91,78,168,0.45)}
@@ -1345,7 +1345,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.50</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.51</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -11498,33 +11498,26 @@ function triggerCompleteFromBar(){
 
 // v4.10 (Step 4B): keyboard-aware floating chrome. visualViewport reports how much
 // the on-screen keyboard covers; expose it as --kb-offset so the timer + Complete
-// pills ride above the keyboard. A focused input scrolls itself into view — done
-// ONLY here (on focus), never on every viewport resize (that causes scroll jank).
-// v5.48: extended re-sync schedule. iOS Safari's keyboard animation (~300ms)
-// often finishes AFTER visualViewport stops firing resize events, leaving the
-// timer + Complete pills below the keyboard for a beat. We re-sync at
-// 350/700/1100ms on focusin.
-// v5.49 fix: REMOVED the document-scroll listener I added in v5.48 — during
-// normal page scrolls iOS briefly reports a non-zero vv.offsetTop (visual
-// viewport drift), so kb=(innerHeight-vv.height-vv.offsetTop) computed a
-// phantom keyboard height and the timer / Complete bar floated up from the
-// bottom into the middle of the screen. Also added a focused-input GUARD
-// to syncKb(): if no input is focused, --kb-offset is forced to 0 — no
-// transient vv calculation can strand the chrome regardless of source.
+// pills ride above the keyboard.
+//
+// v5.51 fix: replaced the v5.49 focus-guard with a MAGNITUDE THRESHOLD.
+// The guard queried document.activeElement, but on iOS activeElement doesn't
+// update synchronously with focusin — there's a window where the input is
+// "focused" but activeElement still points to <body>, so the guard wrongly
+// computed kb=0 and the timer sat below the keyboard. Then the corrective
+// syncKb fired later (focusin delayed re-sync), kb snapped to real keyboard
+// height, and the user saw the timer slide up "from the bottom" mid-scroll.
+//
+// New rule: a real iOS keyboard is 200+ px; scroll drift / address-bar
+// collapse is <50 px. Threshold at 50 → no activeElement race, no phantom
+// kb during scroll. Re-sync on focusin tail (350/700/1100ms) stays — they
+// just feed correct values into syncKb now.
 (function(){
   var vv=window.visualViewport; if(!vv) return;
-  function _hasFocusedInput(){
-    var a=document.activeElement;
-    return !!(a && a.matches && a.matches('.rep-input,.cardio-input,.notes-input,.reps-actual-input'));
-  }
+  var KB_MIN=50;  // px — anything smaller is viewport drift, not a keyboard
   function syncKb(){
-    // No input focused → no keyboard. Force --kb-offset:0 so the floating
-    // chrome can't drift up from the bottom due to a transient vv glitch.
-    if(!_hasFocusedInput()){
-      document.documentElement.style.setProperty('--kb-offset', '0px');
-      return;
-    }
-    var kb=Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    var raw=Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    var kb = (raw < KB_MIN) ? 0 : raw;
     document.documentElement.style.setProperty('--kb-offset', kb+'px');
   }
   vv.addEventListener('resize', syncKb);
