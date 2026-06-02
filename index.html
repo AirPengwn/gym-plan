@@ -188,17 +188,22 @@ button.checkbox{background:transparent;border:0;-webkit-appearance:none;appearan
    Both bars ride above the on-screen keyboard via --kb-offset (set from visualViewport). */
 .complete-bar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 66px + var(--kb-offset,0px));transform:translateX(-50%) translateY(calc(100% + 130px + env(safe-area-inset-bottom)));z-index:1002;transition:transform 0.25s;will-change:transform;-webkit-backface-visibility:hidden}
 .complete-bar.show{transform:translateX(-50%) translateY(0)}
-body.timer-active .complete-bar{bottom:calc(env(safe-area-inset-bottom) + 118px + var(--kb-offset,0px))}
 .complete-bar button{display:flex;align-items:center;gap:8px;background:#5B4EA8;color:#fff;border:0;border-radius:14px;padding:13px 26px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 6px 22px rgba(91,78,168,0.45)}
 .ps-date{border-bottom:1px dotted var(--primary-2);cursor:pointer;-webkit-tap-highlight-color:rgba(91,78,168,.15)}
 .ps-cv{font-size:9px;opacity:.7;margin-left:1px}
 .rest-timer-bar.show{transform:translateX(-50%) translateY(0)}
 .rest-timer-bar button{background:#ffffff33;border:none;color:#fff;font-size:13px;font-weight:600;padding:4px 10px;border-radius:8px;cursor:pointer}
-/* Push page content up when the rest timer / Complete pill is visible so the
-   day content isn't obscured. Both visible → clear both stacked pills. */
-body.timer-active .day-panel.show{padding-bottom:72px}
+/* v5.52: when the rest timer is INLINE inside a card (moved by startRestTimer),
+   override position/transform/animation so it expands the card downward
+   instead of floating at the bottom. No position:fixed → no iOS visual-
+   viewport drift class of bug. The transform/animation switches to a
+   max-height collapse so the card grows/shrinks smoothly. */
+.rest-timer-bar.rest-timer-inline{position:static;left:auto;right:auto;bottom:auto;max-width:none;width:auto;margin:0 12px;border-radius:12px;z-index:auto;max-height:0;padding-top:0;padding-bottom:0;opacity:0;overflow:hidden;transform:none;transition:max-height 0.25s,opacity 0.2s,padding 0.25s,margin 0.25s;will-change:auto;-webkit-backface-visibility:visible}
+.rest-timer-bar.rest-timer-inline.show{max-height:120px;padding:10px 14px;margin:8px 12px 12px;opacity:1}
+/* Push page content up when the Complete pill is visible so the day content
+   isn't obscured. (v5.52: timer-active no longer needs a content offset —
+   the inline timer is inside the card, in the normal document flow.) */
 body.complete-ready .day-panel.show{padding-bottom:80px}
-body.timer-active.complete-ready .day-panel.show{padding-bottom:140px}
 #share-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1100;display:none;align-items:flex-end;justify-content:center}
 #share-modal-overlay.show{display:flex}
 #share-modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:20px;max-height:80vh;overflow-y:auto}
@@ -1345,7 +1350,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.51</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.52</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -11309,9 +11314,23 @@ function startRestTimer(seconds){
   } else { _restCtx=null; }   // manual (bar buttons) — no source label
   var secs=seconds||restDefault;
   restEndTs=Date.now()+secs*1000; _restDone=false; restSeconds=secs;
-  document.getElementById('rest-timer-count').textContent=secs;
-  _updateRestSrc();
-  document.getElementById('rest-timer-bar').classList.add('show');
+  var bar=document.getElementById('rest-timer-bar');
+  if(bar){
+    document.getElementById('rest-timer-count').textContent=secs;
+    _updateRestSrc();
+    // v5.52: move the bar INTO the card whose Rest was tapped (no more
+    // position:fixed). Falls back to the body if there's no source item —
+    // unusual path, but covers programmatic startRestTimer calls.
+    if(_restSourceItem && _restSourceItem.parentNode){
+      _restSourceItem.appendChild(bar);
+      bar.classList.add('rest-timer-inline');
+    } else {
+      // Restore floating-bar mode if previously inline + no source now.
+      if(bar.parentNode !== document.body) document.body.appendChild(bar);
+      bar.classList.remove('rest-timer-inline');
+    }
+    bar.classList.add('show');
+  }
   document.body.classList.add('timer-active');
   [30,60,90,120].forEach(function(d){
     var btn=document.getElementById('rt-'+d);
@@ -11331,7 +11350,7 @@ function _restTick(){
 function _restComplete(){
   if(_restDone) return; _restDone=true;
   clearInterval(restInterval); restInterval=null; restEndTs=0;
-  var bar=document.getElementById('rest-timer-bar'); if(bar) bar.classList.remove('show');
+  _restCleanupBar();   // v5.52: slide inline bar out, then detach from card.
   document.body.classList.remove('timer-active');
   // v5.28: sticky toast so the "rest done" alert is still visible if the
   // timer completed while the phone was locked. Auto-dismissing the toast
@@ -11350,8 +11369,23 @@ function addRestTime(s){
 function stopRestTimer(){
   _restDone=true; restEndTs=0;
   clearInterval(restInterval); restInterval=null;
-  document.getElementById('rest-timer-bar').classList.remove('show');
+  _restCleanupBar();   // v5.52
   document.body.classList.remove('timer-active');
+}
+// v5.52: shared "slide bar out, then detach from the source card" path used
+// by both completion and manual cancel. Wait for the max-height collapse
+// (~250ms) so the user sees the bar smoothly retreat; then move it back to
+// <body> and strip the inline class so the next start is a clean slate.
+function _restCleanupBar(){
+  var bar=document.getElementById('rest-timer-bar'); if(!bar) return;
+  bar.classList.remove('show');
+  setTimeout(function(){
+    if(bar.classList.contains('rest-timer-inline')){
+      bar.classList.remove('rest-timer-inline');
+      if(bar.parentNode !== document.body) document.body.appendChild(bar);
+    }
+    _restSourceItem=null;
+  }, 280);
 }
 // v5.4: recompute the moment the app returns to the foreground — a timer that
 // elapsed while the phone was locked then shows 0 and fires its alert on return.
@@ -11414,10 +11448,19 @@ function restForItem(itemEl){
 }
 // Capture phase: runs before the card Rest button's inline onclick, so the
 // global startRestTimer call below can pick up the resolved smart default.
+// v5.52: also stash the source .item so the timer can render INLINE inside
+// that card instead of as a fixed-position bar at the bottom. The fixed bar
+// triggered a long tail of iOS visual-viewport drift bugs (v5.48–v5.51) —
+// inline puts it inside the normal document flow, eliminating the class.
+var _restSourceItem=null;
 document.addEventListener('click',function(e){
   var t=e.target; if(!t||!t.closest) return;
   var btn=t.closest('.item-timer-btn');
-  if(btn){ try{ _pendingSmartRest=restForItem(btn.closest('.item')); }catch(err){ _pendingSmartRest=null; } }
+  if(btn){
+    var item=btn.closest('.item');
+    try{ _pendingSmartRest=restForItem(item); }catch(err){ _pendingSmartRest=null; }
+    _restSourceItem=item;
+  }
 },true);
 function _updateRestSrc(){
   var el=document.getElementById('rest-timer-src'); if(!el) return;
