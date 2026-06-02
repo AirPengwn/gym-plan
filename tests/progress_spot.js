@@ -62,11 +62,20 @@ w.localStorage.setItem('gymlog_a', JSON.stringify([{
 }]));
 
 // Step 4 — zones render in Trends
+// v5.45 (P1-A): the 3 zone-titles (Now/Trends/Awards) became 4 collapsible
+// <details class="trend-band"> bands: This week / Over time / Needs a look /
+// Achievements. Section content within each band is unchanged.
 w.switchProgTab('stats', null);
 var statsHTML=(D.getElementById('prog-stats')||{}).innerHTML||'';
-ok(/stats-zone-title">Now</.test(statsHTML),'Step 4 · Now zone title present (Patch 3 Step 2: now .stats-section-title.stats-zone-title)');
-ok(/stats-zone-title">Trends</.test(statsHTML),'Step 4 · Trends zone title present');
-ok(/stats-zone-title">Awards</.test(statsHTML),'Step 4 · Awards zone title present');
+ok(/data-band="this-week"/.test(statsHTML)&&/trend-band-title">This week</.test(statsHTML),'v5.45 · "This week" band present');
+ok(/data-band="over-time"/.test(statsHTML)&&/trend-band-title">Over time</.test(statsHTML),'v5.45 · "Over time" band present');
+ok(/data-band="needs-a-look"/.test(statsHTML)&&/trend-band-title">Needs a look</.test(statsHTML),'v5.45 · "Needs a look" band present');
+ok(/data-band="achievements"/.test(statsHTML)&&/trend-band-title">Achievements</.test(statsHTML),'v5.45 · "Achievements" band present');
+ok(/data-band="achievements"[^>]*?>[\s\S]*?trend-band-sub">🏅 \d+ earned/.test(statsHTML),'v5.45 · Achievements band carries the one-line summary (🏅 N earned)');
+// First three bands default-open; Achievements default-closed.
+// (jsdom serializes boolean attrs as open="" — match either form.)
+ok(/<details class="trend-band" data-band="this-week" open(?:="")?>/.test(statsHTML),'v5.45 · This week defaults to open');
+ok(/<details class="trend-band" data-band="achievements"><summary>/.test(statsHTML),'v5.45 · Achievements defaults to closed');
 // v4.5: Body Measurements is NOT in Trends anymore (it has its own Body sub-tab);
 // the old shuffle + anchor are gone.
 ok(!D.getElementById('trends-zone-meas-anchor'),'v4.5 · old Trends meas anchor removed');
@@ -74,9 +83,14 @@ ok(!/meas-wrap-host/.test(statsHTML),'v4.5 · Trends no longer hosts the body me
 
 // Step 5 — Sessions feed
 w.renderProgress();
-// v4.1: hero metric line summarizes sessions (replaces the per-day stat boxes)
+// v5.45 (P1-B): the v4.1 hero metric line is folded INTO #prog-recap as a
+// muted all-time secondary line — #prog-hero is now an empty stub kept for
+// backward-compat with any external selector.
 var hero=D.getElementById('prog-hero');
-ok(hero && /\bsession/.test(hero.textContent) && /<b>/.test(hero.innerHTML),'v4.1 · hero line renders session summary');
+ok(hero && (hero.innerHTML||'')==='','v5.45 · prog-hero stub stays empty (content moved into recap)');
+var recap=D.getElementById('prog-recap');
+ok(recap && /prog-recap-all/.test(recap.innerHTML)&&/\ball-time\b/.test(recap.textContent||''),'v5.45 · recap carries the all-time secondary line');
+ok(recap && /\bsession/.test(recap.textContent||''),'v5.45 · recap mentions sessions in the all-time line');
 var feed=D.getElementById('sess-feed');
 ok(feed && feed.querySelectorAll('.sess-card').length===3,'Step 5 · feed renders 3 session cards');
 ok(/sess-day-pill/.test(feed.innerHTML),'Step 5 · day pill rendered');

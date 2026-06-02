@@ -87,9 +87,12 @@ w.localStorage.setItem('gymlog_a', JSON.stringify([{
 }]));
 w.switchProgTab('stats', null);
 var stats=(D.getElementById('prog-stats')||{}).innerHTML||'';
-ok(/class="stats-section-title stats-zone-title">Now</.test(stats),'Step 2 · Now zone title uses .stats-section-title.stats-zone-title');
-ok(/class="stats-section-title stats-zone-title">Trends</.test(stats),'Step 2 · Trends zone title uses .stats-section-title.stats-zone-title');
-ok(/class="stats-section-title stats-zone-title">Awards</.test(stats),'Step 2 · Awards zone title uses .stats-section-title.stats-zone-title');
+// v5.45 (P1-A): the 3 zone-titles (Now / Trends / Awards) became 4 collapsible
+// <details class="trend-band"> bands (This week / Over time / Needs a look /
+// Achievements). The section content within each band is unchanged.
+ok(/data-band="this-week"/.test(stats)&&/trend-band-title">This week</.test(stats),'v5.45 · "This week" band present (was: Now zone)');
+ok(/data-band="over-time"/.test(stats)&&/trend-band-title">Over time</.test(stats),'v5.45 · "Over time" band present (was: Trends zone)');
+ok(/data-band="achievements"/.test(stats)&&/trend-band-title">Achievements</.test(stats),'v5.45 · "Achievements" band present (was: Awards zone)');
 ok(/\.stats-zone-title\{margin-top:28px\}/.test(css),'Step 2 · CSS adds 28px top margin to zone titles');
 ok(/\.zone-section:first-child>\.stats-zone-title\{margin-top:0\}/.test(css),'Step 2 · first-zone gets margin-top:0');
 ok(!/\.zone-hdr\{/.test(css),'Step 2 · dead .zone-hdr CSS rule removed');

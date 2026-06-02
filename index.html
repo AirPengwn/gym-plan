@@ -444,6 +444,12 @@ body.dark .prog-recap-chip{color:var(--gold);background:rgba(255,215,64,.10)}
 .prog-recap-row{display:flex;flex-wrap:wrap;gap:6px}
 .prog-recap-s{font-size:var(--fs-sm);font-weight:600;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:3px 10px}
 .prog-recap-s b{color:var(--text);font-weight:800}
+/* v5.45 (P1-B): all-time summary tucked under the monthly chips as a single
+   muted line. Replaces the standalone prog-hero (now empty stub) so there's
+   ONE summary card before the Sessions/Lifts/Trends/Body tab switcher. */
+.prog-recap-all{margin-top:8px;font-size:var(--fs-xs);font-weight:500;color:var(--muted);letter-spacing:.01em;line-height:1.45}
+.prog-recap-all b{color:var(--text);font-weight:700}
+.prog-recap-all-sep{margin:0 6px;color:var(--border)}
 .vol-title{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
 .vol-seg{display:inline-flex;margin-left:auto;border:1px solid var(--border);border-radius:8px;overflow:hidden}
 .vol-seg-btn{padding:3px 10px;font-size:10.5px;font-weight:700;border:none;background:transparent;color:var(--muted);cursor:pointer;letter-spacing:.02em}
@@ -1012,6 +1018,23 @@ body.dark .deload-snooze-btn{background:transparent;border-color:#7A2020;color:#
 /* First zone (Now) is wrapped in .zone-section; suppress its top margin so the
    panel doesn't get an awkward gap before the very first header. */
 .zone-section:first-child>.stats-zone-title{margin-top:0}
+/* v5.45 (P1-A): the legacy 3 zones (Now/Trends/Awards) became 4 collapsible
+   bands (This week / Over time / Needs a look / Achievements). Markup is
+   <details class="trend-band">/<summary class="trend-band-h">. First 3 open
+   by default; Achievements collapsed with a one-line summary. Open/closed
+   state lives in localStorage:trends_bands_v1 (local-only, NOT synced). */
+.trend-band{margin:0 0 16px;border:none;background:transparent;display:block}
+.trend-band:last-child{margin-bottom:0}
+.trend-band>summary{display:flex;align-items:baseline;gap:10px;padding:14px 4px 10px;margin:0;cursor:pointer;list-style:none;border-bottom:1px solid var(--border-soft);user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.trend-band>summary::-webkit-details-marker{display:none}
+.trend-band:first-of-type>summary{padding-top:0}
+.trend-band-title{font-size:var(--fs-md);font-weight:800;letter-spacing:-.005em;color:var(--text);flex-shrink:0}
+.trend-band-sub{font-size:var(--fs-xs);font-weight:600;color:var(--muted);margin-left:6px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trend-band-chev{margin-left:auto;font-size:13px;color:var(--muted);transition:transform .15s ease;display:inline-block;line-height:1;flex-shrink:0}
+.trend-band:not([open])>summary .trend-band-chev{transform:rotate(-90deg)}
+.trend-band-body{padding-top:12px}
+.trend-band-body>.stats-section:first-child>.stats-section-title{margin-top:0}
+body.dark .trend-band>summary{border-bottom-color:var(--border)}
 /* Step 5 — Sessions feed (cross-day timeline) */
 /* L1 (v5.2): notes search */
 .sess-search{width:100%;box-sizing:border-box;padding:9px 12px;margin-bottom:0.75rem;border:1px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--text);font-size:14px;font-family:inherit;outline:none}
@@ -1265,7 +1288,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.44</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.45</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -7427,9 +7450,14 @@ function selectBackupCode(){
     try{ ta.select(); }catch(e){}
     try{ document.execCommand('selectAll', false, null); }catch(e){}
     try{ ta.setSelectionRange(0, ta.value.length); }catch(e){}
+    // v5.45 · restore readonly SYNCHRONOUSLY (was inside the 30ms tick, which
+    // left a sync-observable window where the textarea wasn't readonly — the
+    // long-press fallback contract is "always readonly between user actions").
+    // Setting readonly=true after setSelectionRange doesn't clear the iOS
+    // selection paint, so this is safe.
+    if(hadReadonly) try{ ta.setAttribute('readonly',''); }catch(e){}
     setTimeout(function(){
       try{ ta.setSelectionRange(0, ta.value.length); }catch(e){}
-      if(hadReadonly) try{ ta.setAttribute('readonly',''); }catch(e){}
     }, 30);
 
     // Belt-and-suspenders: also write the full value to the clipboard.
@@ -7468,7 +7496,8 @@ function copyBackupCode(){
     try{ ta.select(); }catch(e){}
     try{ document.execCommand('selectAll', false, null); }catch(e){}
     try{ ta.setSelectionRange(0, ta.value.length); }catch(e){}
-    if(hadReadonly) setTimeout(function(){ try{ ta.setAttribute('readonly',''); }catch(e){} }, 30);
+    // v5.45 · restore readonly synchronously (long-press fallback contract).
+    if(hadReadonly) try{ ta.setAttribute('readonly',''); }catch(e){}
   }catch(e){}
   var txt=ta.value;
   if(navigator.clipboard && navigator.clipboard.writeText){
@@ -8709,11 +8738,27 @@ function renderProgress(){
       }
     });
   });
-  // v5.11: render the quiet monthly recap
+  // v5.11: render the quiet monthly recap.
+  // v5.45 (P1-B): the all-time "{N} sessions · {N} PRs · {N}d streak" line
+  // formerly in #prog-hero is folded into the recap card as a muted secondary
+  // line — ONE summary above the Sessions/Lifts/Trends/Body switcher.
   try{
     var recapEl=document.getElementById('prog-recap');
     if(recapEl){
-      if(!mSess){ recapEl.hidden=true; recapEl.innerHTML=''; }
+      // All-time secondary line — shared by both branches below.
+      var _streakAll=0; try{ var _stAll=computeStats(); if(_stAll) _streakAll=_stAll.streak||0; }catch(e){}
+      var _allParts=['<b>'+total+'</b> session'+(total===1?'':'s')];
+      if(prTotal>0) _allParts.push('<b>'+prTotal+'</b> PR'+(prTotal===1?'':'s'));
+      if(_streakAll>0) _allParts.push('<b>'+_streakAll+'</b>d streak');
+      var _allLine='<div class="prog-recap-all">'+_allParts.join('<span class="prog-recap-all-sep">·</span>')+' all-time</div>';
+
+      if(!total){ recapEl.hidden=true; recapEl.innerHTML=''; }
+      else if(!mSess){
+        // No sessions this calendar month yet — show just the all-time
+        // secondary line so the user isn't left without any header summary.
+        recapEl.innerHTML='<div class="prog-recap-h"><span>Summary</span></div>'+_allLine;
+        recapEl.hidden=false;
+      }
       else {
         var bw=[]; try{ bw=getMeasurements().filter(function(m){return m&&m.type==='weight'&&m.value>0;}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}); }catch(e){}
         var bwThis=bw.filter(function(m){ return Date.parse(m.date)>=_monthStart; });
@@ -8733,23 +8778,16 @@ function renderProgress(){
           var recent=_recentlyEarnedMilestones(7);
           if(recent['month1']) headerChip=' <span class="prog-recap-chip" title="Earned within the last week">🔥 1mo active</span>';
         }catch(_e){}
-        recapEl.innerHTML='<div class="prog-recap-h"><span>This month · '+mname+'</span>'+headerChip+'</div><div class="prog-recap-row">'+bits.join('')+'</div>';
+        recapEl.innerHTML='<div class="prog-recap-h"><span>This month · '+mname+'</span>'+headerChip+'</div><div class="prog-recap-row">'+bits.join('')+'</div>'+_allLine;
         recapEl.hidden=false;
       }
     }
   }catch(e){}
-  // v4.1: hero metric line (sessions · PRs · streak) — replaces the stat-box grid.
+  // v5.45 (P1-B): #prog-hero is retired — its content is folded into the
+  // recap card above as a muted secondary line. We keep the empty stub for
+  // backward-compat with any external selector (per the markup comment).
   var heroEl=document.getElementById('prog-hero');
-  if(heroEl){
-    var streak=0; try{ var st=computeStats(); if(st) streak=st.streak||0; }catch(e){}
-    if(!total){ heroEl.textContent='No sessions logged yet'; }
-    else {
-      var parts=[total+' session'+(total===1?'':'s')];
-      if(prTotal>0) parts.push(prTotal+' PR'+(prTotal===1?'':'s'));
-      if(streak>0) parts.push(streak+'d streak');
-      heroEl.innerHTML=parts.map(function(p){ return '<b>'+_esc(p.split(' ')[0])+'</b> '+_esc(p.split(' ').slice(1).join(' ')); }).join('<span class="prog-hero-sep">·</span>');
-    }
-  }
+  if(heroEl) heroEl.innerHTML='';
 
   var filter=_sessFilterDay;
   var actionsEl=document.getElementById('sess-filter-actions');
@@ -9803,6 +9841,51 @@ function statBox(label,value){
   return '<div class="stat-card"><div class="stat-card-label">'+label+'</div><div class="stat-card-val">'+value+'</div></div>';
 }
 
+// v5.45 (P1-A) — Trends sub-tab is structured as 4 collapsible bands instead
+// of 3 zone headers. Open/closed state is local-only (trends_bands_v1), keyed
+// by band id. Achievements is the only one closed by default; the others
+// snap back to whatever state the user left them in.
+function _getTrendBandState(){
+  try{ var v=JSON.parse(localStorage.getItem('trends_bands_v1')); return (v && typeof v==='object')?v:{}; }
+  catch(e){ return {}; }
+}
+function _setTrendBandState(id, open){
+  if(!id) return;
+  try{ var st=_getTrendBandState(); st[id]=!!open; localStorage.setItem('trends_bands_v1', JSON.stringify(st)); }catch(e){}
+}
+// Wrap a section in a <details> band. `defaultOpen` is the fallback if the
+// user hasn't toggled this band yet; otherwise persisted state wins.
+function _trendBand(id, title, body, defaultOpen, summary){
+  var st=_getTrendBandState();
+  var open=(st[id]!=null) ? !!st[id] : !!defaultOpen;
+  var openAttr=open?' open':'';
+  var subEl=summary?'<span class="trend-band-sub">'+summary+'</span>':'';
+  return '<details class="trend-band" data-band="'+id+'"'+openAttr+'>'
+    +'<summary><span class="trend-band-title">'+title+'</span>'+subEl
+    +'<span class="trend-band-chev" aria-hidden="true">▾</span></summary>'
+    +'<div class="trend-band-body">'+body+'</div></details>';
+}
+// One-line summary for the closed Achievements band:
+// "🏅 {earned} earned · next: {nearestName} ({cur}/{tgt})"
+function _achievementsBandSummary(s, wkData, prs){
+  var earned=getEarnedMilestones();
+  var best=null;
+  try{
+    MILESTONES.forEach(function(m){
+      var isEarned=m.check(s,wkData&&wkData.weeksHit,prs,wkData&&wkData.sessions)||earned.indexOf(m.id)!==-1;
+      if(isEarned) return;
+      var prog=_milestoneProgress(m, s, wkData&&wkData.weeksHit, prs);
+      if(!prog || !prog.target) return;
+      var dist=prog.target-prog.current;
+      if(dist<=0) return;
+      if(best===null || dist<best.dist){ best={dist:dist, name:m.label, cur:prog.current, tgt:prog.target}; }
+    });
+  }catch(e){}
+  var line='🏅 '+earned.length+' earned';
+  if(best) line+=' · next: '+best.name+' ('+best.cur+'/'+best.tgt+')';
+  return line;
+}
+
 function renderStats(){
   var s=computeStats();
   var el=document.getElementById('prog-stats');
@@ -9812,33 +9895,29 @@ function renderStats(){
   // Step 9: standardised delta pill replaces the ad-hoc inline ▲/▼ span.
   var monthTrend=deltaPill(s.thisMonth, s.lastMonth, {threshold:0, absoluteFrom:true});
 
-  // ── Step 4: Now / Trends / Awards zones ───────────────────────────────
+  // ── v5.45 (P1-A) · 4 collapsible bands: This week / Over time /
+  // Needs a look / Achievements. Section content is unchanged — only the
+  // wrapper changed from 3 .zone-section divs to 4 <details> bands. ────────
 
-  // NOW — what's actionable today.
-  var html='<div class="zone-section">'
-    +'<div class="stats-section-title stats-zone-title">Now</div>';
-  html+=renderDeloadCard();
-  html+=renderWeeklyConsistency();
-  html+='<div class="stats-section"><div class="stats-section-title">Days Since Last Done</div><div class="day-since-grid">';
+  // THIS WEEK — what's actionable today.
+  var thisWeekBody=renderDeloadCard()+renderWeeklyConsistency();
+  // Step 9: current-streak pill (PB or vs-PB) replaces the static "consecutive" sub-text when applicable.
+  var streakSub=_streakPill(s.streak, s.longestStreak)||'consecutive';
+  thisWeekBody+='<div class="stats-section"><div class="stats-section-title">Current Streak</div><div class="stat-grid">'
+    +statCard('Current',s.streak+(s.streak===1?' day':' days'),streakSub)
+    +statCard('Last Workout',s.daysSinceLast===0?'Today':s.daysSinceLast===1?'Yesterday':s.daysSinceLast+' days ago','')
+    +'</div></div>';
+  thisWeekBody+='<div class="stats-section"><div class="stats-section-title">Days Since Last Done</div><div class="day-since-grid">';
   getDays().forEach(function(d){
     var ts=s.dayLastTs[d],ago=ts?Math.floor((now-ts)/MS_DAY):null;
     var agoStr=ago===null?'Never':ago===0?'Today':ago===1?'Yesterday':ago+' days ago';
     var col=ago===null||ago>14?'#C0392B':ago>7?'#E07B3F':ago>3?'#B8860B':'#0A6640';
-    html+='<div class="day-since-card"><span class="day-since-name">'+s.dayNames[d]+'</span><span class="day-since-val" style="color:'+col+'">'+agoStr+'</span></div>';
+    thisWeekBody+='<div class="day-since-card"><span class="day-since-name">'+s.dayNames[d]+'</span><span class="day-since-val" style="color:'+col+'">'+agoStr+'</span></div>';
   });
-  html+='</div></div>';
-  // Step 9: current-streak pill (PB or vs-PB) replaces the static "consecutive" sub-text when applicable.
-  var streakSub=_streakPill(s.streak, s.longestStreak)||'consecutive';
-  html+='<div class="stats-section"><div class="stats-section-title">Current Streak</div><div class="stat-grid">'
-    +statCard('Current',s.streak+(s.streak===1?' day':' days'),streakSub)
-    +statCard('Last Workout',s.daysSinceLast===0?'Today':s.daysSinceLast===1?'Yesterday':s.daysSinceLast+' days ago','')
-    +'</div></div>';
-  html+='</div>'; // /zone-section Now
+  thisWeekBody+='</div></div>';
 
-  // TRENDS — how the last few weeks went.
-  html+='<div class="zone-section">'
-    +'<div class="stats-section-title stats-zone-title">Trends</div>';
-  html+=renderActivityHeatmap();
+  // OVER TIME — multi-week trends.
+  var overTimeBody=renderActivityHeatmap();
   // Step 9: weekly volume delta pill (this 7d vs prev 7d).
   var _wv=_weeklyVolumeNow();
   var _wvPill=(_wv.curr>0||_wv.prev>0)?deltaPill(_wv.curr, _wv.prev, {threshold:0.5}):'';
@@ -9848,14 +9927,14 @@ function renderStats(){
     +'<button type="button" class="vol-seg-btn'+(_vm==='weight'?' active':'')+'" onclick="setVolMode(\'weight\')" aria-pressed="'+(_vm==='weight')+'">Weight</button>'
     +'<button type="button" class="vol-seg-btn'+(_vm==='tonnage'?' active':'')+'" onclick="setVolMode(\'tonnage\')" aria-pressed="'+(_vm==='tonnage')+'">Tonnage</button>'
     +'</span>';
-  html+='<div class="stats-section"><div class="stats-section-title vol-title">'+_vmLabel+' '+_wvPill+_vmToggle+'</div>'
+  overTimeBody+='<div class="stats-section"><div class="stats-section-title vol-title">'+_vmLabel+' '+_wvPill+_vmToggle+'</div>'
     +'<div class="vol-chart-wrap"><div class="vol-chart-inner"><canvas id="vol-chart-canvas"></canvas></div></div>'
     +'</div>';
   try{
     var _loads=computeWeeklyMuscleLoad();
     var _hasLoad=_loads && Object.keys(_loads).some(function(k){ return _loads[k] && _loads[k]!=='none'; });
     if(_hasLoad){
-      html+='<div class="stats-section"><div class="stats-section-title muscle-map-title">Weekly muscle load</div>'
+      overTimeBody+='<div class="stats-section"><div class="stats-section-title muscle-map-title">Weekly muscle load</div>'
         +'<div class="muscle-map-wrap" style="border-top:none;padding:0">'
         +'<svg class="muscle-map-svg" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg">'
         +buildMuscleHeatMapSVG(_loads)+'</svg></div>'
@@ -9866,38 +9945,53 @@ function renderStats(){
         +'</div>';
     }
   }catch(e){}
-  html+='<div class="stats-section"><div class="stats-section-title">Overview</div><div class="stat-grid">'
+  overTimeBody+='<div class="stats-section"><div class="stats-section-title">Overview</div><div class="stat-grid">'
     +statCard('Total Sessions',''+s.total,'all time')
     +statCard('This Month',''+s.thisMonth,monthTrend)
     +statCard('Avg Between',s.avgDaysBetween!==null?s.avgDaysBetween+' days':'—','between sessions')
     +statCard('Avg Exercises',''+s.avgExChecked,'per session')
     +'</div></div>';
-  html+=renderRecoverySection();
-  html+='</div>'; // /zone-section Trends
 
-  // AWARDS — recognition + tools.
-  html+='<div class="zone-section">'
-    +'<div class="stats-section-title stats-zone-title">Awards</div>';
-  html+=renderMilestones();
-  html+='<div class="stats-section"><div class="stats-section-title">Career Highs</div><div class="stat-grid">'
+  // NEEDS A LOOK — coaching / things to address.
+  var needsBody=renderRecoverySection();
+  if(s.topSkipped.length){
+    // v5.14 (T7): renamed to "Worth a look" with muted "done X of last Y" framing.
+    needsBody+='<div class="stats-section"><div class="stats-section-title">Worth a look</div><div class="skip-list">';
+    s.topSkipped.forEach(function(item){
+      needsBody+='<div class="skip-row"><span class="skip-row-name">'+_esc(item.ex)+'</span><span class="skip-row-cnt">done '+(item.done||0)+' of last '+(item.total||0)+'</span></div>';
+    });
+    needsBody+='</div></div>';
+  }
+  // If both Recovery & Progression and Worth a look are empty, keep an
+  // informative placeholder so the band doesn't appear empty when opened.
+  if(!needsBody) needsBody='<div class="stats-section" style="color:var(--muted);font-size:var(--fs-13);padding:8px 4px">Nothing flagged — your training is balanced this week.</div>';
+
+  // ACHIEVEMENTS — collapsed by default with a one-line summary.
+  var wkData={}; try{ wkData=getWeeklyConsistency()||{}; }catch(e){}
+  var prsTotal=0; try{ prsTotal=getTotalPRs()||0; }catch(e){}
+  var achievementsSummary=_achievementsBandSummary(s, wkData, prsTotal);
+  var achievementsBody=renderMilestones()
+    +'<div class="stats-section"><div class="stats-section-title">Career Highs</div><div class="stat-grid">'
     +statCard('Longest Streak',s.longestStreak+(s.longestStreak===1?' day':' days'),'')
     +statCard('Most Done Day',s.favDay,''+s.favCount+' sessions')
     +'</div></div>';
-  if(s.topSkipped.length){
-    // v5.14 (T7): renamed to "Worth a look" with muted "done X of last Y" framing.
-    html+='<div class="stats-section"><div class="stats-section-title">Worth a look</div><div class="skip-list">';
-    s.topSkipped.forEach(function(item){
-      html+='<div class="skip-row"><span class="skip-row-name">'+_esc(item.ex)+'</span><span class="skip-row-cnt">done '+(item.done||0)+' of last '+(item.total||0)+'</span></div>';
-    });
-    html+='</div></div>';
-  }
-  html+='<div class="stats-section" style="display:flex;gap:8px;">'
+  achievementsBody+='<div class="stats-section" style="display:flex;gap:8px;">'
     +'<button onclick="exportCSV()" style="flex:1;padding:11px;background:#E1F5EE;border:1.5px solid #0F6E56;border-radius:10px;color:#085041;font-size:13px;font-weight:600;cursor:pointer;">📥 Export CSV</button>'
     +'<button onclick="openPlateCalc()" style="flex:1;padding:11px;background:#EEEDFE;border:1.5px solid #7F77DD;border-radius:10px;color:#3C3489;font-size:13px;font-weight:600;cursor:pointer;"><svg class="ic ic-sm" style="margin-right:6px" aria-hidden="true"><use href="#ic-lifts"/></svg>Plate Calc</button>'
     +'</div>';
-  html+='</div>'; // /zone-section Awards
 
-  el.innerHTML=html;
+  el.innerHTML=
+    _trendBand('this-week',     'This week',     thisWeekBody,    true)
+   +_trendBand('over-time',     'Over time',     overTimeBody,    true)
+   +_trendBand('needs-a-look',  'Needs a look',  needsBody,       true)
+   +_trendBand('achievements',  'Achievements',  achievementsBody, false, achievementsSummary);
+
+  // Persist open/closed on toggle. The handler is attached to each band's
+  // <details>; the toggle event bubbles from native UA on user click.
+  el.querySelectorAll('details.trend-band').forEach(function(d){
+    d.addEventListener('toggle', function(){ _setTrendBandState(d.dataset.band, d.open); });
+  });
+
   // v4.5: Body Measurements lives in its own #prog-panel-body sub-tab now — no DOM-shuffle.
   setTimeout(drawVolumeChart,50);
 }
