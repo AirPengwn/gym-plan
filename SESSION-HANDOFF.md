@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.46 · **Updated:** 2026-05-28 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.47 · **Updated:** 2026-05-28 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
@@ -87,6 +87,13 @@ retro), **L2** (Apple Health), **5.2** type-token sweep.
 - **Round 2 (design_handoff_v420_r2) is COMPLETE:** all 11 functional items shipped — Phase A (S2,S1)
   v5.0 · Phase B (F4,F1,F2,F3,L3) v5.1 (+v5.1.1/.2 fixes) · Phase C (C2,C1,M1,L1) v5.2. Cut by owner:
   F5, L2, 5.2. Synced keys added: `rest_overrides_v1`, `plate_setup_v1`, `units_v1`.
+  **v5.47 (P3-C) synced-keys addendum:** `note_tags_v1` joined the synced set —
+  LWW whole-array (no element union; mirrors `units_v1`'s scalar semantics so
+  intentionally-removed tags stay removed). Mirrored in all 9 spots:
+  `pushPlanToCloud`, `_silentPushPlan`, `_PLAN_KEYS_SYNC` (auto-push trigger),
+  `buildBinPayload` (generateExport + cloud-archive helpers), `importData`,
+  `mergeCloudIntoPayload`, `applyPayloadToLocal`, `TEST_EXTRA_KEYS`. Spot test:
+  `tests/note_tags_spot.js`.
 - **Post-Round-2 owner-requested batch (in progress):** v5.3 measurements-sync-from-any-device (DONE,
   see Sync model). v5.4 **rest timer is timestamp-based** (`restEndTs`; recompute on
   `visibilitychange`/focus/pageshow) so it stays accurate across phone-lock, + completion

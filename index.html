@@ -83,15 +83,45 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;padding:1rem;max-width:
 .day-selector{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem}
 /* L3 (v5.1): "Up next" caption above the day chips when auto-advanced */
 .upnext-cap{font-size:var(--fs-xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin:0 2px 5px}
+/* v5.47 (P3-C): quick-tag chips under the .notes-input on workout cards.
+   Tapping a chip appends its text to the free-text field (notes-search
+   indexes it for free). The locked pipe-delimited .note set format is
+   strictly untouched — chips only ever write to .notes-input / sess.notes. */
+.note-tag-chips{display:flex;flex-wrap:wrap;gap:5px;margin:6px 12px 8px}
+.note-tag-chip{font-size:11px;font-weight:600;color:var(--primary);background:var(--primary-tint);border:1px solid var(--primary);border-radius:999px;padding:3px 9px;cursor:pointer;font-family:inherit;line-height:1.3;letter-spacing:.01em}
+.note-tag-chip:hover,.note-tag-chip:focus-visible{background:var(--primary);color:#fff;outline:none}
+body.dark .note-tag-chip{color:var(--primary-2);background:var(--primary-tint);border-color:var(--primary-2)}
+body.dark .note-tag-chip:hover,body.dark .note-tag-chip:focus-visible{background:var(--primary-2);color:var(--surface)}
+/* Tag editor in More → Customize → Note tags. */
+.note-tag-row{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--border-soft)}
+.note-tag-row:last-child{border-bottom:none}
+body.dark .note-tag-row{border-bottom-color:var(--border)}
+.note-tag-row-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:var(--text)}
+.note-tag-row-act{flex-shrink:0;width:30px;height:30px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:14px;cursor:pointer;line-height:1;font-family:inherit;padding:0}
+.note-tag-row-act:hover,.note-tag-row-act:focus-visible{border-color:var(--primary);outline:none}
+.note-tag-row-act:disabled{opacity:.3;cursor:not-allowed}
+.note-tag-row-del{color:var(--bad)}
+.note-tag-row-del:hover,.note-tag-row-del:focus-visible{background:rgba(197,48,48,.08);border-color:var(--bad)}
+.note-tag-add{display:flex;gap:6px;margin-top:10px}
+.note-tag-add input{flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-family:inherit;font-size:13px;outline:none}
+.note-tag-add input:focus{border-color:var(--primary)}
+.note-tag-add button{flex-shrink:0;padding:7px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.note-tag-add button:hover{background:var(--primary-2)}
+.note-tags-empty{font-size:12px;color:var(--muted);padding:8px 2px;line-height:1.5}
 /* v5.46 (P2-B): single "today" header above the day panels — "{day} · last
-   done {rel} · {one cue}". Muted, dismissible (session-only snooze). */
-.day-today-header{display:flex;align-items:center;gap:8px;font-size:var(--fs-xs);font-weight:600;color:var(--muted);background:var(--bg);border:1px solid var(--border-soft);border-radius:10px;padding:8px 10px;margin:8px 0 10px}
+   done {rel} · {one cue}". Muted, dismissible (session-only snooze).
+   v5.47 (P3-A): optional second row — calm rest-day advisory when today's
+   primary muscles are flagged Overworked AND were trained <48h ago. */
+.day-today-header{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-xs);font-weight:600;color:var(--muted);background:var(--bg);border:1px solid var(--border-soft);border-radius:10px;padding:8px 10px;margin:8px 0 10px}
 .day-today-header[hidden]{display:none}
+.day-today-row{display:flex;align-items:center;gap:8px}
 .day-today-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.4}
 .day-today-text b{color:var(--text);font-weight:700}
 .day-today-dismiss{flex-shrink:0;background:transparent;border:none;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:2px 6px;border-radius:6px;font-family:inherit}
 .day-today-dismiss:hover,.day-today-dismiss:focus-visible{background:var(--border-soft);color:var(--text);outline:none}
+.day-today-advisory{font-size:var(--fs-xs);font-weight:600;color:#7A5A00;line-height:1.4;padding:4px 6px;border-radius:6px;background:rgba(255,215,64,.10);border-left:2px solid var(--gold);margin-top:2px}
 body.dark .day-today-header{background:var(--surface);border-color:var(--border)}
+body.dark .day-today-advisory{color:#FFD56A;background:rgba(255,215,64,.06)}
 .day-btn{flex:1;min-width:44px;min-height:44px;padding:6px 8px;border:1px solid var(--border-soft);border-radius:10px;font-size:var(--fs-11);font-weight:700;cursor:pointer;text-align:center;background:#fff;color:var(--text);transition:all 0.15s;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .day-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 2px 8px rgba(91,78,168,.25)}
 .day-btn.progress-tab{font-size:var(--fs-sm);padding:12px 6px}
@@ -1068,8 +1098,12 @@ body.dark .sess-filter.on .sess-cnt{background:#fff;color:var(--primary)}
 body.dark .sess-day-clear{border-color:#7A2020;color:#FF8080}
 .sess-week-hdr{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin:1rem 0 0.5rem;padding-bottom:4px;border-bottom:0.5px solid var(--border-soft)}
 .sess-week-hdr:first-child{margin-top:0.25rem}
-.sess-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:8px;box-shadow:0 1px 3px rgba(91,78,168,0.06)}
+.sess-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:8px;box-shadow:0 1px 3px rgba(91,78,168,0.06);transition:box-shadow .25s,border-color .25s}
 body.dark .sess-card{background:#252540;border-color:var(--border)}
+/* v5.47 (P3-B): brief pulse on the session card jumped to from a tapped
+   heatmap cell. Pure CSS — no scrollIntoView (respects existing scroll). */
+.sess-card.sess-flash{border-color:var(--primary);box-shadow:0 0 0 3px rgba(91,78,168,0.18),0 1px 3px rgba(91,78,168,0.06)}
+body.dark .sess-card.sess-flash{border-color:var(--primary-2);box-shadow:0 0 0 3px rgba(127,119,221,0.28),0 1px 3px rgba(91,78,168,0.06)}
 .sess-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
 .sess-card-head-l{display:flex;align-items:center;gap:6px}
 .sess-day-pill{font-size:11px;font-weight:700;color:#fff;background:var(--primary);border-radius:9px;padding:2px 8px}
@@ -1297,7 +1331,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.46</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.47</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -1548,6 +1582,21 @@ body.dark .hm-sw.med{background:#7F77DD}
     <div class="set-item" style="cursor:default;display:block">
       <div style="margin-bottom:7px">Plates available <span style="font-size:11px;color:var(--muted)">· tap to toggle (per side)</span></div>
       <div id="eq-plates" class="eq-plates"></div>
+    </div>
+  </div>
+  <!-- v5.47 (P3-C): user-editable note-tag vocabulary. Synced across devices
+       via note_tags_v1 (LWW whole-array merge — newest write wins on the
+       entire array, no element union). Defaults seeded when never set. -->
+  <div class="set-group" id="more-tags">
+    <div class="set-gh">🏷 Note tags</div>
+    <div class="set-item" style="cursor:default;display:block">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5">One-tap chips under each workout card's notes input. Edit, reorder, or add your own. <b>Syncs across devices.</b></div>
+      <div id="note-tags-list"></div>
+      <div class="note-tag-add">
+        <input id="note-tag-new" type="text" placeholder="Add a tag…" aria-label="New tag" maxlength="40" onkeydown="if(event.key==='Enter'){event.preventDefault();_addNoteTag()}"/>
+        <button type="button" onclick="_addNoteTag()">Add</button>
+      </div>
+      <button type="button" class="note-tag-row-act" style="width:auto;padding:0 12px;margin-top:8px;font-size:12px" onclick="_resetNoteTagsToDefault()">Reset to defaults</button>
     </div>
   </div>
   <h3 class="more-group">About &amp; advanced</h3>
@@ -2056,6 +2105,10 @@ function pushPlanToCloud(){
     try{ var ro=_mergeRestOverrides(getRestOverrides(), cloud['rest_overrides_v1']); if(ro&&Object.keys(ro).length){ cloud['rest_overrides_v1']=ro; saveRestOverrides(ro); } }catch(e){}
     try{ var ps=JSON.parse(localStorage.getItem('plate_setup_v1')); if(ps) cloud['plate_setup_v1']=ps; }catch(e){}
     try{ var un=localStorage.getItem('units_v1'); if(un) cloud['units_v1']=un; }catch(e){}
+    // v5.47 (P3-C): note_tags_v1 — LWW whole-array (no element union; user
+    // intentionally removes tags from their list, so a union would resurrect
+    // deleted ones).
+    try{ var nt=JSON.parse(localStorage.getItem('note_tags_v1')); if(Array.isArray(nt)) cloud['note_tags_v1']=nt; }catch(e){}
     if(!cloud.__schema) cloud.__schema=SCHEMA_VERSION;
     return _rawCloudPUT(cloud);
   }); }).then(function(){
@@ -2080,7 +2133,7 @@ function pushPlanToCloud(){
 // Boot auto-pull: a Reader device cloudGETs once per app open and applies the
 // payload locally so it always sees the latest plan/days/library/sessions the
 // primary pushed — same effect as tapping "Pull from cloud" without the prompt.
-var _PLAN_KEYS_SYNC=['plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','plate_setup_v1','units_v1'];
+var _PLAN_KEYS_SYNC=['plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','plate_setup_v1','units_v1','note_tags_v1'];
 function _silentPushPlan(){
   try{
     if(typeof TEST_MODE!=='undefined' && TEST_MODE) return;
@@ -2101,6 +2154,8 @@ function _silentPushPlan(){
     try{ var ro=JSON.parse(localStorage.getItem('rest_overrides_v1')); if(ro && typeof ro==='object' && !Array.isArray(ro)) cloud['rest_overrides_v1']=ro; }catch(e){}
     try{ var ps=JSON.parse(localStorage.getItem('plate_setup_v1')); if(ps && typeof ps==='object' && !Array.isArray(ps)) cloud['plate_setup_v1']=ps; }catch(e){}
     try{ var un=localStorage.getItem('units_v1'); if(un==='lbs'||un==='kg') cloud['units_v1']=un; }catch(e){}
+    // v5.47 (P3-C): note_tags_v1 — LWW whole-array (mirrors pushPlanToCloud).
+    try{ var nt=JSON.parse(localStorage.getItem('note_tags_v1')); if(Array.isArray(nt)) cloud['note_tags_v1']=nt; }catch(e){}
     if(!cloud.__schema) cloud.__schema=SCHEMA_VERSION;
     return _rawCloudPUT(cloud);
   }); }).then(function(){
@@ -4216,6 +4271,10 @@ function sw(day,btn){
   // {rel} · {cue}". Called after loadLastTimes so the .item DOM (which the
   // header reads for coachState fallbacks) is up to date.
   try{ _renderDayTodayHeader(day==='prog'?null:day); }catch(e){}
+  // v5.47 (P3-C): inject quick-tag chips under every .notes-input on the
+  // active panel. Pure render — chips are wired to _appendNoteTag which
+  // writes to the FREE-TEXT field, never the locked .note set format.
+  try{ if(day!=='prog'){ var _np=document.getElementById('p-'+day); if(_np) _renderNoteTagChips(_np); } }catch(e){}
   try{ updateSwipeHints(); _dismissSwipeTip(); }catch(e){}
   try{ _syncNav(); }catch(e){}
 }
@@ -4354,8 +4413,56 @@ function _renderDayTodayHeader(day){
 
   var parts=['<b>'+_esc(dayLabel)+'</b>', 'last done '+_esc(lastDoneTxt)];
   if(cue) parts.push(_esc(cue));
-  el.innerHTML='<span class="day-today-text">'+parts.join(' · ')+'</span>'
-    +'<button type="button" class="day-today-dismiss" onclick="_dismissDayTodayHeader()" aria-label="Hide for this session">×</button>';
+
+  // v5.47 (P3-A): rest-day-aware advisory. Triggers when today's primary
+  // muscles are flagged Overworked by computeWeeklyMuscleLoad AND were
+  // trained somewhere (any day) within the last 48h. Lives INSIDE the
+  // header band — not a per-card line. Read-only, never blocks logging,
+  // and dismissed alongside the rest of the header via the same × snooze.
+  var advisoryHTML='';
+  try{
+    var FRESH_MS=48*3600*1000;
+    // Aggregate the day's primary muscles (top 2 by exercise count).
+    var dayMuscles={};
+    panel.querySelectorAll('.item').forEach(function(item){
+      var nameEl=item.querySelector('.ex-name'); if(!nameEl) return;
+      var ms=[]; try{ ms=_musclesByName(String(nameEl.textContent||'').trim())||[]; }catch(_e){}
+      ms.forEach(function(m){ dayMuscles[m]=(dayMuscles[m]||0)+1; });
+    });
+    var primary=Object.keys(dayMuscles).sort(function(a,b){return dayMuscles[b]-dayMuscles[a];}).slice(0,2);
+    if(primary.length){
+      var loads={}; try{ loads=computeWeeklyMuscleLoad()||{}; }catch(_e){}
+      var overworked=primary.filter(function(m){ return loads[m]==='overworked'; });
+      if(overworked.length){
+        // Was any overworked-primary muscle trained anywhere in the last 48h?
+        // (cross-day: another day might have hit chest yesterday.)
+        var freshHit=false;
+        try{
+          var cutoff=Date.now()-FRESH_MS;
+          getDays().forEach(function(dk){
+            if(freshHit) return;
+            (getSaved(dk)||[]).forEach(function(s){
+              if(freshHit) return;
+              var ts=_sessWhen(s); if(!ts || ts<cutoff) return;
+              (s.entries||[]).forEach(function(e){
+                if(freshHit || !e || !e.ex) return;
+                var ms2=[]; try{ ms2=_musclesByName(e.ex)||[]; }catch(_e){}
+                if(ms2.some(function(m){ return overworked.indexOf(m)>=0; })) freshHit=true;
+              });
+            });
+          });
+        }catch(_e){}
+        if(freshHit){
+          var muscleTxt=overworked[0];
+          advisoryHTML='<div class="day-today-advisory">'+_esc(muscleTxt)+' is freshly worked — a lighter day or a swap is fine.</div>';
+        }
+      }
+    }
+  }catch(_e){}
+
+  el.innerHTML='<div class="day-today-row"><span class="day-today-text">'+parts.join(' · ')+'</span>'
+    +'<button type="button" class="day-today-dismiss" onclick="_dismissDayTodayHeader()" aria-label="Hide for this session">×</button></div>'
+    +advisoryHTML;
   el.hidden=false;
 }
 // A real day-chip tap opts out of auto-advance for the rest of the page-load.
@@ -4412,6 +4519,9 @@ function _setDaySelectorVisible(show){
 function renderSettings(){
   var v=document.getElementById('set-ver'); if(v){ var b=document.getElementById('app-version'); v.textContent=b?b.textContent:''; }
   try{ _testUpdateUI(); }catch(e){}   // label the test-mode button (#test-toggle)
+  // v5.47 (P3-C): paint the note-tag editor every time the More tab opens
+  // (synced state may have changed since last render).
+  try{ _renderNoteTagsEditor(); }catch(e){}
 }
 // Highlight exactly one bottom tab based on what's actually visible.
 function _syncNav(){
@@ -7006,6 +7116,119 @@ function setUnit(btn, uid){
   document.getElementById(uid).value=btn.textContent;
 }
 
+// v5.47 (P3-C) — Note-tag vocabulary. Quick-tap chips that append to the
+// free-text notes input on workout cards (per-exercise .notes-input). Tag =
+// plain text; appending writes to the existing free-text field so notes-search
+// (L1) indexes them for free. NEVER touches the locked pipe-delimited .note
+// set format. New SYNCED key `note_tags_v1` — LWW whole-array merge (mirrors
+// units_v1's scalar semantics): newest-write-wins on the entire array, no
+// element union. Mirrored in all 7 payload spots + TEST_EXTRA_KEYS + the
+// _PLAN_KEYS_SYNC auto-push hook.
+var NOTE_TAGS_DEFAULT=['felt strong','tweaked shoulder','short on time','good form','easy','tough'];
+function getNoteTags(){
+  try{
+    var raw=localStorage.getItem('note_tags_v1');
+    if(raw==null) return NOTE_TAGS_DEFAULT.slice();
+    var arr=JSON.parse(raw);
+    return (Array.isArray(arr))?arr.slice():NOTE_TAGS_DEFAULT.slice();
+  }catch(e){ return NOTE_TAGS_DEFAULT.slice(); }
+}
+function saveNoteTags(arr){
+  // Sanitize: strings only, trim, drop empties, dedupe (case-insensitive), cap.
+  var clean=[]; var seen={};
+  (Array.isArray(arr)?arr:[]).forEach(function(t){
+    var s=String(t==null?'':t).trim();
+    if(!s) return;
+    var k=s.toLowerCase();
+    if(seen[k]) return;
+    seen[k]=1; clean.push(s);
+  });
+  if(clean.length>40) clean=clean.slice(0,40);   // generous cap
+  try{ localStorage.setItem('note_tags_v1', JSON.stringify(clean)); }catch(e){}
+  try{ _renderNoteTagsEditor(); }catch(e){}
+  try{ _refreshAllNoteTagChips(); }catch(e){}
+}
+function _addNoteTag(){
+  var input=document.getElementById('note-tag-new'); if(!input) return;
+  var v=String(input.value||'').trim();
+  if(!v) return;
+  var arr=getNoteTags();
+  if(arr.some(function(t){ return t.toLowerCase()===v.toLowerCase(); })){ showToast('Already in your list'); return; }
+  arr.push(v); saveNoteTags(arr); input.value='';
+}
+function _removeNoteTag(i){
+  var arr=getNoteTags(); if(i<0||i>=arr.length) return;
+  arr.splice(i,1); saveNoteTags(arr);
+}
+function _moveNoteTag(i, dir){
+  var arr=getNoteTags(); var j=i+dir;
+  if(j<0||j>=arr.length) return;
+  var tmp=arr[i]; arr[i]=arr[j]; arr[j]=tmp; saveNoteTags(arr);
+}
+function _resetNoteTagsToDefault(){
+  try{ if(!confirm('Reset your note tags to the defaults?\n\n('+NOTE_TAGS_DEFAULT.join(', ')+')')) return; }catch(e){}
+  saveNoteTags(NOTE_TAGS_DEFAULT.slice());
+}
+function _renderNoteTagsEditor(){
+  var el=document.getElementById('note-tags-list'); if(!el) return;
+  var arr=getNoteTags();
+  if(!arr.length){ el.innerHTML='<div class="note-tags-empty">No tags yet — add one below.</div>'; return; }
+  el.innerHTML=arr.map(function(t, i){
+    return '<div class="note-tag-row">'
+      +'<span class="note-tag-row-name">'+_esc(t)+'</span>'
+      +'<button type="button" class="note-tag-row-act" onclick="_moveNoteTag('+i+',-1)" aria-label="Move up"'+(i===0?' disabled':'')+'>↑</button>'
+      +'<button type="button" class="note-tag-row-act" onclick="_moveNoteTag('+i+',1)" aria-label="Move down"'+(i===arr.length-1?' disabled':'')+'>↓</button>'
+      +'<button type="button" class="note-tag-row-act note-tag-row-del" onclick="_removeNoteTag('+i+')" aria-label="Remove">×</button>'
+      +'</div>';
+  }).join('');
+}
+function _renderNoteTagChips(scope){
+  scope=scope||document;
+  var tags=getNoteTags();
+  scope.querySelectorAll('.notes-input').forEach(function(input){
+    var row=input.closest && input.closest('.notes-row');
+    var parent=row?row.parentNode:input.parentNode;
+    if(!parent) return;
+    var dx=input.getAttribute('data-ex')||'';
+    // Replace any prior chips so toggling the vocabulary re-renders cleanly.
+    var existing=parent.querySelector('.note-tag-chips[data-for="'+dx+'"]');
+    if(existing) existing.parentNode.removeChild(existing);
+    if(!tags.length) return;
+    var wrap=document.createElement('div');
+    wrap.className='note-tag-chips';
+    wrap.setAttribute('data-for', dx);
+    tags.forEach(function(t){
+      var btn=document.createElement('button');
+      btn.type='button';
+      btn.className='note-tag-chip';
+      btn.textContent=t;
+      btn.setAttribute('aria-label','Append "'+t+'" to notes');
+      btn.addEventListener('click', function(){ _appendNoteTag(input, t); });
+      wrap.appendChild(btn);
+    });
+    // Insert directly after the .notes-row so the chips get their own line.
+    if(row && row.nextSibling) parent.insertBefore(wrap, row.nextSibling);
+    else if(row) parent.appendChild(wrap);
+    else input.parentNode.insertBefore(wrap, input.nextSibling);
+  });
+}
+function _appendNoteTag(input, tag){
+  if(!input || !tag) return;
+  var v=String(input.value||'').trim();
+  // Don't duplicate-append the same tag verbatim.
+  if(v && v.toLowerCase().indexOf(tag.toLowerCase())>=0) return;
+  // Drop italic/ghost styling that pre-filled notes leave behind.
+  try{ input.style.color=''; input.style.fontStyle=''; }catch(e){}
+  var sep=v?', ':'';
+  input.value=v+sep+tag;
+  try{ input.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){}
+  try{ haptic('light'); }catch(e){}
+  input.focus();
+}
+function _refreshAllNoteTagChips(){
+  try{ document.querySelectorAll('.day-panel').forEach(function(p){ _renderNoteTagChips(p); }); }catch(e){}
+}
+
 // C2 (v5.2): global weight unit (units_v1, synced). Replaces the per-set toggle.
 // Display/entry only — saved session notes keep the unit they were written with
 // (no conversion, no migration).
@@ -7531,6 +7754,7 @@ function generateExport(){
   try{ var ro=getRestOverrides(); if(ro&&Object.keys(ro).length) data['rest_overrides_v1']=ro; }catch(e){}
   try{ var ps=JSON.parse(localStorage.getItem('plate_setup_v1')); if(ps) data['plate_setup_v1']=ps; }catch(e){}
   try{ var un=localStorage.getItem('units_v1'); if(un) data['units_v1']=un; }catch(e){}
+  try{ var nt=JSON.parse(localStorage.getItem('note_tags_v1')); if(Array.isArray(nt)) data['note_tags_v1']=nt; }catch(e){}  // v5.47 (P3-C)
   // In-progress (unsubmitted) drafts — so a backup also protects a workout
   // you're in the middle of entering.
   getAllDayKeys().forEach(function(day){
@@ -7982,6 +8206,8 @@ function importData(){
       try{ localStorage.setItem('plate_setup_v1', JSON.stringify(data['plate_setup_v1'])); }catch(e){}
     }
     if(data['units_v1']==='lbs' || data['units_v1']==='kg'){ try{ localStorage.setItem('units_v1', data['units_v1']); }catch(e){} }
+    // v5.47 (P3-C): restore the note-tag vocabulary on import.
+    if(Array.isArray(data['note_tags_v1'])){ try{ localStorage.setItem('note_tags_v1', JSON.stringify(data['note_tags_v1'])); }catch(e){} }
     var hint=document.getElementById('restore-hint');
     hint.innerHTML='✅ Restored '+count+' sessions + measurements + settings! '
       +'<button onclick="undoImport()" style="margin-left:6px;padding:4px 10px;border:1px solid #C53030;background:#FFF5F5;color:#C53030;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Undo import</button>';
@@ -8993,7 +9219,12 @@ function renderProgress(){
       // v5.14 (T1): friendlier date display + ISO in title (was raw stored string).
       var _sts=_sessWhen(s);
       var dateBlk='<span class="ps-date" id="pdate-'+day+'-'+idx+'" role="button" tabindex="0" aria-label="Tap to edit date" title="'+_esc(fmtDateISO(_sts))+'" onclick="editSessionDate(\''+day+'\','+idx+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();editSessionDate(\''+day+'\','+idx+')}">'+_esc(fmtDate(_sts||s.date,'rel'))+' <span class="ps-cv" aria-hidden="true">▾</span></span>';
-      html+='<div class="sess-card" data-day="'+day+'" data-idx="'+idx+'">'
+      // v5.47 (P3-B): data-ymd lets _hmJumpToYmd find this card from a tapped
+      // heatmap cell. Format matches the heatmap's "Y-M-D" (raw month index,
+      // NOT zero-padded) so the lookup is a single querySelector.
+      var _yd=new Date(_sts||Date.parse(s.date)||0);
+      var _ymd=_yd.getFullYear()+'-'+_yd.getMonth()+'-'+_yd.getDate();
+      html+='<div class="sess-card" data-day="'+day+'" data-idx="'+idx+'" data-ymd="'+_ymd+'">'
         +'<div class="sess-card-head">'
         +'<div class="sess-card-head-l">'+dpill+mood+'</div>'
         +'<div class="sess-card-head-r" style="position:relative">'
@@ -9037,7 +9268,7 @@ renderDaySummaries();
 // Legacy exercise_order no longer drives the DOM (kept only for old backups).
 setTimeout(checkMilestones, 500);
 // Step 3: apply a11y attrs once the cards + injected fields exist.
-setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} try{ _renderPrimaryBadge(); }catch(e){} try{ refreshSyncBanner(); }catch(e){} try{ _syncNav(); }catch(e){} try{ _maybeBootPullForReader(); }catch(e){} try{ var _bootShown=document.querySelector('.day-panel.show'); var _bd=_bootShown?_bootShown.id.replace(/^p-/,''):null; if(_bd && _bd!=='prog' && _bd!=='more') _renderDayTodayHeader(_bd); }catch(e){} }, 0);
+setTimeout(function(){ try{ applyA11y(); }catch(e){} try{ enhanceCardioCards(); }catch(e){} try{ updateProgressBadges(); }catch(e){} try{ updateSwipeHints(); }catch(e){} try{ maybeShowSwipeTip(); }catch(e){} try{ _renderPrimaryBadge(); }catch(e){} try{ refreshSyncBanner(); }catch(e){} try{ _syncNav(); }catch(e){} try{ _maybeBootPullForReader(); }catch(e){} try{ var _bootShown=document.querySelector('.day-panel.show'); var _bd=_bootShown?_bootShown.id.replace(/^p-/,''):null; if(_bd && _bd!=='prog' && _bd!=='more') _renderDayTodayHeader(_bd); }catch(e){} try{ _refreshAllNoteTagChips(); _renderNoteTagsEditor(); }catch(e){} }, 0);
 // After a builder save+reload, return to the Manage tab (not Day 1).
 (function returnToManageAfterPlan(){
   try{ if(sessionStorage.getItem('gym_after_plan')!=='manage') return;
@@ -9356,6 +9587,7 @@ function buildBinPayload(){
   try { var ro=JSON.parse(localStorage.getItem('rest_overrides_v1')); if(ro) p['rest_overrides_v1']=ro; }catch(e){}
   try { var ps=JSON.parse(localStorage.getItem('plate_setup_v1')); if(ps) p['plate_setup_v1']=ps; }catch(e){}
   try { var un=localStorage.getItem('units_v1'); if(un) p['units_v1']=un; }catch(e){}
+  try { var nt=JSON.parse(localStorage.getItem('note_tags_v1')); if(Array.isArray(nt)) p['note_tags_v1']=nt; }catch(e){}  // v5.47 (P3-C)
   // v3.8: carry the archive bin id so every device discovers the same archive.
   try { var aid=_archiveId(); if(aid) p['__archive_bin']=aid; }catch(e){}
   return p;
@@ -9412,6 +9644,10 @@ function mergeCloudIntoPayload(cloud){
   if(mro && Object.keys(mro).length) p['rest_overrides_v1']=mro;
   if(!p['plate_setup_v1'] && cloud['plate_setup_v1']) p['plate_setup_v1']=cloud['plate_setup_v1'];
   if(!p['units_v1'] && cloud['units_v1']) p['units_v1']=cloud['units_v1'];
+  // v5.47 (P3-C): note_tags_v1 — LWW whole-array. Local-wins-when-set
+  // mirrors units_v1's semantics (the next push will overwrite cloud
+  // with local), so a deleted tag stays deleted across sync.
+  if(!p['note_tags_v1'] && Array.isArray(cloud['note_tags_v1'])) p['note_tags_v1']=cloud['note_tags_v1'];
   // v3.8: learn/keep the archive bin id from whichever side has it.
   if(cloud['__archive_bin'] && !_archiveId()){ try{ _setArchiveId(cloud['__archive_bin']); }catch(e){} }
   var aid2=_archiveId()||cloud['__archive_bin']; if(aid2) p['__archive_bin']=aid2;
@@ -9442,6 +9678,8 @@ function applyPayloadToLocal(p){
   if(p['rest_overrides_v1'] && typeof p['rest_overrides_v1']==='object' && !Array.isArray(p['rest_overrides_v1'])) localStorage.setItem('rest_overrides_v1', JSON.stringify(p['rest_overrides_v1']));
   if(p['plate_setup_v1'] && typeof p['plate_setup_v1']==='object' && !Array.isArray(p['plate_setup_v1'])) localStorage.setItem('plate_setup_v1', JSON.stringify(p['plate_setup_v1']));
   if(p['units_v1']==='lbs' || p['units_v1']==='kg') localStorage.setItem('units_v1', p['units_v1']);
+  // v5.47 (P3-C): apply the synced note-tag vocabulary on every cloud-pull.
+  if(Array.isArray(p['note_tags_v1'])) localStorage.setItem('note_tags_v1', JSON.stringify(p['note_tags_v1']));
 }
 
 function refreshAfterSync(){
@@ -9599,7 +9837,7 @@ function clearPendingSync(){ try{ localStorage.removeItem('gymlog_sync_pending')
 // Uses sessionStorage so a mid-test reload stays in test mode, and the
 // snapshot is persisted so it can still be discarded after a reload.
 var TEST_MODE = sessionStorage.getItem('gym_test_mode')==='1';
-var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','plate_setup_v1','units_v1','gymlog_sync_pending','darkMode','milestones_earned_at','bodyweight_goal_v1','vol_chart_mode','text_size_v1','plan_intro_dismissed_v1','rest_autostart_v1'];
+var TEST_EXTRA_KEYS=['body_measurements','archived_exercises','earned_milestones','exercise_order','plan_v2','days_config_v1','exercise_library_v1','library_hidden_v1','plan_templates_v1','rest_overrides_v1','plate_setup_v1','units_v1','note_tags_v1','gymlog_sync_pending','darkMode','milestones_earned_at','bodyweight_goal_v1','vol_chart_mode','text_size_v1','plan_intro_dismissed_v1','rest_autostart_v1'];
 function _testKeys(){
   var ks=[];
   for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i);
@@ -10362,6 +10600,52 @@ function renderWeeklyConsistency(){
 //   - "Today" gets a thin primary-2 outline so the grid has a clear "you-are-here".
 //   - Whole thing is centered (justify-content:center) instead of overflow:auto.
 //   - Legend now spells out the color meanings ("rest · 1 session · 2+ sessions").
+// v5.47 (P3-B): jump from a tapped filled heatmap cell to the matching
+// session card in Sessions. Switches the sub-tab (no scrollIntoView per the
+// directive — we set the Sessions panel scroll and rely on the pulse),
+// then adds .sess-flash to every card whose data-ymd matches for ~1200ms.
+// Multiple sessions on the same day all pulse together — they share the ymd.
+function _hmJumpToYmd(ymd){
+  if(!ymd) return;
+  try{
+    // Make sure the Sessions sub-tab is active.
+    var sessBtn=document.querySelector('.prog-tab-row .prog-tab-btn');
+    if(sessBtn) sessBtn.classList.add('active');
+    switchProgTab('days', sessBtn);
+    // Drop any day filter so the targeted card is visible.
+    var allBtn=document.querySelector('.sess-filter[data-d="all"]');
+    if(allBtn && typeof sessFilter==='function') sessFilter('all', allBtn);
+  }catch(_e){}
+  // Find + pulse — defer one tick so renderProgress repaint settles first.
+  setTimeout(function(){
+    try{
+      var cards=document.querySelectorAll('.sess-card[data-ymd="'+ymd+'"]');
+      if(!cards.length) return;
+      // Set the Sessions panel scroll so the first match is near the top
+      // (no scrollIntoView; we don't want to hijack the page-level scroll).
+      var feed=document.getElementById('sess-feed');
+      if(feed){
+        var feedTop=feed.getBoundingClientRect().top;
+        var cardTop=cards[0].getBoundingClientRect().top;
+        var rel=cardTop-feedTop;
+        // Find the nearest scrollable ancestor; default to window scroll.
+        var anc=feed.parentNode;
+        while(anc && anc!==document.body){
+          var oy=getComputedStyle(anc).overflowY;
+          if(oy==='auto' || oy==='scroll'){ anc.scrollTop+=rel-24; break; }
+          anc=anc.parentNode;
+        }
+        if(!anc || anc===document.body){
+          try{ window.scrollBy({top: rel-24, behavior:'smooth'}); }catch(_e){ window.scrollBy(0, rel-24); }
+        }
+      }
+      cards.forEach(function(c){ c.classList.add('sess-flash'); });
+      setTimeout(function(){ cards.forEach(function(c){ c.classList.remove('sess-flash'); }); }, 1200);
+      try{ haptic('light'); }catch(_e){}
+    }catch(_e){}
+  }, 30);
+}
+
 function renderActivityHeatmap(){
   var cnt={};
   getDays().forEach(function(d){
@@ -10405,7 +10689,12 @@ function renderActivityHeatmap(){
       var cls=(c===0?'rest':(c===1?'med':'high'));
       var isToday=(k===todayKey);
       var t=d.toLocaleDateString()+(c?(' — '+c+' session'+(c>1?'s':'')):' — rest');
-      html+='<div class="hm-cell '+cls+(isToday?' today':'')+'" title="'+t+'"></div>';
+      // v5.47 (P3-B): filled cells (1+ sessions) jump to Sessions sub-tab and
+      // pulse the matching card. Rest cells stay inert (no attribute / cursor).
+      var jumpAttrs=(c>0)
+        ?(' role="button" tabindex="0" data-ymd="'+k+'" onclick="_hmJumpToYmd(\''+k+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();_hmJumpToYmd(\''+k+'\')}" style="cursor:pointer"')
+        :'';
+      html+='<div class="hm-cell '+cls+(isToday?' today':'')+'" title="'+t+'"'+jumpAttrs+'></div>';
     }
   }
   html+='</div>';
