@@ -242,6 +242,12 @@ body.dark .item-timer-btn{background:#252540;border-color:var(--border);color:va
 .notes-row{display:flex;gap:6px;align-items:center}
 .notes-input{flex:1;font-size:16px;padding:5px 8px;border:1px solid var(--border-soft);border-radius:6px;background:#FAFAF8;color:#2C2C2A;outline:none;font-family:inherit}
 .last-time{font-size:11px;color:#7F77DD;background:#EEEDFE;border-radius:6px;padding:5px 8px;margin-bottom:2px;line-height:1.5;display:none}
+/* v5.48 fix: suppress iOS's text-selection magnifier (the floating loupe)
+   on the .last-time line. The v5.46 long-press handler fires a tooltip
+   toast from pointerdown; without these properties, iOS ALSO starts a
+   native text selection on the same touch, painting the magnifier over
+   the toast and competing for the user's gesture. */
+.last-time,.last-time-vals{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-touch-callout:none}
 .last-time.has-data{display:block}
 .last-time-label{font-weight:600;margin-right:4px}
 .notes-input:focus{border-color:#7F77DD;background:#fff}
@@ -633,7 +639,10 @@ body.dark .mgr-notice-x:hover{background:rgba(255,255,255,.06)}
 .mgr-archived-title{font-size:var(--fs-13);font-weight:700;color:#888780;margin-bottom:0.75rem}
 /* v4.20 (nit 22): toast anchored TOP-center — clears the bottom tab bar + the
    floating rest-timer / Complete pills (which it used to collide with). */
-.toast{position:fixed;top:calc(env(safe-area-inset-top) + 14px);bottom:auto;left:50%;transform:translateX(-50%) translateY(-90px);background:#2C2C2A;color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:1003}
+/* v5.48 fix: line-height:1.45 lets sticky toasts (white-space:pre-line) breathe
+   on multi-line content (the v5.46 long-press tooltip). The non-sticky default
+   stays white-space:nowrap for short one-line toasts. */
+.toast{position:fixed;top:calc(env(safe-area-inset-top) + 14px);bottom:auto;left:50%;transform:translateX(-50%) translateY(-90px);background:#2C2C2A;color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:1003;line-height:1.45}
 /* v5.14 (T11): self-dismissing post-save summary card. Mounts ~upper-third,
    slides in, dims out in 3.5s, tap → opens the saved session. Gold accent on
    the big number. */
@@ -645,7 +654,7 @@ body.dark .mgr-notice-x:hover{background:rgba(255,255,255,.06)}
 .ssc-cmp{font-size:12px;font-weight:600;color:var(--muted);margin-top:6px}
 body.dark .sess-summary-card{box-shadow:0 8px 28px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.4)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.toast-sticky{pointer-events:auto;white-space:normal;max-width:88vw;display:flex;align-items:center;gap:12px;text-align:left}
+.toast.toast-sticky{pointer-events:auto;white-space:pre-line;max-width:88vw;display:flex;align-items:flex-start;gap:12px;text-align:left}
 .toast .toast-x{background:none;border:0;color:#fff;font-size:13px;line-height:1;cursor:pointer;padding:4px 6px;margin:-2px -6px -2px 0;opacity:.75;flex-shrink:0}
 .toast .toast-x:hover{opacity:1}
 .unit-toggle{display:flex;border-radius:6px;overflow:hidden;border:1px solid var(--border-soft);flex-shrink:0;height:32px;box-sizing:border-box}
@@ -1331,7 +1340,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.47</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.48</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -5537,14 +5546,29 @@ function loadLastTimes(){
         // so the hot-path workout card reads "3 × 90 × 12" instead of repeating
         // the full per-set string. The original is preserved as title= AND on a
         // ≥500ms long-press → toast, mirroring the coach-line math-tooltip pattern.
+        // v5.48 (fix): pretty-format the long-press toast (each set on its own
+        // line + a human date) and send it sticky so the toast CSS wraps to
+        // multi-line (.toast-sticky has white-space:normal + max-width:88vw —
+        // the default .toast has white-space:nowrap, which was overflowing
+        // both edges on a real phone).
         var _vals=el.querySelector('.last-time-vals');
         var _condensed=_condenseLastNote(match.note);
         _vals.textContent=_condensed+' ('+fmtDate(match.ts||match.date,'rel')+')';
-        var _full=match.note+'\n'+fmtDateISO(match.ts||match.date);
+        // Multi-line breakdown for the long-press tooltip / toast.
+        var _setLines=[];
+        try{
+          parseSetWR(match.note).forEach(function(p, i){
+            var w=(p.w%1===0)?String(p.w):String(Math.round(p.w*10)/10);
+            _setLines.push('Set '+(i+1)+': '+w+(p.r?(' lbs × '+p.r+' reps'):' lbs'));
+          });
+        }catch(_e){}
+        if(!_setLines.length) _setLines=[match.note];  // freeform / cardio fallback
+        var _dateLine=fmtDate(match.ts||match.date,'rel')+' · '+fmtDateISO(match.ts||match.date);
+        var _full=_setLines.join('\n')+'\n'+_dateLine;
         _vals.setAttribute('title', _full);
         try{
           var _lpT=null;
-          var _start=function(){ _lpT=setTimeout(function(){ _lpT=null; try{ showToast(_full); }catch(_e){} }, 500); };
+          var _start=function(){ _lpT=setTimeout(function(){ _lpT=null; try{ showToast(_full, {sticky:true}); }catch(_e){} }, 500); };
           var _cancel=function(){ if(_lpT){ clearTimeout(_lpT); _lpT=null; } };
           _vals.addEventListener('pointerdown', _start);
           _vals.addEventListener('pointerup', _cancel);
@@ -11471,6 +11495,11 @@ function triggerCompleteFromBar(){
 // the on-screen keyboard covers; expose it as --kb-offset so the timer + Complete
 // pills ride above the keyboard. A focused input scrolls itself into view — done
 // ONLY here (on focus), never on every viewport resize (that causes scroll jank).
+// v5.48 fix: extended re-sync schedule. iOS Safari's keyboard animation (~300ms)
+// often finishes AFTER visualViewport stops firing resize events, leaving the
+// timer + Complete pills below the keyboard for a beat. We now re-sync at
+// 350/700/1100ms on focusin, plus on document scroll (the visualViewport
+// scroll event doesn't fire for normal page scrolls during keyboard flicker).
 (function(){
   var vv=window.visualViewport; if(!vv) return;
   function syncKb(){
@@ -11479,11 +11508,29 @@ function triggerCompleteFromBar(){
   }
   vv.addEventListener('resize', syncKb);
   vv.addEventListener('scroll', syncKb);
+  // Page scroll re-sync — fixed-position elements drift behind the keyboard on
+  // iOS during scrolls because the visual viewport offsets without firing a
+  // visualViewport scroll event. {passive:true} so this stays off the main
+  // paint path even with the listener attached.
+  document.addEventListener('scroll', syncKb, {passive:true});
   syncKb();
   document.addEventListener('focusin', function(e){
     var t=e.target;
     if(t && t.matches && t.matches('.rep-input,.cardio-input,.notes-input,.reps-actual-input')){
       setTimeout(function(){ try{ t.scrollIntoView({block:'center',behavior:'smooth'}); }catch(_){} }, 250);
+      // Belt-and-suspenders re-sync — covers the iOS keyboard-animation tail.
+      setTimeout(syncKb, 350);
+      setTimeout(syncKb, 700);
+      setTimeout(syncKb, 1100);
+    }
+  });
+  // On blur, re-sync once so the bar drops back down promptly when the
+  // keyboard dismisses (instead of waiting for the next paint hint).
+  document.addEventListener('focusout', function(e){
+    var t=e.target;
+    if(t && t.matches && t.matches('.rep-input,.cardio-input,.notes-input,.reps-actual-input')){
+      setTimeout(syncKb, 50);
+      setTimeout(syncKb, 350);
     }
   });
 })();
