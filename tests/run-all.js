@@ -12,7 +12,8 @@ const SUITES = [
   'sw_spot', 'cloudarchive_spot', 'finalize_spot', 'sessgroup_spot', 'metadata_spot', 'balance_spot', 'toast_spot', 'templates_spot', 'progression_spot', 'dupscan',
   'patch3_spot', 'patch4_spot', 'patch5_spot', 'patch5_lossless', 'patch5_health',
   'patch5_repair', 'patch5_split', 'patch5_dedupe', 'patch5_pull', 'patch5_primary',
-  'patch5_prefill'
+  'patch5_prefill',
+  'note_tags_spot'  // v5.47 (P3-C): note_tags_v1 SYNCED key + chip-append
 ];
 
 const failed = [];
