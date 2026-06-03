@@ -1,6 +1,6 @@
 # MyFit (gym-plan) — Session Handoff
 
-**App version:** v5.53 · **Updated:** 2026-05-28 · **Files:** `index.html` (~520KB, inline
+**App version:** v5.54 · **Updated:** 2026-05-28 · **Files:** `index.html` (~520KB, inline
 CSS/JS, no build step) **+ `sw.js`** (service worker, v3.7) → GitHub Pages → iPhone home screen.
 
 ## ▶ Round 2 in progress (design_handoff_v420_r2/) — version mapping renumbered to v5.x
