@@ -1372,7 +1372,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.55</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.56</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -6828,9 +6828,15 @@ function renderSync(){
     +'<div class="plan-sync-row">'
     +'<label class="plan-sync-toggle"><input type="checkbox" id="plan-sync-switch" '+(syncOn?'checked':'')+' onchange="setPlanSyncEnabled(this.checked);renderSync()"><span>Cloud sync for plan, days &amp; library '+(syncOn?'<b>(Cloud enabled)</b>':'<b>(Local only)</b>')+'</span></label>'
     +'</div>'
-    // M1 (v5.2): surface this device's role as a secondary line (set in Backup & restore)
-    +'<div class="plan-sync-hint" style="margin-top:2px">'+(isPrimaryDevice()?'⬆ <b>This phone uploads</b> workout history to the cloud.':'📖 <b>Reader</b> — this phone won\'t push history (change in Backup &amp; restore).')+'</div>'
-    +'<div class="plan-sync-hint">Plan, day &amp; library edits stay on this device until you push — and you can push from <b>any</b> device. '+(syncOn?'Tap below to write them to the cloud (your workout history is left untouched).':'Switch on to enable the push button.')+'</div>'
+    // v5.56: copy fix — the old Reader hint ("this phone won't push history,
+    // change in Backup & restore") read as "Readers can't push anything",
+    // which discouraged users from flipping the plan-sync toggle on. In
+    // fact: Primary/Reader gates only WORKOUT HISTORY auto-sync. The push
+    // button below is plan-shape only and works from any device — but only
+    // when this toggle is on. Split the two concerns clearly so the user
+    // doesn't have to read between the lines.
+    +'<div class="plan-sync-hint" style="margin-top:2px">'+(isPrimaryDevice()?'⬆ <b>Primary</b> — workouts auto-sync to the cloud.':'📖 <b>Reader</b> — workouts save locally only. Plan, day &amp; library can still be pushed manually below.')+'</div>'
+    +'<div class="plan-sync-hint">Plan, day &amp; library edits stay on this device until you push — and you can push from <b>any</b> device (Reader included). '+(syncOn?'Tap below to write them to the cloud (your workout history is left untouched).':'Switch the toggle above on to enable the push button.')+'</div>'
     +'<button class="patch5-rerun-btn" '+(syncOn?'':'disabled')+' onclick="pushPlanToCloud()">⬆ Push plan to cloud now</button>'
     +'<div class="plan-sync-last">'+lpTxt+'</div>'
     +'<button class="patch5-rerun-btn" onclick="pullFromCloud()" style="margin-top:8px">⬇ Pull from cloud</button>'
