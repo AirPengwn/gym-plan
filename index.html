@@ -255,6 +255,21 @@ body.dark .item-timer-btn{background:#252540;border-color:var(--border);color:va
 .last-time,.last-time-vals{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-touch-callout:none}
 .last-time.has-data{display:block}
 .last-time-label{font-weight:600;margin-right:4px}
+/* v5.54: explicit tap-to-expand chevron on the right of the "Last session:"
+   pill replaces the hard-to-hit long-press. Tap → the pill grows downward
+   to show per-set detail INSIDE the same purple-tinted bar (no popup,
+   theme stays consistent, font sized up for legibility). Long-press toast
+   still fires as a fallback when the gesture lands cleanly. */
+.last-time-row{display:flex;align-items:center;gap:6px}
+.last-time-row .last-time-label,.last-time-row .last-time-vals{display:inline}
+.last-time-row .last-time-vals{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.last-time-toggle{flex-shrink:0;background:transparent;border:0;color:inherit;font-size:15px;line-height:1;padding:5px 7px;margin:-3px -3px -3px 0;cursor:pointer;opacity:.7;transition:transform .18s ease,opacity .18s;font-family:inherit;border-radius:6px;-webkit-tap-highlight-color:rgba(127,119,221,0.2)}
+.last-time-toggle:hover,.last-time-toggle:focus-visible{opacity:1;background:rgba(127,119,221,0.14);outline:none}
+.last-time.expanded .last-time-toggle{transform:rotate(180deg);opacity:1}
+.last-time-detail{margin-top:6px;padding-top:7px;border-top:1px solid rgba(127,119,221,0.28);font-size:13px;line-height:1.6;color:inherit;white-space:normal;-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+.last-time-detail .lt-set{display:block}
+.last-time-detail .lt-date{display:block;font-size:11px;opacity:.7;margin-top:6px}
+body.dark .last-time-detail{border-top-color:rgba(159,151,224,0.32)}
 .notes-input:focus{border-color:#7F77DD;background:#fff}
 .notes-input::placeholder{color:var(--muted);opacity:1}
 .tip{background:#EEEDFE;border-left:3px solid #7F77DD;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:#3C3489;line-height:1.6;margin-top:1rem}
@@ -1357,7 +1372,7 @@ body.dark .hm-sw.med{background:#7F77DD}
 
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:0.5rem;">
   <div style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;">
-    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.53</span></div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MyFit<span id="app-version" style="font-size:9px;font-weight:400;color:var(--muted);margin-left:9px;letter-spacing:0;vertical-align:baseline;">v5.54</span></div>
   </div>
   <!-- v5.14 (T8): notice bell. Hidden when there are zero notices; the unread
        dot lights up while notices exist. Tap toggles the tray below. -->
@@ -5571,7 +5586,8 @@ function loadLastTimes(){
         var _vals=el.querySelector('.last-time-vals');
         var _condensed=_condenseLastNote(match.note);
         _vals.textContent=_condensed+' ('+fmtDate(match.ts||match.date,'rel')+')';
-        // Multi-line breakdown for the long-press tooltip / toast.
+        // Multi-line breakdown for the long-press tooltip / toast AND the
+        // v5.54 inline expand panel below.
         var _setLines=[];
         try{
           parseSetWR(match.note).forEach(function(p, i){
@@ -5591,6 +5607,46 @@ function loadLastTimes(){
           _vals.addEventListener('pointerup', _cancel);
           _vals.addEventListener('pointercancel', _cancel);
           _vals.addEventListener('pointermove', _cancel);
+        }catch(_e){}
+        // v5.54: explicit chevron toggle on the right + collapsible detail
+        // panel below. Discoverable, reliable hit target, theme-matched.
+        try{
+          var _label=el.querySelector('.last-time-label');
+          var _row=el.querySelector('.last-time-row');
+          if(!_row && _label && _vals){
+            _row=document.createElement('div');
+            _row.className='last-time-row';
+            el.insertBefore(_row, _label);
+            _row.appendChild(_label);
+            _row.appendChild(_vals);
+          }
+          var _btn=el.querySelector('.last-time-toggle');
+          if(!_btn && _row){
+            _btn=document.createElement('button');
+            _btn.type='button';
+            _btn.className='last-time-toggle';
+            _btn.setAttribute('aria-label','Show last-session details');
+            _btn.setAttribute('aria-expanded','false');
+            _btn.textContent='▾';
+            _row.appendChild(_btn);
+            _btn.addEventListener('click', function(ev){
+              ev.stopPropagation();
+              var open=el.classList.toggle('expanded');
+              _btn.setAttribute('aria-expanded', open?'true':'false');
+              _btn.setAttribute('aria-label', open?'Hide last-session details':'Show last-session details');
+              var d=el.querySelector('.last-time-detail');
+              if(d) d.hidden=!open;
+            });
+          }
+          var _detail=el.querySelector('.last-time-detail');
+          if(!_detail){
+            _detail=document.createElement('div');
+            _detail.className='last-time-detail';
+            _detail.hidden=true;
+            el.appendChild(_detail);
+          }
+          _detail.innerHTML=_setLines.map(function(s){ return '<span class="lt-set">'+_esc(s)+'</span>'; }).join('')
+            +'<span class="lt-date">'+_esc(_dateLine)+'</span>';
         }catch(_e){}
         el.classList.add('has-data');
         // v5.13: the progressive-overload cue now lives in the consolidated
